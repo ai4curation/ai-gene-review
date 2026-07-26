@@ -1,0 +1,3523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDHAF1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SDHAF1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A6NFY7" target="_blank" class="term-link">
+                        A6NFY7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SDHAF1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A6NFY7" data-a="DESCRIPTION: SDHAF1 (succinate dehydrogenase assembly factor 1)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SDHAF1 (succinate dehydrogenase assembly factor 1) is a small (115 aa) LYR-motif protein of the mitochondrial matrix that acts as an assembly factor for succinate dehydrogenase (SDH, respiratory Complex II), the enzyme that couples oxidation of succinate to fumarate with reduction of ubiquinone and links the TCA cycle to the electron transport chain. SDHAF1 is not a structural subunit of the mature complex and is not itself catalytic. It promotes maturation of the iron-sulfur (Fe-S) subunit SDHB: through an N-terminal LYR motif it binds the DnaJ/Hsp40-type co-chaperone HSC20 (HSCB), recruiting the HSC20-HSPA9 chaperone system and the ISCU scaffold, while an arginine-rich C-terminal region binds SDHB, thereby positioning the Fe-S transfer machinery to insert iron-sulfur clusters into SDHB and protecting SDHB from oxidative damage. It is a member of the complex I LYR family, SDHAF1 subfamily. Biallelic loss-of-function variants cause an autosomal-recessive, riboflavin-responsive mitochondrial complex II deficiency presenting as infantile leukoencephalopathy with succinate accumulation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) localization of SDHAF1 to mitochondrion. Correct but non-specific; the protein is more precisely in the mitochondrial matrix. Kept as non-core because the specific matrix localization and the assembly BP better capture the biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt states subcellular location is mitochondrion matrix, consistent with this broader mitochondrion term. Retained but subsumed by the more specific matrix term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034553" target="_blank" class="term-link">
+                                    GO:0034553
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex II assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0034553" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the core biological process. This is exactly the process SDHAF1 performs and is consistent with the experimental IMP annotation and with UniProt. Accepted as a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SDHAF1 is a bona fide SDH (Complex II) assembly factor; the IBA agrees with the experimental IMP annotation (PMID:19465911) and UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link">
+                                        PMID:19465911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDHAF1 is the first bona fide SDH assembly factor reported in any organism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005739" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) mitochondrial localization. Correct but non-specific relative to the matrix localization. Kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the curated mitochondrion/matrix localization; less specific than the matrix term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping (IEA) to mitochondrial matrix. This is the correct, specific compartment for SDHAF1 and is supported by the curated UniProt location. Accepted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the experimentally supported UniProt subcellular location (matrix).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034553" target="_blank" class="term-link">
+                                    GO:0034553
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex II assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0034553" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) assignment of the core biological process from the SDHAF1-specific InterPro signature. Correct and consistent with the experimental and phylogenetic annotations. Accepted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro family (IPR045295, Complex1_LYR_SDHAF1_LYRM8) is SDHAF1-specific and the inferred assembly process matches the experimental IMP annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link">
+                                        PMID:19465911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDHAF1 is the first bona fide SDH assembly factor reported in any organism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24606901
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cochaperone binding to LYR motifs confers specificity of iro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005515" data-r="PMID:24606901" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from IntAct curation of the HSC20/LYR-motif study; the recorded partners are SDHB (P21912, substrate) and HSCB/HSC20 (Q8IWL3, co-chaperone). These are the functionally central interactions, but the bare &#34;protein binding&#34; term is uninformative. Kept as non-core; the specific molecular function is captured by protein-folding chaperone binding (GO:0051087) in core_functions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real, physiologically meaningful interactions (co-chaperone HSC20 and substrate SDHB), but GO:0005515 is too general; superseded in core_functions by the chaperone-binding MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                                        PMID:24606901
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">members of the LYR motif family which assist assembly of complexes II or III, SDHAF1 and LYRM7, respectively, are HSC20 binding partners.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26749241" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26749241
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Disease-Causing SDHAF1 Mutations Impair Transfer of Fe-S Clu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005515" data-r="PMID:26749241" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from IntAct curation of the disease-mechanism paper; partners are SDHB (P21912) and HSCB/HSC20 (Q8IWL3). Functionally meaningful but uninformative as a bare term. Kept as non-core; specific MF captured as protein-folding chaperone binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Meaningful SDHB and HSC20 interactions underpinning Fe-S transfer, but GO:0005515 is too general; superseded by GO:0051087 in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26749241" target="_blank" class="term-link">
+                                        PMID:26749241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region in its C terminus and specifically engages a Fe-S donor complex, consisting of the scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR motif near its N-terminal domain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28380382
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A Single Adaptable Cochaperone-Scaffold Complex Delivers Nas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005515" data-r="PMID:28380382" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from IntAct curation; recorded partner is HSCB/HSC20 (Q8IWL3). This HSC20-centered study places SDHAF1 in the LYR-family Fe-S delivery network. Meaningful interaction but uninformative as a bare term; kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine co-chaperone (HSC20) interaction, but GO:0005515 is too general; superseded by GO:0051087 protein-folding chaperone binding in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link">
+                                        PMID:28380382
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Binding of HSC20 to the LYR motif of LYRM7 in a pre-assembled UQCRFS1-LYRM7 intermediate in the mitochondrial matrix facilitates Fe-S cluster transfer to UQCRFS1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from the HuRI large-scale binary (Y2H) interactome; recorded partners are KRT27 (Q7Z3Y8, a keratin) and CIDEB (Q9UHD4). Neither is a plausible physiological partner for a mitochondrial-matrix assembly factor; these are likely high-throughput screen artifacts. Marked as over-annotated: the bare &#34;protein binding&#34; term adds no functional information and the partners are not biologically relevant.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale Y2H hits (keratin KRT27, CIDEB) are non-physiological for a matrix protein; GO:0005515 is uninformative and not supported by any functional role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">With approximately 53,000 protein-protein interactions, HuRI has approximately four times as many such interactions as there are high-quality curated interactions from small-scale studies.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005515" data-r="PMID:33961781" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from the BioPlex 3.0 AP-MS interactome; recorded partner is SDHB (P21912), the physiological substrate of SDHAF1. Consistent with the curated SDHAF1-SDHB interaction. Kept as non-core because GO:0005515 is uninformative; the specific activity is captured elsewhere.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real SDHB interaction (consistent with UniProt SUBUNIT), but GO:0005515 is too general.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Interacts with SDHB within an SDHA-SDHB subcomplex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) immunofluorescence localization to mitochondrion (Human Protein Atlas). Correct but non-specific; the protein resides in the matrix. Kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the curated matrix localization; less specific than the matrix term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) detection of SDHAF1 in the high-confidence human mitochondrial proteome, confirming mitochondrial localization. Correct but non-specific relative to the matrix. Kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports mitochondrial residence via a quantitative mito-proteome dataset; subsumed by the more specific matrix term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9854984
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005759" data-r="Reactome:R-HSA-9854984" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) matrix localization within the SDH assembly pathway (Transfer of Fe-S clusters to SDHB). Matches the curated UniProt matrix location. Accepted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific compartment consistent with UniProt and with SDHAF1&#39;s role in the matrix-localized Fe-S transfer step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9855212
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005759" data-r="Reactome:R-HSA-9855212" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) matrix localization (SDHA binds to SDHB reaction). Correct, specific compartment consistent with UniProt. Accepted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the curated matrix localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9855252
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005759" data-r="Reactome:R-HSA-9855252" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) matrix localization (SDHA:SDHB binds to SDHC:SDHD reaction). Correct, specific compartment consistent with UniProt. Accepted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the curated matrix localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19465911
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SDHAF1, encoding a LYR complex-II specific assembly factor, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0005739" data-r="PMID:19465911" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (IDA) localization of SDHAF1 to mitochondrion in the founding paper. Correct but non-specific; the curated location is the matrix. Kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental mitochondrial localization; subsumed by the more specific matrix term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SDHAF1/SDHAF1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034553" target="_blank" class="term-link">
+                                    GO:0034553
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex II assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19465911
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    SDHAF1, encoding a LYR complex-II specific assembly factor, ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A6NFY7" data-a="GO:0034553" data-r="PMID:19465911" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) assignment of the core biological process from the founding SDHAF1 paper: SDHAF1 mutations cause SDH (Complex II) deficiency, and SDH activity/amount are restored proportionally with re-expression of the wild-type gene. This is the defining function of SDHAF1. Accepted as the primary core annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimental annotation establishing SDHAF1 as a Complex II assembly factor; consistent with UniProt FUNCTION.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link">
+                                        PMID:19465911
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDH activity and amount were restored in mutant fibroblasts proportionally with re-expression of the wild-type gene.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Assembly factor mediating maturation and iron-sulfur cluster acquisition of the SDHB subunit during assembly of mitochondrial respiratory Complex II (succinate dehydrogenase). SDHAF1 binds the DnaJ/Hsp40-type co-chaperone HSC20 (HSCB) via its N-terminal LYR motif to recruit the HSC20-HSPA9 chaperone system and the ISCU scaffold, and binds SDHB via its C-terminal arginine-rich region, positioning the Fe-S transfer machinery to deliver clusters to SDHB. Loss of function causes SDH deficiency that is rescued by wild-type re-expression.</h3>
+                <span class="vote-buttons" data-g="A6NFY7" data-a="FUNCTION: Assembly factor mediating maturation and iron-sulf..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                            protein-folding chaperone binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034553" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex II assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                                PMID:24606901
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">members of the LYR motif family which assist assembly of complexes II or III, SDHAF1 and LYRM7, respectively, are HSC20 binding partners.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26749241" target="_blank" class="term-link">
+                                PMID:26749241
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region in its C terminus and specifically engages a Fe-S donor complex, consisting of the scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR motif near its N-terminal domain.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link">
+                                PMID:19465911
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SDHAF1 is the first bona fide SDH assembly factor reported in any organism.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19465911" target="_blank" class="term-link">
+                            PMID:19465911
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SDHAF1, encoding a LYR complex-II specific assembly factor, is mutated in SDH-defective infantile leukoencephalopathy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Founding paper identifying SDHAF1 as the first bona fide SDH (Complex II) assembly factor; biallelic mutations cause SDH-defective infantile leukoencephalopathy, and wild-type re-expression restores SDH activity and amount.</div>
+
+                        <div class="finding-text">"SDH activity and amount were restored in mutant fibroblasts proportionally with re-expression of the wild-type gene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                            PMID:24606901
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster delivery.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SDHAF1 (LYRM8) is an HSC20 binding partner; LYR-motif proteins engage the ISCU-HSC20-HSPA9 Fe-S transfer complex, and SDHAF1 associates with SDHB via a non-LYR site while positioning the Fe-S transfer complex through its own LYR motif.</div>
+
+                        <div class="finding-text">"members of the LYR motif family which assist assembly of complexes II or III, SDHAF1 and LYRM7, respectively, are HSC20 binding partners."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26749241" target="_blank" class="term-link">
+                            PMID:26749241
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Disease-Causing SDHAF1 Mutations Impair Transfer of Fe-S Clusters to SDHB.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SDHAF1 contributes to Fe-S cluster incorporation into SDHB by binding SDHB (C-terminal arginine-rich region) and engaging the HSC20-HSPA9 co-chaperone/chaperone pair with the ISCU scaffold via its N-terminal LYR motif; disease mutations abrogate SDHB binding, leading to LONP1-mediated SDHB degradation, and riboflavin ameliorates the phenotype.</div>
+
+                        <div class="finding-text">"SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region in its C terminus and specifically engages a Fe-S donor complex, consisting of the scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR motif near its N-terminal domain."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28380382" target="_blank" class="term-link">
+                            PMID:28380382
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A Single Adaptable Cochaperone-Scaffold Complex Delivers Nascent Iron-Sulfur Clusters to Mammalian Respiratory Chain Complexes I-III.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The HSC20-HSPA9-ISCU Fe-S transfer complex delivers clusters to LYR-motif-associated respiratory chain assembly intermediates (complexes I-III), the general framework in which SDHAF1 acts for Complex II.</div>
+
+                        <div class="finding-text">"Binding of HSC20 to the LYR motif of LYRM7 in a pre-assembled UQCRFS1-LYRM7 intermediate in the mitochondrial matrix facilitates Fe-S cluster transfer to UQCRFS1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale binary (Y2H) interactome (HuRI); source of high-throughput SDHAF1 interactions with KRT27 and CIDEB that are not physiologically meaningful for a matrix assembly factor.</div>
+
+                        <div class="finding-text">"With approximately 53,000 protein-protein interactions, HuRI has approximately four times as many such interactions as there are high-quality curated interactions from small-scale studies."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BioPlex 3.0 AP-MS interactome; recovers the SDHAF1-SDHB interaction consistent with SDHAF1&#39;s role as an SDHB-binding assembly factor.</div>
+
+                        <div class="finding-text">"Comparison across cell lines validates thousands of interactions and reveals extensive customization."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-confidence quantitative human mitochondrial proteome; supports SDHAF1 mitochondrial localization (source of the HTP localization annotation).</div>
+
+                        <div class="finding-text">"Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9854984
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transfer of Fe-S clusters to SDHB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9855212
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SDHA binds to SDHB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9855252
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SDHA:SDHB binds to SDHC:SDHD</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SDHAF1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A6NFY7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sdhaf1-succinate-dehydrogenase-assembly-factor-1-mitochondrial-review-notes">SDHAF1 (Succinate dehydrogenase assembly factor 1, mitochondrial) — review notes</h1>
+<p>UniProt: A6NFY7 (SDHF1_HUMAN). Gene: SDHAF1 (HGNC:33867); synonym LYRM8. Human, 115 aa.</p>
+<h2 id="summary-of-biology">Summary of biology</h2>
+<p>SDHAF1 is a small (115 aa) mitochondrial-matrix <strong>assembly factor</strong> for succinate<br />
+dehydrogenase (SDH, respiratory Complex II). It is a <strong>LYR-motif protein</strong> (complex I LYR<br />
+family, SDHAF1 subfamily) and is NOT a structural subunit of the mature Complex II and is<br />
+not itself succinate-dehydrogenase catalytic. Its documented job is to promote maturation<br />
+of the iron-sulfur (Fe-S) subunit <strong>SDHB</strong>: it binds SDHB and recruits the Fe-S transfer<br />
+machinery (HSC20/HSCB co-chaperone + HSPA9 chaperone + ISCU scaffold) via direct binding<br />
+to the co-chaperone HSC20, thereby helping insert Fe-S clusters into SDHB.</p>
+<ul>
+<li>"Plays an essential role in the assembly of succinate dehydrogenase (SDH), an enzyme<br />
+  complex (also referred to as respiratory complex II)" [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+<li>"Promotes maturation of the iron-sulfur protein subunit SDHB of the SDH catalytic dimer,<br />
+  protecting it from the deleterious effects of oxidants" [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+<li>"Contributes to iron-sulfur cluster incorporation into SDHB by binding to SDHB and<br />
+  recruiting the iron-sulfur transfer complex formed by HSC20, HSPA9 and ISCU through direct<br />
+  binding to HSC20" [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+<li>Subcellular location: "Mitochondrion matrix" [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+<li>Family: "Belongs to the complex I LYR family. SDHAF1 subfamily." [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+<li>Keyword: "Chaperone" [file:human/SDHAF1/SDHAF1-uniprot.txt].</li>
+</ul>
+<h2 id="molecular-function-reasoning">Molecular function reasoning</h2>
+<p>There is no catalytic MF here. The honest, specific, experimentally supported MF is<br />
+<strong>protein-folding chaperone binding (GO:0051087)</strong>: SDHAF1 binds the DnaJ/Hsp40-type<br />
+co-chaperone HSC20 (HSCB) directly through its N-terminal LYR motif. HSC20 is "the sole<br />
+human DnaJ type III cochaperone dedicated to Fe-S cluster biogenesis" and works with its<br />
+cognate HSP70 chaperone HSPA9 [PMID:24606901 full text]. SDHAF1 also acts as a<br />
+substrate-recruiting adaptor for SDHB, but "protein binding" (GO:0005515) is uninformative;<br />
+the chaperone-binding term captures the specific, defining molecular activity.</p>
+<p>Supporting text:<br />
+- "members of the LYR motif family which assist assembly of complexes II or III, SDHAF1 and<br />
+  LYRM7, respectively, are HSC20 binding partners" [PMID:24606901,<br />
+  publications/PMID_24606901.md, full text].<br />
+- "SDHAF1 (LYRM8), which is involved in SDH assembly" <a href="https://pubmed.ncbi.nlm.nih.gov/24606901">PMID:24606901</a>.<br />
+- "SDHAF1 associates with SDHB through a non-LYR binding site, and utilizes its own LYR<br />
+  motif to position an ISCU-HSC20-HSPA9 complex" <a href="https://pubmed.ncbi.nlm.nih.gov/24606901">PMID:24606901</a>.<br />
+- "SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region in<br />
+  its C terminus and specifically engages a Fe-S donor complex, consisting of the scaffold,<br />
+  holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR motif near its<br />
+  N-terminal domain" [PMID:26749241 abstract, publications/PMID_26749241.md].</p>
+<h2 id="biological-process-reasoning">Biological process reasoning</h2>
+<p>Core BP = <strong>mitochondrial respiratory chain complex II assembly (GO:0034553)</strong>. This is the<br />
+exact term used in both GOA (IMP PMID:19465911; IBA; IEA) and in the UniProt DR GO line<br />
+(GO:0034553 IMP:UniProtKB). Verified current/non-obsolete via OLS. The founding paper showed<br />
+loss-of-function causes SDH deficiency, rescued by wild-type re-expression:<br />
+- "SDHAF1, encoding a LYR complex-II specific assembly factor, is mutated in SDH-defective<br />
+  infantile leukoencephalopathy ... SDHAF1 is the first bona fide SDH assembly factor<br />
+  reported in any organism" [PMID:19465911 abstract].<br />
+- "SDH activity and amount were restored in mutant fibroblasts proportionally with<br />
+  re-expression of the wild-type gene" <a href="https://pubmed.ncbi.nlm.nih.gov/19465911">PMID:19465911</a>.</p>
+<h2 id="cellular-component">Cellular component</h2>
+<p>Mitochondrial matrix (SL-0170 -&gt; GO:0005759) and mitochondrion (GO:0005739). UniProt DR GO<br />
+gives GO:0005739 IDA:UniProtKB and GO:0005759 TAS:Reactome. GOA also has HPA IDA<br />
+(GO_REF:0000052), FlyBase HTP (PMID:34800366 mito proteome), and IDA PMID:19465911 to<br />
+mitochondrion. All consistent; matrix is the more specific/accurate compartment.<br />
+- "SUBCELLULAR LOCATION: Mitochondrion matrix" [file:human/SDHAF1/SDHAF1-uniprot.txt].</p>
+<h2 id="protein-binding-go0005515-ipi-annotations">Protein-binding (GO:0005515) IPI annotations</h2>
+<p>GOA carries several bare GO:0005515 "protein binding" IPI annotations from IntAct-curated<br />
+interaction datasets:<br />
+- PMID:24606901 with SDHB (P21912) and HSCB/HSC20 (Q8IWL3) — the functionally meaningful<br />
+  interactions (substrate + co-chaperone).<br />
+- PMID:26749241 with SDHB (P21912) and HSCB (Q8IWL3) — disease-mechanism paper.<br />
+- PMID:28380382 with HSCB (Q8IWL3) — HSC20-centered Fe-S delivery paper.<br />
+- PMID:32296183 (HuRI binary interactome) with KRT27 (Q7Z3Y8) and CIDEB (Q9UHD4) —<br />
+  large-scale Y2H; keratin/CIDEB are not biologically meaningful partners for a matrix<br />
+  assembly factor (likely screen artifacts / non-physiological).<br />
+- PMID:33961781 (BioPlex) with SDHB (P21912).</p>
+<p>Per policy, IPI "protein binding" annotations are not removed; the meaningful ones<br />
+(SDHB, HSCB) are kept as non-core (they underpin, but are less informative than, the<br />
+GO:0051087 chaperone-binding MF), and the large-scale screen hits (KRT27, CIDEB) are<br />
+marked as over-annotated because "protein binding" is uninformative and the partners are<br />
+not physiologically relevant to SDHAF1's matrix assembly-factor role.</p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic SDHAF1 variants cause mitochondrial complex II deficiency, nuclear type 2<br />
+(MC2DN2; MIM 619166) = infantile leukoencephalopathy with succinate accumulation; riboflavin<br />
+responsive [file:human/SDHAF1/SDHAF1-uniprot.txt; PMID:26749241 abstract].</p>
+<h2 id="references-consulted">References consulted</h2>
+<ul>
+<li>PMID:19465911 (Nat Genet 2009) — abstract only; founding paper, IMP for GO:0034553 and<br />
+  IDA mitochondrion.</li>
+<li>PMID:24606901 (Cell Metab 2014) — full text available; HSC20/LYR-motif specificity;<br />
+  supports chaperone-binding MF.</li>
+<li>PMID:26749241 (Cell Metab 2016) — abstract only; disease mutations impair Fe-S transfer to<br />
+  SDHB; SDHAF1-HSC20/HSPA9/ISCU and SDHAF1-SDHB interactions.</li>
+<li>PMID:28380382 (Cell Metab 2017) — abstract + partial full text; HSC20-centered Fe-S<br />
+  delivery to complexes I-III (SDHAF1 in LYR-family context).</li>
+<li>PMID:32296183 (Nature 2020, HuRI) — full text; binary interactome; KRT27/CIDEB screen hits.</li>
+<li>PMID:33961781 (Cell 2021, BioPlex 3.0) — full text; AP-MS interactome; SDHB.</li>
+<li>PMID:34800366 (Cell Rep 2021) — high-confidence mito proteome (HTP localization).</li>
+<li>Reactome R-HSA-9854984, R-HSA-9855212, R-HSA-9855252 — SDH assembly reaction context.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A6NFY7
+gene_symbol: SDHAF1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SDHAF1 (succinate dehydrogenase assembly factor 1) is a small (115 aa) LYR-motif protein
+  of the mitochondrial matrix that acts as an assembly factor for succinate dehydrogenase
+  (SDH, respiratory Complex II), the enzyme that couples oxidation of succinate to fumarate
+  with reduction of ubiquinone and links the TCA cycle to the electron transport chain.
+  SDHAF1 is not a structural subunit of the mature complex and is not itself catalytic.
+  It promotes maturation of the iron-sulfur (Fe-S) subunit SDHB: through an N-terminal LYR
+  motif it binds the DnaJ/Hsp40-type co-chaperone HSC20 (HSCB), recruiting the HSC20-HSPA9
+  chaperone system and the ISCU scaffold, while an arginine-rich C-terminal region binds
+  SDHB, thereby positioning the Fe-S transfer machinery to insert iron-sulfur clusters into
+  SDHB and protecting SDHB from oxidative damage. It is a member of the complex I LYR family,
+  SDHAF1 subfamily. Biallelic loss-of-function variants cause an autosomal-recessive,
+  riboflavin-responsive mitochondrial complex II deficiency presenting as infantile
+  leukoencephalopathy with succinate accumulation.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) localization of SDHAF1 to mitochondrion. Correct but non-specific;
+      the protein is more precisely in the mitochondrial matrix. Kept as non-core because
+      the specific matrix localization and the assembly BP better capture the biology.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      UniProt states subcellular location is mitochondrion matrix, consistent with this
+      broader mitochondrion term. Retained but subsumed by the more specific matrix term.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0034553
+    label: mitochondrial respiratory chain complex II assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the core biological process. This is exactly the
+      process SDHAF1 performs and is consistent with the experimental IMP annotation and
+      with UniProt. Accepted as a core function.
+    action: ACCEPT
+    reason: &gt;-
+      SDHAF1 is a bona fide SDH (Complex II) assembly factor; the IBA agrees with the
+      experimental IMP annotation (PMID:19465911) and UniProt.
+    supported_by:
+    - reference_id: PMID:19465911
+      supporting_text: &#34;SDHAF1 is the first bona fide SDH assembly factor reported in any organism.&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) mitochondrial localization. Correct but non-specific relative to
+      the matrix localization. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the curated mitochondrion/matrix localization; less specific than the
+      matrix term.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping (IEA) to mitochondrial matrix. This is the
+      correct, specific compartment for SDHAF1 and is supported by the curated UniProt
+      location. Accepted.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the experimentally supported UniProt subcellular location (matrix).
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0034553
+    label: mitochondrial respiratory chain complex II assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) assignment of the core biological process from the SDHAF1-specific
+      InterPro signature. Correct and consistent with the experimental and phylogenetic
+      annotations. Accepted.
+    action: ACCEPT
+    reason: &gt;-
+      The InterPro family (IPR045295, Complex1_LYR_SDHAF1_LYRM8) is SDHAF1-specific and the
+      inferred assembly process matches the experimental IMP annotation.
+    supported_by:
+    - reference_id: PMID:19465911
+      supporting_text: &#34;SDHAF1 is the first bona fide SDH assembly factor reported in any organism.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24606901
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from IntAct curation of the HSC20/LYR-motif study; the recorded
+      partners are SDHB (P21912, substrate) and HSCB/HSC20 (Q8IWL3, co-chaperone). These are
+      the functionally central interactions, but the bare &#34;protein binding&#34; term is
+      uninformative. Kept as non-core; the specific molecular function is captured by
+      protein-folding chaperone binding (GO:0051087) in core_functions.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real, physiologically meaningful interactions (co-chaperone HSC20 and substrate SDHB),
+      but GO:0005515 is too general; superseded in core_functions by the chaperone-binding MF.
+    supported_by:
+    - reference_id: PMID:24606901
+      supporting_text: &gt;-
+        members of the LYR motif family which assist assembly of complexes II or III, SDHAF1
+        and LYRM7, respectively, are HSC20 binding partners.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26749241
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from IntAct curation of the disease-mechanism paper; partners are
+      SDHB (P21912) and HSCB/HSC20 (Q8IWL3). Functionally meaningful but uninformative as a
+      bare term. Kept as non-core; specific MF captured as protein-folding chaperone binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Meaningful SDHB and HSC20 interactions underpinning Fe-S transfer, but GO:0005515 is
+      too general; superseded by GO:0051087 in core_functions.
+    supported_by:
+    - reference_id: PMID:26749241
+      supporting_text: &gt;-
+        SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region
+        in its C terminus and specifically engages a Fe-S donor complex, consisting of the
+        scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR
+        motif near its N-terminal domain.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28380382
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from IntAct curation; recorded partner is HSCB/HSC20 (Q8IWL3).
+      This HSC20-centered study places SDHAF1 in the LYR-family Fe-S delivery network.
+      Meaningful interaction but uninformative as a bare term; kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine co-chaperone (HSC20) interaction, but GO:0005515 is too general; superseded by
+      GO:0051087 protein-folding chaperone binding in core_functions.
+    supported_by:
+    - reference_id: PMID:28380382
+      supporting_text: &gt;-
+        Binding of HSC20 to the LYR motif of LYRM7 in a pre-assembled UQCRFS1-LYRM7 intermediate
+        in the mitochondrial matrix facilitates Fe-S cluster transfer to UQCRFS1.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from the HuRI large-scale binary (Y2H) interactome; recorded
+      partners are KRT27 (Q7Z3Y8, a keratin) and CIDEB (Q9UHD4). Neither is a plausible
+      physiological partner for a mitochondrial-matrix assembly factor; these are likely
+      high-throughput screen artifacts. Marked as over-annotated: the bare &#34;protein binding&#34;
+      term adds no functional information and the partners are not biologically relevant.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Large-scale Y2H hits (keratin KRT27, CIDEB) are non-physiological for a matrix protein;
+      GO:0005515 is uninformative and not supported by any functional role.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        With approximately 53,000 protein-protein interactions, HuRI has approximately four
+        times as many such interactions as there are high-quality curated interactions from
+        small-scale studies.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from the BioPlex 3.0 AP-MS interactome; recorded partner is SDHB
+      (P21912), the physiological substrate of SDHAF1. Consistent with the curated
+      SDHAF1-SDHB interaction. Kept as non-core because GO:0005515 is uninformative; the
+      specific activity is captured elsewhere.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real SDHB interaction (consistent with UniProt SUBUNIT), but GO:0005515 is too general.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;Interacts with SDHB within an SDHA-SDHB subcomplex&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA) immunofluorescence localization to mitochondrion (Human Protein Atlas).
+      Correct but non-specific; the protein resides in the matrix. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the curated matrix localization; less specific than the matrix term.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) detection of SDHAF1 in the high-confidence human mitochondrial
+      proteome, confirming mitochondrial localization. Correct but non-specific relative to
+      the matrix. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supports mitochondrial residence via a quantitative mito-proteome dataset; subsumed by
+      the more specific matrix term.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9854984
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) matrix localization within the SDH assembly pathway (Transfer of Fe-S
+      clusters to SDHB). Matches the curated UniProt matrix location. Accepted.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific compartment consistent with UniProt and with SDHAF1&#39;s role in the
+      matrix-localized Fe-S transfer step.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9855212
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) matrix localization (SDHA binds to SDHB reaction). Correct, specific
+      compartment consistent with UniProt. Accepted.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the curated matrix localization.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9855252
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) matrix localization (SDHA:SDHB binds to SDHC:SDHD reaction). Correct,
+      specific compartment consistent with UniProt. Accepted.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the curated matrix localization.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:19465911
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (IDA) localization of SDHAF1 to mitochondrion in the founding paper. Correct but
+      non-specific; the curated location is the matrix. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental mitochondrial localization; subsumed by the more specific matrix term.
+    supported_by:
+    - reference_id: file:human/SDHAF1/SDHAF1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion matrix&#34;
+- term:
+    id: GO:0034553
+    label: mitochondrial respiratory chain complex II assembly
+  evidence_type: IMP
+  original_reference_id: PMID:19465911
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) assignment of the core biological process from the founding SDHAF1
+      paper: SDHAF1 mutations cause SDH (Complex II) deficiency, and SDH activity/amount are
+      restored proportionally with re-expression of the wild-type gene. This is the defining
+      function of SDHAF1. Accepted as the primary core annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported experimental annotation establishing SDHAF1 as a Complex II
+      assembly factor; consistent with UniProt FUNCTION.
+    supported_by:
+    - reference_id: PMID:19465911
+      supporting_text: &gt;-
+        SDH activity and amount were restored in mutant fibroblasts proportionally with
+        re-expression of the wild-type gene.
+core_functions:
+- description: &gt;-
+    Assembly factor mediating maturation and iron-sulfur cluster acquisition of the SDHB
+    subunit during assembly of mitochondrial respiratory Complex II (succinate
+    dehydrogenase). SDHAF1 binds the DnaJ/Hsp40-type co-chaperone HSC20 (HSCB) via its
+    N-terminal LYR motif to recruit the HSC20-HSPA9 chaperone system and the ISCU scaffold,
+    and binds SDHB via its C-terminal arginine-rich region, positioning the Fe-S transfer
+    machinery to deliver clusters to SDHB. Loss of function causes SDH deficiency that is
+    rescued by wild-type re-expression.
+  molecular_function:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  directly_involved_in:
+  - id: GO:0034553
+    label: mitochondrial respiratory chain complex II assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:24606901
+    supporting_text: &gt;-
+      members of the LYR motif family which assist assembly of complexes II or III, SDHAF1
+      and LYRM7, respectively, are HSC20 binding partners.
+  - reference_id: PMID:26749241
+    supporting_text: &gt;-
+      SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region
+      in its C terminus and specifically engages a Fe-S donor complex, consisting of the
+      scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR
+      motif near its N-terminal domain.
+  - reference_id: PMID:19465911
+    supporting_text: &gt;-
+      SDHAF1 is the first bona fide SDH assembly factor reported in any organism.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:19465911
+  title: SDHAF1, encoding a LYR complex-II specific assembly factor, is mutated in
+    SDH-defective infantile leukoencephalopathy.
+  findings:
+  - statement: &gt;-
+      Founding paper identifying SDHAF1 as the first bona fide SDH (Complex II) assembly
+      factor; biallelic mutations cause SDH-defective infantile leukoencephalopathy, and
+      wild-type re-expression restores SDH activity and amount.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      SDH activity and amount were restored in mutant fibroblasts proportionally with
+      re-expression of the wild-type gene.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified founding paper; source of the experimental IMP for GO:0034553 and the
+      IDA mitochondrial localization. Abstract-only in cache.
+- id: PMID:24606901
+  title: Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster
+    delivery.
+  findings:
+  - statement: &gt;-
+      SDHAF1 (LYRM8) is an HSC20 binding partner; LYR-motif proteins engage the
+      ISCU-HSC20-HSPA9 Fe-S transfer complex, and SDHAF1 associates with SDHB via a non-LYR
+      site while positioning the Fe-S transfer complex through its own LYR motif.
+    reference_section_type: DISCUSSION
+    supporting_text: &gt;-
+      members of the LYR motif family which assist assembly of complexes II or III, SDHAF1
+      and LYRM7, respectively, are HSC20 binding partners.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available and read; directly supports the protein-folding chaperone binding
+      MF (SDHAF1-HSC20) and the SDHB-recruitment adaptor role.
+- id: PMID:26749241
+  title: Disease-Causing SDHAF1 Mutations Impair Transfer of Fe-S Clusters to SDHB.
+  findings:
+  - statement: &gt;-
+      SDHAF1 contributes to Fe-S cluster incorporation into SDHB by binding SDHB (C-terminal
+      arginine-rich region) and engaging the HSC20-HSPA9 co-chaperone/chaperone pair with
+      the ISCU scaffold via its N-terminal LYR motif; disease mutations abrogate SDHB
+      binding, leading to LONP1-mediated SDHB degradation, and riboflavin ameliorates the
+      phenotype.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      SDHAF1 transiently binds to aromatic peptides of SDHB through an arginine-rich region
+      in its C terminus and specifically engages a Fe-S donor complex, consisting of the
+      scaffold, holo-ISCU, and the co-chaperone-chaperone pair, HSC20-HSPA9, through an LYR
+      motif near its N-terminal domain.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; central mechanism/disease paper. Abstract-only in cache but abstract
+      fully supports the mechanism cited.
+- id: PMID:28380382
+  title: A Single Adaptable Cochaperone-Scaffold Complex Delivers Nascent Iron-Sulfur
+    Clusters to Mammalian Respiratory Chain Complexes I-III.
+  findings:
+  - statement: &gt;-
+      The HSC20-HSPA9-ISCU Fe-S transfer complex delivers clusters to LYR-motif-associated
+      respiratory chain assembly intermediates (complexes I-III), the general framework in
+      which SDHAF1 acts for Complex II.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Binding of HSC20 to the LYR motif of LYRM7 in a pre-assembled UQCRFS1-LYRM7 intermediate
+      in the mitochondrial matrix facilitates Fe-S cluster transfer to UQCRFS1.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Contextual (LYRM7/Complex III focus) but corroborates the HSC20-LYR Fe-S delivery
+      mechanism shared by SDHAF1; source of an IntAct HSCB interaction annotation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      Large-scale binary (Y2H) interactome (HuRI); source of high-throughput SDHAF1
+      interactions with KRT27 and CIDEB that are not physiologically meaningful for a matrix
+      assembly factor.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      With approximately 53,000 protein-protein interactions, HuRI has approximately four
+      times as many such interactions as there are high-quality curated interactions from
+      small-scale studies.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Systematic interactome; the SDHAF1 hits (KRT27, CIDEB) are likely screen artifacts and
+      support only the over-annotated bare protein-binding annotation.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings:
+  - statement: &gt;-
+      BioPlex 3.0 AP-MS interactome; recovers the SDHAF1-SDHB interaction consistent with
+      SDHAF1&#39;s role as an SDHB-binding assembly factor.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Comparison across cell lines validates thousands of interactions and reveals extensive
+      customization.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale AP-MS; the SDHAF1-SDHB hit is consistent with curated biology but the
+      annotation itself is bare protein binding.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      High-confidence quantitative human mitochondrial proteome; supports SDHAF1
+      mitochondrial localization (source of the HTP localization annotation).
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular
+      context.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale mito localization dataset; corroborates mitochondrial residence only.
+- id: Reactome:R-HSA-9854984
+  title: Transfer of Fe-S clusters to SDHB
+  findings: []
+- id: Reactome:R-HSA-9855212
+  title: SDHA binds to SDHB
+  findings: []
+- id: Reactome:R-HSA-9855252
+  title: SDHA:SDHB binds to SDHC:SDHD
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

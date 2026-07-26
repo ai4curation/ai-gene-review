@@ -1,0 +1,4357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMOX2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HMOX2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P30519" target="_blank" class="term-link">
+                        P30519
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HMOX2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P30519" data-a="DESCRIPTION: HMOX2 encodes heme oxygenase 2 (HO-2), the constit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HMOX2 encodes heme oxygenase 2 (HO-2), the constitutively expressed heme oxygenase isozyme (in contrast to the stress-inducible HMOX1/HO-1) and the predominant heme oxygenase in brain, testis and vascular endothelium. HO-2 is a single-pass endoplasmic reticulum (microsomal) membrane protein anchored by a C-terminal type IV transmembrane helix, with its catalytic domain on the cytoplasmic face. It catalyzes the oxidative cleavage of heme b at the alpha-methene bridge carbon, using molecular O2 and reducing equivalents from NADPH--cytochrome P450 (hemoprotein) reductase, to yield biliverdin IXalpha, carbon monoxide (CO) and free ferrous iron (Fe2+); it thereby provides constitutive heme turnover and is a major physiological source of endogenous CO. HO-2 binds one heme b as substrate through an axial histidine and additional heme contacts. Distinctive from HO-1, HO-2 carries C-terminal heme-regulatory Cys-Pro motifs (HRMs) and participates in oxygen sensing: HO-2-derived CO modulates large-conductance calcium-activated (BK) potassium channels, a mechanism important in carotid body and neuronal responses to hypoxia. The enzyme is inhibited by metalloporphyrins such as Sn- and Zn-protoporphyrin.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004392" target="_blank" class="term-link">
+                                    GO:0004392
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxygenase (decyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0004392" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. HO-2 is a heme oxygenase that oxidatively cleaves heme; the phylogenetic (IBA) inference is fully consistent with direct biochemical evidence for the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heme oxygenase (decyclizing) activity is the defining catalytic function of HO-2 and is supported directly by IDA evidence (PMID:7890772, PMID:1575508) in addition to the family-level IBA inference across HMOX orthologs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidative cleavage of heme</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">enzymatic activity for conversion of heme to biliverdin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma-membrane localization is over-general relative to the ER-membrane core; HO-2 is detected at the plasma membrane mainly in the BK-channel/O2-sensing context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HO-2 is an ER/microsomal membrane enzyme (its authoritative core location). Plasma-membrane residence reflects recruitment into the BK potassium channel complex (PMID:15528406) in a heterologous system rather than a generic constitutive plasma-membrane location; the IBA is_active_in plasma membrane row over-states this. Not removed (family-supported IBA), but flagged as over-annotated relative to the ER core.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">CONTEXT OR TISSUE MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P30519</span>
+
+                                    &middot; HMOX2 (human)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">HO-2 plasma-membrane detection is specific to the BK-channel/O2-sensing complex context (PMID:15528406), not a constitutive plasma-membrane residence; the enzyme&#39;s catalytic location is the ER membrane.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:2806</span>
+
+                                    &middot; Hmox2 (rat)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Rodent ortholog contributes the is_active_in plasma membrane IBA seed, but the general plasma-membrane scoping over-states HO-2&#39;s ER-membrane core location.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                                        PMID:15528406
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is part of the BK channel complex and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0006979" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible family-level role, but antioxidant/oxidative-stress response is primarily an HO-1 (inducible) function; retained as non-core for HO-2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Response to oxidative stress is a well-established role of the inducible paralog HMOX1; the IBA transfer to constitutive HO-2 is reasonable (heme/CO/biliverdin chemistry has antioxidant consequences) but is secondary to HO-2&#39;s constitutive heme-catabolic and CO-producing core. Kept as a non-core biological-process context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidative cleavage of heme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0020037" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. HO-2 binds one heme b as substrate via an axial histidine; supported by biochemistry and crystallography of the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heme binding is required for HO-2 catalysis and is directly demonstrated: the purified human HO-2 fragment bound one equivalent of heme with a histidine proximal ligand (PMID:7890772), and the crystal structure defined the heme-binding residues (His45 axial; UniProt BINDING features).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">bound one equivalent of heme to form a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">appears to be similar to that of heme oxygenase-1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042167" target="_blank" class="term-link">
+                                    GO:0042167
+                                </a>
+                            </span>
+                            <span class="term-label">heme catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0042167" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. HO-2 degrades heme constitutively; heme catabolic process is the pathway-level counterpart of its enzymatic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heme catabolism is the biological process HO-2 carries out; the constitutive (non-inducible) HO-2 contributes to endogenous heme turnover and CO production.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">at the alpha-methene bridge carbon, released as carbon monoxide (CO),</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">enzymatic activity for conversion of heme to biliverdin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006788" target="_blank" class="term-link">
+                                    GO:0006788
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0006788" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Heme oxidation is the mechanistic sub-step of HO-2-mediated heme cleavage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HO-2 oxidizes heme (using O2 and reductase-supplied electrons) as the first committed step of heme ring cleavage; this term directly reflects the enzyme&#39;s chemistry.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidative cleavage of heme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004392" target="_blank" class="term-link">
+                                    GO:0004392
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxygenase (decyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0004392" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function (automated IEA duplicate of the experimentally supported heme oxygenase activity).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA (multiple-methods; InterPro/EC/Rhea mapping to EC 1.14.14.18, RHEA:21764) correctly assigns heme oxygenase (decyclizing) activity, matching the direct IDA evidence for HO-2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidative cleavage of heme</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link">
+                                        PMID:1575508
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">significant heme oxygenase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular location. HO-2 is an ER/microsomal membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt Subcellular Location keyword mapping correctly places HO-2 at the ER membrane, its authoritative catalytic location as a single-pass type IV membrane protein with a cytoplasmic catalytic domain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microsome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006788" target="_blank" class="term-link">
+                                    GO:0006788
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0006788" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process (InterPro2GO IEA duplicate of the heme-oxidation step).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro heme-oxygenase domain-to-GO mapping (IPR002051, IPR016053) correctly infers the heme-oxidation process for HO-2, consistent with its enzymatic mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the oxidative cleavage of heme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput binary-interactome (HuRI) protein binding; uninformative generic MF term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a bare GO:0005515 protein binding IPI from a systematic binary interactome screen (HuRI, PMID:32296183) reporting many heterogeneous, mostly ER/membrane partners. It carries no specific molecular function and is uninformative about HO-2&#39;s activity. Per policy, IPI protein binding is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput yeast two-hybrid neurodegeneration interactome protein binding; uninformative generic MF term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare GO:0005515 protein binding IPI from a systematic Y2H neurodegenerative-disease interactome screen (PMID:32814053). No specific molecular function is conveyed. Per policy, IPI protein binding is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular location (ISS transfer from the HMOX1 ortholog to the shared ER-membrane location).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence-similarity transfer (from UniProtKB:P09601/HMOX1) correctly assigns ER-membrane localization, matching HO-2&#39;s own microsomal/ER-membrane residence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004392" target="_blank" class="term-link">
+                                    GO:0004392
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxygenase (decyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7890772
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Heme oxygenase-2. Properties of the heme complex of the puri...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0004392" data-r="PMID:7890772" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, directly demonstrated. Purified recombinant human HO-2 converts heme to biliverdin using NADPH-cytochrome P450 reductase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay of the purified human HO-2 tryptic fragment showed it accepts electrons from NADPH-cytochrome P-450 reductase and converts heme to biliverdin, with a catalytic mechanism like HO-1. This is a strong experimental anchor for the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">enzymatic activity for conversion of heme to biliverdin</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                        PMID:7890772
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">appears to be similar to that of heme oxygenase-1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799350
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005886" data-r="Reactome:R-HSA-6799350" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome neutrophil specific-granule exocytosis context places HO-2 at the plasma membrane; over-general relative to the ER-membrane core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This TAS row comes from the Reactome Exocytosis of specific granule membrane proteins pathway (neutrophil degranulation), in which granule membrane cargo becomes surface/plasma membrane. It is a specialized cell-type context and does not represent HO-2&#39;s constitutive catalytic location at the ER membrane. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6799350
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of specific granule membrane proteins</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035579" target="_blank" class="term-link">
+                                    GO:0035579
+                                </a>
+                            </span>
+                            <span class="term-label">specific granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799350
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0035579" data-r="Reactome:R-HSA-6799350" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places HO-2 among neutrophil specific-granule membrane proteins; a specialized non-core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HO-2 appears in the Reactome neutrophil specific-granule/degranulation cargo set. This is a legitimate cell-type-specific localization but peripheral to the enzyme&#39;s core ER-membrane heme-catabolic role; kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6799350
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of specific granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0016020" data-r="PMID:19946888" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization from a high-throughput NK-cell membrane-proteome MS study; correct but uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HO-2 was identified in an NK-cell membrane proteome by mass spectrometry (PMID:19946888). This is consistent with HO-2 being a membrane-anchored protein but the term membrane is too general to represent the specific ER-membrane core location; kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Defining the membrane proteome of NK cells</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-189398
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005789" data-r="Reactome:R-HSA-189398" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular location (Reactome heme-degradation reaction places HO-2 at the ER membrane).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Reactome HMOX1 dimer, HMOX2 cleave heme reaction (heme degradation) localizes the heme oxygenases to the ER membrane, matching HO-2&#39;s authoritative catalytic location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-189398
+
+                                </span>
+
+                                <div class="support-text">HMOX1 dimer, HMOX2 cleave heme</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001666" target="_blank" class="term-link">
+                                    GO:0001666
+                                </a>
+                            </span>
+                            <span class="term-label">response to hypoxia</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15528406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hemoxygenase-2 is an oxygen sensor for a calcium-sensitive p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0001666" data-r="PMID:15528406" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well-evidenced physiological role: HO-2 is an O2 sensor whose CO product modulates BK potassium channels during hypoxia. Secondary to the heme-catabolic core but experimentally supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct evidence (PMID:15528406) shows HO-2 is part of the BK channel complex and acts as an oxygen sensor controlling channel activity during oxygen deprivation, with CO (an HO-2 product) rescuing channel function. This O2-sensing/hypoxia-response role is a genuine, distinctive HO-2 function but is a downstream physiological consequence of its CO-producing catalytic activity rather than the primary heme-catabolic core; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                                        PMID:15528406
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HO-2 is an oxygen sensor that controls channel activity during oxygen</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                                        PMID:15528406
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">carbon monoxide, a product of HO-2 activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15528406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hemoxygenase-2 is an oxygen sensor for a calcium-sensitive p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005515" data-r="PMID:15528406" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding IPI capturing the HO-2 / BK-channel alpha-subunit (KCNMA1, Q12791) interaction; biologically real but the generic MF term is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IPI (WITH UniProtKB:Q12791, the BK channel alpha subunit KCNMA1) records the physiologically important HO-2 / BK-channel interaction underlying O2 sensing (PMID:15528406). The interaction is meaningful and is captured in the O2-sensing context, but the bare GO:0005515 protein binding term conveys no specific molecular function. Per policy, IPI protein binding is marked over-annotated rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                                        PMID:15528406
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is part of the BK channel complex and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15528406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hemoxygenase-2 is an oxygen sensor for a calcium-sensitive p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0005886" data-r="PMID:15528406" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HO-2 detected at the plasma membrane in the BK-channel/O2-sensing context; over-general relative to the ER-membrane core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In PMID:15528406 HO-2 is found in the BK channel complex, which localizes to the plasma membrane in the heterologous expression system used. This plasma-membrane detection reflects the specific channel-complex context, not HO-2&#39;s constitutive catalytic residence at the ER membrane; flagged as over-annotated (experimental annotation retained, not removed).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                                        PMID:15528406
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is part of the BK channel complex and</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004392" target="_blank" class="term-link">
+                                    GO:0004392
+                                </a>
+                            </span>
+                            <span class="term-label">heme oxygenase (decyclizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1575508
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human heme oxygenase-2: characterization and expression of a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P30519" data-a="GO:0004392" data-r="PMID:1575508" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, directly demonstrated. Recombinant human HO-2 showed heme oxygenase activity inhibited by Zn-/Sn-protoporphyrins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The E. coli-expressed human HO-2 fusion protein displayed significant heme oxygenase activity, inhibited by Zn- and Sn-protoporphyrins (classic heme oxygenase inhibitors), providing direct evidence for the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link">
+                                        PMID:1575508
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">significant heme oxygenase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link">
+                                        PMID:1575508
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which was inhibited by Zn- and</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMOX2/HMOX2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Inhibited by metalloporphyrins such as Sn- and Zn-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HO-2 is a heme oxygenase that catalyzes the oxidative cleavage of heme b at the alpha-methene bridge (using O2 and NADPH--cytochrome P450 reductase electrons) to biliverdin IXalpha, carbon monoxide and ferrous iron, binding one heme b as substrate. This constitutive heme catabolism is HO-2&#39;s core molecular function and a major physiological source of endogenous CO.</h3>
+                <span class="vote-buttons" data-g="P30519" data-a="FUNCTION: HO-2 is a heme oxygenase that catalyzes the oxidat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004392" target="_blank" class="term-link">
+                            heme oxygenase (decyclizing) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042167" target="_blank" class="term-link">
+                                heme catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006788" target="_blank" class="term-link">
+                                heme oxidation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HMOX2/HMOX2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the oxidative cleavage of heme</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HMOX2/HMOX2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">at the alpha-methene bridge carbon, released as carbon monoxide (CO),</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                PMID:7890772
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">enzymatic activity for conversion of heme to biliverdin</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link">
+                                PMID:1575508
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">significant heme oxygenase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HO-2 binds heme b as its catalytic substrate through an axial histidine and additional heme-b contacts, a molecular function required for its heme oxygenase activity.</h3>
+                <span class="vote-buttons" data-g="P30519" data-a="FUNCTION: HO-2 binds heme b as its catalytic substrate throu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                            heme binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                                PMID:7890772
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">bound one equivalent of heme to form a</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HMOX2/HMOX2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the heme oxygenase family.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15528406" target="_blank" class="term-link">
+                            PMID:15528406
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hemoxygenase-2 is an oxygen sensor for a calcium-sensitive potassium channel.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HO-2 is part of the BK potassium channel complex and acts as an oxygen sensor; CO produced by HO-2 modulates channel activity, and HO-2 controls channel activity during oxygen deprivation (carotid body / hypoxia response).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1575508" target="_blank" class="term-link">
+                            PMID:1575508
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human heme oxygenase-2: characterization and expression of a full-length cDNA and evidence suggesting that the two HO-2 transcripts may differ by choice of polyadenylation signal.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant human HO-2 fusion protein displayed significant heme oxygenase activity that was inhibited by Zn- and Sn-protoporphyrins; predicted 36 kDa protein matching HO-2 in human testis microsomes.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HO-2 was identified by mass spectrometry in an NK-cell membrane proteome; supports generic membrane localization (GO:0016020) but not a specific compartment.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic binary interactome (HuRI) reporting many HO-2 protein-protein interactions; supports only a generic GO:0005515 protein binding row.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic Y2H neurodegeneration interactome reporting HO-2 protein-protein interactions; supports only a generic GO:0005515 protein binding row.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" target="_blank" class="term-link">
+                            PMID:7890772
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Heme oxygenase-2. Properties of the heme complex of the purified tryptic fragment of recombinant human heme oxygenase-2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified recombinant human HO-2 fragment accepts electrons from NADPH-cytochrome P-450 reductase, converts heme to biliverdin, binds one equivalent of heme with a histidine proximal ligand, and has a catalytic mechanism similar to HO-1.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-189398
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HMOX1 dimer, HMOX2 cleave heme</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction for heme degradation localizing the heme oxygenases (including non-inducible HMOX2) to the ER membrane, cleaving heme at the alpha-methene bridge and forming the endogenous source of CO.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799350
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of specific granule membrane proteins</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome neutrophil specific-granule exocytosis pathway that includes HO-2 as specific-granule membrane cargo, underlying the specific granule membrane (GO:0035579) and plasma membrane (GO:0005886) TAS rows.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/HMOX2/HMOX2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for human HMOX2 (P30519)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HO-2 is a constitutive ER/microsomal single-pass type IV membrane heme oxygenase that catalyzes oxidative cleavage of heme b at the alpha-methene bridge to biliverdin IXalpha + CO + Fe2+ (EC 1.14.14.18), binds heme b via an axial histidine, is inhibited by Sn-/Zn-protoporphyrins, carries C-terminal heme-regulatory motifs, and is S-nitrosylated by BLVRB.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should HO-2&#39;s O2-sensing / CO-mediated BK-channel modulation (currently captured as response to hypoxia plus a bare protein-binding IPI to KCNMA1) be curated with a more specific process/regulation term rather than a generic protein-binding annotation?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: GO ion-channel / signaling editors, carotid body / O2-sensing physiologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P30519" data-a="Q: Should HO-2&#39;s O2-sensing / CO-mediated BK-channel ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do HO-2&#39;s C-terminal heme-regulatory motifs (HRMs) and their S-nitrosylation warrant a specific regulatory-heme-binding or redox-sensing annotation distinct from substrate heme binding?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: heme biology curators, UniProt curators</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P30519" data-a="Q: Do HO-2&#39;s C-terminal heme-regulatory motifs (HRMs)..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute purified full-length human HO-2 with NADPH-cytochrome P450 reductase and measure heme cleavage, CO and biliverdin production, comparing wild-type with HRM (Cys265/Cys282) and axial-His45 variants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Substrate heme binding and catalysis depend on His45, while the HRMs/Cys residues modulate activity (e.g. via S-nitrosylation or thiol redox) rather than substrate turnover.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P30519" data-a="EXPERIMENT: Reconstitute purified full-length human HO-2 with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In carotid body glomus cells or a BK-channel-expressing system, test whether HO-2 catalytic activity (CO output) versus mere HO-2/KCNMA1 physical association is required for hypoxic BK-channel modulation, using catalytically dead HO-2 and CO donors.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: HO-2&#39;s O2-sensing role requires its CO-producing catalytic activity, not just complex formation with the BK channel.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P30519" data-a="EXPERIMENT: In carotid body glomus cells or a BK-channel-expre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HMOX2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P30519" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hmox2-heme-oxygenase-2-ho-2-review-notes">HMOX2 (Heme oxygenase 2, HO-2) review notes</h1>
+<p>UniProt: P30519 (HMOX2_HUMAN), 316 aa, human (NCBITaxon:9606). HGNC:5014. EC 1.14.14.18.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>HMOX2 encodes heme oxygenase 2 (HO-2), one of the two mammalian heme oxygenase<br />
+isozymes. Unlike the stress-inducible HMOX1 (HO-1), HO-2 is <strong>constitutively</strong><br />
+expressed and is the predominant isoform in brain, testis and vascular<br />
+endothelium. It is a heme-degrading oxidoreductase anchored in the endoplasmic<br />
+reticulum (microsomal) membrane by a single C-terminal transmembrane helix, with<br />
+the catalytic domain facing the cytoplasm.</p>
+<h3 id="molecular-function-catalytic-activity">Molecular function / catalytic activity</h3>
+<p>HO-2 catalyzes the oxidative cleavage of heme at the alpha-methene bridge carbon,<br />
+using O2 and reducing equivalents delivered by NADPH--cytochrome P450 (hemoprotein)<br />
+reductase, to produce biliverdin IXalpha, carbon monoxide (CO) and free ferrous<br />
+iron (Fe2+).</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the oxidative cleavage of heme" ... "at the<br />
+  alpha-methene bridge carbon, released as carbon monoxide (CO)," ... "to generate<br />
+  biliverdin IXalpha, while releasing the central heme iron chelate as ferrous iron"<br />
+  [file:human/HMOX2/HMOX2-uniprot.txt, ECO:0000269|PubMed:1575508, ECO:0000269|PubMed:7890772].</li>
+<li>CATALYTIC ACTIVITY / Rhea RHEA:21764, EC=1.14.14.18: heme b + 3 reduced<br />
+  [NADPH--hemoprotein reductase] + 3 O2 = biliverdin IXalpha + CO + Fe(2+) + ...<br />
+  [file:human/HMOX2/HMOX2-uniprot.txt].</li>
+<li>HO-2 heme oxygenase activity was demonstrated directly for the purified recombinant<br />
+  human protein: the tryptic fragment "retained the ability to accept electrons from<br />
+  NADPH-cytochrome P-450 reductase and the enzymatic activity for conversion of heme to<br />
+  biliverdin" <a href="https://pubmed.ncbi.nlm.nih.gov/7890772" title="retained the ability to accept electrons from   NADPH-cytochrome P-450 reductase and the enzymatic activity for conversion of heme to   biliverdin">PMID:7890772</a>. The catalytic mechanism is similar to HO-1: "the catalytic mechanism of<br />
+  heme oxygenase-2 appears to be similar to that of heme oxygenase-1" <a href="https://pubmed.ncbi.nlm.nih.gov/7890772">PMID:7890772</a>.</li>
+<li>The E. coli-expressed human HO-2 fusion protein "displayed significant heme oxygenase<br />
+  activity, which was inhibited by Zn- and Sn-protoporphyrins, known inhibitors of<br />
+  eukaryotic heme oxygenase" <a href="https://pubmed.ncbi.nlm.nih.gov/1575508">PMID:1575508</a>. UniProt ACTIVITY REGULATION: "Inhibited by<br />
+  metalloporphyrins such as Sn- and Zn-" protoporphyrins<br />
+  [file:human/HMOX2/HMOX2-uniprot.txt].</li>
+</ul>
+<p>Supporting IDA GO annotations: GO:0004392 heme oxygenase (decyclizing) activity<br />
+from both PMID:7890772 and PMID:1575508 (both ECO:0000314 IDA).</p>
+<h3 id="heme-binding">Heme binding</h3>
+<p>HO-2 binds one heme b as substrate; the crystal structure of a truncated human HO-2<br />
+(PMID:17965015) defined heme-binding sites, with His45 as the axial (proximal)<br />
+iron-binding residue and additional heme-b contacts at residues 154, 199, 203<br />
+[file:human/HMOX2/HMOX2-uniprot.txt, BINDING features]. The purified tryptic fragment<br />
+"bound one equivalent of heme to form a substrate-enzyme complex" and spectroscopy<br />
+indicated "a neutral imidazole of a histidine residue served as the proximal ligand"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7890772">PMID:7890772</a>. GO:0020037 heme binding (IBA) is well supported.</p>
+<p>Note on heme-regulatory motifs: UniProt annotates two HRM repeats (residues 264-269<br />
+"HRM 1", 281-286 "HRM 2") [file:human/HMOX2/HMOX2-uniprot.txt, REPEAT features]. These<br />
+Cys-Pro motifs are a distinctive feature of HO-2 (absent from HO-1) and are proposed to<br />
+confer thiol/heme redox and CO/O2-sensing regulation, but the current GOA set does not<br />
+carry a specific HRM/regulatory-heme-binding annotation.</p>
+<h3 id="biological-process">Biological process</h3>
+<ul>
+<li>
+<p>Heme catabolism: GO:0042167 heme catabolic process and GO:0006788 heme oxidation<br />
+  (both from the enzymatic reaction). HO-2 is the constitutive contributor to endogenous<br />
+  heme turnover and is the physiological source of CO. Reactome R-HSA-189398 "HMOX1<br />
+  dimer, HMOX2 cleave heme" / R-HSA-189483 "Heme degradation": "Heme oxygenases (HMOXs)<br />
+  cleaves the heme ring at the alpha-methene bridge to form bilverdin. This reaction<br />
+  forms the only endogenous source of carbon monoxide. ... HMOX2 is non-inducible."<br />
+  [reactome/R-HSA-189398.md].</p>
+</li>
+<li>
+<p>O2 sensing / response to hypoxia: HO-2 acts as an oxygen sensor for large-conductance<br />
+  calcium-activated (BK) K+ channels. "We demonstrate that hemoxygenase-2 (HO-2) is part<br />
+  of the BK channel complex and enhances channel activity in normoxia. Knockdown of HO-2<br />
+  expression reduced channel activity, and carbon monoxide, a product of HO-2 activity,<br />
+  rescued this loss of function." and "HO-2 is an oxygen sensor that controls channel<br />
+  activity during oxygen deprivation" <a href="https://pubmed.ncbi.nlm.nih.gov/15528406">PMID:15528406</a>. This underpins the GO:0001666<br />
+  response to hypoxia IDA annotation and the GO:0005515 protein binding IPI to the BK<br />
+  channel alpha subunit (KCNMA1, UniProtKB:Q12791). The plasma-membrane IDA<br />
+  (GO:0005886) in the same paper reflects HO-2 being detected in / recruited to the BK<br />
+  channel complex at the plasma membrane in the heterologous HEK293 system, not the<br />
+  enzyme's principal ER-membrane residence.</p>
+</li>
+<li>
+<p>Response to oxidative stress: GO:0006979 (IBA) is a family-level inference. It is more<br />
+  strongly established for HO-1 (the inducible, cytoprotective antioxidant isoform); for<br />
+  HO-2 the antioxidant/cytoprotective role is real but secondary to its constitutive<br />
+  catabolic/CO-producing role. Kept as non-core.</p>
+</li>
+</ul>
+<h3 id="subcellular-location">Subcellular location</h3>
+<ul>
+<li>Endoplasmic reticulum / microsomal membrane, single-pass type IV membrane protein,<br />
+  cytoplasmic side [file:human/HMOX2/HMOX2-uniprot.txt SUBCELLULAR LOCATION: "Microsome<br />
+  membrane" ... "Endoplasmic reticulum membrane" ... "Single-pass type IV membrane<br />
+  protein" ... "Cytoplasmic side"]. This is the core catalytic location.<br />
+  GO:0005789 endoplasmic reticulum membrane (ISS, IEA, TAS) — ACCEPT/core.</li>
+<li>GO:0016020 membrane (HDA, PMID:19946888) — a large-scale NK-cell membrane-proteome MS<br />
+  study; correct but generic; kept as non-core.</li>
+<li>GO:0005886 plasma membrane (IBA; IDA PMID:15528406; TAS Reactome) — HO-2 can be found<br />
+  at the plasma membrane in the BK channel complex context; the IBA/TAS generic<br />
+  plasma-membrane rows are over-general relative to the ER-membrane core; treated as<br />
+  non-core / over-annotation.</li>
+<li>GO:0035579 specific granule membrane (TAS Reactome R-HSA-6799350, neutrophil<br />
+  degranulation) — Reactome places HO-2 in the neutrophil specific-granule / degranulation<br />
+  cargo set; peripheral relative to the enzyme's ER function; kept as non-core.</li>
+</ul>
+<h3 id="s-nitrosylation-post-translational-regulation">S-nitrosylation / post-translational regulation</h3>
+<p>HO-2 is S-nitrosylated at Cys265 and Cys282 (within/near the HRM region) by BLVRB<br />
+[file:human/HMOX2/HMOX2-uniprot.txt PTM: "S-nitrosylated by BLVRB",<br />
+ECO:0000269|PubMed:38056462]. A soluble form arises by proteolytic removal of the<br />
+membrane anchor [file:human/HMOX2/HMOX2-uniprot.txt PTM].</p>
+<h2 id="protein-binding-ipi-annotations">Protein-binding (IPI) annotations</h2>
+<p>Three GO:0005515 protein binding IPI sources:<br />
+- PMID:15528406 (WITH UniProtKB:Q12791 = KCNMA1/BK channel alpha) — biologically<br />
+  meaningful HO-2 interaction underpinning O2 sensing. Per policy, bare protein binding<br />
+  IPI is marked MARK_AS_OVER_ANNOTATED (uninformative MF term) but the interaction itself<br />
+  is real and captured in core-function context (BK channel / O2 sensing).<br />
+- PMID:32296183 (HuRI, systematic binary interactome) and PMID:32814053 (neurodegenerative<br />
+  disease interactome Y2H) — high-throughput interactome screens producing long,<br />
+  heterogeneous partner lists (many ER/membrane proteins, e.g. GET1/O00258, MGST3/O14880,<br />
+  SGPL1/O95470, etc.). These are generic "protein binding" rows with no specific functional<br />
+  MF; MARK_AS_OVER_ANNOTATED (never REMOVE per policy for IPI protein binding).</p>
+<h2 id="distinctions-from-hmox1-paralog">Distinctions from HMOX1 (paralog)</h2>
+<ul>
+<li>HMOX1 (HO-1): stress-inducible, cytoprotective/antioxidant, broadly expressed on<br />
+  induction; forms ER dimers/oligomers.</li>
+<li>HMOX2 (HO-2): constitutive, abundant in brain/testis/endothelium, harbors HRMs,<br />
+  functions in physiological CO production and O2 sensing. Same catalytic reaction.<br />
+  Reactome: "HMOX1 is inducible ... HMOX2 is non-inducible." [reactome/R-HSA-189398.md].</li>
+</ul>
+<h2 id="core-function-summary">Core function summary</h2>
+<ul>
+<li>MF: GO:0004392 heme oxygenase (decyclizing) activity (with GO:0020037 heme binding).</li>
+<li>BP: GO:0042167 heme catabolic process; GO:0006788 heme oxidation.</li>
+<li>CC: GO:0005789 endoplasmic reticulum membrane.</li>
+<li>Additional physiological role: O2 sensing via CO production and BK-channel modulation<br />
+  (GO:0001666 response to hypoxia), retained as a secondary/non-core but well-evidenced<br />
+  function.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P30519
+gene_symbol: HMOX2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HMOX2 encodes heme oxygenase 2 (HO-2), the constitutively expressed heme
+  oxygenase isozyme (in contrast to the stress-inducible HMOX1/HO-1) and the
+  predominant heme oxygenase in brain, testis and vascular endothelium. HO-2 is
+  a single-pass endoplasmic reticulum (microsomal) membrane protein anchored by a
+  C-terminal type IV transmembrane helix, with its catalytic domain on the
+  cytoplasmic face. It catalyzes the oxidative cleavage of heme b at the
+  alpha-methene bridge carbon, using molecular O2 and reducing equivalents from
+  NADPH--cytochrome P450 (hemoprotein) reductase, to yield biliverdin IXalpha,
+  carbon monoxide (CO) and free ferrous iron (Fe2+); it thereby provides
+  constitutive heme turnover and is a major physiological source of endogenous CO.
+  HO-2 binds one heme b as substrate through an axial histidine and additional
+  heme contacts. Distinctive from HO-1, HO-2 carries C-terminal heme-regulatory
+  Cys-Pro motifs (HRMs) and participates in oxygen sensing: HO-2-derived CO
+  modulates large-conductance calcium-activated (BK) potassium channels, a
+  mechanism important in carotid body and neuronal responses to hypoxia. The
+  enzyme is inhibited by metalloporphyrins such as Sn- and Zn-protoporphyrin.
+alternative_products:
+- name: &#39;1&#39;
+  id: P30519-1
+- name: &#39;2&#39;
+  id: P30519-2
+  sequence_note: VSP_055031
+existing_annotations:
+- term:
+    id: GO:0004392
+    label: heme oxygenase (decyclizing) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. HO-2 is a heme oxygenase that oxidatively cleaves heme;
+      the phylogenetic (IBA) inference is fully consistent with direct biochemical
+      evidence for the human enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Heme oxygenase (decyclizing) activity is the defining catalytic function of HO-2 and
+      is supported directly by IDA evidence (PMID:7890772, PMID:1575508) in addition to the
+      family-level IBA inference across HMOX orthologs.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Catalyzes the oxidative cleavage of heme
+    - reference_id: PMID:7890772
+      supporting_text: enzymatic activity for conversion of heme to biliverdin
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Plasma-membrane localization is over-general relative to the ER-membrane core; HO-2 is
+      detected at the plasma membrane mainly in the BK-channel/O2-sensing context.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      HO-2 is an ER/microsomal membrane enzyme (its authoritative core location). Plasma-membrane
+      residence reflects recruitment into the BK potassium channel complex (PMID:15528406) in a
+      heterologous system rather than a generic constitutive plasma-membrane location; the IBA
+      is_active_in plasma membrane row over-states this. Not removed (family-supported IBA), but
+      flagged as over-annotated relative to the ER core.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - CONTEXT_OR_TISSUE_MISMATCH
+      source_entities:
+      - source_id: UniProtKB:P30519
+        source_label: HMOX2 (human)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: HO-2 plasma-membrane detection is specific to the BK-channel/O2-sensing complex context (PMID:15528406), not a constitutive plasma-membrane residence; the enzyme&#39;s catalytic location is the ER membrane.
+      - source_id: RGD:2806
+        source_label: Hmox2 (rat)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: Rodent ortholog contributes the is_active_in plasma membrane IBA seed, but the general plasma-membrane scoping over-states HO-2&#39;s ER-membrane core location.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:15528406
+      supporting_text: is part of the BK channel complex and
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Plausible family-level role, but antioxidant/oxidative-stress response is primarily an HO-1
+      (inducible) function; retained as non-core for HO-2.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Response to oxidative stress is a well-established role of the inducible paralog HMOX1; the IBA
+      transfer to constitutive HO-2 is reasonable (heme/CO/biliverdin chemistry has antioxidant
+      consequences) but is secondary to HO-2&#39;s constitutive heme-catabolic and CO-producing core.
+      Kept as a non-core biological-process context.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Catalyzes the oxidative cleavage of heme
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. HO-2 binds one heme b as substrate via an axial histidine; supported
+      by biochemistry and crystallography of the human enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Heme binding is required for HO-2 catalysis and is directly demonstrated: the purified human
+      HO-2 fragment bound one equivalent of heme with a histidine proximal ligand (PMID:7890772), and
+      the crystal structure defined the heme-binding residues (His45 axial; UniProt BINDING features).
+    supported_by:
+    - reference_id: PMID:7890772
+      supporting_text: bound one equivalent of heme to form a
+    - reference_id: PMID:7890772
+      supporting_text: appears to be similar to that of heme oxygenase-1
+- term:
+    id: GO:0042167
+    label: heme catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. HO-2 degrades heme constitutively; heme catabolic process is the
+      pathway-level counterpart of its enzymatic activity.
+    action: ACCEPT
+    reason: &gt;-
+      Heme catabolism is the biological process HO-2 carries out; the constitutive (non-inducible)
+      HO-2 contributes to endogenous heme turnover and CO production.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: at the alpha-methene bridge carbon, released as carbon monoxide (CO),
+    - reference_id: PMID:7890772
+      supporting_text: enzymatic activity for conversion of heme to biliverdin
+- term:
+    id: GO:0006788
+    label: heme oxidation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. Heme oxidation is the mechanistic sub-step of HO-2-mediated heme
+      cleavage.
+    action: ACCEPT
+    reason: &gt;-
+      HO-2 oxidizes heme (using O2 and reductase-supplied electrons) as the first committed step of
+      heme ring cleavage; this term directly reflects the enzyme&#39;s chemistry.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Catalyzes the oxidative cleavage of heme
+- term:
+    id: GO:0004392
+    label: heme oxygenase (decyclizing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function (automated IEA duplicate of the experimentally supported heme oxygenase
+      activity).
+    action: ACCEPT
+    reason: &gt;-
+      This IEA (multiple-methods; InterPro/EC/Rhea mapping to EC 1.14.14.18, RHEA:21764) correctly
+      assigns heme oxygenase (decyclizing) activity, matching the direct IDA evidence for HO-2.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Catalyzes the oxidative cleavage of heme
+    - reference_id: PMID:1575508
+      supporting_text: significant heme oxygenase
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Core cellular location. HO-2 is an ER/microsomal membrane protein.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt Subcellular Location keyword mapping correctly places HO-2 at the ER membrane, its
+      authoritative catalytic location as a single-pass type IV membrane protein with a cytoplasmic
+      catalytic domain.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Microsome membrane
+- term:
+    id: GO:0006788
+    label: heme oxidation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process (InterPro2GO IEA duplicate of the heme-oxidation step).
+    action: ACCEPT
+    reason: &gt;-
+      InterPro heme-oxygenase domain-to-GO mapping (IPR002051, IPR016053) correctly infers the
+      heme-oxidation process for HO-2, consistent with its enzymatic mechanism.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Catalyzes the oxidative cleavage of heme
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput binary-interactome (HuRI) protein binding; uninformative generic MF term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is a bare GO:0005515 protein binding IPI from a systematic binary interactome screen
+      (HuRI, PMID:32296183) reporting many heterogeneous, mostly ER/membrane partners. It carries no
+      specific molecular function and is uninformative about HO-2&#39;s activity. Per policy, IPI protein
+      binding is marked as over-annotated rather than removed.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput yeast two-hybrid neurodegeneration interactome protein binding; uninformative
+      generic MF term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare GO:0005515 protein binding IPI from a systematic Y2H neurodegenerative-disease interactome
+      screen (PMID:32814053). No specific molecular function is conveyed. Per policy, IPI protein
+      binding is marked as over-annotated rather than removed.
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Core cellular location (ISS transfer from the HMOX1 ortholog to the shared ER-membrane
+      location).
+    action: ACCEPT
+    reason: &gt;-
+      Sequence-similarity transfer (from UniProtKB:P09601/HMOX1) correctly assigns ER-membrane
+      localization, matching HO-2&#39;s own microsomal/ER-membrane residence.
+    supported_by:
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0004392
+    label: heme oxygenase (decyclizing) activity
+  evidence_type: IDA
+  original_reference_id: PMID:7890772
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, directly demonstrated. Purified recombinant human HO-2 converts heme
+      to biliverdin using NADPH-cytochrome P450 reductase.
+    action: ACCEPT
+    reason: &gt;-
+      Direct assay of the purified human HO-2 tryptic fragment showed it accepts electrons from
+      NADPH-cytochrome P-450 reductase and converts heme to biliverdin, with a catalytic mechanism
+      like HO-1. This is a strong experimental anchor for the core catalytic function.
+    supported_by:
+    - reference_id: PMID:7890772
+      supporting_text: enzymatic activity for conversion of heme to biliverdin
+    - reference_id: PMID:7890772
+      supporting_text: appears to be similar to that of heme oxygenase-1
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799350
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome neutrophil specific-granule exocytosis context places HO-2 at the plasma membrane;
+      over-general relative to the ER-membrane core.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This TAS row comes from the Reactome Exocytosis of specific granule membrane proteins
+      pathway (neutrophil degranulation), in which granule membrane cargo becomes surface/plasma
+      membrane. It is a specialized cell-type context and does not represent HO-2&#39;s constitutive
+      catalytic location at the ER membrane. Retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6799350
+      supporting_text: Exocytosis of specific granule membrane proteins
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0035579
+    label: specific granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799350
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places HO-2 among neutrophil specific-granule membrane proteins; a specialized
+      non-core location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      HO-2 appears in the Reactome neutrophil specific-granule/degranulation cargo set. This is a
+      legitimate cell-type-specific localization but peripheral to the enzyme&#39;s core ER-membrane
+      heme-catabolic role; kept as non-core.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6799350
+      supporting_text: Exocytosis of specific granule membrane proteins
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic membrane localization from a high-throughput NK-cell membrane-proteome MS study;
+      correct but uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      HO-2 was identified in an NK-cell membrane proteome by mass spectrometry (PMID:19946888). This
+      is consistent with HO-2 being a membrane-anchored protein but the term membrane is too general
+      to represent the specific ER-membrane core location; kept as non-core.
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: Defining the membrane proteome of NK cells
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-189398
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Core cellular location (Reactome heme-degradation reaction places HO-2 at the ER membrane).
+    action: ACCEPT
+    reason: &gt;-
+      The Reactome HMOX1 dimer, HMOX2 cleave heme reaction (heme degradation) localizes the heme
+      oxygenases to the ER membrane, matching HO-2&#39;s authoritative catalytic location.
+    supported_by:
+    - reference_id: Reactome:R-HSA-189398
+      supporting_text: HMOX1 dimer, HMOX2 cleave heme
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0001666
+    label: response to hypoxia
+  evidence_type: IDA
+  original_reference_id: PMID:15528406
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Well-evidenced physiological role: HO-2 is an O2 sensor whose CO product modulates BK potassium
+      channels during hypoxia. Secondary to the heme-catabolic core but experimentally supported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Direct evidence (PMID:15528406) shows HO-2 is part of the BK channel complex and acts as an
+      oxygen sensor controlling channel activity during oxygen deprivation, with CO (an HO-2 product)
+      rescuing channel function. This O2-sensing/hypoxia-response role is a genuine, distinctive HO-2
+      function but is a downstream physiological consequence of its CO-producing catalytic activity
+      rather than the primary heme-catabolic core; retained as non-core.
+    supported_by:
+    - reference_id: PMID:15528406
+      supporting_text: HO-2 is an oxygen sensor that controls channel activity during oxygen
+    - reference_id: PMID:15528406
+      supporting_text: carbon monoxide, a product of HO-2 activity
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15528406
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding IPI capturing the HO-2 / BK-channel alpha-subunit (KCNMA1, Q12791)
+      interaction; biologically real but the generic MF term is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This IPI (WITH UniProtKB:Q12791, the BK channel alpha subunit KCNMA1) records the physiologically
+      important HO-2 / BK-channel interaction underlying O2 sensing (PMID:15528406). The interaction is
+      meaningful and is captured in the O2-sensing context, but the bare GO:0005515 protein binding term
+      conveys no specific molecular function. Per policy, IPI protein binding is marked over-annotated
+      rather than removed.
+    supported_by:
+    - reference_id: PMID:15528406
+      supporting_text: is part of the BK channel complex and
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:15528406
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HO-2 detected at the plasma membrane in the BK-channel/O2-sensing context; over-general relative
+      to the ER-membrane core.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      In PMID:15528406 HO-2 is found in the BK channel complex, which localizes to the plasma membrane
+      in the heterologous expression system used. This plasma-membrane detection reflects the specific
+      channel-complex context, not HO-2&#39;s constitutive catalytic residence at the ER membrane; flagged
+      as over-annotated (experimental annotation retained, not removed).
+    supported_by:
+    - reference_id: PMID:15528406
+      supporting_text: is part of the BK channel complex and
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0004392
+    label: heme oxygenase (decyclizing) activity
+  evidence_type: IDA
+  original_reference_id: PMID:1575508
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, directly demonstrated. Recombinant human HO-2 showed heme oxygenase
+      activity inhibited by Zn-/Sn-protoporphyrins.
+    action: ACCEPT
+    reason: &gt;-
+      The E. coli-expressed human HO-2 fusion protein displayed significant heme oxygenase activity,
+      inhibited by Zn- and Sn-protoporphyrins (classic heme oxygenase inhibitors), providing direct
+      evidence for the core catalytic function.
+    supported_by:
+    - reference_id: PMID:1575508
+      supporting_text: significant heme oxygenase
+    - reference_id: PMID:1575508
+      supporting_text: which was inhibited by Zn- and
+    - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+      supporting_text: Inhibited by metalloporphyrins such as Sn- and Zn-
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15528406
+  title: Hemoxygenase-2 is an oxygen sensor for a calcium-sensitive potassium channel.
+  findings:
+  - statement: HO-2 is part of the BK potassium channel complex and acts as an oxygen sensor; CO produced by HO-2 modulates channel activity, and HO-2 controls channel activity during oxygen deprivation (carotid body / hypoxia response).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (full_text_available false). PubMed-verified Science 2004 paper on HO-2
+      as an O2 sensor for BK channels; directly supports the GO:0001666 response to hypoxia IDA and
+      the HO-2/KCNMA1 (Q12791) interaction. Supports a genuine, distinctive HO-2 physiological role
+      (kept as non-core relative to the heme-catabolic core).
+- id: PMID:1575508
+  title: &#39;Human heme oxygenase-2: characterization and expression of a full-length
+    cDNA and evidence suggesting that the two HO-2 transcripts may differ by choice
+    of polyadenylation signal.&#39;
+  findings:
+  - statement: Recombinant human HO-2 fusion protein displayed significant heme oxygenase activity that was inhibited by Zn- and Sn-protoporphyrins; predicted 36 kDa protein matching HO-2 in human testis microsomes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. PubMed-verified 1992 characterization of the human HO-2 cDNA and enzyme;
+      supports the GO:0004392 heme oxygenase activity IDA and metalloporphyrin inhibition (ACTIVITY
+      REGULATION). Directly about HMOX2 (HO-2).
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings:
+  - statement: HO-2 was identified by mass spectrometry in an NK-cell membrane proteome; supports generic membrane localization (GO:0016020) but not a specific compartment.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. High-throughput membrane-proteome MS study; the HO-2 identification supports
+      a generic membrane HDA row only and is not informative about the specific ER-membrane location.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: Systematic binary interactome (HuRI) reporting many HO-2 protein-protein interactions; supports only a generic GO:0005515 protein binding row.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary-interactome screen. Interactions are numerous and heterogeneous and
+      yield only uninformative bare protein binding; over-annotated as MF.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings:
+  - statement: Systematic Y2H neurodegeneration interactome reporting HO-2 protein-protein interactions; supports only a generic GO:0005515 protein binding row.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput Y2H interactome; HO-2 partners are generic and yield only uninformative bare
+      protein binding; over-annotated as MF.
+- id: PMID:7890772
+  title: Heme oxygenase-2. Properties of the heme complex of the purified tryptic
+    fragment of recombinant human heme oxygenase-2.
+  findings:
+  - statement: Purified recombinant human HO-2 fragment accepts electrons from NADPH-cytochrome P-450 reductase, converts heme to biliverdin, binds one equivalent of heme with a histidine proximal ligand, and has a catalytic mechanism similar to HO-1.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache. PubMed-verified biochemical/spectroscopic characterization of purified human
+      HO-2; strong direct support for GO:0004392 heme oxygenase activity and GO:0020037 heme binding.
+- id: Reactome:R-HSA-189398
+  title: HMOX1 dimer, HMOX2 cleave heme
+  findings:
+  - statement: Reactome reaction for heme degradation localizing the heme oxygenases (including non-inducible HMOX2) to the ER membrane, cleaving heme at the alpha-methene bridge and forming the endogenous source of CO.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome curated reaction; supports the ER-membrane location (GO:0005789 TAS) and the
+      heme-catabolic/CO-producing core of HO-2.
+- id: Reactome:R-HSA-6799350
+  title: Exocytosis of specific granule membrane proteins
+  findings:
+  - statement: Reactome neutrophil specific-granule exocytosis pathway that includes HO-2 as specific-granule membrane cargo, underlying the specific granule membrane (GO:0035579) and plasma membrane (GO:0005886) TAS rows.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome neutrophil-degranulation pathway; a specialized cell-type context. Supports the
+      specific-granule-membrane / plasma-membrane TAS rows but is peripheral to HO-2&#39;s core ER-membrane
+      heme-catabolic function.
+- id: file:human/HMOX2/HMOX2-uniprot.txt
+  title: UniProtKB record for human HMOX2 (P30519)
+  findings:
+  - statement: HO-2 is a constitutive ER/microsomal single-pass type IV membrane heme oxygenase that catalyzes oxidative cleavage of heme b at the alpha-methene bridge to biliverdin IXalpha + CO + Fe2+ (EC 1.14.14.18), binds heme b via an axial histidine, is inhibited by Sn-/Zn-protoporphyrins, carries C-terminal heme-regulatory motifs, and is S-nitrosylated by BLVRB.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative UniProt record for HMOX2; primary source for the description and core-function calls.
+core_functions:
+- description: &gt;-
+    HO-2 is a heme oxygenase that catalyzes the oxidative cleavage of heme b at the alpha-methene
+    bridge (using O2 and NADPH--cytochrome P450 reductase electrons) to biliverdin IXalpha, carbon
+    monoxide and ferrous iron, binding one heme b as substrate. This constitutive heme catabolism is
+    HO-2&#39;s core molecular function and a major physiological source of endogenous CO.
+  molecular_function:
+    id: GO:0004392
+    label: heme oxygenase (decyclizing) activity
+  directly_involved_in:
+  - id: GO:0042167
+    label: heme catabolic process
+  - id: GO:0006788
+    label: heme oxidation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+    supporting_text: Catalyzes the oxidative cleavage of heme
+  - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+    supporting_text: at the alpha-methene bridge carbon, released as carbon monoxide (CO),
+  - reference_id: PMID:7890772
+    supporting_text: enzymatic activity for conversion of heme to biliverdin
+  - reference_id: PMID:1575508
+    supporting_text: significant heme oxygenase
+- description: &gt;-
+    HO-2 binds heme b as its catalytic substrate through an axial histidine and additional
+    heme-b contacts, a molecular function required for its heme oxygenase activity.
+  molecular_function:
+    id: GO:0020037
+    label: heme binding
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:7890772
+    supporting_text: bound one equivalent of heme to form a
+  - reference_id: file:human/HMOX2/HMOX2-uniprot.txt
+    supporting_text: Belongs to the heme oxygenase family.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Should HO-2&#39;s O2-sensing / CO-mediated BK-channel modulation (currently captured as response to
+    hypoxia plus a bare protein-binding IPI to KCNMA1) be curated with a more specific
+    process/regulation term rather than a generic protein-binding annotation?
+  experts:
+  - GO ion-channel / signaling editors
+  - carotid body / O2-sensing physiologists
+- question: &gt;-
+    Do HO-2&#39;s C-terminal heme-regulatory motifs (HRMs) and their S-nitrosylation warrant a specific
+    regulatory-heme-binding or redox-sensing annotation distinct from substrate heme binding?
+  experts:
+  - heme biology curators
+  - UniProt curators
+suggested_experiments:
+- description: &gt;-
+    Reconstitute purified full-length human HO-2 with NADPH-cytochrome P450 reductase and measure
+    heme cleavage, CO and biliverdin production, comparing wild-type with HRM (Cys265/Cys282) and
+    axial-His45 variants.
+  hypothesis: &gt;-
+    Substrate heme binding and catalysis depend on His45, while the HRMs/Cys residues modulate
+    activity (e.g. via S-nitrosylation or thiol redox) rather than substrate turnover.
+- description: &gt;-
+    In carotid body glomus cells or a BK-channel-expressing system, test whether HO-2 catalytic
+    activity (CO output) versus mere HO-2/KCNMA1 physical association is required for hypoxic BK-channel
+    modulation, using catalytically dead HO-2 and CO donors.
+  hypothesis: &gt;-
+    HO-2&#39;s O2-sensing role requires its CO-producing catalytic activity, not just complex formation
+    with the BK channel.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

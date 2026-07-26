@@ -1,0 +1,4630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>acgA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>acgA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q03101" target="_blank" class="term-link">
+                        Q03101
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "acgA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q03101" data-a="DESCRIPTION: acgA encodes adenylyl cyclase G (ACG), an atypical..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>acgA encodes adenylyl cyclase G (ACG), an atypical, receptor-type adenylyl cyclase of the class-4 adenylyl/guanylyl cyclase family. It is a single-pass type II membrane protein comprising a large extracellular domain (including a CHASE domain), a single transmembrane anchor, and a single intracellular catalytic cyclase domain that converts ATP to 3&#39;,5&#39;-cyclic AMP. ACG is catalytically active as a dimer and, unlike the aggregation-stage cyclase ACA, is insensitive to G proteins. Its defining feature is an intramolecular osmosensor that directly couples high osmolality to cAMP synthesis, a property retained even when ACG is expressed heterologously in yeast. ACG is expressed predominantly in prespore and spore cells. In the fruiting body, the ambient high osmolality of the spore head activates ACG, and the resulting intracellular cAMP maintains high protein kinase A (PKA) activity that keeps spores dormant and prevents premature germination. Earlier in development ACG protein accumulates in the prespore region, where the cAMP it produces promotes prespore differentiation, a role partially redundant with the cyclase ACB (AcrA). ACG function in spore dormancy and germination is deeply conserved across the Dictyostelia and is thought to derive from an ancestral drought/osmolarity-sensing role in the encystation and excystation of solitary amoebae.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of plasma membrane localization is consistent with the experimentally determined localization of ACG at the cell periphery of spores and its status as a single-pass type II membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG is a transmembrane receptor-type cyclase and is directly observed at the cell periphery in spores, so plasma membrane localization is correct and the IBA inference is supported by direct evidence for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In spores, ACG was localized at the cell periphery as would be expected for a transmembrane osmosensor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                                    GO:0004016
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0004016" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Adenylate cyclase activity is the core catalytic function of ACG and is directly demonstrated experimentally, so the phylogenetic inference is well supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG catalyzes ATP to cAMP conversion (EC 4.6.1.1) and this activity is directly measured; the IBA inference is corroborated by direct evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001653" target="_blank" class="term-link">
+                                    GO:0001653
+                                </a>
+                            </span>
+                            <span class="term-label">peptide receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0001653" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA term is propagated from receptor-type cyclase family members based on the large extracellular (CHASE) domain. For ACG, however, the activating stimulus is high osmolality acting on an intramolecular osmosensor, and no peptide ligand has been shown to be required for activation (ACG is fully osmoactivatable in yeast without auxiliary sensors). A downstream link to the SDF-1 phosphopeptide has been proposed but not established as direct ligand binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> There is no experimental demonstration that ACG functions as a peptide receptor. Its extracellular domain acts as an intramolecular osmosensor, and activation does not require an external peptide ligand, so transferring peptide receptor activity from family members over-annotates ACG.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000229249</span>
+
+                                    &middot; PANTHER node for the receptor guanylyl-cyclase / natriuretic-peptide-receptor family
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Family node groups peptide-binding receptor guanylyl cyclases; ACG retained the cyclase fold but its extracellular CHASE domain acts as an intramolecular osmosensor rather than a peptide receptor</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P16066</span>
+
+                                    &middot; human natriuretic peptide receptor 1 (guanylyl cyclase A)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Bona fide peptide receptor in mammals, but ACG activation requires high osmolality and no peptide ligand, so the receptor role does not transfer</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This strongly suggests that the ACG osmosensor is intramolecular, which would define ACG as the first characterized primary osmosensor in eukaryotes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                                    GO:0004016
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0004016" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of adenylate cyclase activity via EC 4.6.1.1 mapping is correct and matches the experimentally established catalytic function of ACG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG is a bona fide adenylate cyclase (ATP = cAMP + diphosphate); the IEA/EC-based inference agrees with direct evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an atypical adenylyl cyclase, ACG, in mature spores</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0005886" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic inference of plasma membrane localization is consistent with the direct observation of ACG at the spore cell periphery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is supported by direct evidence for ACG in spores; the electronic annotation is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In spores, ACG was localized at the cell periphery as would be expected for a transmembrane osmosensor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0007165" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG participates in cAMP-mediated signaling, so signal transduction is correct but very general; more specific terms (osmosensory signaling pathway, cAMP biosynthetic process) better capture its role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Signal transduction is a broad parent process that is accurate for a cAMP-producing osmosensor but is not informative as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data indicate that ACG is an osmosensor controlling spore germination through activation of protein kinase A.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009190" target="_blank" class="term-link">
+                                    GO:0009190
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0009190" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG synthesizes the cyclic nucleotide cAMP. The specific child term cAMP biosynthetic process more precisely captures this function than the general cyclic nucleotide biosynthetic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG produces cAMP specifically (not cGMP), so the more specific cAMP biosynthetic process is the appropriate term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006171" target="_blank" class="term-link">
+                                    cAMP biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18640994" target="_blank" class="term-link">
+                                        PMID:18640994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The osmolyte-activated adenylate cyclase, ACG, produces cAMP for prespore differentiation and inhibition of spore germination.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is correct but redundant with the more specific plasma membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG is an integral membrane protein; the general term membrane is subsumed by the more informative plasma membrane annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACG was localized at the cell periphery as would be expected for a transmembrane osmosensor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016849" target="_blank" class="term-link">
+                                    GO:0016849
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorus-oxygen lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0016849" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phosphorus-oxygen lyase activity is the general parent of adenylate cyclase activity. It is technically correct but the specific child term is more informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG&#39;s phosphorus-oxygen lyase activity is specifically adenylate cyclase activity; the more specific term should be used.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                                    adenylate cyclase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG produces intracellular cAMP that activates PKA, so intracellular signal transduction is accurate but general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a broad parent process; the intracellular messenger role of ACG-derived cAMP is better captured by cAMP biosynthetic process and the specific developmental/germination processes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data indicate that ACG is an osmosensor controlling spore germination through activation of protein kinase A.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019887" target="_blank" class="term-link">
+                                    GO:0019887
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8798577
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G, an osmosensor controlling germination of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0019887" data-r="PMID:8798577" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG activates PKA, but it does so indirectly by synthesizing the second messenger cAMP that binds the PKA regulatory subunit. ACG is not itself a direct protein kinase regulator; its molecular function is adenylate cyclase activity, and PKA activation is a downstream consequence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IMP phenotype (loss of osmotic control of germination via PKA) reflects ACG acting upstream of PKA through cAMP, not a direct kinase-regulator molecular function. Assigning protein kinase regulator activity conflates the downstream signaling effect with ACG&#39;s true catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data indicate that ACG is an osmosensor controlling spore germination through activation of protein kinase A.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21602484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21602484
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The polyketide MPBD initiates the SDF-1 signaling cascade th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0007165" data-r="PMID:21602484" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In the SDF-1 signaling cascade, SDF-1 acts through ACG to activate PKA and amplify SDF-1 production. This supports a signal transduction role, though the term is general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG&#39;s involvement in the SDF-1 relay is a genuine but pleiotropic signaling role; signal transduction is too general to be a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21602484" target="_blank" class="term-link">
+                                        PMID:21602484
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SDF-1 apparently acts through the adenylyl cyclase ACG to activate the cyclic AMP (cAMP)-dependent protein kinase A (PKA) and trigger the production of more SDF-1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030435" target="_blank" class="term-link">
+                                    GO:0030435
+                                </a>
+                            </span>
+                            <span class="term-label">sporulation resulting in formation of a cellular spore</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17267449
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cAMP production by adenylyl cyclase G induces prespore diffe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0030435" data-r="PMID:17267449" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG protein is upregulated in prespore tissue and acg null mutants show reduced prespore differentiation, establishing a role in the sporulation program. This role is partly redundant with ACB.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG contributes to prespore differentiation and hence sporulation, but this is a developmental/process role downstream of its catalytic and osmosensing molecular functions and is partially redundant with ACB.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">acg null mutants show reduced prespore differentiation, which becomes very severe when ACB is also deleted.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data show that ACG induces prespore differentiation in wild-type cells, with ACB capable of partially taking over this function in its absence.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009992" target="_blank" class="term-link">
+                                    GO:0009992
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular water homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0009992" data-r="PMID:14718564" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG is an osmosensor that detects high osmolality and triggers a cAMP signaling response; it is not itself an effector that maintains intracellular water balance. This term overstates the function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG senses osmotic conditions and signals through cAMP/PKA to control germination; it does not directly regulate cellular water content. Cellular response to osmotic stress and osmosensory signaling pathway better capture the evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Adenylyl cyclase G (ACG) is activated by high osmolality and mediates inhibition of spore germination by this stress factor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904360" target="_blank" class="term-link">
+                                    GO:1904360
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of spore germination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:1904360" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG activation by high osmolality inhibits spore germination, keeping spores dormant in the fruiting body. This is a core biological role of ACG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss of ACG abolishes osmotic inhibition of germination, and ACG activation by osmolality mediates this inhibition, directly supporting negative regulation of spore germination.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Adenylyl cyclase G (ACG) is activated by high osmolality and mediates inhibition of spore germination by this stress factor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071470" target="_blank" class="term-link">
+                                    GO:0071470
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to osmotic stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8798577
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G, an osmosensor controlling germination of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0071470" data-r="PMID:8798577" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG activity is strongly stimulated by high osmolarity and mediates the cellular response that keeps spores dormant, directly supporting a role in the cellular response to osmotic stress.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG is directly activated by high osmolarity and its disruption removes the osmotic inhibition of germination, supporting this term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904360" target="_blank" class="term-link">
+                                    GO:1904360
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of spore germination</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8798577
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G, an osmosensor controlling germination of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:1904360" data-r="PMID:8798577" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> acg null spores are no longer prevented from germinating by high osmolarity, demonstrating that ACG negatively regulates spore germination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The acg- germination phenotype directly establishes ACG as a negative regulator of spore germination under high osmolarity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">acg- cells developed into normal fruiting bodies with viable spores, but spore germination was no longer inhibited by high osmolarity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                                    GO:0004016
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8798577
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G, an osmosensor controlling germination of...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0004016" data-r="PMID:8798577" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct measurement of osmolarity-stimulated ACG enzyme activity establishes adenylate cyclase activity as the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG adenylate cyclase activity was directly assayed and shown to convert ATP to cAMP in an osmolality-dependent manner; this is the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                        PMID:8798577
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007231" target="_blank" class="term-link">
+                                    GO:0007231
+                                </a>
+                            </span>
+                            <span class="term-label">osmosensory signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0007231" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG couples direct osmosensing to cAMP production, initiating an osmosensory signaling pathway that controls spore germination. Expression in yeast shows the osmosensor is intrinsic to ACG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG functions as a primary osmosensor that transduces high osmolality into cAMP signaling, directly supporting participation in an osmosensory signaling pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This strongly suggests that the ACG osmosensor is intramolecular, which would define ACG as the first characterized primary osmosensor in eukaryotes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0005886" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG is a transmembrane cyclase active at the plasma membrane, where its extracellular domain and osmosensor face the exterior. Direct localization places ACG at the spore cell periphery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As a single-pass type II membrane protein observed at the cell periphery of spores, ACG is active in the plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                                        PMID:17267449
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In spores, ACG was localized at the cell periphery as would be expected for a transmembrane osmosensor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                                    GO:0004016
+                                </a>
+                            </span>
+                            <span class="term-label">adenylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0004016" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dominant-negative and dimerization experiments confirm ACG cAMP production depends on its catalytic domain and dimerization, consistent with adenylate cyclase activity being the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG cAMP synthesis was measured and shown to require dimerization via a region outside the catalytic domain, supporting its adenylate cyclase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This indicates that ACG activity requires dimerization via a region outside the catalytic domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005034" target="_blank" class="term-link">
+                                    GO:0005034
+                                </a>
+                            </span>
+                            <span class="term-label">osmosensor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0005034" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG harbors an intramolecular osmosensor; high osmolality directly activates cAMP synthesis, and this osmosensing is retained when ACG is expressed in a yeast adenylyl cyclase null mutant, showing no auxiliary sensor is required. This is a defining core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct evidence establishes ACG as a primary, intramolecular osmosensor, making osmosensor activity a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In yeast, cAMP production by ACG was similarly activated by high osmolality as in Dictyostelium.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This strongly suggests that the ACG osmosensor is intramolecular, which would define ACG as the first characterized primary osmosensor in eukaryotes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                    GO:0006970
+                                </a>
+                            </span>
+                            <span class="term-label">response to osmotic stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0006970" data-r="PMID:14718564" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG mediates the cellular response to high osmolality that inhibits spore germination, supporting a role in response to osmotic stress.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG is directly activated by osmotic up-shift and its loss removes the osmotic block on germination, supporting response to osmotic stress.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Adenylyl cyclase G (ACG) is activated by high osmolality and mediates inhibition of spore germination by this stress factor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14718564
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Adenylyl cyclase G is activated by an intramolecular osmosen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0042802" data-r="PMID:14718564" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG forms homodimers, which is required for its catalytic activity; size fractionation showed dimers between ACG molecules. This self-association is real but is better understood as a structural requirement for the cyclase rather than a standalone function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ACG homodimerization is experimentally demonstrated and functionally important for catalysis, but identical protein binding is not itself a core informative molecular function; it underpins the adenylate cyclase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                        PMID:14718564
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Size fractionation of native ACG showed that dimers were formed between ACG molecules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010447" target="_blank" class="term-link">
+                                    GO:0010447
+                                </a>
+                            </span>
+                            <span class="term-label">response to acidic pH</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7883072" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7883072
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of Dictyostelium adenylylcyclases by morphogen-in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0010447" data-r="PMID:7883072" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACG activity is strongly pH dependent, optimal at pH 8 and virtually absent below pH 7, and is inhibited by weak acids that lower cytosolic pH. This supports a response to acidic pH at the level of enzyme regulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The pH sensitivity of ACG is an experimentally documented regulatory property but is a modulatory response rather than a core evolved function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7883072" target="_blank" class="term-link">
+                                        PMID:7883072
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">basal and GTP gamma S-stimulated ACA activity as well as ACG activity are optimal at pH 8 and are virtually absent below pH 7</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031000" target="_blank" class="term-link">
+                                    GO:0031000
+                                </a>
+                            </span>
+                            <span class="term-label">response to caffeine</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16952277" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16952277
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pharmacological profiling of the Dictyostelium adenylate cyc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0031000" data-r="PMID:16952277" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Caffeine inhibits cAMP accumulation by ACG (as well as ACA and ACB), documenting a pharmacological response to caffeine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Caffeine sensitivity is an experimentally observed pharmacological response, not a physiological core function of ACG.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16952277" target="_blank" class="term-link">
+                                        PMID:16952277
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Caffeine, which was previously used to specifically block ACA function, also inhibited cAMP accumulation by ACB and ACG.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                    GO:0006970
+                                </a>
+                            </span>
+                            <span class="term-label">response to osmotic stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18640994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18640994
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    From drought sensing to developmental control: evolution of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03101" data-a="GO:0006970" data-r="PMID:18640994" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Across the Dictyostelia, osmolyte-activated ACG activity and osmoregulation of spore germination are conserved, consistent with ACG acting in the response to osmotic stress.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Comparative and expression evidence supports a conserved role for ACG in osmolality-activated cAMP signaling within the response to osmotic stress.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18640994" target="_blank" class="term-link">
+                                        PMID:18640994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The osmolyte-activated adenylate cyclase, ACG, produces cAMP for prespore differentiation and inhibition of spore germination.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ACG is an osmolality-activated adenylate cyclase that converts ATP to cAMP at the plasma membrane. High osmolality directly stimulates catalysis, and the resulting intracellular cAMP activates PKA to keep spores dormant and inhibit premature germination.</h3>
+                <span class="vote-buttons" data-g="Q03101" data-a="FUNCTION: ACG is an osmolality-activated adenylate cyclase t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004016" target="_blank" class="term-link">
+                            adenylate cyclase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006171" target="_blank" class="term-link">
+                                cAMP biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904360" target="_blank" class="term-link">
+                                negative regulation of spore germination
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                PMID:8798577
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                                PMID:8798577
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These data indicate that ACG is an osmosensor controlling spore germination through activation of protein kinase A.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ACG functions as a primary, intramolecular osmosensor. Its extracellular/transmembrane region detects high osmolality and directly couples this stimulus to activation of the cytoplasmic cyclase domain, initiating an osmosensory cAMP signaling pathway. This osmosensing is intrinsic to ACG, as it is retained when ACG is expressed in a yeast adenylyl cyclase null mutant.</h3>
+                <span class="vote-buttons" data-g="Q03101" data-a="FUNCTION: ACG functions as a primary, intramolecular osmosen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005034" target="_blank" class="term-link">
+                            osmosensor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007231" target="_blank" class="term-link">
+                                osmosensory signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                PMID:14718564
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This strongly suggests that the ACG osmosensor is intramolecular, which would define ACG as the first characterized primary osmosensor in eukaryotes.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                                PMID:14718564
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In yeast, cAMP production by ACG was similarly activated by high osmolality as in Dictyostelium.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14718564" target="_blank" class="term-link">
+                            PMID:14718564
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Adenylyl cyclase G is activated by an intramolecular osmosensor.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG is activated by high osmolality and mediates inhibition of spore germination by this stress factor.</div>
+
+                        <div class="finding-text">"Adenylyl cyclase G (ACG) is activated by high osmolality and mediates inhibition of spore germination by this stress factor."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The ACG osmosensor is intramolecular, defining ACG as the first characterized primary osmosensor in eukaryotes.</div>
+
+                        <div class="finding-text">"This strongly suggests that the ACG osmosensor is intramolecular, which would define ACG as the first characterized primary osmosensor in eukaryotes."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG activity requires dimerization via a region outside the catalytic domain, but dimerization does not mediate osmotic activation.</div>
+
+                        <div class="finding-text">"This indicates that ACG activity requires dimerization via a region outside the catalytic domain"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16952277" target="_blank" class="term-link">
+                            PMID:16952277
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pharmacological profiling of the Dictyostelium adenylate cyclases ACA, ACB and ACG.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Caffeine inhibits cAMP accumulation by ACG as well as by ACA and ACB.</div>
+
+                        <div class="finding-text">"Caffeine, which was previously used to specifically block ACA function, also inhibited cAMP accumulation by ACB and ACG."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17267449" target="_blank" class="term-link">
+                            PMID:17267449
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">cAMP production by adenylyl cyclase G induces prespore differentiation in Dictyostelium slugs.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG protein is upregulated in prespore tissue and acg null mutants show reduced prespore differentiation, severe when ACB is also deleted.</div>
+
+                        <div class="finding-text">"acg null mutants show reduced prespore differentiation, which becomes very severe when ACB is also deleted."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In spores, ACG localizes at the cell periphery as expected for a transmembrane osmosensor.</div>
+
+                        <div class="finding-text">"In spores, ACG was localized at the cell periphery as would be expected for a transmembrane osmosensor"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18640994" target="_blank" class="term-link">
+                            PMID:18640994
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">From drought sensing to developmental control: evolution of cyclic AMP signaling in social amoebas.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The osmolyte-activated adenylate cyclase ACG produces cAMP for prespore differentiation and inhibition of spore germination, and this role is conserved across the Dictyostelia.</div>
+
+                        <div class="finding-text">"The osmolyte-activated adenylate cyclase, ACG, produces cAMP for prespore differentiation and inhibition of spore germination."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21602484" target="_blank" class="term-link">
+                            PMID:21602484
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The polyketide MPBD initiates the SDF-1 signaling cascade that coordinates terminal differentiation in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SDF-1 acts through ACG to activate PKA and trigger production of more SDF-1.</div>
+
+                        <div class="finding-text">"SDF-1 apparently acts through the adenylyl cyclase ACG to activate the cyclic AMP (cAMP)-dependent protein kinase A (PKA) and trigger the production of more SDF-1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7883072" target="_blank" class="term-link">
+                            PMID:7883072
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of Dictyostelium adenylylcyclases by morphogen-induced modulation of cytosolic pH or Ca2+ levels.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG activity is optimal at pH 8 and virtually absent below pH 7, and is insensitive to Ca2+.</div>
+
+                        <div class="finding-text">"basal and GTP gamma S-stimulated ACA activity as well as ACG activity are optimal at pH 8 and are virtually absent below pH 7"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8798577" target="_blank" class="term-link">
+                            PMID:8798577
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Adenylyl cyclase G, an osmosensor controlling germination of Dictyostelium spores.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">acg null cells form normal fruiting bodies with viable spores, but spore germination is no longer inhibited by high osmolarity.</div>
+
+                        <div class="finding-text">"acg- cells developed into normal fruiting bodies with viable spores, but spore germination was no longer inhibited by high osmolarity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG activity is strongly stimulated by high osmolarity, with optimal stimulation at 200 milliosmolar.</div>
+
+                        <div class="finding-text">"ACG activity, measured in aca-/ACG cells, was strongly stimulated by high osmolarity with optimal stimulation occurring at 200 milliosmolar."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ACG is an osmosensor controlling spore germination through activation of protein kinase A.</div>
+
+                        <div class="finding-text">"These data indicate that ACG is an osmosensor controlling spore germination through activation of protein kinase A."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q03101
+gene_symbol: acgA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: acgA encodes adenylyl cyclase G (ACG), an atypical, receptor-type
+  adenylyl cyclase of the class-4 adenylyl/guanylyl cyclase family. It is a
+  single-pass type II membrane protein comprising a large extracellular domain
+  (including a CHASE domain), a single transmembrane anchor, and a single
+  intracellular catalytic cyclase domain that converts ATP to 3&#39;,5&#39;-cyclic AMP.
+  ACG is catalytically active as a dimer and, unlike the aggregation-stage
+  cyclase ACA, is insensitive to G proteins. Its defining feature is an
+  intramolecular osmosensor that directly couples high osmolality to cAMP
+  synthesis, a property retained even when ACG is expressed heterologously in
+  yeast. ACG is expressed predominantly in prespore and spore cells. In the
+  fruiting body, the ambient high osmolality of the spore head activates ACG,
+  and the resulting intracellular cAMP maintains high protein kinase A (PKA)
+  activity that keeps spores dormant and prevents premature germination. Earlier
+  in development ACG protein accumulates in the prespore region, where the cAMP
+  it produces promotes prespore differentiation, a role partially redundant with
+  the cyclase ACB (AcrA). ACG function in spore dormancy and germination is
+  deeply conserved across the Dictyostelia and is thought to derive from an
+  ancestral drought/osmolarity-sensing role in the encystation and excystation
+  of solitary amoebae.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic inference of plasma membrane localization is consistent
+      with the experimentally determined localization of ACG at the cell periphery
+      of spores and its status as a single-pass type II membrane protein.
+    action: ACCEPT
+    reason: ACG is a transmembrane receptor-type cyclase and is directly observed
+      at the cell periphery in spores, so plasma membrane localization is correct
+      and the IBA inference is supported by direct evidence for this gene.
+    supported_by:
+    - reference_id: PMID:17267449
+      supporting_text: In spores, ACG was localized at the cell periphery as would
+        be expected for a transmembrane osmosensor
+- term:
+    id: GO:0004016
+    label: adenylate cyclase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Adenylate cyclase activity is the core catalytic function of ACG and
+      is directly demonstrated experimentally, so the phylogenetic inference is
+      well supported.
+    action: ACCEPT
+    reason: ACG catalyzes ATP to cAMP conversion (EC 4.6.1.1) and this activity is
+      directly measured; the IBA inference is corroborated by direct evidence.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+        stimulated by high osmolarity with optimal stimulation occurring at 200
+        milliosmolar.
+- term:
+    id: GO:0001653
+    label: peptide receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: This IBA term is propagated from receptor-type cyclase family members
+      based on the large extracellular (CHASE) domain. For ACG, however, the
+      activating stimulus is high osmolality acting on an intramolecular
+      osmosensor, and no peptide ligand has been shown to be required for
+      activation (ACG is fully osmoactivatable in yeast without auxiliary
+      sensors). A downstream link to the SDF-1 phosphopeptide has been proposed
+      but not established as direct ligand binding.
+    action: MARK_AS_OVER_ANNOTATED
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN000229249
+        source_label: &#34;PANTHER node for the receptor guanylyl-cyclase / natriuretic-peptide-receptor family&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Family node groups peptide-binding receptor guanylyl cyclases; ACG retained the cyclase fold but its extracellular CHASE domain acts as an intramolecular osmosensor rather than a peptide receptor&#34;
+      - source_id: UniProtKB:P16066
+        source_label: &#34;human natriuretic peptide receptor 1 (guanylyl cyclase A)&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Bona fide peptide receptor in mammals, but ACG activation requires high osmolality and no peptide ligand, so the receptor role does not transfer&#34;
+    reason: There is no experimental demonstration that ACG functions as a peptide
+      receptor. Its extracellular domain acts as an intramolecular osmosensor, and
+      activation does not require an external peptide ligand, so transferring
+      peptide receptor activity from family members over-annotates ACG.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: This strongly suggests that the ACG osmosensor is
+        intramolecular, which would define ACG as the first characterized primary
+        osmosensor in eukaryotes.
+- term:
+    id: GO:0004016
+    label: adenylate cyclase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic assignment of adenylate cyclase activity via EC 4.6.1.1
+      mapping is correct and matches the experimentally established catalytic
+      function of ACG.
+    action: ACCEPT
+    reason: ACG is a bona fide adenylate cyclase (ATP = cAMP + diphosphate); the
+      IEA/EC-based inference agrees with direct evidence.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: an atypical adenylyl cyclase, ACG, in mature spores
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: ARBA electronic inference of plasma membrane localization is
+      consistent with the direct observation of ACG at the spore cell periphery.
+    action: ACCEPT
+    reason: Plasma membrane localization is supported by direct evidence for ACG
+      in spores; the electronic annotation is correct.
+    supported_by:
+    - reference_id: PMID:17267449
+      supporting_text: In spores, ACG was localized at the cell periphery as would
+        be expected for a transmembrane osmosensor
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: ACG participates in cAMP-mediated signaling, so signal transduction
+      is correct but very general; more specific terms (osmosensory signaling
+      pathway, cAMP biosynthetic process) better capture its role.
+    action: KEEP_AS_NON_CORE
+    reason: Signal transduction is a broad parent process that is accurate for a
+      cAMP-producing osmosensor but is not informative as a core function.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: These data indicate that ACG is an osmosensor controlling
+        spore germination through activation of protein kinase A.
+- term:
+    id: GO:0009190
+    label: cyclic nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: ACG synthesizes the cyclic nucleotide cAMP. The specific child term
+      cAMP biosynthetic process more precisely captures this function than the
+      general cyclic nucleotide biosynthetic process.
+    action: MODIFY
+    reason: ACG produces cAMP specifically (not cGMP), so the more specific
+      cAMP biosynthetic process is the appropriate term.
+    proposed_replacement_terms:
+    - id: GO:0006171
+      label: cAMP biosynthetic process
+    supported_by:
+    - reference_id: PMID:18640994
+      supporting_text: The osmolyte-activated adenylate cyclase, ACG, produces cAMP
+        for prespore differentiation and inhibition of spore germination.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Membrane localization is correct but redundant with the more specific
+      plasma membrane annotation.
+    action: KEEP_AS_NON_CORE
+    reason: ACG is an integral membrane protein; the general term membrane is
+      subsumed by the more informative plasma membrane annotation.
+    supported_by:
+    - reference_id: PMID:17267449
+      supporting_text: ACG was localized at the cell periphery as would be
+        expected for a transmembrane osmosensor
+- term:
+    id: GO:0016849
+    label: phosphorus-oxygen lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Phosphorus-oxygen lyase activity is the general parent of adenylate
+      cyclase activity. It is technically correct but the specific child term is
+      more informative.
+    action: MODIFY
+    reason: ACG&#39;s phosphorus-oxygen lyase activity is specifically adenylate
+      cyclase activity; the more specific term should be used.
+    proposed_replacement_terms:
+    - id: GO:0004016
+      label: adenylate cyclase activity
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+        stimulated by high osmolarity with optimal stimulation occurring at 200
+        milliosmolar.
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: ACG produces intracellular cAMP that activates PKA, so intracellular
+      signal transduction is accurate but general.
+    action: KEEP_AS_NON_CORE
+    reason: This is a broad parent process; the intracellular messenger role of
+      ACG-derived cAMP is better captured by cAMP biosynthetic process and the
+      specific developmental/germination processes.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: These data indicate that ACG is an osmosensor controlling
+        spore germination through activation of protein kinase A.
+- term:
+    id: GO:0019887
+    label: protein kinase regulator activity
+  evidence_type: IMP
+  original_reference_id: PMID:8798577
+  qualifier: enables
+  review:
+    summary: ACG activates PKA, but it does so indirectly by synthesizing the
+      second messenger cAMP that binds the PKA regulatory subunit. ACG is not
+      itself a direct protein kinase regulator; its molecular function is
+      adenylate cyclase activity, and PKA activation is a downstream consequence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The IMP phenotype (loss of osmotic control of germination via PKA)
+      reflects ACG acting upstream of PKA through cAMP, not a direct
+      kinase-regulator molecular function. Assigning protein kinase regulator
+      activity conflates the downstream signaling effect with ACG&#39;s true
+      catalytic activity.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: These data indicate that ACG is an osmosensor controlling
+        spore germination through activation of protein kinase A.
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IMP
+  original_reference_id: PMID:21602484
+  qualifier: involved_in
+  review:
+    summary: In the SDF-1 signaling cascade, SDF-1 acts through ACG to activate
+      PKA and amplify SDF-1 production. This supports a signal transduction role,
+      though the term is general.
+    action: KEEP_AS_NON_CORE
+    reason: ACG&#39;s involvement in the SDF-1 relay is a genuine but pleiotropic
+      signaling role; signal transduction is too general to be a core function.
+    supported_by:
+    - reference_id: PMID:21602484
+      supporting_text: SDF-1 apparently acts through the adenylyl cyclase ACG to
+        activate the cyclic AMP (cAMP)-dependent protein kinase A (PKA) and
+        trigger the production of more SDF-1.
+- term:
+    id: GO:0030435
+    label: sporulation resulting in formation of a cellular spore
+  evidence_type: IDA
+  original_reference_id: PMID:17267449
+  qualifier: involved_in
+  review:
+    summary: ACG protein is upregulated in prespore tissue and acg null mutants
+      show reduced prespore differentiation, establishing a role in the
+      sporulation program. This role is partly redundant with ACB.
+    action: KEEP_AS_NON_CORE
+    reason: ACG contributes to prespore differentiation and hence sporulation, but
+      this is a developmental/process role downstream of its catalytic and
+      osmosensing molecular functions and is partially redundant with ACB.
+    supported_by:
+    - reference_id: PMID:17267449
+      supporting_text: acg null mutants show reduced prespore differentiation,
+        which becomes very severe when ACB is also deleted.
+    - reference_id: PMID:17267449
+      supporting_text: These data show that ACG induces prespore differentiation
+        in wild-type cells, with ACB capable of partially taking over this
+        function in its absence.
+- term:
+    id: GO:0009992
+    label: intracellular water homeostasis
+  evidence_type: IDA
+  original_reference_id: PMID:14718564
+  qualifier: involved_in
+  review:
+    summary: ACG is an osmosensor that detects high osmolality and triggers a cAMP
+      signaling response; it is not itself an effector that maintains intracellular
+      water balance. This term overstates the function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: ACG senses osmotic conditions and signals through cAMP/PKA to control
+      germination; it does not directly regulate cellular water content. Cellular
+      response to osmotic stress and osmosensory signaling pathway better capture
+      the evidence.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: Adenylyl cyclase G (ACG) is activated by high osmolality
+        and mediates inhibition of spore germination by this stress factor.
+- term:
+    id: GO:1904360
+    label: negative regulation of spore germination
+  evidence_type: IMP
+  original_reference_id: PMID:14718564
+  qualifier: involved_in
+  review:
+    summary: ACG activation by high osmolality inhibits spore germination, keeping
+      spores dormant in the fruiting body. This is a core biological role of ACG.
+    action: ACCEPT
+    reason: Loss of ACG abolishes osmotic inhibition of germination, and ACG
+      activation by osmolality mediates this inhibition, directly supporting
+      negative regulation of spore germination.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: Adenylyl cyclase G (ACG) is activated by high osmolality
+        and mediates inhibition of spore germination by this stress factor.
+- term:
+    id: GO:0071470
+    label: cellular response to osmotic stress
+  evidence_type: IMP
+  original_reference_id: PMID:8798577
+  qualifier: involved_in
+  review:
+    summary: ACG activity is strongly stimulated by high osmolarity and mediates
+      the cellular response that keeps spores dormant, directly supporting a role
+      in the cellular response to osmotic stress.
+    action: ACCEPT
+    reason: ACG is directly activated by high osmolarity and its disruption
+      removes the osmotic inhibition of germination, supporting this term.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+        stimulated by high osmolarity with optimal stimulation occurring at 200
+        milliosmolar.
+- term:
+    id: GO:1904360
+    label: negative regulation of spore germination
+  evidence_type: IMP
+  original_reference_id: PMID:8798577
+  qualifier: involved_in
+  review:
+    summary: acg null spores are no longer prevented from germinating by high
+      osmolarity, demonstrating that ACG negatively regulates spore germination.
+    action: ACCEPT
+    reason: The acg- germination phenotype directly establishes ACG as a negative
+      regulator of spore germination under high osmolarity.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: acg- cells developed into normal fruiting bodies with viable
+        spores, but spore germination was no longer inhibited by high osmolarity
+- term:
+    id: GO:0004016
+    label: adenylate cyclase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8798577
+  qualifier: enables
+  review:
+    summary: Direct measurement of osmolarity-stimulated ACG enzyme activity
+      establishes adenylate cyclase activity as the core catalytic function.
+    action: ACCEPT
+    reason: ACG adenylate cyclase activity was directly assayed and shown to
+      convert ATP to cAMP in an osmolality-dependent manner; this is the core
+      molecular function.
+    supported_by:
+    - reference_id: PMID:8798577
+      supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+        stimulated by high osmolarity with optimal stimulation occurring at 200
+        milliosmolar.
+- term:
+    id: GO:0007231
+    label: osmosensory signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:14718564
+  qualifier: involved_in
+  review:
+    summary: ACG couples direct osmosensing to cAMP production, initiating an
+      osmosensory signaling pathway that controls spore germination. Expression in
+      yeast shows the osmosensor is intrinsic to ACG.
+    action: ACCEPT
+    reason: ACG functions as a primary osmosensor that transduces high osmolality
+      into cAMP signaling, directly supporting participation in an osmosensory
+      signaling pathway.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: This strongly suggests that the ACG osmosensor is
+        intramolecular, which would define ACG as the first characterized primary
+        osmosensor in eukaryotes.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:14718564
+  qualifier: is_active_in
+  review:
+    summary: ACG is a transmembrane cyclase active at the plasma membrane, where
+      its extracellular domain and osmosensor face the exterior. Direct
+      localization places ACG at the spore cell periphery.
+    action: ACCEPT
+    reason: As a single-pass type II membrane protein observed at the cell
+      periphery of spores, ACG is active in the plasma membrane.
+    supported_by:
+    - reference_id: PMID:17267449
+      supporting_text: In spores, ACG was localized at the cell periphery as would
+        be expected for a transmembrane osmosensor
+- term:
+    id: GO:0004016
+    label: adenylate cyclase activity
+  evidence_type: IMP
+  original_reference_id: PMID:14718564
+  qualifier: enables
+  review:
+    summary: Dominant-negative and dimerization experiments confirm ACG cAMP
+      production depends on its catalytic domain and dimerization, consistent with
+      adenylate cyclase activity being the core function.
+    action: ACCEPT
+    reason: ACG cAMP synthesis was measured and shown to require dimerization via a
+      region outside the catalytic domain, supporting its adenylate cyclase
+      activity.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: This indicates that ACG activity requires dimerization via a
+        region outside the catalytic domain
+- term:
+    id: GO:0005034
+    label: osmosensor activity
+  evidence_type: IDA
+  original_reference_id: PMID:14718564
+  qualifier: enables
+  review:
+    summary: ACG harbors an intramolecular osmosensor; high osmolality directly
+      activates cAMP synthesis, and this osmosensing is retained when ACG is
+      expressed in a yeast adenylyl cyclase null mutant, showing no auxiliary
+      sensor is required. This is a defining core molecular function.
+    action: ACCEPT
+    reason: Direct evidence establishes ACG as a primary, intramolecular
+      osmosensor, making osmosensor activity a core molecular function.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: In yeast, cAMP production by ACG was similarly activated by
+        high osmolality as in Dictyostelium.
+    - reference_id: PMID:14718564
+      supporting_text: This strongly suggests that the ACG osmosensor is
+        intramolecular, which would define ACG as the first characterized primary
+        osmosensor in eukaryotes.
+- term:
+    id: GO:0006970
+    label: response to osmotic stress
+  evidence_type: IMP
+  original_reference_id: PMID:14718564
+  qualifier: involved_in
+  review:
+    summary: ACG mediates the cellular response to high osmolality that inhibits
+      spore germination, supporting a role in response to osmotic stress.
+    action: ACCEPT
+    reason: ACG is directly activated by osmotic up-shift and its loss removes the
+      osmotic block on germination, supporting response to osmotic stress.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: Adenylyl cyclase G (ACG) is activated by high osmolality
+        and mediates inhibition of spore germination by this stress factor.
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14718564
+  qualifier: enables
+  review:
+    summary: ACG forms homodimers, which is required for its catalytic activity;
+      size fractionation showed dimers between ACG molecules. This
+      self-association is real but is better understood as a structural
+      requirement for the cyclase rather than a standalone function.
+    action: KEEP_AS_NON_CORE
+    reason: ACG homodimerization is experimentally demonstrated and functionally
+      important for catalysis, but identical protein binding is not itself a core
+      informative molecular function; it underpins the adenylate cyclase activity.
+    supported_by:
+    - reference_id: PMID:14718564
+      supporting_text: Size fractionation of native ACG showed that dimers were
+        formed between ACG molecules
+- term:
+    id: GO:0010447
+    label: response to acidic pH
+  evidence_type: IDA
+  original_reference_id: PMID:7883072
+  qualifier: involved_in
+  review:
+    summary: ACG activity is strongly pH dependent, optimal at pH 8 and virtually
+      absent below pH 7, and is inhibited by weak acids that lower cytosolic pH.
+      This supports a response to acidic pH at the level of enzyme regulation.
+    action: KEEP_AS_NON_CORE
+    reason: The pH sensitivity of ACG is an experimentally documented regulatory
+      property but is a modulatory response rather than a core evolved function.
+    supported_by:
+    - reference_id: PMID:7883072
+      supporting_text: basal and GTP gamma S-stimulated ACA activity as well as ACG
+        activity are optimal at pH 8 and are virtually absent below pH 7
+- term:
+    id: GO:0031000
+    label: response to caffeine
+  evidence_type: IDA
+  original_reference_id: PMID:16952277
+  qualifier: involved_in
+  review:
+    summary: Caffeine inhibits cAMP accumulation by ACG (as well as ACA and ACB),
+      documenting a pharmacological response to caffeine.
+    action: KEEP_AS_NON_CORE
+    reason: Caffeine sensitivity is an experimentally observed pharmacological
+      response, not a physiological core function of ACG.
+    supported_by:
+    - reference_id: PMID:16952277
+      supporting_text: Caffeine, which was previously used to specifically block
+        ACA function, also inhibited cAMP accumulation by ACB and ACG.
+- term:
+    id: GO:0006970
+    label: response to osmotic stress
+  evidence_type: IEP
+  original_reference_id: PMID:18640994
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Across the Dictyostelia, osmolyte-activated ACG activity and
+      osmoregulation of spore germination are conserved, consistent with ACG
+      acting in the response to osmotic stress.
+    action: ACCEPT
+    reason: Comparative and expression evidence supports a conserved role for ACG
+      in osmolality-activated cAMP signaling within the response to osmotic stress.
+    supported_by:
+    - reference_id: PMID:18640994
+      supporting_text: The osmolyte-activated adenylate cyclase, ACG, produces cAMP
+        for prespore differentiation and inhibition of spore germination.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14718564
+  title: Adenylyl cyclase G is activated by an intramolecular osmosensor.
+  findings:
+  - statement: ACG is activated by high osmolality and mediates inhibition of spore
+      germination by this stress factor.
+    supporting_text: Adenylyl cyclase G (ACG) is activated by high osmolality and
+      mediates inhibition of spore germination by this stress factor.
+  - statement: The ACG osmosensor is intramolecular, defining ACG as the first
+      characterized primary osmosensor in eukaryotes.
+    supporting_text: This strongly suggests that the ACG osmosensor is
+      intramolecular, which would define ACG as the first characterized primary
+      osmosensor in eukaryotes.
+  - statement: ACG activity requires dimerization via a region outside the catalytic
+      domain, but dimerization does not mediate osmotic activation.
+    supporting_text: This indicates that ACG activity requires dimerization via a
+      region outside the catalytic domain
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMC full text confirms ACG is an intramolecular osmosensor whose
+      osmoactivation is retained in yeast; directly supports the osmosensor
+      activity, osmosensory signaling, and germination-control annotations.
+- id: PMID:16952277
+  title: Pharmacological profiling of the Dictyostelium adenylate cyclases ACA, ACB
+    and ACG.
+  findings:
+  - statement: Caffeine inhibits cAMP accumulation by ACG as well as by ACA and ACB.
+    supporting_text: Caffeine, which was previously used to specifically block ACA
+      function, also inhibited cAMP accumulation by ACB and ACG.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports the response-to-caffeine annotation and confirms ACG is
+      an osmosensor controlling spore germination that is not activated by G
+      proteins.
+- id: PMID:17267449
+  title: cAMP production by adenylyl cyclase G induces prespore differentiation in
+    Dictyostelium slugs.
+  findings:
+  - statement: ACG protein is upregulated in prespore tissue and acg null mutants
+      show reduced prespore differentiation, severe when ACB is also deleted.
+    supporting_text: acg null mutants show reduced prespore differentiation, which
+      becomes very severe when ACB is also deleted.
+  - statement: In spores, ACG localizes at the cell periphery as expected for a
+      transmembrane osmosensor.
+    supporting_text: In spores, ACG was localized at the cell periphery as would be
+      expected for a transmembrane osmosensor
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes the prespore-differentiation role of ACG-derived cAMP
+      and the plasma-membrane localization of ACG in spores.
+- id: PMID:18640994
+  title: &#39;From drought sensing to developmental control: evolution of cyclic AMP signaling
+    in social amoebas.&#39;
+  findings:
+  - statement: The osmolyte-activated adenylate cyclase ACG produces cAMP for
+      prespore differentiation and inhibition of spore germination, and this role
+      is conserved across the Dictyostelia.
+    supporting_text: The osmolyte-activated adenylate cyclase, ACG, produces cAMP
+      for prespore differentiation and inhibition of spore germination.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Provides the evolutionary/conservation context for ACG&#39;s
+      osmosensing and germination-control functions across dictyostelid species.
+- id: PMID:21602484
+  title: The polyketide MPBD initiates the SDF-1 signaling cascade that coordinates
+    terminal differentiation in Dictyostelium.
+  findings:
+  - statement: SDF-1 acts through ACG to activate PKA and trigger production of more
+      SDF-1.
+    supporting_text: SDF-1 apparently acts through the adenylyl cyclase ACG to
+      activate the cyclic AMP (cAMP)-dependent protein kinase A (PKA) and trigger
+      the production of more SDF-1.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports a signal transduction role for ACG in the SDF-1 relay;
+      the ACG-SDF-1 link is described as apparent, not a demonstrated direct
+      peptide-receptor interaction.
+- id: PMID:7883072
+  title: Regulation of Dictyostelium adenylylcyclases by morphogen-induced modulation
+    of cytosolic pH or Ca2+ levels.
+  findings:
+  - statement: ACG activity is optimal at pH 8 and virtually absent below pH 7, and
+      is insensitive to Ca2+.
+    supporting_text: basal and GTP gamma S-stimulated ACA activity as well as ACG
+      activity are optimal at pH 8 and are virtually absent below pH 7
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports the pH-dependence (response to acidic pH) annotation and
+      documents ACG&#39;s Ca2+ insensitivity.
+- id: PMID:8798577
+  title: Adenylyl cyclase G, an osmosensor controlling germination of Dictyostelium
+    spores.
+  findings:
+  - statement: acg null cells form normal fruiting bodies with viable spores, but
+      spore germination is no longer inhibited by high osmolarity.
+    supporting_text: acg- cells developed into normal fruiting bodies with viable
+      spores, but spore germination was no longer inhibited by high osmolarity
+  - statement: ACG activity is strongly stimulated by high osmolarity, with optimal
+      stimulation at 200 milliosmolar.
+    supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+      stimulated by high osmolarity with optimal stimulation occurring at 200
+      milliosmolar.
+  - statement: ACG is an osmosensor controlling spore germination through activation
+      of protein kinase A.
+    supporting_text: These data indicate that ACG is an osmosensor controlling spore
+      germination through activation of protein kinase A.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original characterization of ACG as an osmosensor that controls
+      spore germination via PKA; abstract-only cache but the key findings are
+      explicit.
+core_functions:
+- description: ACG is an osmolality-activated adenylate cyclase that converts ATP to
+    cAMP at the plasma membrane. High osmolality directly stimulates catalysis, and
+    the resulting intracellular cAMP activates PKA to keep spores dormant and inhibit
+    premature germination.
+  molecular_function:
+    id: GO:0004016
+    label: adenylate cyclase activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0006171
+    label: cAMP biosynthetic process
+  - id: GO:1904360
+    label: negative regulation of spore germination
+  supported_by:
+  - reference_id: PMID:8798577
+    supporting_text: ACG activity, measured in aca-/ACG cells, was strongly
+      stimulated by high osmolarity with optimal stimulation occurring at 200
+      milliosmolar.
+  - reference_id: PMID:8798577
+    supporting_text: These data indicate that ACG is an osmosensor controlling spore
+      germination through activation of protein kinase A.
+- description: ACG functions as a primary, intramolecular osmosensor. Its
+    extracellular/transmembrane region detects high osmolality and directly couples
+    this stimulus to activation of the cytoplasmic cyclase domain, initiating an
+    osmosensory cAMP signaling pathway. This osmosensing is intrinsic to ACG, as it
+    is retained when ACG is expressed in a yeast adenylyl cyclase null mutant.
+  molecular_function:
+    id: GO:0005034
+    label: osmosensor activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  directly_involved_in:
+  - id: GO:0007231
+    label: osmosensory signaling pathway
+  supported_by:
+  - reference_id: PMID:14718564
+    supporting_text: This strongly suggests that the ACG osmosensor is
+      intramolecular, which would define ACG as the first characterized primary
+      osmosensor in eukaryotes.
+  - reference_id: PMID:14718564
+    supporting_text: In yeast, cAMP production by ACG was similarly activated by
+      high osmolality as in Dictyostelium.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

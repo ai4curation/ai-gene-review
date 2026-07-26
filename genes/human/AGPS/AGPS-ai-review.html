@@ -1,0 +1,4856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGPS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AGPS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O00116" target="_blank" class="term-link">
+                        O00116
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AGPS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O00116" data-a="DESCRIPTION: AGPS is alkyldihydroxyacetonephosphate synthase (a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AGPS is alkyldihydroxyacetonephosphate synthase (alkyl-DHAP synthase, also called alkylglycerone-phosphate synthase; EC 2.5.1.26), a FAD-dependent peroxisomal enzyme that catalyzes the committed, ether-bond-forming step of ether-lipid (plasmalogen) biosynthesis. It exchanges the acyl group of acyl-dihydroxyacetone phosphate (acyl-DHAP) for a long-chain fatty alcohol, producing alkyl-dihydroxyacetone phosphate (alkyl-DHAP) - the first intermediate carrying the characteristic O-alkyl ether bond - plus the released long-chain fatty acid. The enzyme is a homodimer that uses FAD as an obligate cofactor and belongs to the FAD-binding oxidoreductase/transferase type 4 family. It acts on the luminal face of the peroxisomal membrane together with GNPAT (glyceronephosphate O-acyltransferase, which produces the acyl-DHAP substrate), and is imported into the peroxisome via a cleavable N-terminal type-2 peroxisomal targeting signal (PTS2) presequence in a PEX7-dependent manner, after which the presequence is proteolytically removed to give the mature enzyme. Ether lipids and plasmalogens produced through this pathway are major membrane phospholipids, particularly abundant in myelin, heart and other tissues. Biallelic loss-of-function mutations in AGPS cause rhizomelic chondrodysplasia punctata type 3 (RCDP3), characterized by rhizomelic limb shortening, chondrodysplasia punctata, cataract and severe neurodevelopmental impairment.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                                    GO:0008609
+                                </a>
+                            </span>
+                            <span class="term-label">alkylglycerone-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008609" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the core alkylglycerone-phosphate synthase activity. This is the defining, experimentally established molecular function of AGPS and is directly supported by enzymatic characterization of the human and guinea-pig enzymes. Accept as a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.5.1.26</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that AGPS is active in the peroxisome. This is consistent with the experimentally established peroxisomal localization and with the PTS2-dependent peroxisomal import of the enzyme. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008610" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of involvement in lipid biosynthesis. This is correct but is a broad parent term; AGPS acts specifically in ether lipid (plasmalogen) biosynthesis, so a more informative term is available. Modify to ether lipid biosynthetic process.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    ether lipid biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycerolipid metabolism; ether lipid biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the root-level catalytic activity term. AGPS is an enzyme, so this is not wrong, but it is uninformative and fully superseded by the specific alkylglycerone-phosphate synthase activity (GO:0008609). Mark as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) localization to the peroxisome. Correct and consistent with the experimental IDA/IBA peroxisome annotations; redundant with them but represents a genuine core localization, so accept rather than flag as over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005778" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA, SubCell mapping) localization to the peroxisomal membrane, matching the UniProt &#34;Peroxisome membrane&#34; subcellular location. AGPS associates with the luminal face of the peroxisomal membrane where it works with GNPAT. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                                    GO:0008609
+                                </a>
+                            </span>
+                            <span class="term-label">alkylglycerone-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008609" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) annotation of the core alkylglycerone-phosphate synthase activity via InterPro/RHEA/EC mapping. This is the correct core molecular function of AGPS and is experimentally established; accept the redundant IEA as capturing the core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.5.1.26</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008610" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the broad lipid biosynthetic process term. AGPS functions specifically in ether lipid biosynthesis, which is separately annotated (GO:0008611); this generic parent is an over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of FAD (flavin adenine dinucleotide) binding. AGPS is a flavoprotein of the FAD-binding oxidoreductase/transferase type 4 family with multiple predicted FAD-binding regions, and FAD is its obligate cofactor. This is essentially equivalent to the FAD binding (GO:0071949) annotations. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of FAD binding. Correct: FAD is the obligate cofactor of this flavoenzyme (COFACTOR: FAD). Accept; redundant with the ISS FAD binding annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from a large-scale binary interactome map (interactor GORASP1/Q9BQQ3, matching the curated UniProt INTERACTION record). Bare &#34;protein binding&#34; is uninformative about AGPS function and the biological significance of the GORASP1 interaction is unclear, so this is marked as over-annotated rather than treated as a core function (experimental IPI is retained, not removed, per policy).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">O00116; Q9BQQ3: GORASP1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from a high-throughput variant/interaction screen (interactor GORASP1/Q9BQQ3). As with the other IPI protein-binding annotations, the bare term is uninformative and the interaction&#39;s role in AGPS function is not established. Marked as over-annotated (experimental IPI retained, not removed).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">O00116; Q9BQQ3: GORASP1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#34;protein binding&#34; from the HuRI reference binary interactome (interactor GORASP1/Q9BQQ3). Uninformative bare protein-binding term; the GORASP1 interaction is recorded in UniProt but its functional meaning for AGPS is unclear. Marked as over-annotated (experimental IPI retained, not removed).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">O00116; Q9BQQ3: GORASP1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008611" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA, UniPathway mapping) annotation of involvement in ether lipid biosynthesis. This is the correct, specific biological process for AGPS - it catalyzes the committed ether-bond-forming step of the pathway. Accept as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycerolipid metabolism; ether lipid biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA, HPA immunofluorescence) localizing AGPS to the peroxisome. This is consistent with all other evidence for peroxisomal localization. Accept as a core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS localization to the peroxisome transferred from the mouse ortholog (P97275). Correct and consistent with human experimental data. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005778" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS localization to the peroxisomal membrane transferred from the mouse ortholog (P97275), matching the UniProt &#34;Peroxisome membrane&#34; location. AGPS is peripherally associated with the luminal face of the peroxisomal membrane. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                                    GO:0008609
+                                </a>
+                            </span>
+                            <span class="term-label">alkylglycerone-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8399344" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8399344
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ether lipid synthesis: purification and identification of al...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008609" data-r="PMID:8399344" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of alkyl-DHAP synthase activity from the original purification of the enzyme (guinea-pig liver ortholog), which established the reaction and enzyme identity used to annotate the human protein. This is the defining core molecular function of AGPS. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8399344" target="_blank" class="term-link">
+                                        PMID:8399344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the second enzyme involved in ether</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8399344" target="_blank" class="term-link">
+                                        PMID:8399344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glycero-ether bond formation, has been purified</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033232
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005829" data-r="Reactome:R-HSA-9033232" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol annotation. This reflects the transient cytosolic stage of the AGPS precursor during PEX7/PTS2-dependent peroxisomal import, not the functional steady-state location of the mature enzyme. Keep as a non-core localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033514
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005829" data-r="Reactome:R-HSA-9033514" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol annotation associated with the peroxisomal import reaction. As above, this captures the pre-import cytosolic form of the protein rather than where the enzyme carries out catalysis. Keep as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033514
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005782" data-r="Reactome:R-HSA-9033514" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the peroxisomal matrix, the compartment into which the mature enzyme is imported and where it functions. This is the most specific and appropriate location for the active enzyme. Accept as a core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                        PMID:9553082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in line with an intraperoxisomal localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HDA) identification of AGPS in an NK-cell membrane proteome preparation. The generic &#34;membrane&#34; term adds little beyond the specific peroxisomal membrane localization and reflects a bulk membrane fractionation rather than a curated compartment. Mark as over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20833797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoproteome analysis of functional mitochondria isolated...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005739" data-r="PMID:20833797" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HDA) detection of AGPS in an isolated muscle mitochondrial phosphoproteome. AGPS is a peroxisomal enzyme; peroxisomes commonly co-fractionate with mitochondria, so this most likely reflects contamination of the mitochondrial preparation rather than genuine mitochondrial localization. Mark as over-annotated (experimental HDA retained, not removed).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link">
+                                        PMID:20833797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">isolated from human muscle biopsies</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-390427
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005782" data-r="Reactome:R-HSA-390427" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the peroxisomal matrix, in the context of the alkyl-DHAP synthase reaction. This is the correct, most specific location for the active enzyme. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-75879
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005782" data-r="Reactome:R-HSA-75879" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) peroxisomal matrix localization associated with the acyl-DHAP-forming step of the pathway. Consistent with the correct peroxisomal-matrix localization of the mature enzyme. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008611" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation of involvement in ether lipid biosynthesis transferred from the mouse ortholog (P97275). This is the correct, specific core biological process for AGPS. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                        PMID:9553082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Alkyl-dihydroxyacetonephosphate synthase, a peroxisomal enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0071949" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation of FAD binding transferred from the mouse ortholog (P97275). Correct: AGPS is an FAD-dependent flavoenzyme and FAD is its obligate cofactor. Accept as a core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/AGPS/AGPS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005778" target="_blank" class="term-link">
+                                    GO:0005778
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21525035" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21525035
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PEX14 is required for microtubule-based peroxisome motility ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005778" data-r="PMID:21525035" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HDA) identification of AGPS in isolated native peroxisomal membrane protein complexes (PEX14 pull-downs). This supports the peroxisomal membrane association of AGPS, consistent with its ISS/IEA membrane localization. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21525035" target="_blank" class="term-link">
+                                        PMID:21525035
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">isolating native peroxisomal membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10415121" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10415121
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro processing of the human alkyl-dihydroxyacetonephosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="PMID:10415121" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of peroxisomal localization: the AGPS precursor is imported into purified peroxisomes and processed there in vitro. Confirms genuine peroxisomal localization of the enzyme. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10415121" target="_blank" class="term-link">
+                                        PMID:10415121
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a peroxisomal enzyme involved in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                                    GO:0008609
+                                </a>
+                            </span>
+                            <span class="term-label">alkylglycerone-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10415121" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10415121
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro processing of the human alkyl-dihydroxyacetonephosp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008609" data-r="PMID:10415121" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of alkyl-DHAP synthase activity in the study of in vitro processing of the human enzyme; enzyme activity was measured for the precursor and mature forms. Supports the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10415121" target="_blank" class="term-link">
+                                        PMID:10415121
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a peroxisomal enzyme involved in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9553082
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alkyl-dihydroxyacetonephosphate synthase. Fate in peroxisome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0005777" data-r="PMID:9553082" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of peroxisomal localization from the study characterizing AGPS in peroxisome biogenesis disorders; the enzyme is destabilized when peroxisomal import fails, confirming its peroxisomal residence. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                        PMID:9553082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in line with an intraperoxisomal localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                                    GO:0008609
+                                </a>
+                            </span>
+                            <span class="term-label">alkylglycerone-phosphate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9553082
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alkyl-dihydroxyacetonephosphate synthase. Fate in peroxisome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008609" data-r="PMID:9553082" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of alkyl-DHAP synthase activity: the human enzyme and its RCDP3-causing R419H mutant were expressed and assayed, with R419H abolishing activity. Directly establishes the core molecular function. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                        PMID:9553082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">responsible for the inactivity of the enzyme and the phenotype</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9553082
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Alkyl-dihydroxyacetonephosphate synthase. Fate in peroxisome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O00116" data-a="GO:0008610" data-r="PMID:9553082" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (acts_upstream_of_or_within) linking AGPS to lipid biosynthesis, from the study of its role in ether phospholipid biosynthesis and RCDP3. The paper is specifically about ether phospholipid biosynthesis, so a more informative term than the broad &#34;lipid biosynthetic process&#34; is warranted. Modify to ether lipid biosynthetic process.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    ether lipid biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                        PMID:9553082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the biosynthesis of ether phospholipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Alkylglycerone-phosphate synthase (alkyl-DHAP synthase) activity: AGPS catalyzes the committed ether-bond-forming step of ether-lipid biosynthesis, exchanging the acyl group of acyl-dihydroxyacetone phosphate for a long-chain fatty alcohol to yield alkyl-dihydroxyacetone phosphate (the first O-alkyl ether intermediate) plus the released fatty acid, in the peroxisomal matrix.</h3>
+                <span class="vote-buttons" data-g="O00116" data-a="FUNCTION: Alkylglycerone-phosphate synthase (alkyl-DHAP synt..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008609" target="_blank" class="term-link">
+                            alkylglycerone-phosphate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                ether lipid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AGPS/AGPS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=2.5.1.26</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8399344" target="_blank" class="term-link">
+                                PMID:8399344
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">glycero-ether bond formation, has been purified</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                                PMID:9553082
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">responsible for the inactivity of the enzyme and the phenotype</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD binding: AGPS is a flavoprotein of the FAD-binding oxidoreductase/transferase type 4 family and requires FAD as an obligate cofactor for its ether-bond-forming catalysis.</h3>
+                <span class="vote-buttons" data-g="O00116" data-a="FUNCTION: FAD binding: AGPS is a flavoprotein of the FAD-bin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AGPS/AGPS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/AGPS/AGPS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the FAD-binding oxidoreductase/transferase type</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10415121" target="_blank" class="term-link">
+                            PMID:10415121
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vitro processing of the human alkyl-dihydroxyacetonephosphate synthase precursor.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The human alkyl-DHAP synthase precursor carries a cleavable N-terminal PTS2 presequence and is imported into and processed within peroxisomes; processing does not change enzyme activity.</div>
+
+                        <div class="finding-text">"a peroxisomal enzyme involved in the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link">
+                            PMID:20833797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoproteome analysis of functional mitochondria isolated from resting human muscle reveals extensive phosphorylation of inner membrane protein complexes and enzymes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21525035" target="_blank" class="term-link">
+                            PMID:21525035
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PEX14 is required for microtubule-based peroxisome motility in human cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Native peroxisomal membrane protein complexes isolated via PEX14 from human cells contain peroxisomal proteins; supports peroxisomal membrane association of AGPS.</div>
+
+                        <div class="finding-text">"isolating native peroxisomal membrane"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8399344" target="_blank" class="term-link">
+                            PMID:8399344
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ether lipid synthesis: purification and identification of alkyl dihydroxyacetone phosphate synthase from guinea-pig liver.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Alkyl-DHAP synthase, the enzyme responsible for glycero-ether bond formation in ether phospholipid biosynthesis, was purified and characterized (65 kDa, ~13,000-fold purification) from guinea-pig liver peroxisomes.</div>
+
+                        <div class="finding-text">"glycero-ether bond formation, has been purified"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9553082" target="_blank" class="term-link">
+                            PMID:9553082
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Alkyl-dihydroxyacetonephosphate synthase. Fate in peroxisome biogenesis disorders and identification of the point mutation underlying a single enzyme deficiency.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human AGPS is a peroxisomal enzyme with a cleavable N-terminal PTS2 presequence; it is destabilized when peroxisomal import fails, and the RCDP3 R419H mutation abolishes catalytic activity, establishing AGPS as the enzyme deficient in this disorder.</div>
+
+                        <div class="finding-text">"responsible for the inactivity of the enzyme and the phenotype"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-390427
+
+                    </span>
+                </div>
+
+                <div class="reference-title">1-palmitoylglycerone phosphate + hexadecanol =&gt; O-hexadecylglycerone phosphate + palmitate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-75879
+
+                    </span>
+                </div>
+
+                <div class="reference-title">palmitoyl-CoA + DHAP =&gt; 1-palmitoylglycerone phosphate + CoASH</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033232
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PEX7 binds cargo proteins containing PTS2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033514
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cargo of PEX5L:PEX7 translocates from the cytosol to the peroxisomal matrix</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AGPS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O00116" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="agps-alkylglycerone-phosphate-synthase-review-notes">AGPS (alkylglycerone phosphate synthase) — review notes</h1>
+<p>UniProt: O00116 (ADAS_HUMAN). Gene: AGPS (a.k.a. AAG5, "aging-associated gene 5").<br />
+658 aa precursor; peroxisomal. EC 2.5.1.26.</p>
+<h2 id="core-biology-from-local-uniprot-o00116-and-cited-primary-literature">Core biology (from local UniProt O00116 and cited primary literature)</h2>
+<ul>
+<li><strong>Enzyme / reaction.</strong> AGPS is alkyldihydroxyacetonephosphate synthase (alkyl-DHAP synthase / alkylglycerone-phosphate synthase). It catalyzes the committed <strong>ether-bond-forming</strong> step of ether-lipid (plasmalogen) biosynthesis: it exchanges the <strong>acyl group of acyl-dihydroxyacetone phosphate (acyl-DHAP) for a long-chain fatty alcohol</strong>, yielding <strong>alkyl-DHAP</strong> (the first O-alkyl ether intermediate) plus the released fatty acid.</li>
+<li>UniProt FUNCTION: "Catalyzes the exchange of the acyl chain in acyl-dihydroxyacetonephosphate (acyl-DHAP) for a long chain fatty alcohol, yielding the first ether linked intermediate, i.e. alkyl-dihydroxyacetonephosphate (alkyl-DHAP), in the pathway of ether lipid biosynthesis" [file:human/AGPS/AGPS-uniprot.txt].</li>
+<li>Reaction (Rhea:36171): "a long chain fatty alcohol + a 1-acylglycerone 3-phosphate = a 1-O-alkylglycerone 3-phosphate + a long-chain fatty acid + H(+)"; EC=2.5.1.26 [file:human/AGPS/AGPS-uniprot.txt].</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/8399344" title="the second enzyme involved in ether phospholipid biosynthesis from dihydroxyacetone phosphate and responsible for glycero-ether bond formation, has been purified from guinea-pig liver.">PMID:8399344</a> — original purification (guinea-pig liver ortholog); 65 kDa band, 13,000-fold purification. EC assigned in UniProt with ECO:0000269|PubMed:8399344.</li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/9553082">PMID:9553082</a> — human AGPS characterization; R419H patient mutation abolishes activity ("providing further proof that this substitution is responsible for the inactivity of the enzyme and the phenotype"). Enzyme activity is inhibited by the arginine-modifying agent phenylglyoxal and protected by saturating substrate palmitoyl-DHAP.</p>
+</li>
+<li>
+<p><strong>Cofactor.</strong> FAD-dependent flavoprotein; belongs to the "FAD-binding oxidoreductase/transferase type 4 family" [file:human/AGPS/AGPS-uniprot.txt]. UniProt COFACTOR: Name=FAD (ISS from mouse ortholog P97275). Four FAD-binding regions annotated (residues 234-240, 303-309, 316-319, 368-374). KW: FAD; Flavoprotein.</p>
+</li>
+<li>
+<p><strong>Localization / import.</strong> Peroxisomal enzyme. UniProt SUBCELLULAR LOCATION: "Peroxisome membrane" and "Peroxisome" (ISS from mouse P97275). Imported into peroxisome via a <strong>PTS2</strong> signal in a cleavable N-terminal presequence (TRANSIT 1..58), PEX7-dependent.</p>
+</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9553082" title="Alkyl-dihydroxyacetonephosphate synthase, a peroxisomal enzyme playing a key role in the biosynthesis of ether phospholipids, contains the peroxisomal targeting signal type 2 in a N-terminal cleavable presequence.">PMID:9553082</a> Reduced levels in Zellweger/RCDP fibroblasts (defective import → cytoplasmic instability); NALD PTS1-import-deficient patient retains precursor form intraperoxisomally ("in line with an intraperoxisomal localization").</li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/10415121" title="a peroxisomal enzyme involved in the biosynthesis of ether phospholipids, is synthesized with a cleavable N-terminal presequence containing the peroxisomal targeting signal type 2.">PMID:10415121</a> The precursor is imported into purified peroxisomes and processed by a cysteine protease (matches Reactome "TYSND1 cleaves peroxisomal proteins"); processing does not change activity. GO CC peroxisome IDA supported here.</p>
+</li>
+<li>
+<p><strong>Quaternary structure / partners.</strong> Homodimer (UniProt SUBUNIT, ISS from P97275). Works together with GNPAT (DHAPAT), which produces acyl-DHAP; GNPAT and AGPS are thought to form a complex on the inner peroxisomal membrane surface. UniProt lists a curated interaction with GORASP1 (Q9BQQ3, GRASP65) with NbExp=7.</p>
+</li>
+<li>
+<p><strong>Disease.</strong> Biallelic AGPS loss-of-function causes <strong>rhizomelic chondrodysplasia punctata type 3 (RCDP3; MIM:600121)</strong> — rhizomelic limb shortening, chondrodysplasia punctata, cataract, severe intellectual disability. Characterized RCDP3 variants: R419H (loss of activity), T309I, L469P, R182Q, E471K, T568M [file:human/AGPS/AGPS-uniprot.txt; PMID:9553082; PMID:11152660; PMID:21990100].</p>
+</li>
+<li>
+<p><strong>Pathway.</strong> UniProt PATHWAY: "Glycerolipid metabolism; ether lipid biosynthesis" (UniPathway UPA00781). Reactome: R-HSA-75896 Plasmalogen biosynthesis.</p>
+</li>
+</ul>
+<h2 id="goa-annotation-review-summary-33-annotations">GOA annotation review summary (33 annotations)</h2>
+<ul>
+<li><strong>Core molecular function</strong> — GO:0008609 alkylglycerone-phosphate synthase activity: present as IDA (PMID:8399344, PMID:9553082, PMID:10415121), IBA, and IEA. ACCEPT the experimental/IBA; ACCEPT the redundant IEA (own core function, not over-annotation).</li>
+<li><strong>FAD binding</strong> (GO:0071949 ISS/IEA; GO:0050660 flavin adenine dinucleotide binding IEA): correct cofactor; ACCEPT ISS, KEEP redundant IEA. GO:0050660 is a valid synonym-branch term (parent of GO:0071949) — ACCEPT.</li>
+<li><strong>catalytic activity</strong> GO:0003824 (IEA, InterPro): correct but uninformative parent of the specific MF → MARK_AS_OVER_ANNOTATED (generic root-ish IEA superseded by GO:0008609).</li>
+<li><strong>protein binding</strong> GO:0005515 (three IPI, all vs GORASP1/Q9BQQ3, high-throughput Y2H interactome maps PMID:25416956/31515488/32296183): uninformative bare "protein binding"; MARK_AS_OVER_ANNOTATED (policy: never REMOVE an IPI protein-binding). The GORASP1 interaction is real per UniProt INTERACTION record but its biological meaning for AGPS is unclear.</li>
+<li><strong>Biological process</strong> — GO:0008611 ether lipid biosynthetic process (ISS, IEA): core BP, ACCEPT. GO:0008610 lipid biosynthetic process (IBA, IEA InterPro, and IDA PMID:9553082 acts_upstream_of_or_within): correct but general parent of GO:0008611; the IDA/IBA reflect real data → KEEP but the plain "lipid biosynthetic process" is less informative than ether lipid biosynthesis → MARK_AS_OVER_ANNOTATED for the generic IEA, KEEP_AS_NON_CORE / MODIFY toward GO:0008611 for the experimental ones. Chose: IBA GO:0008610 → MODIFY to GO:0008611; IEA GO:0008610 → MARK_AS_OVER_ANNOTATED; IDA GO:0008610 (acts_upstream_of_or_within, PMID:9553082) → MODIFY to GO:0008611 (paper is about ether phospholipid biosynthesis specifically).</li>
+<li><strong>Cellular component</strong> — peroxisome GO:0005777 (IDA PMID:10415121, IDA PMID:9553082, IDA HPA GO_REF:0000052, IBA, ISS, IEA), peroxisomal matrix GO:0005782 (Reactome TAS x3), peroxisomal membrane GO:0005778 (ISS, IEA, HDA PMID:21525035): all correct peroxisomal localization. ACCEPT experimental/IBA/matrix; KEEP redundant IEA. Peroxisomal matrix is the best (most specific, mature-enzyme) location; membrane association reflects the GNPAT/AGPS complex on the inner membrane surface.</li>
+<li><strong>cytosol</strong> GO:0005829 (Reactome TAS R-HSA-9033232, R-HSA-9033514): reflects the transient PTS2/PEX7 cytosolic import stage before peroxisomal import, not the functional steady-state location → KEEP_AS_NON_CORE.</li>
+<li><strong>membrane</strong> GO:0016020 (HDA PMID:19946888, NK-cell membrane proteome): generic; over-annotation from a proteomic membrane prep → MARK_AS_OVER_ANNOTATED.</li>
+<li><strong>mitochondrion</strong> GO:0005739 (HDA PMID:20833797, muscle mitochondrial phosphoproteome): AGPS is peroxisomal; this is a common contaminant in mitochondrial fraction proteomics (co-purifying peroxisomes). Experimental HDA so not REMOVE → MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="core-functions-chosen">Core functions chosen</h2>
+<ol>
+<li>MF GO:0008609 alkylglycerone-phosphate synthase activity (directly_involved_in GO:0008611 ether lipid biosynthetic process; location GO:0005782 peroxisomal matrix).</li>
+<li>MF GO:0071949 FAD binding (cofactor required for catalysis).<br />
+</content><br />
+</invoke></li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O00116
+gene_symbol: AGPS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AGPS is alkyldihydroxyacetonephosphate synthase (alkyl-DHAP synthase, also called
+  alkylglycerone-phosphate synthase; EC 2.5.1.26), a FAD-dependent peroxisomal enzyme
+  that catalyzes the committed, ether-bond-forming step of ether-lipid (plasmalogen)
+  biosynthesis. It exchanges the acyl group of acyl-dihydroxyacetone phosphate
+  (acyl-DHAP) for a long-chain fatty alcohol, producing alkyl-dihydroxyacetone
+  phosphate (alkyl-DHAP) - the first intermediate carrying the characteristic O-alkyl
+  ether bond - plus the released long-chain fatty acid. The enzyme is a homodimer that
+  uses FAD as an obligate cofactor and belongs to the FAD-binding
+  oxidoreductase/transferase type 4 family. It acts on the luminal face of the
+  peroxisomal membrane together with GNPAT (glyceronephosphate O-acyltransferase, which
+  produces the acyl-DHAP substrate), and is imported into the peroxisome via a
+  cleavable N-terminal type-2 peroxisomal targeting signal (PTS2) presequence in a
+  PEX7-dependent manner, after which the presequence is proteolytically removed to give
+  the mature enzyme. Ether lipids and plasmalogens produced through this pathway are
+  major membrane phospholipids, particularly abundant in myelin, heart and other
+  tissues. Biallelic loss-of-function mutations in AGPS cause rhizomelic
+  chondrodysplasia punctata type 3 (RCDP3), characterized by rhizomelic limb shortening,
+  chondrodysplasia punctata, cataract and severe neurodevelopmental impairment.
+existing_annotations:
+- term:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the core alkylglycerone-phosphate synthase
+      activity. This is the defining, experimentally established molecular function of
+      AGPS and is directly supported by enzymatic characterization of the human and
+      guinea-pig enzymes. Accept as a core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;EC=2.5.1.26&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that AGPS is active in the peroxisome. This is
+      consistent with the experimentally established peroxisomal localization and with
+      the PTS2-dependent peroxisomal import of the enzyme. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of involvement in lipid biosynthesis. This is
+      correct but is a broad parent term; AGPS acts specifically in ether lipid
+      (plasmalogen) biosynthesis, so a more informative term is available. Modify to
+      ether lipid biosynthetic process.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0008611
+      label: ether lipid biosynthetic process
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;Glycerolipid metabolism; ether lipid biosynthesis.&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the root-level catalytic activity term. AGPS
+      is an enzyme, so this is not wrong, but it is uninformative and fully superseded by
+      the specific alkylglycerone-phosphate synthase activity (GO:0008609). Mark as
+      over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) localization to the peroxisome. Correct and consistent with the
+      experimental IDA/IBA peroxisome annotations; redundant with them but represents a
+      genuine core localization, so accept rather than flag as over-annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA, SubCell mapping) localization to the peroxisomal membrane,
+      matching the UniProt &#34;Peroxisome membrane&#34; subcellular location. AGPS associates
+      with the luminal face of the peroxisomal membrane where it works with GNPAT.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) annotation of the core alkylglycerone-phosphate synthase activity
+      via InterPro/RHEA/EC mapping. This is the correct core molecular function of AGPS
+      and is experimentally established; accept the redundant IEA as capturing the core
+      function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;EC=2.5.1.26&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the broad lipid biosynthetic process term.
+      AGPS functions specifically in ether lipid biosynthesis, which is separately
+      annotated (GO:0008611); this generic parent is an over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation of FAD (flavin adenine dinucleotide) binding.
+      AGPS is a flavoprotein of the FAD-binding oxidoreductase/transferase type 4 family
+      with multiple predicted FAD-binding regions, and FAD is its obligate cofactor.
+      This is essentially equivalent to the FAD binding (GO:0071949) annotations. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;Name=FAD&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation of FAD binding. Correct: FAD is the obligate
+      cofactor of this flavoenzyme (COFACTOR: FAD). Accept; redundant with the ISS FAD
+      binding annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;Name=FAD&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from a large-scale binary interactome map (interactor
+      GORASP1/Q9BQQ3, matching the curated UniProt INTERACTION record). Bare &#34;protein
+      binding&#34; is uninformative about AGPS function and the biological significance of
+      the GORASP1 interaction is unclear, so this is marked as over-annotated rather than
+      treated as a core function (experimental IPI is retained, not removed, per policy).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;O00116; Q9BQQ3: GORASP1&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from a high-throughput variant/interaction screen (interactor
+      GORASP1/Q9BQQ3). As with the other IPI protein-binding annotations, the bare term is
+      uninformative and the interaction&#39;s role in AGPS function is not established. Marked
+      as over-annotated (experimental IPI retained, not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;O00116; Q9BQQ3: GORASP1&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI &#34;protein binding&#34; from the HuRI reference binary interactome (interactor
+      GORASP1/Q9BQQ3). Uninformative bare protein-binding term; the GORASP1 interaction is
+      recorded in UniProt but its functional meaning for AGPS is unclear. Marked as
+      over-annotated (experimental IPI retained, not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;O00116; Q9BQQ3: GORASP1&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (IEA, UniPathway mapping) annotation of involvement in ether lipid
+      biosynthesis. This is the correct, specific biological process for AGPS - it
+      catalyzes the committed ether-bond-forming step of the pathway. Accept as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;Glycerolipid metabolism; ether lipid biosynthesis.&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA, HPA immunofluorescence) localizing AGPS to the peroxisome. This
+      is consistent with all other evidence for peroxisomal localization. Accept as a
+      core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS localization to the peroxisome transferred from the mouse ortholog (P97275).
+      Correct and consistent with human experimental data. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS localization to the peroxisomal membrane transferred from the mouse ortholog
+      (P97275), matching the UniProt &#34;Peroxisome membrane&#34; location. AGPS is peripherally
+      associated with the luminal face of the peroxisomal membrane. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8399344
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of alkyl-DHAP synthase activity from the original purification of
+      the enzyme (guinea-pig liver ortholog), which established the reaction and enzyme
+      identity used to annotate the human protein. This is the defining core molecular
+      function of AGPS. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8399344
+      supporting_text: &gt;-
+        the second enzyme involved in ether
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:8399344
+      supporting_text: &gt;-
+        glycero-ether bond formation, has been purified
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033232
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol annotation. This reflects the transient cytosolic stage of
+      the AGPS precursor during PEX7/PTS2-dependent peroxisomal import, not the functional
+      steady-state location of the mature enzyme. Keep as a non-core localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033514
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol annotation associated with the peroxisomal import reaction.
+      As above, this captures the pre-import cytosolic form of the protein rather than
+      where the enzyme carries out catalysis. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033514
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) localization to the peroxisomal matrix, the compartment into which
+      the mature enzyme is imported and where it functions. This is the most specific and
+      appropriate location for the active enzyme. Accept as a core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9553082
+      supporting_text: &gt;-
+        in line with an intraperoxisomal localization
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HDA) identification of AGPS in an NK-cell membrane proteome
+      preparation. The generic &#34;membrane&#34; term adds little beyond the specific peroxisomal
+      membrane localization and reflects a bulk membrane fractionation rather than a
+      curated compartment. Mark as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:20833797
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HDA) detection of AGPS in an isolated muscle mitochondrial
+      phosphoproteome. AGPS is a peroxisomal enzyme; peroxisomes commonly co-fractionate
+      with mitochondria, so this most likely reflects contamination of the mitochondrial
+      preparation rather than genuine mitochondrial localization. Mark as over-annotated
+      (experimental HDA retained, not removed).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:20833797
+      supporting_text: &gt;-
+        isolated from human muscle biopsies
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-390427
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) localization to the peroxisomal matrix, in the context of the
+      alkyl-DHAP synthase reaction. This is the correct, most specific location for the
+      active enzyme. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-75879
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) peroxisomal matrix localization associated with the acyl-DHAP-forming
+      step of the pathway. Consistent with the correct peroxisomal-matrix localization of
+      the mature enzyme. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation of involvement in ether lipid biosynthesis transferred from the mouse
+      ortholog (P97275). This is the correct, specific core biological process for AGPS.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9553082
+      supporting_text: &gt;-
+        Alkyl-dihydroxyacetonephosphate synthase, a peroxisomal enzyme
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS annotation of FAD binding transferred from the mouse ortholog (P97275). Correct:
+      AGPS is an FAD-dependent flavoenzyme and FAD is its obligate cofactor. Accept as a
+      core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/AGPS/AGPS-uniprot.txt
+      supporting_text: &#34;Name=FAD&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005778
+    label: peroxisomal membrane
+  evidence_type: HDA
+  original_reference_id: PMID:21525035
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HDA) identification of AGPS in isolated native peroxisomal membrane
+      protein complexes (PEX14 pull-downs). This supports the peroxisomal membrane
+      association of AGPS, consistent with its ISS/IEA membrane localization. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:21525035
+      supporting_text: &gt;-
+        isolating native peroxisomal membrane
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:10415121
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of peroxisomal localization: the AGPS precursor is imported into
+      purified peroxisomes and processed there in vitro. Confirms genuine peroxisomal
+      localization of the enzyme. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10415121
+      supporting_text: &gt;-
+        a peroxisomal enzyme involved in the
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10415121
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of alkyl-DHAP synthase activity in the study of in vitro
+      processing of the human enzyme; enzyme activity was measured for the precursor and
+      mature forms. Supports the core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10415121
+      supporting_text: &gt;-
+        a peroxisomal enzyme involved in the
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:9553082
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of peroxisomal localization from the study characterizing AGPS in
+      peroxisome biogenesis disorders; the enzyme is destabilized when peroxisomal import
+      fails, confirming its peroxisomal residence. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9553082
+      supporting_text: &gt;-
+        in line with an intraperoxisomal localization
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9553082
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of alkyl-DHAP synthase activity: the human enzyme and its
+      RCDP3-causing R419H mutant were expressed and assayed, with R419H abolishing
+      activity. Directly establishes the core molecular function. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:9553082
+      supporting_text: &gt;-
+        responsible for the inactivity of the enzyme and the phenotype
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:9553082
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IDA annotation (acts_upstream_of_or_within) linking AGPS to lipid biosynthesis, from
+      the study of its role in ether phospholipid biosynthesis and RCDP3. The paper is
+      specifically about ether phospholipid biosynthesis, so a more informative term than
+      the broad &#34;lipid biosynthetic process&#34; is warranted. Modify to ether lipid
+      biosynthetic process.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0008611
+      label: ether lipid biosynthetic process
+    supported_by:
+    - reference_id: PMID:9553082
+      supporting_text: &gt;-
+        the biosynthesis of ether phospholipids
+      reference_section_type: ABSTRACT
+core_functions:
+- description: &gt;-
+    Alkylglycerone-phosphate synthase (alkyl-DHAP synthase) activity: AGPS catalyzes the
+    committed ether-bond-forming step of ether-lipid biosynthesis, exchanging the acyl
+    group of acyl-dihydroxyacetone phosphate for a long-chain fatty alcohol to yield
+    alkyl-dihydroxyacetone phosphate (the first O-alkyl ether intermediate) plus the
+    released fatty acid, in the peroxisomal matrix.
+  molecular_function:
+    id: GO:0008609
+    label: alkylglycerone-phosphate synthase activity
+  supported_by:
+  - reference_id: file:human/AGPS/AGPS-uniprot.txt
+    supporting_text: &#34;EC=2.5.1.26&#34;
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: PMID:8399344
+    supporting_text: &gt;-
+      glycero-ether bond formation, has been purified
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:9553082
+    supporting_text: &gt;-
+      responsible for the inactivity of the enzyme and the phenotype
+    reference_section_type: ABSTRACT
+  directly_involved_in:
+  - id: GO:0008611
+    label: ether lipid biosynthetic process
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+- description: &gt;-
+    FAD binding: AGPS is a flavoprotein of the FAD-binding oxidoreductase/transferase
+    type 4 family and requires FAD as an obligate cofactor for its ether-bond-forming
+    catalysis.
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  supported_by:
+  - reference_id: file:human/AGPS/AGPS-uniprot.txt
+    supporting_text: &#34;Name=FAD&#34;
+    reference_section_type: DATABASE_ENTRY
+  - reference_id: file:human/AGPS/AGPS-uniprot.txt
+    supporting_text: &#34;Belongs to the FAD-binding oxidoreductase/transferase type&#34;
+    reference_section_type: DATABASE_ENTRY
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10415121
+  title: In vitro processing of the human alkyl-dihydroxyacetonephosphate synthase
+    precursor.
+  findings:
+  - statement: &gt;-
+      The human alkyl-DHAP synthase precursor carries a cleavable N-terminal PTS2
+      presequence and is imported into and processed within peroxisomes; processing does
+      not change enzyme activity.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      a peroxisomal enzyme involved in the
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Directly supports peroxisomal localization (IDA) and PTS2-dependent
+      import/processing of human AGPS; also supports the alkyl-DHAP synthase activity
+      annotation. Abstract-only in cache (full_text_available: false).
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified high-throughput NK-cell membrane proteome; AGPS is one of ~1843
+      proteins identified. Supports only the generic &#34;membrane&#34; HDA annotation, which is
+      an over-annotation relative to the specific peroxisomal membrane localization.
+- id: PMID:20833797
+  title: Phosphoproteome analysis of functional mitochondria isolated from resting
+    human muscle reveals extensive phosphorylation of inner membrane protein complexes
+    and enzymes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified muscle mitochondrial phosphoproteome. AGPS is peroxisomal; its
+      appearance in an isolated-mitochondria preparation most plausibly reflects
+      peroxisome co-fractionation, so the mitochondrion HDA annotation is treated as an
+      over-annotation.
+- id: PMID:21525035
+  title: PEX14 is required for microtubule-based peroxisome motility in human cells.
+  findings:
+  - statement: &gt;-
+      Native peroxisomal membrane protein complexes isolated via PEX14 from human cells
+      contain peroxisomal proteins; supports peroxisomal membrane association of AGPS.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      isolating native peroxisomal membrane
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Study of PEX14/peroxisomal membrane complexes; AGPS was identified
+      as a peroxisomal-membrane-associated protein (HDA), consistent with its peroxisomal
+      membrane localization.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified systematic binary interactome map. Source of an IPI protein-binding
+      annotation for the AGPS-GORASP1 (Q9BQQ3) interaction, which is also in the curated
+      UniProt INTERACTION record. Uninformative &#34;protein binding&#34;; interaction&#39;s role in
+      AGPS function is unclear.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified variant-interaction screen. Source of an IPI protein-binding
+      annotation for AGPS-GORASP1 (Q9BQQ3). Bare &#34;protein binding&#34;; functional relevance
+      to AGPS not established.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified HuRI reference binary interactome. Source of an IPI protein-binding
+      annotation for AGPS-GORASP1 (Q9BQQ3). Uninformative &#34;protein binding&#34; term.
+- id: PMID:8399344
+  title: &#39;Ether lipid synthesis: purification and identification of alkyl dihydroxyacetone
+    phosphate synthase from guinea-pig liver.&#39;
+  findings:
+  - statement: &gt;-
+      Alkyl-DHAP synthase, the enzyme responsible for glycero-ether bond formation in
+      ether phospholipid biosynthesis, was purified and characterized (65 kDa, ~13,000-fold
+      purification) from guinea-pig liver peroxisomes.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      glycero-ether bond formation, has been purified
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original purification of alkyl-DHAP synthase (guinea-pig liver
+      ortholog); one of the two ECO:0000269 sources UniProt cites for EC 2.5.1.26 and
+      FUNCTION. Establishes the core enzymatic activity. Abstract-only in cache.
+- id: PMID:9553082
+  title: Alkyl-dihydroxyacetonephosphate synthase. Fate in peroxisome biogenesis disorders
+    and identification of the point mutation underlying a single enzyme deficiency.
+  findings:
+  - statement: &gt;-
+      Human AGPS is a peroxisomal enzyme with a cleavable N-terminal PTS2 presequence; it
+      is destabilized when peroxisomal import fails, and the RCDP3 R419H mutation abolishes
+      catalytic activity, establishing AGPS as the enzyme deficient in this disorder.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      responsible for the inactivity of the enzyme and the phenotype
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Key human AGPS paper: peroxisomal/PTS2 localization, ether
+      phospholipid biosynthesis role, and the R419H RCDP3 loss-of-activity mutation.
+      Second ECO:0000269 source UniProt cites for EC 2.5.1.26/FUNCTION. Abstract-only in
+      cache.
+- id: Reactome:R-HSA-390427
+  title: 1-palmitoylglycerone phosphate + hexadecanol =&gt; O-hexadecylglycerone phosphate
+    + palmitate
+  findings: []
+- id: Reactome:R-HSA-75879
+  title: palmitoyl-CoA + DHAP =&gt; 1-palmitoylglycerone phosphate + CoASH
+  findings: []
+- id: Reactome:R-HSA-9033232
+  title: PEX7 binds cargo proteins containing PTS2
+  findings: []
+- id: Reactome:R-HSA-9033514
+  title: Cargo of PEX5L:PEX7 translocates from the cytosol to the peroxisomal matrix
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

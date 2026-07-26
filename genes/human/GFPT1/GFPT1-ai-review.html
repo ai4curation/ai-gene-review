@@ -1,0 +1,4251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GFPT1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GFPT1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q06210" target="_blank" class="term-link">
+                        Q06210
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GFPT1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q06210" data-a="DESCRIPTION: GFPT1 (GFAT1) is the human glutamine--fructose-6-p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GFPT1 (GFAT1) is the human glutamine--fructose-6-phosphate aminotransferase [isomerizing] 1 (EC 2.6.1.16), the first and rate-limiting enzyme of the hexosamine biosynthetic pathway (HBP). It catalyzes the transfer of the amido nitrogen of L-glutamine to D-fructose 6-phosphate, producing D-glucosamine 6-phosphate and L-glutamate. The enzyme is bifunctional: an N-terminal glutamine amidotransferase (class II / Ntn-hydrolase) domain hydrolyzes L-glutamine to L-glutamate plus ammonia, and a C-terminal isomerase region built from two sugar-isomerase (SIS) subdomains isomerizes fructose 6-phosphate to glucose 6-phosphate and aminates it, with the two active sites connected by an ammonia channel. Glucosamine 6-phosphate is the committed precursor for UDP-N-acetylglucosamine (UDP-GlcNAc), which feeds N- and O-linked protein glycosylation, O-GlcNAcylation, GPI-anchor synthesis, and glycosaminoglycan (e.g. hyaluronan) biosynthesis; the HBP therefore acts as a nutrient- and flux-sensing branch of glycolysis. GFPT1 is a cytosolic homodimer/homotetramer and is feedback-inhibited by its downstream product UDP-GlcNAc. Loss-of-function variants of GFPT1 cause congenital myasthenic syndrome type 12 (limb-girdle congenital myasthenia with tubular aggregates).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006002" target="_blank" class="term-link">
+                                    GO:0006002
+                                </a>
+                            </span>
+                            <span class="term-label">fructose 6-phosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006002" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fructose 6-phosphate is the sugar substrate of GFPT1 (F6P + L-Gln -&gt; GlcN6P + L-Glu), so this term is correct but describes the substrate side of the same catalytic reaction that is more informatively captured by the molecular function (GO:0004360) and the downstream HBP process (GO:0006048). Kept as non-core supporting metabolism.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                                        PMID:35229715
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glutamine fructose-6-phosphate amidotransferase (GFPT) converts fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to D-glucosamine-6-phosphate (GlcN6P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006048" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. GFPT1 catalyzes the first, rate-limiting and committed step of the pathway that produces UDP-GlcNAc. Well supported by phylogenetic inference across GFAT/GlmS orthologs and by direct experimental evidence.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Rate-limiting enzyme of the hexosamine biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of GFPT1. This is the EC 2.6.1.16 activity (L-glutamine + D-fructose 6-phosphate -&gt; L-glutamate + D-glucosamine 6-phosphate). Phylogenetic inference is fully consistent with direct experimental and structural evidence for the human enzyme.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same core molecular function, inferred electronically from ARBA/InterPro (IPR005855 GFAT) mapped to EC 2.6.1.16 / RHEA:13237. Consistent with the experimentally verified activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.6.1.16 {ECO:0000269|PubMed:32019926, ECO:0000269|PubMed:35229715}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006002" target="_blank" class="term-link">
+                                    GO:0006002
+                                </a>
+                            </span>
+                            <span class="term-label">fructose 6-phosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006002" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) restatement of the substrate-side process, same as the IBA and TAS annotations to this term. Correct but non-core; the specific MF and HBP process terms are more informative.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                                        PMID:35229715
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glutamine fructose-6-phosphate amidotransferase (GFPT) converts fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to D-glucosamine-6-phosphate (GlcN6P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006112" target="_blank" class="term-link">
+                                    GO:0006112
+                                </a>
+                            </span>
+                            <span class="term-label">energy reserve metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006112" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biologically incorrect. &#34;Energy reserve metabolic process&#34; concerns storage carbohydrate/lipid (glycogen, starch, triglyceride) metabolism and energy derivation. GFPT1 does the opposite: it diverts fructose 6-phosphate OUT of energy/glycolytic flux into aminosugar biosynthesis (the HBP). This is a clearly wrong electronic (ARBA) inference and should be removed.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097367" target="_blank" class="term-link">
+                                    GO:0097367
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0097367" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro-derived binding term (SIS domain). GFPT1 does bind phosphosugar substrates/products (fructose 6-phosphate, glucose 6-phosphate, UDP-GlcNAc), so this is not wrong, but it is an uninformative parent term subsumed by the specific transaminase molecular function. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;UDP-N-acetyl-alpha-D-glucosamine&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901135" target="_blank" class="term-link">
+                                    GO:1901135
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:1901135" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level parent process (carbohydrate derivative metabolism). True but uninformative; subsumed by the specific UDP-GlcNAc biosynthetic process and fructose 6-phosphate metabolic process annotations. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901137" target="_blank" class="term-link">
+                                    GO:1901137
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:1901137" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level parent process (carbohydrate derivative biosynthesis). True but uninformative; subsumed by the specific UDP-N-acetylglucosamine biosynthetic process (GO:0006048) annotation. Kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput affinity-capture interactome (BioPlex). The WITH/FROM is UniProtKB:O94808 = GFPT2, i.e. this records the GFPT1-GFPT2 paralog interaction also documented in UniProt (IntAct, NbExp=3). Bare &#34;protein binding&#34; is uninformative and does not describe GFPT1&#39;s molecular function; marked as over-annotated rather than removed (experimental IPI). The cited publication&#39;s cached text does not name GFPT1/GFPT2 in prose, so no verbatim quote is given.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q06210; O94808: GFPT2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second high-throughput interactome study (multimodal cell maps), WITH/FROM UniProtKB:O94808 = GFPT2, again capturing the GFPT1-GFPT2 interaction. Bare &#34;protein binding&#34; is uninformative; marked as over-annotated rather than removed (experimental IPI). No verbatim quote is available because the cached publication text does not name GFPT1/GFPT2 in prose.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q06210; O94808: GFPT2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032922" target="_blank" class="term-link">
+                                    GO:0032922
+                                </a>
+                            </span>
+                            <span class="term-label">circadian regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0032922" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronically transferred from mouse ortholog (Gfpt1, P47856) via Ensembl Compara. UniProt notes, by similarity, that GFPT1 modulates peripheral clock oscillation through control of the HBP; this is an indirect, downstream role of UDP-GlcNAc/O-GlcNAc signaling rather than a core function of the enzyme. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">modulates peripheral clock oscillation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446210
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006048" data-r="Reactome:R-HSA-446210" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, curated by Reactome (Synthesis of UDP-N-acetyl-glucosamine). GFPT1 catalyzes the first committed step of UDP-GlcNAc biosynthesis.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Nucleotide-sugar biosynthesis; UDP-N-acetyl-alpha-D-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006048" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same core process inferred electronically (ARBA + UniPathway UPA00113). Consistent with the curated and experimental annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Nucleotide-sugar biosynthesis; UDP-N-acetyl-alpha-D-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-4085027
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="Reactome:R-HSA-4085027" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, curated by Reactome (this reaction annotation describes the defective-GFPT1 case but asserts the wild-type activity of transferring an amino group from L-Gln to F6P to form GlcN6P).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-449715
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="Reactome:R-HSA-449715" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, curated by Reactome (GFPT1,2 transfer an amino group from L-Gln to F6P to form GlcN6P). Consistent with all other GO:0004360 annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32019926" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32019926
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss of GFAT-1 feedback regulation activates the hexosamine ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="PMID:32019926" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function with strong experimental support. Ruegenberg et al. determined the full-length human GFAT-1 crystal structure, performed enzyme activity assays, and defined the catalytic reaction and UDP-GlcNAc feedback inhibition. This is the primary experimental basis for the EC 2.6.1.16 assignment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32019926" target="_blank" class="term-link">
+                                        PMID:32019926
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GFAT synthesizes d-glucosamine-6-phosphate (GlcN6P) from l-glutamine (l-Gln) and Frc6P, releasing l-glutamate (l-Glu)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35229715
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GFPT2/GFAT2 and AMDHD2 act in tandem to control the hexosami...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="PMID:35229715" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, direct assay. Kroef et al. is primarily about GFPT2/AMDHD2 but directly measures GFPT1 enzyme activity and its UDP-GlcNAc sensitivity as the comparison point; the paper explicitly frames GFPT (GFPT1/2) as carrying out the F6P + L-Gln -&gt; GlcN6P reaction. Experimental annotation retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                                        PMID:35229715
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Compared with GFPT1, GFPT2 had a much lower sensitivity to UDP-GlcNAc</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006002" target="_blank" class="term-link">
+                                    GO:0006002
+                                </a>
+                            </span>
+                            <span class="term-label">fructose 6-phosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35229715
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GFPT2/GFAT2 and AMDHD2 act in tandem to control the hexosami...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006002" data-r="PMID:35229715" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fructose 6-phosphate is the substrate consumed by GFPT1; direct assay supports involvement in F6P metabolism, but this is the substrate-side framing of the core transaminase reaction. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                                        PMID:35229715
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">glutamine fructose-6-phosphate amidotransferase (GFPT) converts fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to D-glucosamine-6-phosphate (GlcN6P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35229715
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GFPT2/GFAT2 and AMDHD2 act in tandem to control the hexosami...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006048" data-r="PMID:35229715" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, direct assay. The study manipulates the HBP and measures UDP-GlcNAc, with GFPT (GFPT1/2) as the rate-limiting entry enzyme. Experimental annotation retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                                        PMID:35229715
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the first and rate limiting step of the HBP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26887390" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26887390
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hexosamine biosynthesis in keratinocytes: roles of GFAT and ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006048" data-r="PMID:26887390" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process supported by loss-of-function evidence. siRNA depletion of GFAT1 in human keratinocytes reduced the cellular UDP-GlcNAc pool (and hyaluronan synthesis), directly implicating GFPT1 in UDP-GlcNAc biosynthesis. Experimental (IMP) annotation retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26887390" target="_blank" class="term-link">
+                                        PMID:26887390
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Depletion of GFAT1 reduced the cellular pool of UDP-GlcNAc and hyaluronan synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-4085027
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0005829" data-r="Reactome:R-HSA-4085027" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct subcellular localization. GFPT1 is a soluble cytosolic enzyme (no signal peptide or transmembrane region); the HBP is a cytosolic branch of glycolysis. Curated by Reactome.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032922" target="_blank" class="term-link">
+                                    GO:0032922
+                                </a>
+                            </span>
+                            <span class="term-label">circadian regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0032922" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer from the mouse ortholog (P47856), same indirect clock-modulation role as the Ensembl IEA annotation to this term. Downstream/By-similarity role via UDP-GlcNAc rather than a core function. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GFPT1/GFPT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">modulates peripheral clock oscillation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0070062" data-r="PMID:20458337" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected by high-throughput proteomics of B-cell exosomes. GFPT1 is a cytosolic metabolic enzyme; presence in the exosome fraction is a common finding for abundant cytosolic proteins and does not reflect a functional extracellular/exosomal role. Kept as non-core (localization observation only).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1791088
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0005829" data-r="Reactome:R-HSA-1791088" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization, curated by Reactome (Expression of GFPT1). Consistent with the other cytosol annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-449715
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0005829" data-r="Reactome:R-HSA-449715" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization, curated by Reactome (GFPT1,2 reaction). Consistent with the other cytosol annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                                    GO:0004360
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8144040" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8144040
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The murine glutamine:fructose-6-phosphate amidotransferase-e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0004360" data-r="PMID:8144040" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, legacy author statement. Sayeski et al. (murine GFAT cDNA) describe GFAT as the rate-limiting enzyme of hexosamine synthesis (&gt;98% identical to human), supporting the transaminase activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8144040" target="_blank" class="term-link">
+                                        PMID:8144040
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GFAT) is the rate-limiting enzyme in hexosamine synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006002" target="_blank" class="term-link">
+                                    GO:0006002
+                                </a>
+                            </span>
+                            <span class="term-label">fructose 6-phosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8144040" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8144040
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The murine glutamine:fructose-6-phosphate amidotransferase-e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006002" data-r="PMID:8144040" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Substrate-side process annotation from the murine GFAT cDNA paper. Correct but non-core; the transaminase MF and HBP biosynthetic process are more informative.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8144040" target="_blank" class="term-link">
+                                        PMID:8144040
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GFAT) is the rate-limiting enzyme in hexosamine synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006112" target="_blank" class="term-link">
+                                    GO:0006112
+                                </a>
+                            </span>
+                            <span class="term-label">energy reserve metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1460020" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1460020
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning, cDNA sequence, and bacterial expression o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q06210" data-a="GO:0006112" data-r="PMID:1460020" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Legacy ProtInc author annotation. The cited paper (McKnight 1992) is about cloning human GFAT and its regulation in insulin resistance; it supports catalytic activity and UDP-GlcNAc feedback inhibition, NOT an energy-reserve (glycogen/storage carbohydrate) role. GFPT1 diverts fructose 6-phosphate away from energy metabolism into aminosugar biosynthesis. Because this is a curator/author (TAS) annotation it is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1460020" target="_blank" class="term-link">
+                                        PMID:1460020
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Recombinant GFAT activity was inhibited 51% by UDP-GlcNAc</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Rate-limiting, first and committed step of the hexosamine biosynthetic pathway: transfers the amido nitrogen of L-glutamine to D-fructose 6-phosphate to produce D-glucosamine 6-phosphate and L-glutamate, feedback inhibited by the downstream product UDP-GlcNAc.</h3>
+                <span class="vote-buttons" data-g="Q06210" data-a="FUNCTION: Rate-limiting, first and committed step of the hex..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004360" target="_blank" class="term-link">
+                            L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                UDP-N-acetylglucosamine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32019926" target="_blank" class="term-link">
+                                PMID:32019926
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GFAT synthesizes d-glucosamine-6-phosphate (GlcN6P) from l-glutamine (l-Gln) and Frc6P, releasing l-glutamate (l-Glu)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GFPT1/GFPT1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Rate-limiting enzyme of the hexosamine biosynthetic pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1460020" target="_blank" class="term-link">
+                            PMID:1460020
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning, cDNA sequence, and bacterial expression of human glutamine:fructose-6-phosphate amidotransferase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26887390" target="_blank" class="term-link">
+                            PMID:26887390
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hexosamine biosynthesis in keratinocytes: roles of GFAT and GNPDA enzymes in the maintenance of UDP-GlcNAc content and hyaluronan synthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32019926" target="_blank" class="term-link">
+                            PMID:32019926
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Loss of GFAT-1 feedback regulation activates the hexosamine pathway that modulates protein homeostasis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35229715" target="_blank" class="term-link">
+                            PMID:35229715
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GFPT2/GFAT2 and AMDHD2 act in tandem to control the hexosamine pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8144040" target="_blank" class="term-link">
+                            PMID:8144040
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The murine glutamine:fructose-6-phosphate amidotransferase-encoding cDNA sequence.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1791088
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of GFPT1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-4085027
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective GFPT1 does not transfer an amino group from L-Gln to F6P to form GlcN6P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446210
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of UDP-N-acetyl-glucosamine</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-449715
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GFPT1,2 transfer an amino group from L-Gln to F6P to form GlcN6P</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GFPT1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q06210" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gfpt1-q06210-review-notes">GFPT1 (Q06210) review notes</h1>
+<p>Human glutamine--fructose-6-phosphate aminotransferase [isomerizing] 1 (GFAT1 / GFPT1).<br />
+HGNC:4241. 699 aa. EC 2.6.1.16. Reviewed from local files only (no deep-research run).</p>
+<h2 id="identity-and-core-biochemistry">Identity and core biochemistry</h2>
+<ul>
+<li>UniProt RecName "Glutamine--fructose-6-phosphate aminotransferase [isomerizing] 1";<br />
+  EC=2.6.1.16 with experimental evidence from PubMed:32019926 and PubMed:35229715<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "EC=2.6.1.16 {ECO:0000269|PubMed:32019926, ECO:0000269|PubMed:35229715}"].</li>
+<li>CATALYTIC ACTIVITY (UniProt, Rhea RHEA:13237):<br />
+  D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-phosphate + L-glutamate<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-"].</li>
+<li>Rate-limiting enzyme of the hexosamine biosynthetic pathway (HBP); controls flux of<br />
+  glucose into the HBP; feedback-inhibited by UDP-GlcNAc<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "Rate-limiting enzyme of the hexosamine biosynthetic pathway"].</li>
+<li>Two-domain architecture: N-terminal glutamine amidotransferase type-2 domain (aa 2-305,<br />
+  hydrolyses L-Gln -&gt; L-Glu + NH3) + C-terminal isomerase region (aa 313-680, two SIS<br />
+  subdomains) that isomerises Frc6P to Glc6P and aminates it to GlcN6P<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "Glutamine amidotransferase type-2"; "SIS 1"; "Isomerase"].</li>
+<li>PMID:32019926 (Ruegenberg 2020, full text): "In the first step of the HP, GFAT synthesizes<br />
+  d-glucosamine-6-phosphate (GlcN6P) from l-glutamine (l-Gln) and Frc6P, releasing l-glutamate<br />
+  (l-Glu)"; "the rate-limiting enzyme of the HP"; "UDP-GlcNAc directly interacts with GFAT-1,<br />
+  inhibiting catalytic activity". Full-length crystal structure of human GFAT-1; defines<br />
+  UDP-GlcNAc feedback site (G469E / G451E-numbering gain-of-function loses feedback).</li>
+<li>PMID:35229715 (Kroef 2022, full text): "In the first and rate limiting step of the HBP,<br />
+  glutamine fructose-6-phosphate amidotransferase (GFPT) converts fructose-6-phosphate (Frc6P)<br />
+  and L-glutamine (L-Gln) to D-glucosamine-6-phosphate (GlcN6P)". Paper is mainly about GFPT2 /<br />
+  AMDHD2 but directly assays GFPT1 enzyme activity and UDP-GlcNAc sensitivity<br />
+  ("Compared with GFPT1, GFPT2 had a much lower sensitivity to UDP-GlcNAc"). GFPT1 is the<br />
+  ubiquitously expressed paralog. FlyBase (dataset source) attributed the IDA GFPT1<br />
+  annotations to this paper; kept (experimental, do not remove).</li>
+</ul>
+<h2 id="downstream-pathway-context">Downstream / pathway context</h2>
+<ul>
+<li>GlcN6P is the committed precursor for UDP-GlcNAc, feeding N-/O-linked glycosylation,<br />
+  O-GlcNAcylation, GPI anchors, glycosaminoglycans/hyaluronan (HBP as nutrient/flux sensor).</li>
+<li>PMID:26887390 (Oikari 2016, abstract only): GFAT1 siRNA silencing "reduced the cellular pool<br />
+  of UDP-GlcNAc and hyaluronan synthesis" in human keratinocytes -&gt; supports IMP for<br />
+  UDP-N-acetylglucosamine biosynthetic process (GO:0006048).</li>
+<li>PMID:1460020 (McKnight 1992, abstract only): cloning of human GFAT; recombinant enzyme<br />
+  raised "GFAT activity 4.5-fold" and was "inhibited 51% by UDP-GlcNAc". This is the source<br />
+  of the legacy ProtInc TAS annotations. It supports catalytic activity, NOT "energy reserve<br />
+  metabolic process".</li>
+<li>PMID:8144040 (Sayeski 1994, abstract only): murine GFAT cDNA; "GFAT is the rate-limiting<br />
+  enzyme in hexosamine synthesis". Source of the older PINC TAS GO:0004360 / GO:0006002.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic enzyme (Reactome TAS: R-HSA-4085027, R-HSA-449715, R-HSA-1791088 -&gt; GO:0005829).</li>
+<li>GO:0070062 extracellular exosome (HDA, PMID:20458337, B-cell exosome proteomics): common<br />
+  mass-spec exosome-fraction hit; kept as non-core (not the site of catalytic function).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>GFPT1 loss-of-function variants cause congenital myasthenic syndrome type 12 (CMS12;<br />
+  limb-girdle CMS with tubular aggregates), MIM:610542 (PubMed:21310273, Senderek 2011)<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "Myasthenic syndrome, congenital, 12 (CMS12)"].</li>
+<li>Reactome R-HSA-4085023 "Defective GFPT1 causes CMSTA1".</li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li>Core MF: GO:0004360 L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity.<br />
+  All 6 GO:0004360 annotations (IBA, IEA, 2x Reactome TAS, EXP PMID:32019926, IDA PMID:35229715,<br />
+  TAS PMID:8144040) ACCEPTed.</li>
+<li>Core BP: GO:0006048 UDP-N-acetylglucosamine biosynthetic process (IBA, 2x IEA/Reactome/ARBA,<br />
+  IDA PMID:35229715, IMP PMID:26887390) ACCEPTed.</li>
+<li>GO:0006002 fructose 6-phosphate metabolic process: real (substrate metabolism) but a<br />
+  by-product framing of the same reaction; KEEP_AS_NON_CORE.</li>
+<li>Cytosol GO:0005829: ACCEPT.</li>
+<li>GO:0006112 energy reserve metabolic process: biologically wrong (HBP diverts F6P AWAY from<br />
+  energy/glycogen metabolism). ARBA IEA -&gt; REMOVE; legacy ProtInc TAS (PMID:1460020) -&gt;<br />
+  MARK_AS_OVER_ANNOTATED (experimental/author annotation, not removed per policy).</li>
+<li>GO:0005515 protein binding (2x IPI, both WITH GFPT2 O94808): this is the GFPT1-GFPT2<br />
+  homolog/heteromer interaction from high-throughput interactome maps<br />
+  (UniProt INTERACTION "Q06210; O94808: GFPT2; NbExp=3"). Bare "protein binding" -&gt;<br />
+  MARK_AS_OVER_ANNOTATED (uninformative; not removed per policy). Neither cited interactome<br />
+  paper's cached text names GFPT1/GFPT2 in prose, so no verbatim quote given.</li>
+<li>GO:0097367 carbohydrate derivative binding / GO:1901135 / GO:1901137 (InterPro IEA):<br />
+  over-general parent terms subsumed by the specific MF/BP; KEEP_AS_NON_CORE.</li>
+<li>GO:0032922 circadian regulation of gene expression (IEA Ensembl + ISS, both from mouse<br />
+  P47856 "By similarity"): HBP/UDP-GlcNAc modulates peripheral clock oscillation<br />
+  [file:human/GFPT1/GFPT1-uniprot.txt "modulates peripheral clock oscillation (By similarity)"],<br />
+  but this is an indirect downstream/By-similarity role, not a core function of the enzyme;<br />
+  KEEP_AS_NON_CORE.</li>
+<li>GO:0070062 extracellular exosome (HDA): KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q06210
+gene_symbol: GFPT1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GFPT1 (GFAT1) is the human glutamine--fructose-6-phosphate aminotransferase
+  [isomerizing] 1 (EC 2.6.1.16), the first and rate-limiting enzyme of the
+  hexosamine biosynthetic pathway (HBP). It catalyzes the transfer of the amido
+  nitrogen of L-glutamine to D-fructose 6-phosphate, producing D-glucosamine
+  6-phosphate and L-glutamate. The enzyme is bifunctional: an N-terminal
+  glutamine amidotransferase (class II / Ntn-hydrolase) domain hydrolyzes
+  L-glutamine to L-glutamate plus ammonia, and a C-terminal isomerase region
+  built from two sugar-isomerase (SIS) subdomains isomerizes fructose 6-phosphate
+  to glucose 6-phosphate and aminates it, with the two active sites connected by
+  an ammonia channel. Glucosamine 6-phosphate is the committed precursor for
+  UDP-N-acetylglucosamine (UDP-GlcNAc), which feeds N- and O-linked protein
+  glycosylation, O-GlcNAcylation, GPI-anchor synthesis, and glycosaminoglycan
+  (e.g. hyaluronan) biosynthesis; the HBP therefore acts as a nutrient- and
+  flux-sensing branch of glycolysis. GFPT1 is a cytosolic homodimer/homotetramer
+  and is feedback-inhibited by its downstream product UDP-GlcNAc. Loss-of-function
+  variants of GFPT1 cause congenital myasthenic syndrome type 12 (limb-girdle
+  congenital myasthenia with tubular aggregates).
+alternative_products:
+- name: 1 (GFAT1m)
+  id: Q06210-1
+- name: &#39;2&#39;
+  id: Q06210-2
+  sequence_note: VSP_007497
+existing_annotations:
+- term:
+    id: GO:0006002
+    label: fructose 6-phosphate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Fructose 6-phosphate is the sugar substrate of GFPT1 (F6P + L-Gln -&gt;
+      GlcN6P + L-Glu), so this term is correct but describes the substrate side
+      of the same catalytic reaction that is more informatively captured by the
+      molecular function (GO:0004360) and the downstream HBP process
+      (GO:0006048). Kept as non-core supporting metabolism.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:35229715
+      supporting_text: &gt;-
+        glutamine fructose-6-phosphate amidotransferase (GFPT) converts
+        fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to
+        D-glucosamine-6-phosphate (GlcN6P)
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. GFPT1 catalyzes the first, rate-limiting and
+      committed step of the pathway that produces UDP-GlcNAc. Well supported by
+      phylogenetic inference across GFAT/GlmS orthologs and by direct
+      experimental evidence.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Rate-limiting enzyme of the hexosamine biosynthetic pathway
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function of GFPT1. This is the EC 2.6.1.16 activity
+      (L-glutamine + D-fructose 6-phosphate -&gt; L-glutamate + D-glucosamine
+      6-phosphate). Phylogenetic inference is fully consistent with direct
+      experimental and structural evidence for the human enzyme.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Same core molecular function, inferred electronically from ARBA/InterPro
+      (IPR005855 GFAT) mapped to EC 2.6.1.16 / RHEA:13237. Consistent with the
+      experimentally verified activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        EC=2.6.1.16 {ECO:0000269|PubMed:32019926, ECO:0000269|PubMed:35229715}
+- term:
+    id: GO:0006002
+    label: fructose 6-phosphate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA) restatement of the substrate-side process, same as the
+      IBA and TAS annotations to this term. Correct but non-core; the specific
+      MF and HBP process terms are more informative.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:35229715
+      supporting_text: &gt;-
+        glutamine fructose-6-phosphate amidotransferase (GFPT) converts
+        fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to
+        D-glucosamine-6-phosphate (GlcN6P)
+- term:
+    id: GO:0006112
+    label: energy reserve metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Biologically incorrect. &#34;Energy reserve metabolic process&#34; concerns
+      storage carbohydrate/lipid (glycogen, starch, triglyceride) metabolism and
+      energy derivation. GFPT1 does the opposite: it diverts fructose 6-phosphate
+      OUT of energy/glycolytic flux into aminosugar biosynthesis (the HBP). This
+      is a clearly wrong electronic (ARBA) inference and should be removed.
+    action: REMOVE
+- term:
+    id: GO:0097367
+    label: carbohydrate derivative binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro-derived binding term (SIS domain). GFPT1 does bind
+      phosphosugar substrates/products (fructose 6-phosphate, glucose 6-phosphate,
+      UDP-GlcNAc), so this is not wrong, but it is an uninformative parent term
+      subsumed by the specific transaminase molecular function. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        /ligand=&#34;UDP-N-acetyl-alpha-D-glucosamine&#34;
+- term:
+    id: GO:1901135
+    label: carbohydrate derivative metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      High-level parent process (carbohydrate derivative metabolism). True but
+      uninformative; subsumed by the specific UDP-GlcNAc biosynthetic process
+      and fructose 6-phosphate metabolic process annotations. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:1901137
+    label: carbohydrate derivative biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      High-level parent process (carbohydrate derivative biosynthesis). True but
+      uninformative; subsumed by the specific UDP-N-acetylglucosamine
+      biosynthetic process (GO:0006048) annotation. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput affinity-capture interactome (BioPlex). The WITH/FROM is
+      UniProtKB:O94808 = GFPT2, i.e. this records the GFPT1-GFPT2 paralog
+      interaction also documented in UniProt (IntAct, NbExp=3). Bare &#34;protein
+      binding&#34; is uninformative and does not describe GFPT1&#39;s molecular function;
+      marked as over-annotated rather than removed (experimental IPI). The cited
+      publication&#39;s cached text does not name GFPT1/GFPT2 in prose, so no verbatim
+      quote is given.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &#39;Q06210; O94808: GFPT2&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second high-throughput interactome study (multimodal cell maps),
+      WITH/FROM UniProtKB:O94808 = GFPT2, again capturing the GFPT1-GFPT2
+      interaction. Bare &#34;protein binding&#34; is uninformative; marked as
+      over-annotated rather than removed (experimental IPI). No verbatim quote is
+      available because the cached publication text does not name GFPT1/GFPT2 in
+      prose.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &#39;Q06210; O94808: GFPT2&#39;
+- term:
+    id: GO:0032922
+    label: circadian regulation of gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronically transferred from mouse ortholog (Gfpt1, P47856) via Ensembl
+      Compara. UniProt notes, by similarity, that GFPT1 modulates peripheral
+      clock oscillation through control of the HBP; this is an indirect,
+      downstream role of UDP-GlcNAc/O-GlcNAc signaling rather than a core
+      function of the enzyme. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: modulates peripheral clock oscillation
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446210
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, curated by Reactome (Synthesis of
+      UDP-N-acetyl-glucosamine). GFPT1 catalyzes the first committed step of
+      UDP-GlcNAc biosynthesis.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Nucleotide-sugar biosynthesis; UDP-N-acetyl-alpha-D-
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Same core process inferred electronically (ARBA + UniPathway UPA00113).
+      Consistent with the curated and experimental annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Nucleotide-sugar biosynthesis; UDP-N-acetyl-alpha-D-
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-4085027
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, curated by Reactome (this reaction annotation
+      describes the defective-GFPT1 case but asserts the wild-type activity of
+      transferring an amino group from L-Gln to F6P to form GlcN6P).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-449715
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, curated by Reactome (GFPT1,2 transfer an amino
+      group from L-Gln to F6P to form GlcN6P). Consistent with all other
+      GO:0004360 annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=D-fructose 6-phosphate + L-glutamine = D-glucosamine 6-
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: EXP
+  original_reference_id: PMID:32019926
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function with strong experimental support. Ruegenberg et al.
+      determined the full-length human GFAT-1 crystal structure, performed enzyme
+      activity assays, and defined the catalytic reaction and UDP-GlcNAc feedback
+      inhibition. This is the primary experimental basis for the EC 2.6.1.16
+      assignment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32019926
+      supporting_text: &gt;-
+        GFAT synthesizes d-glucosamine-6-phosphate (GlcN6P) from l-glutamine
+        (l-Gln) and Frc6P, releasing l-glutamate (l-Glu)
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: IDA
+  original_reference_id: PMID:35229715
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, direct assay. Kroef et al. is primarily about
+      GFPT2/AMDHD2 but directly measures GFPT1 enzyme activity and its UDP-GlcNAc
+      sensitivity as the comparison point; the paper explicitly frames GFPT
+      (GFPT1/2) as carrying out the F6P + L-Gln -&gt; GlcN6P reaction. Experimental
+      annotation retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:35229715
+      supporting_text: &gt;-
+        Compared with GFPT1, GFPT2 had a much lower sensitivity to UDP-GlcNAc
+- term:
+    id: GO:0006002
+    label: fructose 6-phosphate metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:35229715
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Fructose 6-phosphate is the substrate consumed by GFPT1; direct assay
+      supports involvement in F6P metabolism, but this is the substrate-side
+      framing of the core transaminase reaction. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:35229715
+      supporting_text: &gt;-
+        glutamine fructose-6-phosphate amidotransferase (GFPT) converts
+        fructose-6-phosphate (Frc6P) and L-glutamine (L-Gln) to
+        D-glucosamine-6-phosphate (GlcN6P)
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:35229715
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, direct assay. The study manipulates the HBP and
+      measures UDP-GlcNAc, with GFPT (GFPT1/2) as the rate-limiting entry enzyme.
+      Experimental annotation retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:35229715
+      supporting_text: &gt;-
+        In the first and rate limiting step of the HBP
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:26887390
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process supported by loss-of-function evidence. siRNA
+      depletion of GFAT1 in human keratinocytes reduced the cellular UDP-GlcNAc
+      pool (and hyaluronan synthesis), directly implicating GFPT1 in UDP-GlcNAc
+      biosynthesis. Experimental (IMP) annotation retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26887390
+      supporting_text: &gt;-
+        Depletion of GFAT1 reduced the cellular pool of UDP-GlcNAc and hyaluronan
+        synthesis
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-4085027
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct subcellular localization. GFPT1 is a soluble cytosolic enzyme
+      (no signal peptide or transmembrane region); the HBP is a cytosolic branch
+      of glycolysis. Curated by Reactome.
+    action: ACCEPT
+- term:
+    id: GO:0032922
+    label: circadian regulation of gene expression
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer from the mouse ortholog (P47856), same
+      indirect clock-modulation role as the Ensembl IEA annotation to this term.
+      Downstream/By-similarity role via UDP-GlcNAc rather than a core function.
+      Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+      supporting_text: modulates peripheral clock oscillation
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Detected by high-throughput proteomics of B-cell exosomes. GFPT1 is a
+      cytosolic metabolic enzyme; presence in the exosome fraction is a common
+      finding for abundant cytosolic proteins and does not reflect a functional
+      extracellular/exosomal role. Kept as non-core (localization observation
+      only).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1791088
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization, curated by Reactome (Expression of GFPT1).
+      Consistent with the other cytosol annotations.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-449715
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization, curated by Reactome (GFPT1,2 reaction). Consistent
+      with the other cytosol annotations.
+    action: ACCEPT
+- term:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  evidence_type: TAS
+  original_reference_id: PMID:8144040
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, legacy author statement. Sayeski et al. (murine
+      GFAT cDNA) describe GFAT as the rate-limiting enzyme of hexosamine
+      synthesis (&gt;98% identical to human), supporting the transaminase activity.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8144040
+      supporting_text: &gt;-
+        GFAT) is the rate-limiting
+        enzyme in hexosamine synthesis
+- term:
+    id: GO:0006002
+    label: fructose 6-phosphate metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:8144040
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Substrate-side process annotation from the murine GFAT cDNA paper. Correct
+      but non-core; the transaminase MF and HBP biosynthetic process are more
+      informative.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:8144040
+      supporting_text: &gt;-
+        GFAT) is the rate-limiting
+        enzyme in hexosamine synthesis
+- term:
+    id: GO:0006112
+    label: energy reserve metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:1460020
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Legacy ProtInc author annotation. The cited paper (McKnight 1992) is about
+      cloning human GFAT and its regulation in insulin resistance; it supports
+      catalytic activity and UDP-GlcNAc feedback inhibition, NOT an energy-reserve
+      (glycogen/storage carbohydrate) role. GFPT1 diverts fructose 6-phosphate
+      away from energy metabolism into aminosugar biosynthesis. Because this is a
+      curator/author (TAS) annotation it is marked as over-annotated rather than
+      removed.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:1460020
+      supporting_text: &gt;-
+        Recombinant GFAT activity was inhibited 51% by UDP-GlcNAc
+core_functions:
+- description: &gt;-
+    Rate-limiting, first and committed step of the hexosamine biosynthetic
+    pathway: transfers the amido nitrogen of L-glutamine to D-fructose
+    6-phosphate to produce D-glucosamine 6-phosphate and L-glutamate, feedback
+    inhibited by the downstream product UDP-GlcNAc.
+  molecular_function:
+    id: GO:0004360
+    label: L-glutamine:D-fructose-6-phosphate transaminase (isomerizing) activity
+  directly_involved_in:
+  - id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:32019926
+    supporting_text: &gt;-
+      GFAT synthesizes d-glucosamine-6-phosphate (GlcN6P) from l-glutamine
+      (l-Gln) and Frc6P, releasing l-glutamate (l-Glu)
+  - reference_id: file:human/GFPT1/GFPT1-uniprot.txt
+    supporting_text: &gt;-
+      Rate-limiting enzyme of the hexosamine biosynthetic pathway
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1460020
+  title: Molecular cloning, cDNA sequence, and bacterial expression of human glutamine:fructose-6-phosphate
+    amidotransferase.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. Human GFAT cloning/expression; recombinant enzyme
+      raised GFAT activity and was inhibited 51% by UDP-GlcNAc. Supports catalytic
+      activity and feedback inhibition; does NOT support the energy-reserve
+      annotation it is cited for (that annotation marked over-annotated).
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. High-throughput B-cell exosome proteomics; source
+      of the extracellular-exosome HDA localization. Not informative for core
+      enzymatic function.
+- id: PMID:26887390
+  title: &#39;Hexosamine biosynthesis in keratinocytes: roles of GFAT and GNPDA enzymes
+    in the maintenance of UDP-GlcNAc content and hyaluronan synthesis.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. GFAT1 siRNA reduced the cellular UDP-GlcNAc pool and
+      hyaluronan synthesis in human keratinocytes; loss-of-function support for the
+      UDP-N-acetylglucosamine biosynthetic process (IMP) annotation.
+- id: PMID:32019926
+  title: Loss of GFAT-1 feedback regulation activates the hexosamine pathway that
+    modulates protein homeostasis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available. Full-length human GFAT-1 crystal structure plus enzyme
+      activity assays defining the EC 2.6.1.16 reaction and UDP-GlcNAc feedback
+      inhibition. Primary experimental basis for the catalytic-activity annotation.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex high-throughput interactome; GFPT1-GFPT2 (O94808) interaction is the
+      basis of a bare &#34;protein binding&#34; IPI (marked over-annotated). GFPT1/GFPT2 are
+      not named in the cached prose (interactions are in supplementary tables).
+- id: PMID:35229715
+  title: GFPT2/GFAT2 and AMDHD2 act in tandem to control the hexosamine pathway.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available. Primarily on GFPT2/AMDHD2 but directly assays GFPT1
+      enzyme activity and UDP-GlcNAc sensitivity; source of the FlyBase-assigned
+      GFPT1 IDA annotations for transaminase activity and UDP-GlcNAc biosynthesis.
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput multimodal cell map; second source of the GFPT1-GFPT2
+      (O94808) &#34;protein binding&#34; IPI (marked over-annotated). GFPT1/GFPT2 not named
+      in the cached prose.
+- id: PMID:8144040
+  title: The murine glutamine:fructose-6-phosphate amidotransferase-encoding cDNA
+    sequence.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. Murine GFAT cDNA, &gt;98% identical to human; states GFAT
+      is the rate-limiting enzyme of hexosamine synthesis. Source of legacy PINC TAS
+      annotations for transaminase activity and F6P metabolism.
+- id: Reactome:R-HSA-1791088
+  title: Expression of GFPT1
+  findings: []
+- id: Reactome:R-HSA-4085027
+  title: Defective GFPT1 does not transfer an amino group from L-Gln to F6P to form
+    GlcN6P
+  findings: []
+- id: Reactome:R-HSA-446210
+  title: Synthesis of UDP-N-acetyl-glucosamine
+  findings: []
+- id: Reactome:R-HSA-449715
+  title: GFPT1,2 transfer an amino group from L-Gln to F6P to form GlcN6P
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

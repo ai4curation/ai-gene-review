@@ -1,0 +1,3608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMMDC1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TIMMDC1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NPL8" target="_blank" class="term-link">
+                        Q9NPL8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TIMMDC1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NPL8" data-a="DESCRIPTION: TIMMDC1 (TIM17 domain-containing protein 1; also k..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TIMMDC1 (TIM17 domain-containing protein 1; also known as C3orf1/M5-14) is a multi-pass integral protein of the mitochondrial inner membrane and a member of the Tim17/Tim22/Tim23 preprotein-translocase / membrane-insertase-like superfamily. It functions as a chaperone/assembly factor for mitochondrial Complex I (NADH:ubiquinone oxidoreductase), where it acts during the mid-stage, MCIA-associated construction of the membrane arm of the enzyme. It transiently associates with incompletely assembled Complex I intermediates (including the ~315 kDa iron-sulfur/membrane-arm subcomplex) together with other assembly factors such as NDUFAF3, NDUFAF4, TMEM126B and the MCIA complex (ACAD9, NDUFAF1, ECSIT), and dissociates once the mature holoenzyme is formed; it is therefore not a stable structural subunit of the Complex I holoenzyme. TIMMDC1 is broadly expressed with enhanced levels in heart and skeletal muscle. Biallelic loss-of-function variants cause an autosomal-recessive mitochondrial Complex I deficiency (nuclear type 31, MC1DN31).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to mitochondrion. Correct but non-specific; TIMMDC1 is a multi-pass inner mitochondrial membrane protein. A more precise inner-membrane term is available and captured by the Reactome TAS annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0031966" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic Swiss-Prot subcellular-location mapping to mitochondrial membrane. Consistent with the UniProt SUBCELLULAR LOCATION (mitochondrion membrane, multi-pass). The more specific inner-membrane term (GO:0005743) is the better representation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0032981" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Although sourced electronically (InterPro2GO, IPR055299 = the TIMMDC1 family), this is the well-established function of TIMMDC1: it is a chaperone that participates in constructing the membrane arm of Complex I. Strongly corroborated by the UniProt experimental FUNCTION statement (PMID:24191001), by Reactome Complex I biogenesis, and by the Complex I deficiency disease phenotype.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Chaperone protein involved in the assembly of the mitochondrial NADH:ubiquinone oxidoreductase complex (complex I). Participates in constructing the membrane arm of complex I.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale binary interactome screen (CCSB HuRI-related map; WITH/FROM FATE1, a non-mitochondrial protein). Not informative about TIMMDC1&#39;s molecular function and the partner is not a known biological interactor. Retained (experimental IPI) but flagged as over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative GO:0005515 from a high-throughput binary interactome; the WITH/FROM partner (FATE1) is not a plausible physiological interactor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput variant-interaction perturbation study (WITH/FROM FATE1). Uninformative about molecular function. Retained (experimental IPI) but flagged as over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative GO:0005515 from a high-throughput screen; partner not a known physiological interactor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI reference binary (Y2H) interactome. Many WITH/FROM partners (SCD, STX6, YIF1A, FAM20B, SERF1B, ...), mostly non-mitochondrial membrane proteins characteristic of Y2H sticky-membrane noise. Uninformative about molecular function. Retained (experimental IPI) but flagged as over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative GO:0005515 from a large-scale binary interactome; partners are not established physiological interactors.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from BioPlex 3.0 (AP-MS). The WITH/FROM partner here is NDUFB11 (Q9NX14), a Complex I membrane-arm (ND) subunit, which is biologically consistent with TIMMDC1&#39;s role in membrane-arm assembly. The MF term itself remains uninformative, so it is flagged as over-annotation, but the interaction supports the membrane-arm assembly role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 is uninformative as a molecular function; the biologically meaningful NDUFB11 interaction is better captured by the CI assembly BP.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence (IDA) nucleoplasm annotation. This contradicts all other evidence: TIMMDC1 is a multi-pass integral inner mitochondrial membrane protein with a mitochondrial targeting signal, and every other localization line (IBA/IDA/HTP mitochondrion, TAS inner membrane) places it in mitochondria. The nuclear signal is almost certainly non-specific antibody staining. Not core; retained per policy (experimental IDA not removed) but marked non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Contradicted by the multi-pass mitochondrial inner-membrane localization; likely HPA antibody cross-reactivity rather than a genuine nuclear pool.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence (IDA) mitochondrion annotation, consistent with the established mitochondrial localization. Correct but non-specific relative to the inner-membrane term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome (MitoCoP) localization to mitochondrion. Consistent with all other evidence. Correct but non-specific.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33753518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33753518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TMEM70 and TMEM242 help to assemble the rotor ring of human ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005515" data-r="PMID:33753518" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; (WITH/FROM TMEM70, Q9BUB7). This interaction is experimentally supported and biologically meaningful: TMEM70 co-purifies with TIMMDC1 and other MCIA components (ACAD9, NDUFAF1), linking TIMMDC1 to the MCIA machinery that builds the Complex I membrane arm. The GO:0005515 term itself is uninformative about molecular function, so it is flagged as over-annotation, but the underlying interaction is real. Corroborated by the UniProt SUBUNIT statement.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 is uninformative as a molecular function; the real TMEM70/MCIA interaction is captured by the Complex I assembly BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33753518" target="_blank" class="term-link">
+                                        PMID:33753518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">and also with an additional assembly factor for complex I, the translocase of IMM domain-containing protein 1, or TIMMDC1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Interacts with TMEM70 (PubMed:33753518).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799178
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799178" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization, from a step of the Complex I biogenesis pathway. This is the most precise, correct location for TIMMDC1 and is consistent with its multi-pass topology. Core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799179
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799179" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the Complex I biogenesis pathway. Correct, precise location. Redundant with the other Reactome TAS inner-membrane annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799191
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the Complex I biogenesis pathway. Correct, precise location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799196
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799196" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the Complex I biogenesis pathway (the step in which TIMMDC1/MCIA dissociate from the 980 kDa complex to yield mature Complex I). Correct, precise location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799197
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799197" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the Complex I biogenesis pathway. Correct, precise location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799202
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799202" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the Complex I biogenesis pathway. Correct, precise location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799203
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005743" data-r="Reactome:R-HSA-6799203" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner mitochondrial membrane localization from the step &#34;IP subcomplex binds NDUFAF3, NDUFAF4, TIMMDC1 to form Intermediate 1&#34;, which directly documents TIMMDC1&#39;s incorporation into the Complex I assembly intermediate. Correct, precise location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000054
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NPL8" data-a="GO:0005739" data-r="GO_REF:0000054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LIFEdb (IDA) localization of a fluorescent fusion protein to mitochondrion. Consistent with all other evidence. Correct but non-specific relative to the inner-membrane term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Chaperone / assembly factor that acts during the mid-stage (MCIA-associated) construction of the membrane arm of mitochondrial Complex I. TIMMDC1 transiently binds incompletely assembled Complex I intermediates (including the ~315 kDa subcomplex) together with NDUFAF3, NDUFAF4 and the MCIA machinery (which also engages TMEM70/TMEM242), and dissociates on maturation of the holoenzyme. Its precise molecular activity is unresolved: as a Tim17/Tim22/Tim23-family multi-pass inner-membrane protein it is a candidate membrane scaffold/insertase for the ND (membrane-arm) subunits, but no catalytic insertase or transporter activity has been demonstrated, and it is not a stable structural subunit of the Complex I holoenzyme; therefore no specific molecular_function term is asserted.</h3>
+                <span class="vote-buttons" data-g="Q9NPL8" data-a="FUNCTION: Chaperone / assembly factor that acts during the m..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex I assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Chaperone protein involved in the assembly of the mitochondrial NADH:ubiquinone oxidoreductase complex (complex I). Participates in constructing the membrane arm of complex I.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMMDC1/TIMMDC1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Associates with the intermediate 315 kDa subcomplex of incompletely assembled complex I.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33753518" target="_blank" class="term-link">
+                                PMID:33753518
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">and also with an additional assembly factor for complex I, the translocase of IMM domain-containing protein 1, or TIMMDC1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000054.md" target="_blank" class="term-link">
+                            GO_REF:0000054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of intracellular localizations of expressed fusion proteins in living cells</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24191001" target="_blank" class="term-link">
+                            PMID:24191001
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Assembly factors for the membrane arm of human complex I.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">C3orf1 (TIMMDC1), a hydrophobic protein, associates with the 550 and 815 kDa Complex I subcomplexes that accumulate upon NDUFA11 suppression, and its characteristics (together with TMEM126B and NDUFA11) indicate participation in constructing the membrane arm of Complex I.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33753518" target="_blank" class="term-link">
+                            PMID:33753518
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TMEM70 and TMEM242 help to assemble the rotor ring of human ATP synthase and interact with assembly factors for complex I.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">TMEM70 co-purifies with TIMMDC1 and other MCIA components (ACAD9, NDUFAF1), linking TIMMDC1 to the MCIA complex that supports assembly of the Complex I membrane arm.</div>
+
+                        <div class="finding-text">"and also with an additional assembly factor for complex I, the translocase of IMM domain-containing protein 1, or TIMMDC1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28604674" target="_blank" class="term-link">
+                            PMID:28604674
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic diagnosis of Mendelian disorders via RNA sequencing.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An intronic cryptic splice event in TIMMDC1 was identified by RNA-seq in a mitochondriopathy patient, establishing TIMMDC1 as a novel Complex I deficiency (MC1DN31) disease gene.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799178
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intermediate 1 binds HP subcomplex to form Intermediate 2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799179
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799191
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intermediate 2 binds MT-ND1:NDUFAF5:NDUFAF6 to form a 315kDa subcomplex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799196
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting in Complex I</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799197
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ND4, ND5 bind the 550kDa complex to form the 815kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799202
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The 315kDa subcomplex binds the 370kDa subcomplex to form the 550kDa complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799203
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IP subcomplex binds NDUFAF3, NDUFAF4, TIMMDC1 to form Intermediate 1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does TIMMDC1 have genuine membrane-insertase catalytic activity for the mitochondrially encoded ND subunits, or does it act solely as a scaffold?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPL8" data-a="Q: Does TIMMDC1 have genuine membrane-insertase catal..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which Complex I membrane-arm (ND) subunits does TIMMDC1 directly contact during assembly, and in what order?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPL8" data-a="Q: Which Complex I membrane-arm (ND) subunits does TI..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute TIMMDC1 with ND-subunit substrates in a defined membrane system to test for insertase activity versus a passive scaffolding role.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPL8" data-a="EXPERIMENT: Reconstitute TIMMDC1 with ND-subunit substrates in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural characterization (cryo-EM) of TIMMDC1-containing Complex I assembly intermediates to define its interface with the membrane arm.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NPL8" data-a="EXPERIMENT: Structural characterization (cryo-EM) of TIMMDC1-c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TIMMDC1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NPL8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="timmdc1-q9npl8-review-notes">TIMMDC1 (Q9NPL8) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Gene: TIMMDC1 (TIM17 domain-containing protein 1; synonyms C3orf1, M5-14, UNQ247/PRO284). HGNC:1321.</li>
+<li>Protein: "Complex I assembly factor TIMMDC1, mitochondrial"; 285 aa; multi-pass inner-membrane protein.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "RecName: Full=Complex I assembly factor TIMMDC1, mitochondrial"]</li>
+<li>Belongs to the Tim17/Tim22/Tim23 (preprotein-translocase / membrane-insertase-like) family.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Belongs to the Tim17/Tim22/Tim23 family."]</li>
+<li>Four predicted TRANSMEM helices (80-100, 137-159, 165-185, 189-209); Pfam PF02466 (Tim17); InterPro IPR055299.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt]</li>
+</ul>
+<h2 id="function-core">Function (core)</h2>
+<ul>
+<li>Chaperone/assembly factor for mitochondrial NADH:ubiquinone oxidoreductase (Complex I); builds the membrane arm.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Chaperone protein involved in the assembly of the mitochondrial NADH:ubiquinone oxidoreductase complex (complex I). Participates in constructing the membrane arm of complex I."]</li>
+<li>Andrews et al. 2013 (PMID:24191001, PNAS, DOI:10.1073/pnas.1319247110): C3orf1 (=TIMMDC1), a hydrophobic<br />
+  protein, associates with the 550 and 815 kDa CI subcomplexes that accumulate on NDUFA11 knockdown; its<br />
+  characteristics, together with TMEM126B and NDUFA11, "suggest that they all participate in constructing the<br />
+  membrane arm of complex I." (source of the UniProt FUNCTION statement; verified via PubMed metadata — abstract<br />
+  only in cache-less state, no verbatim quote stored). This is the SUBUNIT source: "Associates with the<br />
+  intermediate 315 kDa subcomplex of incompletely assembled complex I."<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Associates with the intermediate 315 kDa subcomplex of incompletely assembled complex I."]</li>
+</ul>
+<h2 id="molecular-function-deliberately-conservative">Molecular function — deliberately conservative</h2>
+<ul>
+<li>TIMMDC1 is a TIM17/22/23-family membrane-insertase-like protein and a plausible scaffold/insertase for the<br />
+  membrane-arm (ND) subunits, BUT no direct evidence in the local files demonstrates catalytic "membrane<br />
+  insertase activity" (GO:0032977) or "protein transporter activity". Whether it is a true insertase vs. a<br />
+  scaffold is unresolved. It is NOT a stable structural subunit of the CI holoenzyme (it is a transient assembly<br />
+  factor that dissociates — Reactome R-HSA-6799196: "The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa<br />
+  complex, resulting in Complex I"). Therefore no NADH-dehydrogenase MF (GO:0008137) and no structural-constituent<br />
+  MF is asserted. The core function is captured as the BP (GO:0032981) with a chaperone/scaffold description; MF<br />
+  is flagged as a knowledge gap.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion membrane; multi-pass membrane protein (inner membrane by Reactome TAS).<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "SUBCELLULAR LOCATION: Mitochondrion membrane"]<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Multi-pass membrane protein"]</li>
+<li>GOA has IBA/IDA/HTP mitochondrion, IEA mitochondrial membrane, TAS mitochondrial inner membrane (Reactome).</li>
+<li>GOA also has one IDA nucleoplasm (HPA GO_REF:0000052). This contradicts all other evidence (mitochondrial<br />
+  inner-membrane multipass protein) and is almost certainly antibody cross-reactivity / non-specific HPA staining.<br />
+  Kept as non-core rather than removed (IDA, not to be REMOVEd per policy).</li>
+</ul>
+<h2 id="interactions-mcia-context">Interactions / MCIA context</h2>
+<ul>
+<li>Interacts with TMEM70 (PMID:33753518, Carroll et al. 2021, PNAS, DOI:10.1073/pnas.2100558118, full text cached):<br />
+  "TMEM70-t was found in association with ACAD9, NDUFAF1, and also with an additional assembly factor for complex<br />
+  I, the translocase of IMM domain-containing protein 1, or TIMMDC1". The GOA IPI GO:0005515 with WITH/FROM<br />
+  UniProtKB:Q9BUB7 (TMEM70) is supported by this paper. TMEM70/TMEM242 interact with the MCIA complex that<br />
+  supports assembly of the CI membrane arm.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Interacts with TMEM70 (PubMed:33753518)."]</li>
+<li>Large-scale binary/AP-MS interactome papers give generic GO:0005515 "protein binding" IPI:</li>
+<li>PMID:25416956 (Rolland et al. 2014, Cell, DOI:10.1016/j.cell.2014.10.050) — HuRI/CCSB binary map; WITH/FROM Q969F0 (FATE1).</li>
+<li>PMID:31515488 (Fragoza et al. 2019, Nat Commun, DOI:10.1038/s41467-019-11959-3) — variant interaction perturbation; WITH/FROM Q969F0 (FATE1).</li>
+<li>PMID:32296183 (Luck et al. 2020, Nature, DOI:10.1038/s41586-020-2188-x) — HuRI reference binary interactome; many WITH/FROM partners (SCD, STX6, FAM20B, YIF1A, SERF1B, ...), mostly non-mitochondrial (Y2H-derived).</li>
+<li>PMID:33961781 (Huttlin et al. 2021, Cell, DOI:10.1016/j.cell.2021.04.011) — BioPlex 3.0 AP-MS; WITH/FROM Q9NX14 (NDUFB11, a CI membrane-arm subunit — biologically meaningful).<br />
+  These are uninformative at the MF level (bare "protein binding"); most Y2H partners are membrane proteins from<br />
+  the ORFeome and look like sticky-membrane-protein noise. The NDUFB11 hit (BioPlex) is consistent with CI<br />
+  membrane-arm engagement. Marked over-annotated (not removed; experimental IPI per policy).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Mitochondrial complex I deficiency, nuclear type 31 (MC1DN31; MIM:618251); autosomal recessive.<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Mitochondrial complex I deficiency, nuclear type 31 (MC1DN31)"]</li>
+<li>Established by Kremer et al. 2017 (PMID:28604674, Nat Commun, DOI:10.1038/ncomms15824): an intronic cryptic<br />
+  splice event in TIMMDC1 "establishing a novel disease-associated gene" (RNA-seq diagnosis of mitochondriopathy).<br />
+  [file:human/TIMMDC1/TIMMDC1-uniprot.txt "INVOLVEMENT IN MC1DN31"]</li>
+</ul>
+<h2 id="tissue-phosphorylation">Tissue / phosphorylation</h2>
+<ul>
+<li>Enhanced expression in heart and skeletal muscle. [file:human/TIMMDC1/TIMMDC1-uniprot.txt "Generalized expression enhanced in heart and skeletal muscle."]</li>
+<li>Phosphoserine at Ser-277 (large-scale, PMID:24275569).</li>
+</ul>
+<h2 id="reactome-complex-i-biogenesis-r-hsa-6799198">Reactome (Complex I biogenesis, R-HSA-6799198)</h2>
+<ul>
+<li>R-HSA-6799203: "IP subcomplex binds NDUFAF3, NDUFAF4, TIMMDC1 to form Intermediate 1" — TIMMDC1 joins the<br />
+  315 kDa IP-subcomplex-derived Intermediate 1.</li>
+<li>TAS mitochondrial inner-membrane location annotations (R-HSA-6799178/179/191/196/197/202/203) are all steps in<br />
+  this CI biogenesis pathway; location (inner membrane) is well supported and consistent with UniProt.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<ul>
+<li>BP GO:0032981 (CI assembly): ACCEPT (core), even though IEA — strongly corroborated by UniProt FUNCTION<br />
+  (PMID:24191001), Reactome, and disease.</li>
+<li>Mitochondrion / mitochondrial membrane / mitochondrial inner membrane locations: ACCEPT (core location) for the<br />
+  best-supported ones; inner membrane is the precise term.</li>
+<li>nucleoplasm IDA: KEEP_AS_NON_CORE (contradicts mito localization; likely HPA artefact; not removing an IDA).</li>
+<li>protein binding IPIs: MARK_AS_OVER_ANNOTATED (bare GO:0005515; keep, don't remove per policy). The TMEM70 one<br />
+  (PMID:33753518) and the NDUFB11 one (PMID:33961781) are biologically meaningful but still uninformative MF.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NPL8
+gene_symbol: TIMMDC1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TIMMDC1 (TIM17 domain-containing protein 1; also known as C3orf1/M5-14) is a
+  multi-pass integral protein of the mitochondrial inner membrane and a member of
+  the Tim17/Tim22/Tim23 preprotein-translocase / membrane-insertase-like
+  superfamily. It functions as a chaperone/assembly factor for mitochondrial
+  Complex I (NADH:ubiquinone oxidoreductase), where it acts during the mid-stage,
+  MCIA-associated construction of the membrane arm of the enzyme. It transiently
+  associates with incompletely assembled Complex I intermediates (including the
+  ~315 kDa iron-sulfur/membrane-arm subcomplex) together with other assembly
+  factors such as NDUFAF3, NDUFAF4, TMEM126B and the MCIA complex (ACAD9,
+  NDUFAF1, ECSIT), and dissociates once the mature holoenzyme is formed; it is
+  therefore not a stable structural subunit of the Complex I holoenzyme. TIMMDC1
+  is broadly expressed with enhanced levels in heart and skeletal muscle. Biallelic
+  loss-of-function variants cause an autosomal-recessive mitochondrial Complex I
+  deficiency (nuclear type 31, MC1DN31).
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to mitochondrion. Correct but non-specific;
+      TIMMDC1 is a multi-pass inner mitochondrial membrane protein. A more precise
+      inner-membrane term is available and captured by the Reactome TAS
+      annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic Swiss-Prot subcellular-location mapping to mitochondrial
+      membrane. Consistent with the UniProt SUBCELLULAR LOCATION (mitochondrion
+      membrane, multi-pass). The more specific inner-membrane term (GO:0005743)
+      is the better representation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. Although sourced electronically (InterPro2GO,
+      IPR055299 = the TIMMDC1 family), this is the well-established function of
+      TIMMDC1: it is a chaperone that participates in constructing the membrane
+      arm of Complex I. Strongly corroborated by the UniProt experimental FUNCTION
+      statement (PMID:24191001), by Reactome Complex I biogenesis, and by the
+      Complex I deficiency disease phenotype.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: &gt;-
+        Chaperone protein involved in the assembly of the mitochondrial
+        NADH:ubiquinone oxidoreductase complex (complex I). Participates in
+        constructing the membrane arm of complex I.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale binary interactome screen (CCSB
+      HuRI-related map; WITH/FROM FATE1, a non-mitochondrial protein). Not
+      informative about TIMMDC1&#39;s molecular function and the partner is not a
+      known biological interactor. Retained (experimental IPI) but flagged as
+      over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative GO:0005515 from a high-throughput binary interactome; the
+      WITH/FROM partner (FATE1) is not a plausible physiological interactor.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput variant-interaction
+      perturbation study (WITH/FROM FATE1). Uninformative about molecular
+      function. Retained (experimental IPI) but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative GO:0005515 from a high-throughput screen; partner not a known
+      physiological interactor.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI reference binary (Y2H) interactome.
+      Many WITH/FROM partners (SCD, STX6, YIF1A, FAM20B, SERF1B, ...), mostly
+      non-mitochondrial membrane proteins characteristic of Y2H sticky-membrane
+      noise. Uninformative about molecular function. Retained (experimental IPI)
+      but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative GO:0005515 from a large-scale binary interactome; partners are
+      not established physiological interactors.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from BioPlex 3.0 (AP-MS). The WITH/FROM partner here
+      is NDUFB11 (Q9NX14), a Complex I membrane-arm (ND) subunit, which is
+      biologically consistent with TIMMDC1&#39;s role in membrane-arm assembly. The
+      MF term itself remains uninformative, so it is flagged as over-annotation,
+      but the interaction supports the membrane-arm assembly role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005515 is uninformative as a molecular function; the biologically
+      meaningful NDUFB11 interaction is better captured by the CI assembly BP.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence (IDA) nucleoplasm annotation. This contradicts all
+      other evidence: TIMMDC1 is a multi-pass integral inner mitochondrial
+      membrane protein with a mitochondrial targeting signal, and every other
+      localization line (IBA/IDA/HTP mitochondrion, TAS inner membrane) places it
+      in mitochondria. The nuclear signal is almost certainly non-specific
+      antibody staining. Not core; retained per policy (experimental IDA not
+      removed) but marked non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Contradicted by the multi-pass mitochondrial inner-membrane localization;
+      likely HPA antibody cross-reactivity rather than a genuine nuclear pool.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence (IDA) mitochondrion annotation, consistent with the
+      established mitochondrial localization. Correct but non-specific relative to
+      the inner-membrane term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome (MitoCoP) localization to
+      mitochondrion. Consistent with all other evidence. Correct but
+      non-specific.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33753518
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; (WITH/FROM TMEM70, Q9BUB7). This interaction is
+      experimentally supported and biologically meaningful: TMEM70 co-purifies
+      with TIMMDC1 and other MCIA components (ACAD9, NDUFAF1), linking TIMMDC1 to
+      the MCIA machinery that builds the Complex I membrane arm. The GO:0005515
+      term itself is uninformative about molecular function, so it is flagged as
+      over-annotation, but the underlying interaction is real. Corroborated by the
+      UniProt SUBUNIT statement.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005515 is uninformative as a molecular function; the real TMEM70/MCIA
+      interaction is captured by the Complex I assembly BP.
+    supported_by:
+    - reference_id: PMID:33753518
+      supporting_text: &gt;-
+        and also with an additional assembly factor for complex I, the
+        translocase of IMM domain-containing protein 1, or TIMMDC1
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Interacts with TMEM70 (PubMed:33753518).
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799178
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization, from a step of the
+      Complex I biogenesis pathway. This is the most precise, correct location for
+      TIMMDC1 and is consistent with its multi-pass topology. Core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799179
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the Complex I
+      biogenesis pathway. Correct, precise location. Redundant with the other
+      Reactome TAS inner-membrane annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799191
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the Complex I
+      biogenesis pathway. Correct, precise location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799196
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the Complex I
+      biogenesis pathway (the step in which TIMMDC1/MCIA dissociate from the
+      980 kDa complex to yield mature Complex I). Correct, precise location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799197
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the Complex I
+      biogenesis pathway. Correct, precise location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799202
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the Complex I
+      biogenesis pathway. Correct, precise location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799203
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner mitochondrial membrane localization from the step
+      &#34;IP subcomplex binds NDUFAF3, NDUFAF4, TIMMDC1 to form Intermediate 1&#34;,
+      which directly documents TIMMDC1&#39;s incorporation into the Complex I
+      assembly intermediate. Correct, precise location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000054
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      LIFEdb (IDA) localization of a fluorescent fusion protein to mitochondrion.
+      Consistent with all other evidence. Correct but non-specific relative to the
+      inner-membrane term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+core_functions:
+- description: &gt;-
+    Chaperone / assembly factor that acts during the mid-stage (MCIA-associated)
+    construction of the membrane arm of mitochondrial Complex I. TIMMDC1
+    transiently binds incompletely assembled Complex I intermediates (including
+    the ~315 kDa subcomplex) together with NDUFAF3, NDUFAF4 and the MCIA machinery
+    (which also engages TMEM70/TMEM242), and dissociates on maturation of the
+    holoenzyme. Its precise molecular activity is unresolved: as a
+    Tim17/Tim22/Tim23-family multi-pass inner-membrane protein it is a candidate
+    membrane scaffold/insertase for the ND (membrane-arm) subunits, but no
+    catalytic insertase or transporter activity has been demonstrated, and it is
+    not a stable structural subunit of the Complex I holoenzyme; therefore no
+    specific molecular_function term is asserted.
+  directly_involved_in:
+  - id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+    supporting_text: &gt;-
+      Chaperone protein involved in the assembly of the mitochondrial
+      NADH:ubiquinone oxidoreductase complex (complex I). Participates in
+      constructing the membrane arm of complex I.
+  - reference_id: file:human/TIMMDC1/TIMMDC1-uniprot.txt
+    supporting_text: &gt;-
+      Associates with the intermediate 315 kDa subcomplex of incompletely
+      assembled complex I.
+  - reference_id: PMID:33753518
+    supporting_text: &gt;-
+      and also with an additional assembly factor for complex I, the
+      translocase of IMM domain-containing protein 1, or TIMMDC1
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular function of TIMMDC1 is undetermined: it is unresolved whether
+      it possesses genuine protein/membrane-insertase catalytic activity (as its
+      Tim17/Tim22/Tim23 fold might suggest) or acts purely as a membrane scaffold
+      that positions the ND (membrane-arm) subunits during Complex I assembly.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does TIMMDC1 have genuine membrane-insertase catalytic activity for the
+    mitochondrially encoded ND subunits, or does it act solely as a scaffold?
+- question: &gt;-
+    Which Complex I membrane-arm (ND) subunits does TIMMDC1 directly contact
+    during assembly, and in what order?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute TIMMDC1 with ND-subunit substrates in a defined membrane system
+    to test for insertase activity versus a passive scaffolding role.
+- description: &gt;-
+    Structural characterization (cryo-EM) of TIMMDC1-containing Complex I assembly
+    intermediates to define its interface with the membrane arm.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000054
+  title: Gene Ontology annotation based on curation of intracellular localizations
+    of expressed fusion proteins in living cells
+  findings: []
+- id: PMID:24191001
+  title: Assembly factors for the membrane arm of human complex I.
+  findings:
+  - statement: &gt;-
+      C3orf1 (TIMMDC1), a hydrophobic protein, associates with the 550 and 815 kDa
+      Complex I subcomplexes that accumulate upon NDUFA11 suppression, and its
+      characteristics (together with TMEM126B and NDUFA11) indicate participation
+      in constructing the membrane arm of Complex I.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (DOI:10.1073/pnas.1319247110); this is the experimental
+      source cited by UniProt for the TIMMDC1 FUNCTION and SUBUNIT statements.
+      Not in the local publications cache, so no verbatim supporting_text is
+      quoted; provenance anchored to the UniProt FUNCTION statement it underpins.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale binary interactome (CCSB); source of an uninformative GO:0005515
+      IPI (WITH/FROM FATE1), not a physiological interactor.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput variant-interaction study; source of an uninformative
+      GO:0005515 IPI (WITH/FROM FATE1).
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI Y2H reference interactome; source of many uninformative GO:0005515 IPIs
+      whose partners are mostly non-mitochondrial membrane proteins (Y2H noise).
+- id: PMID:33753518
+  title: TMEM70 and TMEM242 help to assemble the rotor ring of human ATP synthase
+    and interact with assembly factors for complex I.
+  findings:
+  - statement: &gt;-
+      TMEM70 co-purifies with TIMMDC1 and other MCIA components (ACAD9, NDUFAF1),
+      linking TIMMDC1 to the MCIA complex that supports assembly of the Complex I
+      membrane arm.
+    supporting_text: &gt;-
+      and also with an additional assembly factor for complex I, the
+      translocase of IMM domain-containing protein 1, or TIMMDC1
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text cached and verified; supports the TIMMDC1-TMEM70/MCIA interaction
+      (the UniProt SUBUNIT &#34;Interacts with TMEM70&#34; statement).
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 AP-MS; source of a GO:0005515 IPI whose WITH/FROM partner
+      NDUFB11 (a Complex I membrane-arm subunit) is biologically consistent with
+      the membrane-arm assembly role, though the MF term itself is uninformative.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial proteome; supports mitochondrial localization.
+- id: PMID:28604674
+  title: Genetic diagnosis of Mendelian disorders via RNA sequencing.
+  findings:
+  - statement: &gt;-
+      An intronic cryptic splice event in TIMMDC1 was identified by RNA-seq in a
+      mitochondriopathy patient, establishing TIMMDC1 as a novel Complex I
+      deficiency (MC1DN31) disease gene.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (DOI:10.1038/ncomms15824); the UniProt source for
+      INVOLVEMENT IN MC1DN31. Not in the local cache, so no verbatim
+      supporting_text is quoted; anchored to the UniProt DISEASE statement.
+- id: Reactome:R-HSA-6799178
+  title: Intermediate 1 binds HP subcomplex to form Intermediate 2
+  findings: []
+- id: Reactome:R-HSA-6799179
+  title: Peripheral arm subunits bind the 815kDa complex to form a 980kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799191
+  title: Intermediate 2 binds MT-ND1:NDUFAF5:NDUFAF6 to form a 315kDa subcomplex
+  findings: []
+- id: Reactome:R-HSA-6799196
+  title: The MCIA complex, NDUFAF2-7 all dissociate from the 980kDa complex, resulting
+    in Complex I
+  findings: []
+- id: Reactome:R-HSA-6799197
+  title: ND4, ND5 bind the 550kDa complex to form the 815kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799202
+  title: The 315kDa subcomplex binds the 370kDa subcomplex to form the 550kDa complex
+  findings: []
+- id: Reactome:R-HSA-6799203
+  title: IP subcomplex binds NDUFAF3, NDUFAF4, TIMMDC1 to form Intermediate 1
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

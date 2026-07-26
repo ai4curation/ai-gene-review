@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tktA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tktA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D62" target="_blank" class="term-link">
+                        Q88D62
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tktA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D62" data-a="DESCRIPTION: tktA (PP_4965) encodes a thiamine-diphosphate-depe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>tktA (PP_4965) encodes a thiamine-diphosphate-dependent transketolase. It transfers two-carbon ketol units between sugar phosphates in the non-oxidative pentose phosphate pathway, linking ribose 5-phosphate and xylulose 5-phosphate to sedoheptulose 7-phosphate, erythrose 4-phosphate, fructose 6-phosphate, and glyceraldehyde 3-phosphate.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004802" target="_blank" class="term-link">
+                                    GO:0004802
+                                </a>
+                            </span>
+                            <span class="term-label">transketolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D62" data-a="GO:0004802" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact molecular function. UniProt describes two-carbon ketol transfer via thiamine pyrophosphate, and GOA links the term to RHEA:10508, EC 2.2.1.1, and PANTHER:PTN002460846.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004802 captures the defining enzymatic role of tktA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the transfer of a two-carbon ketol group from a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004802	transketolase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">tktA (UniProt Q88D62; ordered locus PP_4965) of *Pseudomonas putida* KT2440 encodes transketolase (EC 2.2.1.1)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D62" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the expected location for a soluble central-carbon transketolase and is supported by TreeGrafter GOA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Keep as location context; the catalytic activity is the core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005829	cytosol</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Transketolase therefore carries out its function in the **cytoplasm** of *P. putida*</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D62" data-a="GO:0006098" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The overall PPP term is compatible with transketolase function, but the more specific non-oxidative branch term is also present.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as parent pathway context; GO:0009052 is the direct branch-level process term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009052" target="_blank" class="term-link">
+                                    GO:0009052
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt, non-oxidative branch</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D62" data-a="GO:0009052" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transketolase performs core non-oxidative PPP carbon rearrangements, so the branch term is appropriate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0009052 matches the direct pathway role of TktA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0009052	pentose-phosphate shunt, non-oxidative branch</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tktA/tktA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Transketolase provides the two non-oxidative PPP ketol-transfer steps</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Thiamine-diphosphate-dependent transketolase that transfers two-carbon units between pentose phosphate pathway sugar phosphates in the non-oxidative branch.</h3>
+                <span class="vote-buttons" data-g="Q88D62" data-a="FUNCTION: Thiamine-diphosphate-dependent transketolase that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004802" target="_blank" class="term-link">
+                            transketolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009052" target="_blank" class="term-link">
+                                pentose-phosphate shunt, non-oxidative branch
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tktA/tktA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the transfer of a two-carbon ketol group from a</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tktA/tktA-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004802	transketolase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tktA/tktA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">transfers a two-carbon glycolaldehyde/dihydroxyethyl unit from a ketose donor to an aldose acceptor</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tktA/tktA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for tktA (Q88D62)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes TktA as a thiamine-pyrophosphate-dependent two-carbon transferase.</div>
+
+                        <div class="finding-text">"Catalyzes the transfer of a two-carbon ketol group from a"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tktA/tktA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for tktA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA provides the exact transketolase activity.</div>
+
+                        <div class="finding-text">"GO:0004802	transketolase activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tktA/tktA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for tktA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist corroborates the transketolase identity and activity.</div>
+
+                        <div class="finding-text">"tktA (UniProt Q88D62; ordered locus PP_4965) of *Pseudomonas putida* KT2440 encodes transketolase (EC 2.2.1.1)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist supports the non-oxidative PPP placement for TktA.</div>
+
+                        <div class="finding-text">"Transketolase provides the two non-oxidative PPP ketol-transfer steps"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tktA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D62" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: tktA (Transketolase, Q88D62 / PP_4965) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T09:28:16.364156</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tktA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tktA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-tkta-transketolase-q88d62-pp_4965-in-pseudomonas-putida-kt2440">Functional Annotation Report: tktA (Transketolase, Q88D62 / PP_4965) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt accession:</strong> Q88D62 · <strong>Gene:</strong> <em>tktA</em> · <strong>Ordered locus:</strong> PP_4965<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), taxid 160488<br />
+<strong>Enzyme:</strong> Transketolase, EC 2.2.1.1 · 665 aa, ~72.5 kDa · Homodimer</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>tktA (UniProt Q88D62; ordered locus PP_4965) of <em>Pseudomonas putida</em> KT2440 encodes transketolase (EC 2.2.1.1), a soluble cytoplasmic, thiamine-diphosphate (ThDP)- and Mg²⁺-dependent homodimeric enzyme that catalyzes the reversible transfer of a two-carbon "ketol" (dihydroxyethyl/glycolaldehyde) unit from a ketose-phosphate donor to an aldose-phosphate acceptor.</strong> These are the two defining reactions of the non-oxidative branch of the pentose phosphate pathway (PPP). The target identity was verified against the UniProt record: the gene symbol <em>tktA</em>, the EC number 2.2.1.1, the transketolase protein family, and the diagnostic ThDP-binding (IPR029061, IPR005475) and transketolase C-terminal (IPR009014, IPR055152, IPR005478) domains are all mutually consistent, and the recovered literature describes transketolase enzymology directly. There is <strong>no gene-symbol ambiguity</strong> — <em>tktA</em> is a broadly conserved central-metabolism gene name for transketolase across bacteria.</p>
+<p>Functionally, transketolase interconverts xylulose-5-phosphate (X5P), ribose-5-phosphate (R5P), sedoheptulose-7-phosphate (S7P), erythrose-4-phosphate (E4P), fructose-6-phosphate (F6P) and glyceraldehyde-3-phosphate (GAP). Through these reactions it (i) supplies <strong>R5P</strong> for nucleotide/histidine biosynthesis, (ii) supplies <strong>E4P</strong>, the precursor that (with phosphoenolpyruvate) enters the <strong>shikimate pathway</strong> toward aromatic amino acids and aromatic secondary metabolites, and (iii) links the PPP to glycolysis/gluconeogenesis. Metabolic-engineering evidence establishes transketolase as rate-limiting for E4P supply and hence for aromatic-product formation.</p>
+<p>In <em>P. putida</em> KT2440 specifically — an organism that lacks a functional Embden–Meyerhof–Parnas glycolysis and catabolizes glucose almost exclusively via the Entner–Doudoroff route — transketolase operates as an integral component of the <strong>EDEMP cycle</strong>, an unusual architecture that recycles triose phosphates back to hexoses and biases the redox economy toward NADPH overproduction. Genomic and proteomic evidence shows tktA is the <strong>single, non-redundant, complete transketolase</strong> in KT2440 (the only other transketolase-family entry, PP_5367/Q88C16, is a 156-aa fragment lacking the catalytic pyrimidine-binding domain). It sits in a compact gene neighborhood with <em>pgk</em> (PP_4963) and <em>epd</em> (PP_4964), physically linking transketolase-derived E4P to both glycolysis and vitamin B6 (pyridoxal-5′-phosphate) biosynthesis. The enzyme carries the fully conserved transketolase catalytic fingerprint and functions in the cytoplasm.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-tkta-encodes-a-thdp-dependent-transketolase-ec-2211">F001 — tktA encodes a ThDP-dependent transketolase (EC 2.2.1.1)</h3>
+<p>UniProt Q88D62 annotates PP_4965 as <strong>transketolase, EC 2.2.1.1</strong>, with ECO evidence from ARBA and the NCBIfam model TIGR00232, and places it in the transketolase family. The domain architecture — THDP-binding (IPR029061), transketolase-like pyrimidine-binding (IPR005475), and transketolase C-terminal domains — is the canonical layout of a bona fide transketolase. Mechanistically, the enzyme transfers a two-carbon glycolaldehyde/dihydroxyethyl unit from a ketose donor to an aldose acceptor using thiamine diphosphate as the essential cofactor. This is directly supported by primary literature: transketolase "catalyzes the transfer of a glycolaldehyde residue from ketose (the donor substrate) to aldose (the acceptor substrate)" (<a href="https://pubmed.ncbi.nlm.nih.gov/29500317/">PMID: 29500317</a>), and it is "a thiamine diphosphate-dependent enzyme … [that] plays a crucial role in cellular metabolism" (<a href="https://pubmed.ncbi.nlm.nih.gov/41203356/">PMID: 41203356</a>). The gene symbol, EC number, family, and domains all agree, confirming correct target identification.</p>
+<h3 id="f002-substrate-specificity-reversible-ketol-transfer-across-the-non-oxidative-ppp">F002 — Substrate specificity: reversible ketol transfer across the non-oxidative PPP</h3>
+<p>Transketolase catalyzes two reversible reactions of the non-oxidative PPP:</p>
+<ol>
+<li><strong>X5P + R5P ⇌ S7P + GAP</strong></li>
+<li><strong>X5P + E4P ⇌ F6P + GAP</strong></li>
+</ol>
+<p>The <strong>donor</strong> is a ketose bearing an S-configured C3 hydroxyl (X5P, F6P, S7P, or the non-physiological hydroxypyruvate), and the <strong>acceptor</strong> is an aldose (R5P, E4P, or GAP). Mechanistic work on the phosphoketolase/transketolase enzyme class confirms these enzymes "catalyze phosphorolytic cleavage of xylulose 5-phosphate or fructose 6-phosphate in the first reaction step," identifying X5P and F6P as ketose donors cleaved in the first half-reaction (<a href="https://pubmed.ncbi.nlm.nih.gov/36974963/">PMID: 36974963</a>). The reversibility and the R5P/heptulose-7-phosphate substrate pairing were experimentally demonstrated with purified enzyme: "the transketolase exchange reaction, [¹⁴C]ribose 5-phosphate + altro-heptulose 7-phosphate ⇌ … was demonstrated for the first time using purified transketolase" (<a href="https://pubmed.ncbi.nlm.nih.gov/6862092/">PMID: 6862092</a>). The registered catalytic activity for Q88D62 (Rhea RHEA:10508) is <strong>D-sedoheptulose 7-phosphate + D-glyceraldehyde 3-phosphate = aldehydo-D-ribose 5-phosphate + D-xylulose 5-phosphate</strong> — precisely reaction 1 written in reverse.</p>
+<h3 id="f003-structure-and-cofactors-665-aa-homodimer-one-thdp-one-mg2-per-subunit">F003 — Structure and cofactors: 665-aa homodimer, one ThDP + one Mg²⁺ per subunit</h3>
+<p>Q88D62 is a <strong>665-residue (~72.5 kDa)</strong> protein that assembles as an obligate <strong>homodimer</strong>, with the two active sites forming at the subunit interface. Each subunit binds <strong>one thiamine diphosphate and one Mg²⁺</strong> (with tolerance for other divalent cations such as Ca²⁺ or Co²⁺). The record annotates a transketolase-like pyrimidine-binding domain (~residues 354–526) and a C-terminal transketolase domain, an active-site proton-donor residue at position 411, catalytically important residues at 26 and 260, and an extensive set of cofactor-coordinating positions (26, 66, 114–116, 155–156, 185, 187, 260, 357, 384, 437, 461, 469, 473, 520). The Mg²⁺ requirement is corroborated by assay work "including or omitting magnesium to assess functional cofactor limitation" (<a href="https://pubmed.ncbi.nlm.nih.gov/41870883/">PMID: 41870883</a>). ThDP is essential; transketolase activity is a classical functional readout of thiamine status precisely because the apoenzyme requires the cofactor.</p>
+<h3 id="f004-in-kt2440-transketolase-operates-within-the-nadph-favoring-edemp-cycle">F004 — In KT2440, transketolase operates within the NADPH-favoring EDEMP cycle</h3>
+<p><em>P. putida</em> KT2440 lacks a functional Embden–Meyerhof–Parnas glycolysis and catabolizes glucose almost exclusively via the Entner–Doudoroff route. ¹³C-metabolic flux analysis revealed that ~10% of triose phosphates are recycled back to hexose phosphates by combining ED, gluconeogenic EMP, and PPP activities into what the authors named the <strong>EDEMP cycle</strong>: "This set of reactions merges activities belonging to the ED, the EMP (operating in a gluconeogenic fashion), and the pentose phosphate pathways to form an unforeseen metabolic architecture (EDEMP cycle)" (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>). This cycle biases the redox economy toward reducing power: "the default metabolic state of P. putida KT2440 is characterized by a slight catabolic overproduction of reducing power" (NADPH) (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>). Transketolase provides the two non-oxidative PPP ketol-transfer steps that interconvert pentose phosphates with F6P/GAP and is therefore an obligate participant in this recycling architecture — physiologically important for a soil bacterium that must buffer oxidative and solvent stress and supply biosynthetic NADPH.</p>
+<h3 id="f005-transketolase-supplies-e4p-and-is-rate-limiting-for-aromatic-shikimate-pathway-product-formation">F005 — Transketolase supplies E4P and is rate-limiting for aromatic (shikimate-pathway) product formation</h3>
+<p>Transketolase generates <strong>erythrose-4-phosphate</strong>, which condenses with phosphoenolpyruvate via DAHP synthase to enter the shikimate pathway toward aromatic amino acids (Phe, Tyr, Trp) and aromatic secondary metabolites. The two-carbon transfer that produces/consumes E4P is explicitly described: transketolases "transfer two carbon units from fructose-6-phosphate to erythrose-4-phosphate and convert glyceraldehyde-3-phosphate to xylulose-5-phosphate," and "erythrose-4-phosphate enters the shikimate pathway which … produces many secondary metabolites such as aromatic amino acids, flavonoids, lignin" (<a href="https://pubmed.ncbi.nlm.nih.gov/24132392/">PMID: 24132392</a>). Metabolic-engineering evidence establishes transketolase as <strong>rate-limiting for E4P supply</strong>: overexpression of <em>tktA</em> raised tryptophan titers to 37.9–40.2 g/L — "overexpression of the tktA gene, alone or with the ppsA gene, could further improve tryptophan yield to a final tryptophan titer of 37.9 and 40.2 g/L" (<a href="https://pubmed.ncbi.nlm.nih.gov/22791961/">PMID: 22791961</a>). Complementary studies show <em>tktA</em> boosts L-phenylalanine production from glycerol (<a href="https://pubmed.ncbi.nlm.nih.gov/25012491/">PMID: 25012491</a>) and indirubin production from glucose (<a href="https://pubmed.ncbi.nlm.nih.gov/29301095/">PMID: 29301095</a>). This precursor-supply function is directly relevant to <em>P. putida</em>, a workhorse chassis for aromatic-compound metabolism and production.</p>
+<h3 id="f006-localization-soluble-cytoplasmic-enzyme">F006 — Localization: soluble cytoplasmic enzyme</h3>
+<p>Feature analysis of Q88D62 shows <strong>no signal peptide and no transmembrane segments</strong>, consistent with a soluble intracellular protein. In bacteria the entire PPP is cytosolic: "Unlike bacteria, fungal and animal, PPP is complete in the cytosol and all enzymes are found cytosolic" (<a href="https://pubmed.ncbi.nlm.nih.gov/24132392/">PMID: 24132392</a>). Its substrates (phosphorylated sugars) and cofactors (ThDP, Mg²⁺) are cytoplasmic. Transketolase therefore carries out its function in the <strong>cytoplasm</strong> of <em>P. putida</em>.</p>
+<h3 id="f007-conserved-catalytic-fingerprint-gdg-motif-his-cluster-glu411">F007 — Conserved catalytic fingerprint (GDG motif, His cluster, Glu411)</h3>
+<p>Sequence-motif analysis of the 665-aa protein identifies the complete transketolase catalytic apparatus: (i) the diagnostic <strong>GDG ThDP/Mg²⁺-binding motif</strong> (G153-D154-G155) within the sequence context GDGCMMEGISHEVASLAGTLGLNKLIAFYD, with metal/ThDP-binding residues Asp155/Gly156; (ii) a conserved <strong>active-site histidine cluster</strong> (His26, His66, His260, His461, His473), with His26 and His260 flagged as catalytically important; and (iii) <strong>Glu411</strong>, homologous to <em>E. coli</em> transketolase Glu411, the invariant glutamate that hydrogen-bonds the N1′ atom of the ThDP aminopyrimidine ring to promote formation of the reactive C2 ylide/carbanion. The importance of conserved active-site architecture in maintaining the catalytic <strong>V-conformation</strong> of ThDP in this enzyme class is supported by site-saturation mutagenesis work: "the long held tenet that a bulky hydrophobic residue provides a fulcrum by which the V-conformation of the ThDP cofactor is maintained" (<a href="https://pubmed.ncbi.nlm.nih.gov/23895593/">PMID: 23895593</a>). The presence of the full fingerprint provides strong evolutionary evidence that Q88D62 is a catalytically competent transketolase operating by the canonical ThDP ylide mechanism — it is not a pseudogene or degenerate homolog.</p>
+<h3 id="f008-tkta-is-the-sole-complete-transketolase-in-kt2440-no-isozyme-redundancy">F008 — tktA is the sole complete transketolase in KT2440 (no isozyme redundancy)</h3>
+<p>A UniProt proteome query (taxid 160488, <code>protein_name:transketolase</code>) returns only two hits: <strong>Q88D62</strong> (tktA/PP_4965, the full-length 665-aa transketolase with complete pyrimidine domain, GDG motif, His cluster, and catalytic Glu411) and <strong>Q88C16</strong> (PP_5367), a 156-aa "transketolase domain protein" carrying only the C-terminal Transketo_C/PFOR_II module (IPR009014) and lacking the ThDP/pyrimidine-binding domain and catalytic residues. Thus KT2440 encodes a <strong>single bona fide transketolase</strong>, in contrast to <em>E. coli</em>, which has two isozymes (<em>tktA</em> and <em>tktB</em>). Unlike <em>E. coli</em>, <em>P. putida</em> has <strong>no paralog to buffer loss of tktA</strong>, making it the exclusive route for non-oxidative-PPP interconversions and E4P/R5P supply, and predicting that its loss would be strongly deleterious under conditions requiring pentose or E4P flux.</p>
+<h3 id="f009-genomic-clustering-with-pgk-and-epd-links-transketolase-to-glycolysis-and-vitamin-b6-biosynthesis">F009 — Genomic clustering with <em>pgk</em> and <em>epd</em> links transketolase to glycolysis and vitamin B6 biosynthesis</h3>
+<p>The PP_4965 neighborhood forms a compact functional cluster: <strong>PP_4963 = phosphoglycerate kinase (Pgk</strong>, 387 aa, glycolytic/gluconeogenic), <strong>PP_4964 = erythrose-4-phosphate dehydrogenase (Epd/GapB</strong>, 352 aa), and <strong>PP_4965 = tktA</strong>. Epd catalyzes the committed first step of pyridoxal-5′-phosphate (vitamin B6) biosynthesis by oxidizing E4P to 4-phosphoerythronate — meaning transketolase-produced E4P is a shared substrate feeding both the shikimate pathway and PLP biosynthesis. This co-localizes the enzyme that <strong>produces</strong> E4P (transketolase) with one that <strong>consumes</strong> E4P (Epd), and with triose-phosphate metabolism (Pgk), reinforcing transketolase's role as the E4P source and extending its biosynthetic relevance beyond aromatic amino acids to vitamin B6/PLP biosynthesis. The immediately downstream genes PP_4966 (a transcriptional regulator of methionine metabolism) and PP_4967 (S-adenosylmethionine synthase, MetK) belong to methionine/SAM metabolism and are likely a separate transcriptional unit.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Transketolase in <em>P. putida</em> KT2440 is best understood as a <strong>central metabolic hub</strong> that shuttles two-carbon units between sugar phosphates, thereby wiring together the oxidative PPP, glycolysis/gluconeogenesis, and biosynthetic precursor supply.</p>
+<h3 id="reaction-chemistry-per-catalytic-cycle">Reaction chemistry (per catalytic cycle)</h3>
+<div class="codehilite"><pre><span></span><code><span class="n">ThDP</span><span class="o">-</span><span class="n">C2</span><span class="w"> </span><span class="n">ylide</span><span class="w"> </span><span class="p">(</span><span class="n">carbanion</span><span class="p">)</span>
+<span class="w"> </span><span class="o">|</span>
+<span class="w">  </span><span class="n">Ketose</span><span class="w"> </span><span class="n">donor</span><span class="w"> </span><span class="err">──</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cleaved</span><span class="w"> </span><span class="kr">between</span><span class="w"> </span><span class="n">C2</span><span class="err">–</span><span class="n">C3</span>
+<span class="w">  </span><span class="p">(</span><span class="n">X5P</span><span class="o">/</span><span class="n">F6P</span><span class="o">/</span><span class="n">S7P</span><span class="p">)</span><span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">dihydroxyethyl</span><span class="o">-</span><span class="n">ThDP</span><span class="w"> </span><span class="p">(</span><span class="n">DHEThDP</span><span class="p">)</span><span class="w"> </span><span class="n">carbanion</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">released</span><span class="w"> </span><span class="n">aldose</span>
+<span class="w"> </span><span class="o">|</span>
+<span class="w">  </span><span class="n">Aldose</span><span class="w"> </span><span class="n">acceptor</span><span class="err">─</span><span class="w"> </span><span class="mi">2</span><span class="o">-</span><span class="n">C</span><span class="w"> </span><span class="n">unit</span><span class="w"> </span><span class="n">transferred</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">acceptor</span><span class="w"> </span><span class="n">C1</span>
+<span class="w">  </span><span class="p">(</span><span class="n">R5P</span><span class="o">/</span><span class="n">E4P</span><span class="o">/</span><span class="n">GAP</span><span class="p">)</span><span class="w">  </span><span class="o">|</span><span class="w">  </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="n">ketose</span><span class="w"> </span><span class="n">product</span>
+<span class="w"> </span><span class="n">v</span>
+<span class="n">Glu411</span><span class="w"> </span><span class="n">activates</span><span class="w"> </span><span class="n">aminopyrimidine</span><span class="w"> </span><span class="n">N1</span><span class="s">&#39; -&gt; deprotonates C2 -&gt; ylide</span>
+<span class="s">His cluster (His26/His260...) + GDG motif + Mg2+ orient ThDP &amp; substrate phosphates</span>
+</code></pre></div>
+
+<h3 id="metabolic-map-of-the-two-physiological-reactions">Metabolic map of the two physiological reactions</h3>
+<table>
+<thead>
+<tr>
+<th>Reaction</th>
+<th>Donor (ketose)</th>
+<th>Acceptor (aldose)</th>
+<th>Products</th>
+<th>Net biosynthetic value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TK-1</td>
+<td>Xylulose-5-P</td>
+<td>Ribose-5-P</td>
+<td>Sedoheptulose-7-P + GAP</td>
+<td>Feeds transaldolase; balances pentoses; supplies R5P</td>
+</tr>
+<tr>
+<td>TK-2</td>
+<td>Xylulose-5-P</td>
+<td>Erythrose-4-P</td>
+<td>Fructose-6-P + GAP</td>
+<td>Returns carbon to F6P/GAP; <strong>E4P is the key precursor</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="system-level-role-in-kt2440">System-level role in KT2440</h3>
+<div class="codehilite"><pre><span></span><code>   Glucose ──(Entner–Doudoroff)──&gt; GAP + pyruvate
+      |                                   ^
+      |            (gluconeogenic EMP)    |  ~10% triose recycled
+      v                                   |
+   6-P-gluconate ──(oxidative PPP)──&gt; Ru5P ──&gt; X5P + R5P
+                            |
+                    TRANSKETOLASE (tktA)
+                            |
+        ┌───────────────────┼───────────────────┐
+        v                   v                   v
+     S7P + GAP          F6P + GAP            E4P (supply)
+   (→ transaldolase)   (→ EDEMP recycle)   ┌────┴────┐
+                                           v         v
+                                 Shikimate pathway   Epd (PP_4964)
+                                 (aromatic AAs,      → 4-P-erythronate
+                                  aromatics)         → PLP / vitamin B6
+</code></pre></div>
+
+<p>The <strong>EDEMP cycle</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">PMID: 26350459</a>) explains why a transketolase-driven non-oxidative PPP is essential in KT2440 even though the organism does not run canonical glycolysis: pentose phosphates generated by the oxidative PPP must be returned to the central hexose/triose pool, and transketolase (with transaldolase) performs exactly this carbon-rebalancing. Because the cycle is tuned to overproduce NADPH, transketolase indirectly supports KT2440's celebrated robustness against oxidative and solvent stress. Simultaneously, as the sole source of E4P, transketolase gates flux into aromatic biosynthesis and vitamin B6 biosynthesis — a role of practical importance given <em>P. putida</em>'s use as a chassis for producing aromatic chemicals.</p>
+<p>A useful cross-organism validation comes from <em>Yersinia pestis</em>, where transketolase (TktA) and transaldolase were shown to have <strong>distinct, non-interchangeable roles</strong> in metabolism, biofilm formation, and vector colonization (<a href="https://pubmed.ncbi.nlm.nih.gov/42347215/">PMID: 42347215</a>) — evidence that the non-oxidative PPP enzymes are physiologically consequential and not trivially bypassed. In eukaryotic disease contexts, TKT even participates in oncogenic signaling loops (TKT–c-Myc; <a href="https://pubmed.ncbi.nlm.nih.gov/42014677/">PMID: 42014677</a>); while not relevant to the bacterial enzyme's mechanism, this underscores how central transketolase flux is to cell physiology across kingdoms.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29500317/">29500317</a></td>
+<td><em>The mechanism of a one-substrate transketolase reaction</em></td>
+<td>Defines the core ketol-transfer chemistry (glycolaldehyde from ketose donor to aldose acceptor) — F001</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41203356/">41203356</a></td>
+<td><em>Engineering transketolase for stereoselective α-hydroxyketone synthesis</em></td>
+<td>Confirms ThDP dependence and central metabolic role — F001</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36974963/">36974963</a></td>
+<td><em>Ambient-temperature structure of phosphoketolase (SFX)</em></td>
+<td>Identifies X5P and F6P as ketose donors cleaved in the first half-reaction — F002</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6862092/">6862092</a></td>
+<td><em>Non-oxidative synthesis of pentose 5-phosphate…</em></td>
+<td>Experimental demonstration of the reversible R5P/heptulose-7-P exchange with purified transketolase — F002</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41870883/">41870883</a></td>
+<td><em>Reassessing transketolase assays…</em></td>
+<td>Confirms Mg²⁺ as a functional cofactor — F003</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26350459/">26350459</a></td>
+<td><em>P. putida KT2440 metabolizes glucose through the EDEMP cycle</em></td>
+<td>Defines the EDEMP cycle and NADPH overproduction in the exact target organism — F004</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24132392/">24132392</a></td>
+<td><em>Cloning… of sugarcane transketolase</em></td>
+<td>Two-carbon transfer producing E4P; E4P → shikimate pathway; bacterial PPP is cytosolic — F005, F006</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22791961/">22791961</a></td>
+<td><em>Improved tryptophan production with TktA/PpsA overexpression</em></td>
+<td>Causal evidence that transketolase controls E4P availability limiting aromatic-AA biosynthesis — F005</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25012491/">25012491</a></td>
+<td><em>L-phenylalanine from glycerol; role of glpK, glpX, tktA</em></td>
+<td>tktA overexpression improves aromatic (Phe) production — F005</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29301095/">29301095</a></td>
+<td><em>Indirubin from glucose in E. coli</em></td>
+<td>tktA overexpression enhances E4P/aromatic precursor supply — F005</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23895593/">23895593</a></td>
+<td><em>Site-saturation mutagenesis in ThDP enzymes</em></td>
+<td>Conserved architecture maintaining ThDP V-conformation — F007</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42347215/">42347215</a></td>
+<td><em>Distinct roles of TktA and TalB in Yersinia</em></td>
+<td>Non-redundant physiological importance of transketolase — F008, interpretation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Nature of evidence.</strong> The mechanistic and substrate-specificity claims (F001–F003, F007) rest on well-established transketolase enzymology and on the UniProt/InterPro annotation of Q88D62 itself. The E4P/shikimate rate-limiting role (F005) is supported by <strong>causal, gain-of-function metabolic-engineering studies</strong> (strong evidence, though performed largely in <em>E. coli</em>). The organism-specific systems role (F004) comes from <strong>quantitative ¹³C-flux analysis in KT2440 itself</strong> — the most directly relevant experimental evidence. The non-redundancy (F008) and genomic clustering (F009) claims are <strong>bioinformatic inferences</strong> from the KT2440 proteome/genome.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- Q88D62 is a genuine transketolase (EC 2.2.1.1) catalyzing ThDP-dependent 2-carbon ketol transfer <em>(UniProt; conserved catalytic residues; family signatures — F001, F007)</em><br />
+- Substrates are the non-oxidative PPP ketose/aldose phosphates (X5P, R5P, S7P, E4P, F6P, GAP) <em>(Rhea RHEA:10508; enzymology literature — F002)</em><br />
+- Requires ThDP + Mg²⁺; functions as a homodimer <em>(UniProt COFACTOR/SUBUNIT; assay literature — F003)</em><br />
+- Supplies E4P for aromatic biosynthesis and R5P for nucleotides; rate-limiting for E4P <em>(metabolic-engineering studies — F005)</em><br />
+- Cytoplasmic localization <em>(no signal/TM; bacterial PPP is cytosolic — F006)</em><br />
+- Sole non-redundant transketolase in KT2440 <em>(proteome analysis — F008)</em><br />
+- Participates in the EDEMP cycle / NADPH balance in KT2440 <em>(¹³C-MFA — F004)</em></p>
+<p><strong>Refuted / excluded:</strong><br />
+- Not a membrane transporter, structural protein, or signaling molecule — it is a soluble metabolic enzyme with no transmembrane or secretion signals.<br />
+- Not functionally redundant in KT2440 (Q88C16/PP_5367 is a non-catalytic domain fragment, not a second isozyme).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct biochemical characterization of Q88D62.</strong> There is, to date, no purified-enzyme kinetic study (Kₘ, kcat, cofactor affinities) or crystal structure of the KT2440 transketolase specifically. All substrate-specificity and mechanistic statements are inferred from the highly conserved transketolase family and from orthologs (<em>E. coli</em>, plants, human), not from the KT2440 protein directly.</li>
+<li><strong>Engineering evidence is largely heterologous.</strong> The rate-limiting E4P role (F005) is demonstrated principally in <em>E. coli</em>. While transketolase chemistry is conserved, the quantitative contribution of tktA to aromatic flux in <em>P. putida</em> (with its ED-dominant catabolism) has not been measured directly.</li>
+<li><strong>Essentiality not experimentally confirmed in KT2440.</strong> The inference that tktA is non-redundant (F008) predicts a strong growth phenotype on deletion, but a clean <em>tktA</em> knockout/complementation phenotype in KT2440 was not located. High-throughput RB-TnSeq fitness data (<a href="https://pubmed.ncbi.nlm.nih.gov/38323821/">PMID: 38323821</a>) may bear on this but was not analyzed at the gene-fitness level here.</li>
+<li><strong>Operon structure and regulation unknown.</strong> The <em>epd–pgk–tktA</em> clustering (F009) is suggestive, but transcriptional co-regulation, promoter architecture, and whether these genes form a true operon in KT2440 were not established experimentally.</li>
+<li><strong>Metal/cofactor promiscuity unquantified.</strong> The record notes tolerance for Ca²⁺/Co²⁺, but relative activities with alternative divalent cations for the KT2440 enzyme are unknown.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Recombinant expression and steady-state kinetics.</strong> Clone PP_4965, purify the His-tagged homodimer, and measure Kₘ/kcat for the physiological donor/acceptor pairs (X5P+R5P, X5P+E4P) and cofactor dependence (ThDP, Mg²⁺ vs Ca²⁺/Co²⁺), to replace inference with direct data for F002/F003.</li>
+<li><strong>Structure determination.</strong> Solve the crystal or cryo-EM structure of Q88D62 (± ThDP/Mg²⁺), or generate and validate an AlphaFold model, to confirm the GDG motif, His cluster, and Glu411 geometry (F007) and the dimeric active-site interface.</li>
+<li><strong>Targeted genetics in KT2440.</strong> Construct a markerless <em>ΔtktA</em> mutant with complementation; assay growth on glucose, gluconate, and gluconeogenic/aromatic substrates, and quantify auxotrophy for aromatic amino acids and vitamin B6 to test the non-redundancy/essentiality prediction (F008, F009).</li>
+<li><strong>¹³C-flux under perturbation.</strong> Repeat ¹³C-MFA in wild-type vs <em>tktA</em>-modulated strains to quantify transketolase's flux contribution to the EDEMP cycle and to E4P/NADPH pools (F004, F005).</li>
+<li><strong>Aromatic-production engineering test.</strong> Overexpress native tktA in a KT2440 aromatic-product chassis (e.g., a vanillin or muconate producer) to test whether E4P supply is rate-limiting in <em>P. putida</em> as it is in <em>E. coli</em> (F005).</li>
+<li><strong>Transcriptional mapping.</strong> Use RNA-seq/RT-PCR and promoter mapping to determine whether <em>epd–pgk–tktA</em> are co-transcribed and how the operon responds to oxidative stress and carbon source (F009).</li>
+</ol>
+<hr />
+<p><em>Report generated from a 5-iteration autonomous investigation: 9 confirmed findings, 27 papers reviewed. Target identity (tktA / Q88D62 / PP_4965, transketolase EC 2.2.1.1, </em>Pseudomonas putida<em> KT2440) was verified and unambiguous.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tktA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tktA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:29500317</li>
+<li>PMID:41203356</li>
+<li>PMID:36974963</li>
+<li>PMID:6862092</li>
+<li>PMID:41870883</li>
+<li>PMID:26350459</li>
+<li>PMID:24132392</li>
+<li>PMID:22791961</li>
+<li>PMID:25012491</li>
+<li>PMID:29301095</li>
+<li>PMID:23895593</li>
+<li>PMID:42347215</li>
+<li>PMID:42014677</li>
+<li>PMID:38323821</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D62
+gene_symbol: tktA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  tktA (PP_4965) encodes a thiamine-diphosphate-dependent transketolase. It
+  transfers two-carbon ketol units between sugar phosphates in the
+  non-oxidative pentose phosphate pathway, linking ribose 5-phosphate and
+  xylulose 5-phosphate to sedoheptulose 7-phosphate, erythrose 4-phosphate,
+  fructose 6-phosphate, and glyceraldehyde 3-phosphate.
+existing_annotations:
+- term:
+    id: GO:0004802
+    label: transketolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the exact molecular function. UniProt describes two-carbon ketol
+      transfer via thiamine pyrophosphate, and GOA links the term to RHEA:10508,
+      EC 2.2.1.1, and PANTHER:PTN002460846.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0004802 captures the defining enzymatic role of tktA.
+    supported_by:
+    - reference_id: file:PSEPK/tktA/tktA-uniprot.txt
+      supporting_text: Catalyzes the transfer of a two-carbon ketol group from a
+    - reference_id: file:PSEPK/tktA/tktA-goa.tsv
+      supporting_text: &#34;GO:0004802\ttransketolase activity&#34;
+    - reference_id: file:PSEPK/tktA/tktA-deep-research-openscientist.md
+      supporting_text: tktA (UniProt Q88D62; ordered locus PP_4965) of *Pseudomonas putida* KT2440 encodes transketolase (EC 2.2.1.1)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol is the expected location for a soluble central-carbon
+      transketolase and is supported by TreeGrafter GOA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Keep as location context; the catalytic activity is the core annotation.
+    supported_by:
+    - reference_id: file:PSEPK/tktA/tktA-goa.tsv
+      supporting_text: &#34;GO:0005829\tcytosol&#34;
+    - reference_id: file:PSEPK/tktA/tktA-deep-research-openscientist.md
+      supporting_text: Transketolase therefore carries out its function in the **cytoplasm** of *P. putida*
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The overall PPP term is compatible with transketolase function, but the
+      more specific non-oxidative branch term is also present.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as parent pathway context; GO:0009052 is the direct branch-level
+      process term.
+- term:
+    id: GO:0009052
+    label: pentose-phosphate shunt, non-oxidative branch
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Transketolase performs core non-oxidative PPP carbon rearrangements, so
+      the branch term is appropriate.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0009052 matches the direct pathway role of TktA.
+    supported_by:
+    - reference_id: file:PSEPK/tktA/tktA-goa.tsv
+      supporting_text: &#34;GO:0009052\tpentose-phosphate shunt, non-oxidative branch&#34;
+    - reference_id: file:PSEPK/tktA/tktA-deep-research-openscientist.md
+      supporting_text: Transketolase provides the two non-oxidative PPP ketol-transfer steps
+core_functions:
+- description: &gt;-
+    Thiamine-diphosphate-dependent transketolase that transfers two-carbon units
+    between pentose phosphate pathway sugar phosphates in the non-oxidative
+    branch.
+  molecular_function:
+    id: GO:0004802
+    label: transketolase activity
+  directly_involved_in:
+  - id: GO:0009052
+    label: pentose-phosphate shunt, non-oxidative branch
+  supported_by:
+  - reference_id: file:PSEPK/tktA/tktA-uniprot.txt
+    supporting_text: Catalyzes the transfer of a two-carbon ketol group from a
+  - reference_id: file:PSEPK/tktA/tktA-goa.tsv
+    supporting_text: &#34;GO:0004802\ttransketolase activity&#34;
+  - reference_id: file:PSEPK/tktA/tktA-deep-research-openscientist.md
+    supporting_text: transfers a two-carbon glycolaldehyde/dihydroxyethyl unit from a ketose donor to an aldose acceptor
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/tktA/tktA-uniprot.txt
+  title: UniProt record for tktA (Q88D62)
+  findings:
+  - statement: UniProt describes TktA as a thiamine-pyrophosphate-dependent two-carbon transferase.
+    supporting_text: Catalyzes the transfer of a two-carbon ketol group from a
+- id: file:PSEPK/tktA/tktA-goa.tsv
+  title: QuickGO GOA annotations for tktA
+  findings:
+  - statement: GOA provides the exact transketolase activity.
+    supporting_text: &#34;GO:0004802\ttransketolase activity&#34;
+- id: file:PSEPK/tktA/tktA-deep-research-openscientist.md
+  title: OpenScientist deep research report for tktA
+  findings:
+  - statement: OpenScientist corroborates the transketolase identity and activity.
+    supporting_text: tktA (UniProt Q88D62; ordered locus PP_4965) of *Pseudomonas putida* KT2440 encodes transketolase (EC 2.2.1.1)
+  - statement: OpenScientist supports the non-oxidative PPP placement for TktA.
+    supporting_text: Transketolase provides the two non-oxidative PPP ketol-transfer steps
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
