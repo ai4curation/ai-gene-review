@@ -65,6 +65,25 @@ Pattern (fetched from PROSITE): `[LIVM]-x-[LIVMF]-[SA]-G-D-S-[CAS]-G-[GA]-x-[LI]
 | NCEH1_MOUSE (Q8BLF1) | [(109, 261), (318, 381)] |
 | HIDH_SOYBN (Q5NUF3) | [(74, 298)] |
 
+## 6. Subfamily-level versus fold-level signature assignment
+
+Which signature carries an activity inference matters more than whether one matches at all: a fold signature constrains architecture, a subfamily signature constrains the reaction. Spans are residue ranges on each protein; score is the member-database e-value where the API reports one (InterPro entries themselves carry no score).
+
+- `IPR017157` - Arylacetamide deacetylase (InterPro, subfamily)
+- `PIRSF037251` - Arylacetamide deacetylase (PIRSF member signature)
+- `IPR013094` - Alpha/beta hydrolase fold-3 (InterPro, fold)
+- `IPR050300` - GDXG lipolytic enzyme (InterPro, family)
+
+| protein | IPR017157 | PIRSF037251 | IPR013094 | IPR050300 |
+|---|---|---|---|---|
+| ADCL3_HUMAN (Q5VUY0) | 19-403 | 19-403 (5.8e-82) [representative] | 115-245; 310-380 | 74-385 |
+| ADCL4_HUMAN (Q5VUY2) | 21-404 | 21-404 (1.3e-79) [representative] | 115-268; 310-378 | 79-402 |
+| ADCL2_HUMAN (Q6P093) | 3-401 | 3-401 (0) [representative] | 107-258; 311-373 | 73-400 |
+| AAAD_HUMAN (P22760) | 4-399 | 4-399 (0) [representative] | 107-265; 315-376 | 71-397 |
+| NCEH1_HUMAN (Q6PIU2) | 1-408 | 1-408 (0) [representative] | 109-262; 320-381 | 77-406 |
+| NCEH1_MOUSE (Q8BLF1) | 1-408 | 1-408 (0) [representative] | 109-261; 318-381 | 66-406 |
+| HIDH_SOYBN (Q5NUF3) | - | - | 74-298 | - |
+
 ## Interpretation
 
 All numbers above are produced by the script; the reading of them is the reviewer's. Limitations: topology calls are Phobius/TMHMM/SignalP predictions retrieved from InterProScan, not experiments, and they cannot say *which* membrane. No structure of any AADACL3 protein exists, so triad geometry is inferred from alignment, not from coordinates. Nothing here demonstrates catalytic activity; it only establishes whether the residues that would be required for activity are present.

@@ -222,12 +222,17 @@ PTN009058710); neither is AADACL3 itself, so neither IBA is self-referential.
 
 **GO:0016020 IEA (GO_REF:0000120)** cites `ARBA:ARBA00028763 | InterPro:IPR017157`
 and **GO:0016787 IEA / GO:0052689 IEA (GO_REF:0000002)** cite `InterPro:IPR013094`
-and `InterPro:IPR017157` respectively. The distinction matters: IPR013094
-(Alpha/beta hydrolase fold-3) is a *fold* domain whose members include
-non-hydrolases such as HIDH, so IPR013094 → GO:0016787 is a fold-to-activity
-mapping. IPR017157 (Arylacetamide deacetylase) is a subfamily signature and
-matches AADACL3 across residues 19–403 with PIRSF037251 scoring 5.8e-82, so
-IPR017157 → GO:0052689 is a subfamily-to-activity mapping. Both land on a
+and `InterPro:IPR017157` respectively. The distinction matters, and section 6 of
+the bioinformatics report quantifies it. IPR013094 (Alpha/beta hydrolase fold-3)
+is a *fold* signature: it constrains architecture, not the reaction, and it
+reaches outside the subfamily whose chemistry is being asserted - it matches
+soybean HIDH at 74–298 even though HIDH matches neither IPR017157 nor
+PIRSF037251 nor even the family-level IPR050300, and HIDH's physiologically
+important reaction is a dehydration. So IPR013094 → GO:0016787 is a
+fold-to-activity mapping. IPR017157 (Arylacetamide deacetylase) is a *subfamily*
+signature that matches AADACL3 across residues 19–403, with its PIRSF member
+signature PIRSF037251 over the same span at 5.8e-82 and flagged representative,
+so IPR017157 → GO:0052689 is a subfamily-to-activity mapping. Both land on a
 defensible answer here, but only the second one is a well-grounded inference in
 its own right.
 

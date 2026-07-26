@@ -55,6 +55,16 @@ PANEL: dict[str, str] = {
 # HGG oxyanion loop. Used to check, not to assert.
 EXPECTED_TRIAD = ("S", "D", "H")
 
+# Signatures whose span and score decide whether an activity inference for
+# AADACL3 is subfamily-level (constrains the reaction) or only fold-level
+# (constrains the architecture). Reported per panel member for comparison.
+TRACKED_SIGNATURES: dict[str, str] = {
+    "IPR017157": "Arylacetamide deacetylase (InterPro, subfamily)",
+    "PIRSF037251": "Arylacetamide deacetylase (PIRSF member signature)",
+    "IPR013094": "Alpha/beta hydrolase fold-3 (InterPro, fold)",
+    "IPR050300": "GDXG lipolytic enzyme (InterPro, family)",
+}
+
 
 def get_json(url: str) -> dict:
     resp = requests.get(url, timeout=60, headers={"Accept": "application/json"})
@@ -86,6 +96,7 @@ class Entry:
     phobius: dict[str, list[tuple[int, int]]] = field(default_factory=dict)
     tmhmm: list[tuple[int, int]] = field(default_factory=list)
     signalp: list[tuple[int, int]] = field(default_factory=list)
+    signatures: dict[str, list[dict]] = field(default_factory=dict)
 
 
 def fetch_uniprot(accession: str, label: str) -> Entry:
@@ -160,6 +171,22 @@ def add_interpro(entry: Entry) -> None:
             entry.prosite_ser_site = spans
         elif meta["accession"] == "PF07859":
             entry.pfam_ab3 = spans
+
+        # Keep span + score + representative flag for the signatures that decide
+        # whether an activity inference is subfamily-level or merely fold-level.
+        if meta["accession"] in TRACKED_SIGNATURES:
+            entry.signatures[meta["accession"]] = [
+                {
+                    "start": fr["start"],
+                    "end": fr["end"],
+                    "score": loc.get("score"),
+                    "representative": loc.get("representative"),
+                    "model": loc.get("model"),
+                }
+                for prot in result["proteins"]
+                for loc in prot["entry_protein_locations"]
+                for fr in loc["fragments"]
+            ]
 
     feats = get_json(f"{INTERPRO}/protein/uniprot/{entry.accession}/?extra_features=true")
     if not feats:
@@ -376,7 +403,18 @@ def main() -> None:
         "pairwise_alignment_to_query": alignments,
         "topology": topology,
         "pfam_PF07859_matches": {acc: e.pfam_ab3 for acc, e in entries.items()},
+        "tracked_signatures": {
+            "descriptions": TRACKED_SIGNATURES,
+            "per_protein": {acc: e.signatures for acc, e in entries.items()},
+        },
     }
+    if QUERY not in results["tracked_signatures"]["per_protein"]:
+        raise RuntimeError("query missing from tracked-signature table")
+    if not entries[QUERY].signatures:
+        raise RuntimeError(
+            f"No tracked signatures ({', '.join(TRACKED_SIGNATURES)}) matched {QUERY}; "
+            "the subfamily-versus-fold comparison cannot be made"
+        )
 
     (HERE / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     (HERE / "RESULTS.md").write_text(render_markdown(results, entries))
@@ -489,6 +527,39 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
     L.append("|---|---|")
     for acc, spans in r["pfam_PF07859_matches"].items():
         L.append(f"| {entries[acc].uniprot_id} ({acc}) | {spans or '-'} |")
+    L.append("")
+
+    L.append("## 6. Subfamily-level versus fold-level signature assignment")
+    L.append("")
+    L.append(
+        "Which signature carries an activity inference matters more than whether one "
+        "matches at all: a fold signature constrains architecture, a subfamily "
+        "signature constrains the reaction. Spans are residue ranges on each protein; "
+        "score is the member-database e-value where the API reports one (InterPro "
+        "entries themselves carry no score)."
+    )
+    L.append("")
+    for sig, desc in TRACKED_SIGNATURES.items():
+        L.append(f"- `{sig}` - {desc}")
+    L.append("")
+    L.append("| protein | " + " | ".join(TRACKED_SIGNATURES) + " |")
+    L.append("|---" * (len(TRACKED_SIGNATURES) + 1) + "|")
+    for acc, sigs in r["tracked_signatures"]["per_protein"].items():
+        cells = []
+        for sig in TRACKED_SIGNATURES:
+            hits = sigs.get(sig) or []
+            if not hits:
+                cells.append("-")
+                continue
+            cells.append(
+                "; ".join(
+                    f"{h['start']}-{h['end']}"
+                    + (f" ({h['score']:g})" if h.get("score") is not None else "")
+                    + (" [representative]" if h.get("representative") else "")
+                    for h in hits
+                )
+            )
+        L.append(f"| {entries[acc].uniprot_id} ({acc}) | " + " | ".join(cells) + " |")
     L.append("")
 
     L.append("## Interpretation")
