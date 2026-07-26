@@ -1,0 +1,3787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGPP2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SGPP2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IWX5" target="_blank" class="term-link">
+                        Q8IWX5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SGPP2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IWX5" data-a="DESCRIPTION: SGPP2 (sphingosine-1-phosphate phosphatase 2, SPP2..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SGPP2 (sphingosine-1-phosphate phosphatase 2, SPP2/hSPP2) is a multipass integral endoplasmic reticulum membrane enzyme of the type 2 lipid phosphate phosphatase (LPP/PAP2) superfamily and a paralog of SGPP1. It dephosphorylates sphingoid-base 1-phosphates, principally sphingosine-1-phosphate (S1P) to sphingosine and dihydrosphingosine-1-phosphate to dihydrosphingosine (sphinganine), and can also act on phytosphingosine-1-phosphate. This activity is specific for sphingoid-base 1-phosphates and does not act on glycerolipid phosphates such as lysophosphatidic acid or phosphatidic acid. By reversing the sphingosine kinase reaction, SGPP2 helps set the intracellular balance between S1P, sphingosine and ceramide (the &#34;sphingolipid rheostat&#34;) and channels sphingosine into the ceramide salvage/recycling pathway, thereby attenuating intracellular S1P signaling. Unlike the constitutively expressed SGPP1, SGPP2 is strongly and NF-kB-dependently induced by inflammatory stimuli (TNF, bacterial LPS) in cells such as neutrophils and endothelial cells, implicating it in inflammatory signaling; in mouse, Sgpp2 is highly expressed in pancreatic islets and its loss causes beta-cell endoplasmic reticulum stress and defective adaptive beta-cell proliferation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing the active enzyme in the endoplasmic reticulum membrane. This is the correct site of action and matches the experimental (IDA) localization of human SPP2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SGPP2 is a multipass ER membrane protein and the S1P dephosphorylation reaction occurs on the ER membrane. The IBA is consistent with the experimental IDA localization and the family-wide ER residence of SPP1/SPP2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">localized to the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046839" target="_blank" class="term-link">
+                                    GO:0046839
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid dephosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0046839" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the broad process of phospholipid dephosphorylation. This is a correct but over-general parent term for the specific sphingoid-base-1-phosphate dephosphorylation that SGPP2 performs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SGPP2 does not act on general phospholipids; it is highly specific for sphingoid base 1-phosphates and does not dephosphorylate lysophosphatidic acid or phosphatidic acid. The term is not wrong (S1P is a phosphorylated lipid) but is less informative than the sphingosine-1-phosphate/sphingolipid terms; retain as non-core rather than treat as the core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indicating that SPP2 is highly specific to sphingoid base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the defining molecular function of SGPP2: sphingosine-1-phosphate phosphatase activity (S1P -&gt; sphingosine + Pi). Fully corroborated by experimental IDA/IMP/EXP annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core catalytic activity of the enzyme and is supported by direct biochemical assays of human SPP2. Correct term at the correct level of specificity. Selected as the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Has specific phosphohydrolase activity towards sphingoid base</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006670" target="_blank" class="term-link">
+                                    GO:0006670
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0006670" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to sphingosine metabolic process. SGPP2 generates sphingosine by dephosphorylating S1P, directly participating in sphingosine metabolism; this is also independently supported experimentally (IDA).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The product of the SGPP2 reaction is sphingosine, and the enzyme controls the sphingosine&lt;-&gt;S1P interconversion, so sphingosine metabolic process is an accurate process annotation. Corroborated by the PMID:12411432 IDA annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">is needed for efficient recycling of sphingosine into the sphingolipid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to ER membrane derived from the UniProt Subcellular Location vocabulary. Redundant with the experimental (IDA) and phylogenetic (IBA) ER-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization, mechanically transferred from the curated UniProt subcellular-location term. Consistent with all other evidence; kept as a (non-core) corroborating localization annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0030149" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic annotation to sphingolipid catabolic process. Dephosphorylation of S1P to sphingosine is a committed step in the catabolic / salvage arm of sphingolipid metabolism, so the term is biologically defensible.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reaction contributes to sphingolipid turnover (S1P is degraded / recycled via sphingosine), so the term is correct in direction; however, it is a broad process term and the enzyme also feeds sphingosine back into biosynthesis (salvage), so it is retained as a non-core process rather than the defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">is needed for efficient recycling of sphingosine into the sphingolipid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070780" target="_blank" class="term-link">
+                                    GO:0070780
+                                </a>
+                            </span>
+                            <span class="term-label">dihydrosphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0070780" data-r="GO_REF:0000116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (RHEA:27514 reaction mapping) to dihydrosphingosine-1-phosphate phosphatase activity. This is a genuine, directly demonstrated secondary activity of SGPP2 (also present as an EXP annotation).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SPP2 hydrolyses dihydrosphingosine-1-phosphate (sphinganine-1-phosphate) as well as S1P; this reflects the enzyme&#39;s sphingoid-base-1-phosphate specificity at a single active site rather than a distinct function. Correct term, retained as a non-core secondary activity alongside the core S1P phosphatase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the core sphingosine-1-phosphate phosphatase activity (combined IEA pipeline including RHEA:27518 and ortholog transfer). Redundant with the experimental IDA/IMP/EXP annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, independently and mechanically inferred; fully consistent with the experimental evidence. Redundant with the experimental annotations that define the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Has specific phosphohydrolase activity towards sphingoid base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061469" target="_blank" class="term-link">
+                                    GO:0061469
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of type B pancreatic cell proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0061469" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic ortholog-transfer annotation (Ensembl Compara) from mouse Sgpp2, whose knockout shows defective adaptive pancreatic beta-cell proliferation. A real but context-/organism-specific downstream phenotype, not the molecular core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation traces to the mouse Sgpp2-/- phenotype (defective adaptive beta-cell proliferation and basal beta-cell ER stress). This is a genuine physiological consequence of losing SPPase activity in islets, but it is a downstream, tissue-specific process rather than the enzyme&#39;s core function; keep as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059959" target="_blank" class="term-link">
+                                        PMID:27059959
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they exhibited defective adaptive β-cell proliferation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9845614
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0030149" data-r="Reactome:R-HSA-9845614" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation placing SGPP2 in sphingolipid catabolism. Consistent with the ARBA IEA annotation to the same process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SGPP2 acts in the sphingolipid catabolic/salvage arm (S1P -&gt; sphingosine), so the Reactome pathway placement is correct. Retained as a non-core process annotation; the more specific and informative annotations are the S1P phosphatase MF and sphingosine metabolic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428664
+
+                                </span>
+
+                                <div class="support-text">catalyze the hydrolysis of cytosolic sphingosine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel human sphingo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0005789" data-r="PMID:12411432" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP, from immunofluorescence microscopy in the identification study) localization of human SPP2 to the endoplasmic reticulum membrane. This is the authoritative localization annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence (immunofluorescence) localizes SPP2 to the ER, and the protein is a multipass ER membrane protein. This is the core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">localized to the endoplasmic reticulum</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31916624" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31916624
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biosynthesis of the anti-lipid-microdomain sphingoid base 4,...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="PMID:31916624" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation to the core sphingosine-1-phosphate phosphatase activity from the FADS3/sphingadiene study, which assayed SPP1/SPP2 dephosphorylation of sphingoid-base 1-phosphates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GOA experimental (EXP) annotation to the defining S1P phosphatase activity of SGPP2. The cached record for PMID:31916624 is abstract-only and is about 4,14-sphingadiene (SPD) metabolism, so it contains no verbatim sentence documenting SGPP2/SPP2 dephosphorylation of sphingosine-1-phosphate; the primary SPP1/SPP2 dephosphorylation assay is in the uncached full text. Correct term; reinforces the core molecular function, which is independently established by the PMID:12411432 IDA evidence. No on-point verbatim supporting_text is available from the cached abstract, so none is cited here.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070780" target="_blank" class="term-link">
+                                    GO:0070780
+                                </a>
+                            </span>
+                            <span class="term-label">dihydrosphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel human sphingo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0070780" data-r="PMID:12411432" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation to dihydrosphingosine-1-phosphate phosphatase activity, directly demonstrated in the identification study (high activity against dihydrosphingosine 1-phosphate, inhibited by excess S1P).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A genuine, directly measured secondary activity reflecting the enzyme&#39;s sphingoid-base-1-phosphate specificity. Retain as a non-core activity alongside the core S1P phosphatase activity; do not remove an experimental annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428664
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="Reactome:R-HSA-428664" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation to the core sphingosine-1-phosphate phosphatase activity, modeling SGPP1/2 dephosphorylation of cytosolic S1P, dihydro-S1P and phyto-S1P at the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function with an explicit pathway model. Consistent with all experimental evidence; redundant with the IDA/IMP/EXP annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428664
+
+                                </span>
+
+                                <div class="support-text">catalyze the hydrolysis of cytosolic sphingosine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27059959" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27059959
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-1-phosphate Phosphatase 2 Regulates Pancreatic I...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="PMID:27059959" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation to sphingosine-1-phosphate phosphatase activity based on the mouse Sgpp2 knockout, which established the in-vivo role of SPPase 2 in sphingosine recycling and beta-cell homeostasis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Sgpp2-/- mouse study links loss of SPPase 2 to defective sphingosine recycling and beta-cell ER stress, supporting that the gene product enables S1P phosphatase activity in vivo. Correct core molecular function; do not remove an experimental annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059959" target="_blank" class="term-link">
+                                        PMID:27059959
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SPPase activity is needed for efficient recycling of sphingosine into the sphingolipid synthesis pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061469" target="_blank" class="term-link">
+                                    GO:0061469
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of type B pancreatic cell proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0061469" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer from mouse Sgpp2 of the beta-cell proliferation regulation phenotype. Same underlying evidence as the Ensembl IEA annotation to this term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the mouse Sgpp2-/- phenotype (defective adaptive beta-cell proliferation with basal ER stress). This is a real downstream, tissue-specific physiological role, but not the molecular core function of the enzyme; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059959" target="_blank" class="term-link">
+                                        PMID:27059959
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">they exhibited defective adaptive β-cell proliferation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428664
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0005789" data-r="Reactome:R-HSA-428664" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author localization of SGPP2 to the ER membrane, where it dephosphorylates cytosolic sphingoid-base 1-phosphates. Consistent with the experimental IDA and phylogenetic IBA localizations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization consistent with all other evidence. Redundant with the experimental ER-membrane annotation; retained as a corroborating localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-428664
+
+                                </span>
+
+                                <div class="support-text">enzymes associated with the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006670" target="_blank" class="term-link">
+                                    GO:0006670
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel human sphingo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0006670" data-r="PMID:12411432" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation to sphingosine metabolic process from the identification study, which characterized SPP2 as producing sphingosine by dephosphorylating S1P.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme directly generates sphingosine and governs the sphingosine&lt;-&gt;S1P interconversion; sphingosine metabolic process is the accurate process term. Selected as the primary process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel human sphingo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0005783" data-r="PMID:12411432" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization to the endoplasmic reticulum (immunofluorescence). This is the more general parent of the ER-membrane term; the membrane-level annotation is the more precise localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than GO:0005789 endoplasmic reticulum membrane, which is the true integral-membrane localization of this multipass protein. Retain as a valid, more general (non-core) localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">localized to the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                                    GO:0042392
+                                </a>
+                            </span>
+                            <span class="term-label">sphingosine-1-phosphate phosphatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of a novel human sphingo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IWX5" data-a="GO:0042392" data-r="PMID:12411432" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) annotation to the core sphingosine-1-phosphate phosphatase activity from the identification and biochemical characterization of human SPP2. This is the foundational evidence for the enzyme&#39;s defining function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SPP2 was directly assayed and shown to have high, sphingoid-base-specific phosphohydrolase activity against S1P. This is the core molecular function and the best-supported annotation for the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                        PMID:12411432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SGPP2/SGPP2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Has specific phosphohydrolase activity towards sphingoid base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sphingosine-1-phosphate phosphatase: an ER-membrane enzyme that dephosphorylates sphingosine-1-phosphate (S1P) to sphingosine plus phosphate, opposing sphingosine kinase and feeding sphingosine into the ceramide salvage pathway to set the intracellular S1P/sphingosine/ceramide balance.</h3>
+                <span class="vote-buttons" data-g="Q8IWX5" data-a="FUNCTION: Sphingosine-1-phosphate phosphatase: an ER-membran..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042392" target="_blank" class="term-link">
+                            sphingosine-1-phosphate phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006670" target="_blank" class="term-link">
+                                sphingosine metabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                sphingolipid catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                PMID:12411432
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SGPP2/SGPP2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Has specific phosphohydrolase activity towards sphingoid base</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Secondary sphingoid-base-1-phosphate phosphatase activity: at the same active site SGPP2 also dephosphorylates dihydrosphingosine-1-phosphate (sphinganine-1-phosphate) to dihydrosphingosine, reflecting a broad sphingoid-base-1-phosphate specificity (it also acts on phytosphingosine-1-phosphate) rather than a distinct function.</h3>
+                <span class="vote-buttons" data-g="Q8IWX5" data-a="FUNCTION: Secondary sphingoid-base-1-phosphate phosphatase a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070780" target="_blank" class="term-link">
+                            dihydrosphingosine-1-phosphate phosphatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                                PMID:12411432
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/SGPP2/SGPP2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q8IWX5 (SGPP2_HUMAN) record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12411432" target="_blank" class="term-link">
+                            PMID:12411432
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of a novel human sphingosine-1-phosphate phosphohydrolase, hSPP2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17113265" target="_blank" class="term-link">
+                            PMID:17113265
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingosine 1-phosphate phosphatase 2 is induced during inflammatory responses.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27059959" target="_blank" class="term-link">
+                            PMID:27059959
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingosine-1-phosphate Phosphatase 2 Regulates Pancreatic Islet β-Cell Endoplasmic Reticulum Stress and Proliferation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31916624" target="_blank" class="term-link">
+                            PMID:31916624
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biosynthesis of the anti-lipid-microdomain sphingoid base 4,14-sphingadiene by the ceramide desaturase FADS3.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-428664
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SGPP1,2 dephosphorylate sphingoid-1-phosphates</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9845614
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingolipid catabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SGPP2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IWX5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sgpp2-sphingosine-1-phosphate-phosphatase-2-review-notes">SGPP2 (Sphingosine-1-phosphate phosphatase 2) — review notes</h1>
+<p>UniProt: Q8IWX5 (SGPP2_HUMAN), 399 aa. HGNC:19953. Gene on chromosome 2.<br />
+Paralog of SGPP1 (Q9BX95). Belongs to the type 2 lipid phosphate phosphatase<br />
+(LPP / PAP2) family.</p>
+<h2 id="identity-and-molecular-function">Identity and molecular function</h2>
+<p>SGPP2 is the second human sphingosine-1-phosphate phosphatase (a.k.a. S1P<br />
+phosphohydrolase, SPP2/hSPP2). It was identified by homology to SPP1/SGPP1 and<br />
+shown to dephosphorylate sphingoid-base 1-phosphates.</p>
+<ul>
+<li>Identity / activity: "we have identified a second human S1P phosphohydrolase,<br />
+  SPP2, based on sequence homology to human SPP1. SPP2 exhibited high<br />
+  phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12411432" title="SPP2 exhibited high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate">PMID:12411432</a></li>
+<li>Substrate specificity (sphingoid-base specific, not a general lipid<br />
+  phosphatase): "The dihydrosphingosine-1-phosphate phosphohydrolase activity was<br />
+  efficiently inhibited by excess S1P but not by lysophosphatidic acid,<br />
+  phosphatidic acid, or glycerol 3-phosphate, indicating that SPP2 is highly<br />
+  specific to sphingoid base 1-phosphates."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12411432" title="indicating that SPP2 is highly specific to sphingoid base 1-phosphates">PMID:12411432</a></li>
+<li>UniProt FUNCTION: "Has specific phosphohydrolase activity towards sphingoid base<br />
+  1-phosphates. Has high phosphohydrolase activity against<br />
+  dihydrosphingosine-1-phosphate and sphingosine-1-phosphate (S1P) in vitro."<br />
+  [file:human/SGPP2/SGPP2-uniprot.txt "Has specific phosphohydrolase activity towards sphingoid base"]</li>
+<li>Reactions (UniProt CATALYTIC ACTIVITY): sphinganine 1-phosphate + H2O -&gt;<br />
+  sphinganine + phosphate (RHEA:27514); sphing-4-enine 1-phosphate + H2O -&gt;<br />
+  sphing-4-enine + phosphate (S1P, RHEA:27518); (4R)-hydroxysphinganine<br />
+  1-phosphate + H2O -&gt; (4R)-hydroxysphinganine + phosphate (phyto-S1P,<br />
+  RHEA:33067). EC 3.1.3.-.<br />
+  [file:human/SGPP2/SGPP2-uniprot.txt "EC=3.1.3.- {ECO:0000269|PubMed:12411432, ECO:0000269|PubMed:27059959}"]</li>
+<li>FADS3 study confirms S1P/dihydro-S1P and also 4,14-sphingadiene-1-phosphate<br />
+  dephosphorylation by SPP1/SPP2 in vitro (source of one EXP annotation).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/31916624" title="SPD is metabolized to ceramides and SPD 1-phosphate with almost the same efficiency as sphingosine">PMID:31916624</a></li>
+</ul>
+<p>Core MF term: <strong>GO:0042392 sphingosine-1-phosphate phosphatase activity</strong><br />
+(verified current label via OLS). Also enables <strong>GO:0070780<br />
+dihydrosphingosine-1-phosphate phosphatase activity</strong> (a genuine second<br />
+sphingoid-base-1-P activity, kept as non-core).</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>Multipass ER membrane protein. UniProt: "Endoplasmic reticulum membrane ... <br />
+Multi-pass membrane protein." Nine predicted TM helices; three PAP2 phosphatase<br />
+sequence motifs (regions 136-144, 163-166, 206-217) with catalytic residues<br />
+His166 (proton donor) and His213 (nucleophile).<br />
+[file:human/SGPP2/SGPP2-uniprot.txt "Endoplasmic reticulum membrane"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12411432" title="SPP2 is localized to the endoplasmic reticulum">PMID:12411432</a></p>
+<p>Reactome models the reaction on the ER membrane facing the cytosol: "SGPP1 and 2<br />
+... enzymes associated with the endoplasmic reticulum membrane catalyze the<br />
+hydrolysis of cytosolic sphingosine 1-phosphate (S1P), dihydro-S1P, and<br />
+phyto-S1P."<br />
+[Reactome:R-HSA-428664 "catalyze the hydrolysis of cytosolic sphingosine"]</p>
+<p>Location terms: GO:0005789 endoplasmic reticulum membrane (core), GO:0005783<br />
+endoplasmic reticulum (parent, IDA).</p>
+<h2 id="biological-role-sphingolipid-rheostat-salvage">Biological role — sphingolipid rheostat / salvage</h2>
+<p>By dephosphorylating S1P back to sphingosine, SGPP2 opposes sphingosine kinase<br />
+and controls the S1P&lt;-&gt;sphingosine&lt;-&gt;ceramide balance ("sphingolipid rheostat"),<br />
+feeding sphingosine into the ceramide salvage/recycling pathway.</p>
+<ul>
+<li>UniProt: "Sphingosine-1-phosphate phosphatase activity is needed for efficient<br />
+  recycling of sphingosine into the sphingolipid synthesis pathway ... May play a<br />
+  role in attenuating intracellular sphingosine 1-phosphate (S1P) signaling."<br />
+  [file:human/SGPP2/SGPP2-uniprot.txt "is needed for efficient recycling of sphingosine into the sphingolipid"]</li>
+<li>Mouse Sgpp2 knockout: "SPPase activity is needed for efficient recycling of<br />
+  sphingosine into the sphingolipid synthesis pathway ... reveal a juncture in the<br />
+  sphingolipid recycling pathway that could impact the development of diabetes."<br />
+  Sgpp2-/- mice have normal skin (unlike Sgpp1-/-), defective adaptive beta-cell<br />
+  proliferation, and basal beta-cell ER stress.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27059959" title="reveal a juncture in the sphingolipid recycling pathway that could impact the development of diabetes">PMID:27059959</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27059959" title="they exhibited defective adaptive β-cell proliferation">PMID:27059959</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27059959" title="β-cells from Sgpp2 −/− mice exhibited markers indicating an elevated basal ER stress response">PMID:27059959</a></li>
+</ul>
+<p>BP terms: GO:0006670 sphingosine metabolic process (IDA, core-adjacent),<br />
+GO:0030149 sphingolipid catabolic process (S1P -&gt; sphingosine is the committed<br />
+catabolic/salvage step), GO:0046839 phospholipid dephosphorylation (broad IBA<br />
+parent). GO:0061469 regulation of type B pancreatic cell proliferation is<br />
+supported only by the mouse Sgpp2-/- phenotype and is an organism/context-specific<br />
+downstream process (non-core).</p>
+<h2 id="regulation-induction">Regulation / induction</h2>
+<p>SGPP2 is an NF-kB-dependent, inflammation-inducible gene (distinguishing it from<br />
+the more constitutive SGPP1). Cached in publications/ (abstract-only,<br />
+PMID_17113265.md); title verified via PubMed.</p>
+<ul>
+<li>"expression and activity of S1P phosphatase 2 (SPP2) was found to be highly<br />
+  upregulated by inflammatory stimuli in a variety of cells (e.g., neutrophils,<br />
+  endothelial cells) ... SPP2 is an NFkappaB-dependent gene ... suggesting a<br />
+  pro-inflammatory role of SPP2."<br />
+  [PMID:17113265 Mechtcheriakova et al. 2007, Cell Signal; verified via PubMed, https://doi.org/10.1016/j.cellsig.2006.09.004]</li>
+<li>UniProt INDUCTION: "Strongly induced by TNF, also induced by bacterial<br />
+  lipopolycaccharides (LPS) in neutrophils, endothelial cells, and other cell<br />
+  types. Not induced by growth-related factors."<br />
+  [file:human/SGPP2/SGPP2-uniprot.txt "Strongly induced by TNF"]</li>
+</ul>
+<h2 id="tissue-expression">Tissue expression</h2>
+<p>UniProt: "Expressed strongly in kidney and heart, followed by brain, colon, small<br />
+intestine and lung." Mouse Sgpp2 mRNA is high in pancreatic islets.<br />
+[file:human/SGPP2/SGPP2-uniprot.txt "Expressed strongly in kidney and heart"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27059959" title="WT mice expressed Sgpp2 mRNA at high levels in pancreatic islets">PMID:27059959</a></p>
+<h2 id="annotation-review-summary">Annotation-review summary</h2>
+<ul>
+<li>Core MF: GO:0042392 sphingosine-1-phosphate phosphatase activity — multiple<br />
+  independent IDA/IMP/EXP/IBA/TAS annotations; ACCEPT the experimental ones, keep<br />
+  the redundant electronic/Reactome ones as non-core.</li>
+<li>GO:0070780 dihydrosphingosine-1-phosphate phosphatase activity — real second<br />
+  activity (EXP + IEA/RHEA); KEEP_AS_NON_CORE (sphingoid-base-1-P specificity is<br />
+  one active site acting on several substrates).</li>
+<li>ER membrane / ER localization — well supported (IDA + IBA + IEA + Reactome<br />
+  TAS); ACCEPT the experimental, keep redundant ones.</li>
+<li>BP: sphingosine metabolic process (IDA) ACCEPT as core-adjacent; sphingolipid<br />
+  catabolic process (Reactome TAS + ARBA IEA) KEEP_AS_NON_CORE; phospholipid<br />
+  dephosphorylation (IBA, over-broad) KEEP_AS_NON_CORE.</li>
+<li>regulation of type B pancreatic cell proliferation (ISS + IEA/Ensembl from<br />
+  mouse Sgpp2-/-) — real but organism/context-specific downstream phenotype;<br />
+  KEEP_AS_NON_CORE (not the molecular core function).</li>
+</ul>
+<p>No REMOVE actions: all experimental annotations are sound; the electronic ones are<br />
+biologically defensible (redundant with experimental, not wrong).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IWX5
+gene_symbol: SGPP2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SGPP2 (sphingosine-1-phosphate phosphatase 2, SPP2/hSPP2) is a multipass integral
+  endoplasmic reticulum membrane enzyme of the type 2 lipid phosphate phosphatase
+  (LPP/PAP2) superfamily and a paralog of SGPP1. It dephosphorylates sphingoid-base
+  1-phosphates, principally sphingosine-1-phosphate (S1P) to sphingosine and
+  dihydrosphingosine-1-phosphate to dihydrosphingosine (sphinganine), and can also act
+  on phytosphingosine-1-phosphate. This activity is specific for sphingoid-base
+  1-phosphates and does not act on glycerolipid phosphates such as lysophosphatidic
+  acid or phosphatidic acid. By reversing the sphingosine kinase reaction, SGPP2 helps
+  set the intracellular balance between S1P, sphingosine and ceramide (the &#34;sphingolipid
+  rheostat&#34;) and channels sphingosine into the ceramide salvage/recycling pathway,
+  thereby attenuating intracellular S1P signaling. Unlike the constitutively expressed
+  SGPP1, SGPP2 is strongly and NF-kB-dependently induced by inflammatory stimuli
+  (TNF, bacterial LPS) in cells such as neutrophils and endothelial cells, implicating
+  it in inflammatory signaling; in mouse, Sgpp2 is highly expressed in pancreatic islets
+  and its loss causes beta-cell endoplasmic reticulum stress and defective adaptive
+  beta-cell proliferation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8IWX5-1
+- name: &#39;2&#39;
+  id: Q8IWX5-2
+  sequence_note: VSP_039385
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation placing the active enzyme in the endoplasmic
+      reticulum membrane. This is the correct site of action and matches the
+      experimental (IDA) localization of human SPP2.
+    action: ACCEPT
+    reason: &gt;-
+      SGPP2 is a multipass ER membrane protein and the S1P dephosphorylation reaction
+      occurs on the ER membrane. The IBA is consistent with the experimental IDA
+      localization and the family-wide ER residence of SPP1/SPP2.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:12411432
+      supporting_text: localized to the endoplasmic reticulum
+- term:
+    id: GO:0046839
+    label: phospholipid dephosphorylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the broad process of phospholipid
+      dephosphorylation. This is a correct but over-general parent term for the
+      specific sphingoid-base-1-phosphate dephosphorylation that SGPP2 performs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      SGPP2 does not act on general phospholipids; it is highly specific for sphingoid
+      base 1-phosphates and does not dephosphorylate lysophosphatidic acid or
+      phosphatidic acid. The term is not wrong (S1P is a phosphorylated lipid) but is
+      less informative than the sphingosine-1-phosphate/sphingolipid terms; retain as
+      non-core rather than treat as the core process.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: indicating that SPP2 is highly specific to sphingoid base
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the defining molecular function of SGPP2:
+      sphingosine-1-phosphate phosphatase activity (S1P -&gt; sphingosine + Pi). Fully
+      corroborated by experimental IDA/IMP/EXP annotations.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core catalytic activity of the enzyme and is supported by direct
+      biochemical assays of human SPP2. Correct term at the correct level of
+      specificity. Selected as the core molecular function.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Has specific phosphohydrolase activity towards sphingoid base
+    - reference_id: PMID:12411432
+      supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+- term:
+    id: GO:0006670
+    label: sphingosine metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to sphingosine metabolic process. SGPP2 generates
+      sphingosine by dephosphorylating S1P, directly participating in sphingosine
+      metabolism; this is also independently supported experimentally (IDA).
+    action: ACCEPT
+    reason: &gt;-
+      The product of the SGPP2 reaction is sphingosine, and the enzyme controls the
+      sphingosine&lt;-&gt;S1P interconversion, so sphingosine metabolic process is an
+      accurate process annotation. Corroborated by the PMID:12411432 IDA annotation.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: is needed for efficient recycling of sphingosine into the sphingolipid
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation to ER membrane derived from the UniProt Subcellular
+      Location vocabulary. Redundant with the experimental (IDA) and phylogenetic (IBA)
+      ER-membrane annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization, mechanically transferred from the curated UniProt
+      subcellular-location term. Consistent with all other evidence; kept as a
+      (non-core) corroborating localization annotation.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic annotation to sphingolipid catabolic process.
+      Dephosphorylation of S1P to sphingosine is a committed step in the catabolic /
+      salvage arm of sphingolipid metabolism, so the term is biologically defensible.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The reaction contributes to sphingolipid turnover (S1P is degraded / recycled via
+      sphingosine), so the term is correct in direction; however, it is a broad process
+      term and the enzyme also feeds sphingosine back into biosynthesis (salvage), so it
+      is retained as a non-core process rather than the defining function.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: is needed for efficient recycling of sphingosine into the sphingolipid
+- term:
+    id: GO:0070780
+    label: dihydrosphingosine-1-phosphate phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (RHEA:27514 reaction mapping) to
+      dihydrosphingosine-1-phosphate phosphatase activity. This is a genuine, directly
+      demonstrated secondary activity of SGPP2 (also present as an EXP annotation).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      SPP2 hydrolyses dihydrosphingosine-1-phosphate (sphinganine-1-phosphate) as well
+      as S1P; this reflects the enzyme&#39;s sphingoid-base-1-phosphate specificity at a
+      single active site rather than a distinct function. Correct term, retained as a
+      non-core secondary activity alongside the core S1P phosphatase activity.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation to the core sphingosine-1-phosphate phosphatase activity
+      (combined IEA pipeline including RHEA:27518 and ortholog transfer). Redundant with
+      the experimental IDA/IMP/EXP annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, independently and mechanically inferred; fully
+      consistent with the experimental evidence. Redundant with the experimental
+      annotations that define the core function.
+    supported_by:
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Has specific phosphohydrolase activity towards sphingoid base
+- term:
+    id: GO:0061469
+    label: regulation of type B pancreatic cell proliferation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic ortholog-transfer annotation (Ensembl Compara) from mouse Sgpp2, whose
+      knockout shows defective adaptive pancreatic beta-cell proliferation. A real but
+      context-/organism-specific downstream phenotype, not the molecular core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation traces to the mouse Sgpp2-/- phenotype (defective adaptive beta-cell
+      proliferation and basal beta-cell ER stress). This is a genuine physiological
+      consequence of losing SPPase activity in islets, but it is a downstream,
+      tissue-specific process rather than the enzyme&#39;s core function; keep as non-core.
+    supported_by:
+    - reference_id: PMID:27059959
+      supporting_text: they exhibited defective adaptive β-cell proliferation
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9845614
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation placing SGPP2 in sphingolipid catabolism.
+      Consistent with the ARBA IEA annotation to the same process term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      SGPP2 acts in the sphingolipid catabolic/salvage arm (S1P -&gt; sphingosine), so the
+      Reactome pathway placement is correct. Retained as a non-core process annotation;
+      the more specific and informative annotations are the S1P phosphatase MF and
+      sphingosine metabolic process.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428664
+      supporting_text: catalyze the hydrolysis of cytosolic sphingosine
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:12411432
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (EXP, from immunofluorescence microscopy in the identification study)
+      localization of human SPP2 to the endoplasmic reticulum membrane. This is the
+      authoritative localization annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence (immunofluorescence) localizes SPP2 to the ER, and
+      the protein is a multipass ER membrane protein. This is the core localization.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: localized to the endoplasmic reticulum
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: EXP
+  original_reference_id: PMID:31916624
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation to the core sphingosine-1-phosphate phosphatase
+      activity from the FADS3/sphingadiene study, which assayed SPP1/SPP2 dephosphorylation
+      of sphingoid-base 1-phosphates.
+    action: ACCEPT
+    reason: &gt;-
+      GOA experimental (EXP) annotation to the defining S1P phosphatase activity of SGPP2.
+      The cached record for PMID:31916624 is abstract-only and is about 4,14-sphingadiene
+      (SPD) metabolism, so it contains no verbatim sentence documenting SGPP2/SPP2
+      dephosphorylation of sphingosine-1-phosphate; the primary SPP1/SPP2 dephosphorylation
+      assay is in the uncached full text. Correct term; reinforces the core molecular
+      function, which is independently established by the PMID:12411432 IDA evidence. No
+      on-point verbatim supporting_text is available from the cached abstract, so none is
+      cited here.
+- term:
+    id: GO:0070780
+    label: dihydrosphingosine-1-phosphate phosphatase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12411432
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation to dihydrosphingosine-1-phosphate phosphatase
+      activity, directly demonstrated in the identification study (high activity against
+      dihydrosphingosine 1-phosphate, inhibited by excess S1P).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A genuine, directly measured secondary activity reflecting the enzyme&#39;s
+      sphingoid-base-1-phosphate specificity. Retain as a non-core activity alongside the
+      core S1P phosphatase activity; do not remove an experimental annotation.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428664
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation to the core sphingosine-1-phosphate
+      phosphatase activity, modeling SGPP1/2 dephosphorylation of cytosolic S1P,
+      dihydro-S1P and phyto-S1P at the ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function with an explicit pathway model. Consistent with
+      all experimental evidence; redundant with the IDA/IMP/EXP annotations to the same
+      term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428664
+      supporting_text: catalyze the hydrolysis of cytosolic sphingosine
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: IMP
+  original_reference_id: PMID:27059959
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP annotation to sphingosine-1-phosphate phosphatase activity based on the mouse
+      Sgpp2 knockout, which established the in-vivo role of SPPase 2 in sphingosine
+      recycling and beta-cell homeostasis.
+    action: ACCEPT
+    reason: &gt;-
+      The Sgpp2-/- mouse study links loss of SPPase 2 to defective sphingosine recycling
+      and beta-cell ER stress, supporting that the gene product enables S1P phosphatase
+      activity in vivo. Correct core molecular function; do not remove an experimental
+      annotation.
+    supported_by:
+    - reference_id: PMID:27059959
+      supporting_text: SPPase activity is needed for efficient recycling of sphingosine into the sphingolipid synthesis pathway
+- term:
+    id: GO:0061469
+    label: regulation of type B pancreatic cell proliferation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer from mouse Sgpp2 of the beta-cell proliferation
+      regulation phenotype. Same underlying evidence as the Ensembl IEA annotation to
+      this term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported by the mouse Sgpp2-/- phenotype (defective adaptive beta-cell
+      proliferation with basal ER stress). This is a real downstream, tissue-specific
+      physiological role, but not the molecular core function of the enzyme; retain as
+      non-core.
+    supported_by:
+    - reference_id: PMID:27059959
+      supporting_text: they exhibited defective adaptive β-cell proliferation
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428664
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author localization of SGPP2 to the ER membrane, where it
+      dephosphorylates cytosolic sphingoid-base 1-phosphates. Consistent with the
+      experimental IDA and phylogenetic IBA localizations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization consistent with all other evidence. Redundant with the
+      experimental ER-membrane annotation; retained as a corroborating localization.
+    supported_by:
+    - reference_id: Reactome:R-HSA-428664
+      supporting_text: enzymes associated with the endoplasmic reticulum membrane
+- term:
+    id: GO:0006670
+    label: sphingosine metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12411432
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation to sphingosine metabolic process from the
+      identification study, which characterized SPP2 as producing sphingosine by
+      dephosphorylating S1P.
+    action: ACCEPT
+    reason: &gt;-
+      The enzyme directly generates sphingosine and governs the sphingosine&lt;-&gt;S1P
+      interconversion; sphingosine metabolic process is the accurate process term.
+      Selected as the primary process annotation.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:12411432
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) localization to the endoplasmic reticulum
+      (immunofluorescence). This is the more general parent of the ER-membrane term; the
+      membrane-level annotation is the more precise localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but less specific than GO:0005789 endoplasmic reticulum membrane, which is
+      the true integral-membrane localization of this multipass protein. Retain as a
+      valid, more general (non-core) localization.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: localized to the endoplasmic reticulum
+- term:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12411432
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) annotation to the core sphingosine-1-phosphate phosphatase
+      activity from the identification and biochemical characterization of human SPP2.
+      This is the foundational evidence for the enzyme&#39;s defining function.
+    action: ACCEPT
+    reason: &gt;-
+      SPP2 was directly assayed and shown to have high, sphingoid-base-specific
+      phosphohydrolase activity against S1P. This is the core molecular function and the
+      best-supported annotation for the gene.
+    supported_by:
+    - reference_id: PMID:12411432
+      supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+    - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+      supporting_text: Has specific phosphohydrolase activity towards sphingoid base
+core_functions:
+- description: &gt;-
+    Sphingosine-1-phosphate phosphatase: an ER-membrane enzyme that dephosphorylates
+    sphingosine-1-phosphate (S1P) to sphingosine plus phosphate, opposing sphingosine
+    kinase and feeding sphingosine into the ceramide salvage pathway to set the
+    intracellular S1P/sphingosine/ceramide balance.
+  molecular_function:
+    id: GO:0042392
+    label: sphingosine-1-phosphate phosphatase activity
+  directly_involved_in:
+  - id: GO:0006670
+    label: sphingosine metabolic process
+  - id: GO:0030149
+    label: sphingolipid catabolic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:12411432
+    supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+  - reference_id: file:human/SGPP2/SGPP2-uniprot.txt
+    supporting_text: Has specific phosphohydrolase activity towards sphingoid base
+- description: &gt;-
+    Secondary sphingoid-base-1-phosphate phosphatase activity: at the same active site
+    SGPP2 also dephosphorylates dihydrosphingosine-1-phosphate (sphinganine-1-phosphate)
+    to dihydrosphingosine, reflecting a broad sphingoid-base-1-phosphate specificity
+    (it also acts on phytosphingosine-1-phosphate) rather than a distinct function.
+  molecular_function:
+    id: GO:0070780
+    label: dihydrosphingosine-1-phosphate phosphatase activity
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:12411432
+    supporting_text: high phosphohydrolase activity against S1P and dihydrosphingosine 1-phosphate
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/SGPP2/SGPP2-uniprot.txt
+  title: UniProtKB Q8IWX5 (SGPP2_HUMAN) record
+  findings: []
+- id: PMID:12411432
+  title: Identification and characterization of a novel human sphingosine-1-phosphate
+    phosphohydrolase, hSPP2.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identification and biochemical characterization of human SPP2. Establishes the
+      core sphingosine-1-phosphate / dihydrosphingosine-1-phosphate phosphatase activity,
+      sphingoid-base-1-phosphate specificity, and ER localization. Abstract-only in the
+      local cache; all supporting_text quotes are verbatim from the abstract.
+- id: PMID:17113265
+  title: Sphingosine 1-phosphate phosphatase 2 is induced during inflammatory responses.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows SGPP2/SPP2 is strongly, NF-kB-dependently induced by inflammatory stimuli
+      (TNF, LPS) in neutrophils and endothelial cells, with a pro-inflammatory role.
+      Underlies the UniProt INDUCTION and pro-inflammatory FUNCTION statements. Cached in
+      the local publications cache (abstract-only); PubMed-verified (DOI
+      10.1016/j.cellsig.2006.09.004).
+- id: PMID:27059959
+  title: Sphingosine-1-phosphate Phosphatase 2 Regulates Pancreatic Islet β-Cell Endoplasmic
+    Reticulum Stress and Proliferation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mouse Sgpp2 knockout: normal skin (unlike Sgpp1-/-), defective adaptive beta-cell
+      proliferation, basal beta-cell ER stress. Establishes the in-vivo role in
+      sphingosine recycling and underlies the pancreatic beta-cell proliferation
+      annotations. Full text available in the local cache.
+- id: PMID:31916624
+  title: Biosynthesis of the anti-lipid-microdomain sphingoid base 4,14-sphingadiene
+    by the ceramide desaturase FADS3.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      FADS3/sphingadiene study; assays SPP1/SPP2 dephosphorylation of sphingoid-base
+      1-phosphates, providing an independent experimental basis for the S1P phosphatase
+      activity annotation. Abstract-only in the local cache.
+- id: Reactome:R-HSA-428664
+  title: SGPP1,2 dephosphorylate sphingoid-1-phosphates
+  findings: []
+- id: Reactome:R-HSA-9845614
+  title: Sphingolipid catabolism
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

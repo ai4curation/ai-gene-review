@@ -1,0 +1,4399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPAM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GPAM</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HCL2" target="_blank" class="term-link">
+                        Q9HCL2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GPAM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HCL2" data-a="DESCRIPTION: GPAM (glycerol-3-phosphate acyltransferase 1, mito..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GPAM (glycerol-3-phosphate acyltransferase 1, mitochondrial; GPAT1; EC 2.3.1.15) catalyzes the essential, committed and rate-limiting first step of glycerolipid biosynthesis. It esterifies a long-chain acyl group from acyl-CoA onto the sn-1 position of sn-glycerol-3-phosphate, producing 1-acyl-sn-glycerol-3-phosphate (lysophosphatidic acid, LPA) and CoA. The LPA product is the common precursor that feeds both storage lipid (triacylglycerol) and membrane glycerophospholipid synthesis, including phosphatidic acid and, downstream, CDP-diacylglycerol. GPAT1 is a peripheral protein of the mitochondrial outer membrane with a cytosol-facing catalytic domain, anchored via an intramembrane segment and a patch of basic residues; its HXXXXD acyltransferase motif is required for catalysis. The enzyme prefers saturated long-chain acyl-CoAs (notably 16-carbon palmitoyl-CoA) and is highly expressed in liver and adipose tissue, where it is a major determinant of triacylglycerol synthesis and, when overexpressed, contributes to hepatic steatosis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) placement of GPAT1 activity in the mitochondrion. Correct but less precise than the mitochondrial outer membrane localization that is independently supported by structural and subcellular-location evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GPAT1 is indeed active in mitochondria, but the more specific and better-evidenced compartment is the mitochondrial outer membrane (GO:0005741); mitochondrion is a correct but general parent term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the core molecular function, glycerol-3-phosphate O-acyltransferase activity, consistent with all experimental evidence for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining, experimentally validated molecular function of GPAT1; the IBA call agrees with EXP/IMP/ISS evidence and the UniProt catalytic-activity record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006650" target="_blank" class="term-link">
+                                    GO:0006650
+                                </a>
+                            </span>
+                            <span class="term-label">glycerophospholipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006650" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) involvement in glycerophospholipid metabolism. Correct at a general level: GPAT1&#39;s LPA product is the entry point for glycerophospholipid synthesis, but this term is broad relative to the specific biosynthetic processes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but general; GPAT1 initiates glycerophospholipid synthesis. Retained as a non-core contextual process rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019432" target="_blank" class="term-link">
+                                    GO:0019432
+                                </a>
+                            </span>
+                            <span class="term-label">triglyceride biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0019432" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) involvement in triglyceride biosynthesis, a core downstream process served by GPAT1&#39;s committed first acylation step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GPAT1 catalyzes the committed first step of triacylglycerol synthesis; supported here by IBA and independently by IDA (PMID:18238778) and TAS (Reactome).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (IEA, multiple-method) assignment of the core molecular function, backed by InterPro, RHEA reactions and EC 2.3.1.15. Redundant with experimental evidence but correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA reproduces the gene&#39;s own correct core molecular function (EC 2.3.1.15, Rhea RHEA:15325); per policy a correct core MF is accepted, not marked over-annotated, even when redundant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated transfer from the UniProt subcellular-location vocabulary of mitochondrial outer membrane, matching the experimentally determined location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; GPAT1 is a peripheral protein of the mitochondrial outer membrane as established by cryo-EM and mutagenesis (PubMed:36522428).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005886" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro-based (IPR028354, GPAT_PlsB) transfer of a plasma-membrane location. This is a mis-transferred default reflecting the bacterial PlsB/inner- membrane ancestry of the family, not human GPAT1, which resides on the mitochondrial outer membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Clearly-wrong IEA. GPAT1 is a mitochondrial-outer-membrane peripheral protein; there is no evidence for plasma-membrane localization, and this InterPro default conflicts with the experimentally determined location (PubMed:36522428).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006629" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro-based assignment of the very general process lipid metabolism. Correct but uninformative relative to the specific glycerolipid biosynthetic processes GPAT1 initiates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but a high-level parent; retained as non-core background rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008654" target="_blank" class="term-link">
+                                    GO:0008654
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0008654" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro-based assignment of phospholipid biosynthesis. Correct: GPAT1&#39;s LPA product feeds phospholipid synthesis, but the term is general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; GPAT1 initiates the pathway. Kept as a non-core process; more specific biosynthetic terms (phosphatidic acid, CDP-diacylglycerol) capture the pathway more precisely.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">phosphatidic acids and lysophosphatidic acids (PubMed:18238778,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro-based assignment of the general parent term acyltransferase activity. Correct but subsumed by the specific glycerol-3-phosphate O-acyltransferase activity (GO:0004366).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant general parent of the specific, better-evidenced molecular function; adds no information beyond GO:0004366.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated InterPro-based assignment of a general acyltransferase parent term. Correct but subsumed by GO:0004366.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant general parent of the specific glycerol-3-phosphate O-acyltransferase activity; adds no information beyond GO:0004366.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI protein-binding annotation from a systematic human binary interactome screen, corresponding to the reported GPAM (Q9HCL2)-CIDEB (Q9UHD4) interaction. The bare &#34;protein binding&#34; term is uninformative about GPAT1&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) conveys no specific functional information; retained (not removed, per policy for IPI protein-binding) but flagged as over-annotated. The underlying interactor is CIDEB, per the UniProt INTERACTION record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9HCL2; Q9UHD4: CIDEB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006654" target="_blank" class="term-link">
+                                    GO:0006654
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1483166
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006654" data-r="Reactome:R-HSA-1483166" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome &#34;Synthesis of PA&#34;) involvement in phosphatidic acid biosynthesis. GPAT1 produces LPA, the immediate precursor of phosphatidic acid, so it is a core contributor to this process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GPAT1 catalyzes the first step of the de novo PA synthesis route (G3P -&gt; LPA -&gt; PA); accepting as a core downstream biosynthetic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1483166
+
+                                </span>
+
+                                <div class="support-text">lysophosphatidic acid (LPA) is initially formed by the esterification of sn-1 by glycerol 3-phosphate acyltransferase (GPAT) from glycerol 3-phosphate (G3P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019432" target="_blank" class="term-link">
+                                    GO:0019432
+                                </a>
+                            </span>
+                            <span class="term-label">triglyceride biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-75109
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0019432" data-r="Reactome:R-HSA-75109" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome &#34;Triglyceride biosynthesis&#34;) involvement in triacylglycerol biosynthesis, a core downstream process fed by GPAT1&#39;s committed first step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with IDA (PMID:18238778) and IBA evidence; GPAT1 provides the LPA that begins triacylglycerol synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016024" target="_blank" class="term-link">
+                                    GO:0016024
+                                </a>
+                            </span>
+                            <span class="term-label">CDP-diacylglycerol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0016024" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated UniPathway (UPA00557) mapping of GPAT1 to CDP-diacylglycerol biosynthesis. This matches the UniProt PATHWAY line placing GPAT1 at step 1/3 of &#34;CDP-diacylglycerol from sn-glycerol 3-phosphate&#34;, i.e. GPAT1 supplies the LPA that begins this route.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pathway-based assignment is correct: GPAT1 initiates the route to CDP-diacylglycerol but does not itself make CDP-DAG; retained as a non-core downstream process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Phospholipid metabolism; CDP-diacylglycerol biosynthesis; CDP-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18238778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18238778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransf...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="PMID:18238778" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) assignment of the core glycerol-3-phosphate O-acyltransferase activity. UniProt cites PubMed:18238778 as an ECO:0000269 experimental source for GPAT1 function and catalytic activity (RHEA:15325 and related reactions). Note the cached abstract foregrounds the paralog AGPAT6/GPAT4, but the full text also characterizes GPAM/GPAT1 activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defining experimental molecular function of the gene. Per curation policy an experimental annotation is not removed on the basis of an abstract about a paralog; UniProt&#39;s ECO:0000269 use of this paper for GPAM&#39;s catalytic activity confirms the full text supports GPAT1 activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) detection of GPAM in a high-confidence human mitochondrial proteome. Correct compartment; consistent with the specific mitochondrial outer membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general relative to mitochondrial outer membrane (GO:0005741); retained as corroborating, non-core localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of the core molecular function from the mouse ortholog (UniProtKB:P97564). Correct and concordant with experimental human evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reproduces the gene&#39;s own correct core molecular function; concordant with EXP/IMP/IBA evidence. Accepted per policy (correct core MF, not marked over-annotated).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19075029" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19075029
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microsomal cardiolipin remodeling enzyme acyl-CoA lysoca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="PMID:19075029" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP assignment of glycerol-3-phosphate O-acyltransferase activity. UniProt cites PubMed:19075029 as an ECO:0000269 experimental source for a GPAT1 catalytic activity (acylation of 1-acyl-LPG). The cached abstract foregrounds ALCAT1, but the full text also assays GPAM activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the core molecular function; not removed on the basis of an abstract about a different enzyme, in line with curation policy for experimental annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006651" target="_blank" class="term-link">
+                                    GO:0006651
+                                </a>
+                            </span>
+                            <span class="term-label">diacylglycerol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006651" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of diacylglycerol biosynthesis from the mouse ortholog. Diacylglycerol lies downstream of GPAT1&#39;s LPA/PA products, so the gene contributes indirectly to this process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Downstream, indirect process; GPAT1 does not itself synthesize DAG. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006654" target="_blank" class="term-link">
+                                    GO:0006654
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006654" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of phosphatidic acid biosynthesis from the mouse ortholog. Concordant with the Reactome TAS annotation; GPAT1 makes the LPA precursor of phosphatidic acid.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core downstream biosynthetic process; GPAT1 catalyzes the committed first step of PA synthesis. Concordant with TAS (Reactome:R-HSA-1483166).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">phosphatidic acids and lysophosphatidic acids (PubMed:18238778,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006655" target="_blank" class="term-link">
+                                    GO:0006655
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylglycerol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19075029" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19075029
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The microsomal cardiolipin remodeling enzyme acyl-CoA lysoca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0006655" data-r="PMID:19075029" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP assignment of phosphatidylglycerol biosynthesis, derived from the PubMed:19075029 finding that the enzyme can acylate 1-acyl-lysophosphatidylglycerol to diacyl-phosphatidylglycerol (UniProt catalytic activity RHEA:33203). This is a minor secondary acyltransferase activity, not the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IMP) so retained (not removed); represents a secondary/minor lysophospholipid-remodeling activity rather than GPAT1&#39;s core committed step in glycerolipid synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">1,2-diacyl-sn-glycero-3-phospho-(1&#39;-sn-glycerol) + CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1482695
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005741" data-r="Reactome:R-HSA-1482695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome) localization to the mitochondrial outer membrane, matching the experimentally determined location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization, concordant with UniProt SubCell and cryo-EM evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1482695
+
+                                </span>
+
+                                <div class="support-text">at the outer mitochondrial (OM)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655837
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005741" data-r="Reactome:R-HSA-1655837" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome) localization to the mitochondrial outer membrane. Correct; redundant with other TAS/IEA evidence for the same compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization for GPAT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-75886
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005741" data-r="Reactome:R-HSA-75886" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome) localization to the mitochondrial outer membrane for the GPAM/GPAT2 reaction. Correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization for GPAT1, consistent with all other location evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-75886
+
+                                </span>
+
+                                <div class="support-text">associated with the outer mitochondrial membrane catalyzes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8932020
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0005741" data-r="Reactome:R-HSA-8932020" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (Reactome) localization to the mitochondrial outer membrane, associated with the GPAM gene-expression regulation entry. Correct compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization for GPAT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion outer membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                                    GO:0004366
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18238778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18238778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransf...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0004366" data-r="PMID:18238778" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP assignment of the core glycerol-3-phosphate O-acyltransferase activity from PubMed:18238778, cited by UniProt (ECO:0000269) for GPAT1 function/catalytic activity. As above, the cached abstract foregrounds the AGPAT6/GPAT4 paralog while the full text characterizes GPAM/GPAT1 activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the defining core molecular function; not removed on the basis of a paralog-focused abstract, per curation policy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019432" target="_blank" class="term-link">
+                                    GO:0019432
+                                </a>
+                            </span>
+                            <span class="term-label">triglyceride biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18238778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18238778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransf...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HCL2" data-a="GO:0019432" data-r="PMID:18238778" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) involvement in triglyceride biosynthesis. GPAT1&#39;s committed first acylation step feeds triacylglycerol synthesis; UniProt cites this paper (ECO:0000269) for GPAT1 function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for a core downstream biosynthetic process; concordant with IBA and Reactome TAS. Not removed despite the paralog-focused abstract, per policy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GPAM/GPAM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">first step of biosynthesis of glycerolipids such as triglycerides,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glycerol-3-phosphate O-acyltransferase (GPAT1) activity: acylation of the sn-1 position of sn-glycerol-3-phosphate with a long-chain acyl-CoA (preferentially saturated/palmitoyl-CoA) to yield 1-acyl-sn-glycerol-3-phosphate (lysophosphatidic acid) and CoA - the committed, rate-limiting first step of glycerolipid biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q9HCL2" data-a="FUNCTION: Glycerol-3-phosphate O-acyltransferase (GPAT1) act..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004366" target="_blank" class="term-link">
+                            glycerol-3-phosphate O-acyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019432" target="_blank" class="term-link">
+                                triglyceride biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006654" target="_blank" class="term-link">
+                                phosphatidic acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GPAM/GPAM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18238778" target="_blank" class="term-link">
+                            PMID:18238778
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Used by UniProt (ECO:0000269) as an experimental source for GPAT1 (GPAM) function and catalytic activity, including the core sn-glycerol-3-phosphate + acyl-CoA -&gt; 1-acyl-LPA + CoA reaction. The abstract foregrounds the paralog AGPAT6/GPAT4.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19075029" target="_blank" class="term-link">
+                            PMID:19075029
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The microsomal cardiolipin remodeling enzyme acyl-CoA lysocardiolipin acyltransferase is an acyltransferase of multiple anionic lysophospholipids.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cited by UniProt (ECO:0000269) for a GPAM catalytic activity acylating 1-acyl-lysophosphatidylglycerol to diacyl-phosphatidylglycerol; basis for the IMP annotations to GPAT activity and phosphatidylglycerol biosynthesis. Abstract foregrounds ALCAT1.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Systematic human binary interactome (HuRI) screen; source of the GPAM (Q9HCL2) protein-binding IPI, corresponding to the GPAM-CIDEB (Q9UHD4) interaction recorded in UniProt.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput mitochondrial proteomics detecting GPAM in the high-confidence human mitochondrial proteome; corroborates mitochondrial localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1482695
+
+                    </span>
+                </div>
+
+                <div class="reference-title">G3P is acylated to 1-acyl LPA by GPAM/GPAT2 (OM)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1483166
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of PA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655837
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Glycerol-3-phosphate Acyltransferase (GPAM, GPAT)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-75109
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Triglyceride biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-75886
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glycerol 3-phosphate + acyl-CoA =&gt; 1-acylglycerol 3-phosphate + CoASH [mitochondrial membrane-associated]</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8932020
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GPAM gene expression is stimulated by RUNX1 and ESR1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GPAM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HCL2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gpam-gpat1-review-notes">GPAM (GPAT1) review notes</h1>
+<p>UniProt: Q9HCL2 (GPAT1_HUMAN). Gene symbol GPAM (HGNC:24865); synonyms GPAT1, KIAA1560.<br />
+EC 2.3.1.15. 828 aa. Evidence at protein level (PE 1). Family: GPAT/DAPAT family.</p>
+<h2 id="core-biology-from-uniprot-q9hcl2">Core biology (from UniProt Q9HCL2)</h2>
+<p>GPAM encodes <strong>glycerol-3-phosphate acyltransferase 1, mitochondrial (GPAT1)</strong>, the<br />
+enzyme that catalyzes the <strong>essential, committed, rate-limiting first step of<br />
+glycerolipid biosynthesis</strong>.</p>
+<ul>
+<li>FUNCTION: "Mitochondrial membrane protein that catalyzes the essential" "first step<br />
+  of biosynthesis of glycerolipids such as triglycerides," "phosphatidic acids and<br />
+  lysophosphatidic acids" (PubMed:18238778, PubMed:19075029, PubMed:36522428). It<br />
+  "Esterifies acyl-group from acyl-coenzyme A (acyl-CoA) to the sn-1 position of<br />
+  glycerol-3-phosphate, to produce lysophosphatidic acid" (PubMed:18238778)<br />
+  [file:human/GPAM/GPAM-uniprot.txt].</li>
+<li>Reaction (Rhea:RHEA:15325, EC 2.3.1.15): sn-glycerol 3-phosphate + acyl-CoA →<br />
+  1-acyl-sn-glycero-3-phosphate (lysophosphatidic acid, LPA) + CoA<br />
+  [file:human/GPAM/GPAM-uniprot.txt].</li>
+<li>Substrate preference: cryo-EM structure shows GPAT1 "Has a narrow" "hydrophobic<br />
+  binding cleft that selects for a linear acyl chain"; "Catalytic activity is higher<br />
+  for substrates with a" "16-carbon acyl chain" (i.e., palmitoyl-CoA, saturated)<br />
+  (PubMed:36522428) [file:human/GPAM/GPAM-uniprot.txt].</li>
+<li>PATHWAY: "Phospholipid metabolism; CDP-diacylglycerol biosynthesis; CDP-"<br />
+  "diacylglycerol from sn-glycerol 3-phosphate: step 1/3" (UPA00557/UER00612)<br />
+  [file:human/GPAM/GPAM-uniprot.txt]. GPAT1 provides the LPA that feeds the branch<br />
+  point for both storage (triacylglycerol) and membrane (glycerophospholipid,<br />
+  including PA → CDP-DAG) lipid synthesis.</li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<ul>
+<li>SUBCELLULAR LOCATION: "Mitochondrion outer membrane"; "Peripheral membrane protein";<br />
+  "Associated with the mitochondrion" "outer membrane of hepatic cells via a patch of<br />
+  basic residues" (PubMed:36522428) [file:human/GPAM/GPAM-uniprot.txt]. Topology:<br />
+  cytoplasmic N-terminus (1..87), an intramembrane segment (88..118), and a large<br />
+  cytoplasmic catalytic domain (119..828); the enzyme faces the cytosol on the outer<br />
+  mitochondrial membrane. Mutating a patch of basic residues (R89/H98/R100/H101/R102/<br />
+  R107/R108/R118 → E) abrogates mitochondrial localization (PubMed:36522428)<br />
+  [file:human/GPAM/GPAM-uniprot.txt].</li>
+<li>HTP mitochondrial proteome study (PMID:34800366) independently places GPAM in<br />
+  mitochondria.</li>
+</ul>
+<h2 id="structure-mechanism">Structure / mechanism</h2>
+<ul>
+<li>Cryo-EM structures 8E4Y / 8E50 (80-828), 3.4 Å (PubMed:36522428). HXXXXD motif<br />
+  (residues 230..235) essential for acyltransferase activity; His230, His233, Gly273,<br />
+  Arg278, Phe313, Arg318 mutations abolish catalysis; Met388 impairs it<br />
+  [file:human/GPAM/GPAM-uniprot.txt].</li>
+</ul>
+<h2 id="regulation-physiology">Regulation / physiology</h2>
+<ul>
+<li>Ser695 phosphorylated (liver, large-scale; PubMed:18318008, PubMed:24275569).</li>
+<li>Tissue-enhanced in adipose tissue and liver (HPA). GPAT1 is the predominant hepatic<br />
+  isoform; overexpression drives hepatic triacylglycerol accumulation / steatosis<br />
+  (background biology; GPAM prefers saturated palmitoyl-CoA).</li>
+<li>Reactome: GPAM gene expression cooperatively stimulated by RUNX1 + ESR1<br />
+  (R-HSA-8932020); high GPAM correlates with better breast-cancer survival.</li>
+</ul>
+<h2 id="cited-reference-notes-important-for-annotation-review">Cited-reference notes (important for annotation review)</h2>
+<ul>
+<li><strong>PMID:18238778</strong> (Chen et al. 2008, "AGPAT6 is a novel microsomal GPAT"): cached<br />
+  entry is <strong>abstract-only</strong> (<code>full_text_available: false</code>) and the abstract is about<br />
+<strong>AGPAT6/GPAT4</strong>, a <em>different</em> (microsomal/ER) paralog — NOT GPAM/GPAT1. However<br />
+  UniProt cites this paper as an <strong>ECO:0000269 (experimental)</strong> source for GPAM's<br />
+  FUNCTION and multiple CATALYTIC ACTIVITY reactions (RHEA:15325, 37195, 37199, 37203,<br />
+  35723, 35727), so the full text clearly also characterizes GPAM/GPAT1 activity. Per<br />
+  curation policy, experimental annotations (EXP/IMP/IDA) sourced from this paper are<br />
+  ACCEPTed (do not REMOVE on the basis of an abstract about a paralog). GOA carries<br />
+  EXP + IMP GPAT-activity and IDA triglyceride-biosynthesis annotations from it.</li>
+<li><strong>PMID:19075029</strong> (Zhao et al. 2009, "ALCAT1 … acyltransferase of multiple anionic<br />
+  lysophospholipids"): cached entry <strong>abstract-only</strong>; abstract foregrounds <strong>ALCAT1</strong>.<br />
+  UniProt nonetheless cites it as ECO:0000269 for a GPAM catalytic activity<br />
+  (1-acyl-sn-glycero-3-phospho-(1'-sn-glycerol) + acyl-CoA → diacyl-PG + CoA,<br />
+  RHEA:33203), and GOA has IMP annotations from it to GPAT activity (GO:0004366) and<br />
+  phosphatidylglycerol biosynthetic process (GO:0006655). Experimental (IMP), so not<br />
+  REMOVEd; kept per policy though the PG-biosynthesis role is a minor secondary<br />
+  activity, not the core function.</li>
+<li><strong>PMID:32296183</strong> (Luck et al. 2020, HuRI reference interactome): supports the bare<br />
+<code>protein binding</code> (GO:0005515) IPI. UniProt lists one INTERACTION: Q9HCL2–Q9UHD4<br />
+  (CIDEB), NbExp=3, IntAct EBI-7600236↔EBI-7062247 [file:human/GPAM/GPAM-uniprot.txt].<br />
+  Bare "protein binding" is uninformative → MARK_AS_OVER_ANNOTATED (never REMOVE an<br />
+  IPI protein-binding per policy).</li>
+<li><strong>PMID:34800366</strong> (Morgenstern et al. 2021, high-confidence mitochondrial proteome):<br />
+  HTP support for mitochondrial localization (GO:0005739).</li>
+</ul>
+<h2 id="annotation-review-summary">Annotation-review summary</h2>
+<p>Core, well-supported:<br />
+- MF: <strong>glycerol-3-phosphate O-acyltransferase activity (GO:0004366)</strong> — EXP/IMP/ISS/<br />
+  IBA/IEA all converge; ACCEPT the experimental one, keep redundant informative IEA/IBA.<br />
+- CC: <strong>mitochondrial outer membrane (GO:0005741)</strong> — Reactome TAS + UniProt SubCell<br />
+  IEA, consistent with cryo-EM. ACCEPT.<br />
+- BP: <strong>triglyceride biosynthetic process (GO:0019432)</strong> (IDA/IBA/TAS) and<br />
+<strong>phosphatidic acid biosynthetic process (GO:0006654)</strong> (TAS/ISS) — core downstream<br />
+  processes served by GPAT1's LPA product. ACCEPT / KEEP.</p>
+<p>Over-annotations / non-core / to correct:<br />
+- <code>plasma membrane (GO:0005886)</code> IEA (InterPro): GPAT1 is an outer-mitochondrial-<br />
+  membrane enzyme; plasma-membrane placement is a mis-transferred bacterial-PlsB-style<br />
+  InterPro default → REMOVE (clearly-wrong IEA).<br />
+- <code>acyltransferase activity (GO:0016746)</code> / <code>…transferring groups other than amino-acyl
+  (GO:0016747)</code> IEA: correct but too general parents of GO:0004366 → MARK_AS_OVER_ANNOTATED.<br />
+- <code>lipid metabolic process (GO:0006629)</code> / <code>phospholipid biosynthetic process
+  (GO:0008654)</code> / <code>glycerophospholipid metabolic process (GO:0006650)</code> IEA/IBA: correct<br />
+  but general → KEEP_AS_NON_CORE.<br />
+- <code>CDP-diacylglycerol biosynthetic process (GO:0016024)</code> IEA (UniPathway UPA00557):<br />
+  matches the UniProt PATHWAY line (step 1/3); GPAT1 supplies the LPA that begins this<br />
+  route → KEEP_AS_NON_CORE.<br />
+- <code>diacylglycerol biosynthetic process (GO:0006651)</code> ISS, <code>phosphatidylglycerol
+  biosynthetic process (GO:0006655)</code> IMP: downstream / minor secondary; non-core.<br />
+- <code>protein binding (GO:0005515)</code> IPI: MARK_AS_OVER_ANNOTATED (uninformative).<br />
+</content></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HCL2
+gene_symbol: GPAM
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GPAM (glycerol-3-phosphate acyltransferase 1, mitochondrial; GPAT1; EC 2.3.1.15)
+  catalyzes the essential, committed and rate-limiting first step of glycerolipid
+  biosynthesis. It esterifies a long-chain acyl group from acyl-CoA onto the sn-1
+  position of sn-glycerol-3-phosphate, producing 1-acyl-sn-glycerol-3-phosphate
+  (lysophosphatidic acid, LPA) and CoA. The LPA product is the common precursor that
+  feeds both storage lipid (triacylglycerol) and membrane glycerophospholipid
+  synthesis, including phosphatidic acid and, downstream, CDP-diacylglycerol. GPAT1
+  is a peripheral protein of the mitochondrial outer membrane with a cytosol-facing
+  catalytic domain, anchored via an intramembrane segment and a patch of basic
+  residues; its HXXXXD acyltransferase motif is required for catalysis. The enzyme
+  prefers saturated long-chain acyl-CoAs (notably 16-carbon palmitoyl-CoA) and is
+  highly expressed in liver and adipose tissue, where it is a major determinant of
+  triacylglycerol synthesis and, when overexpressed, contributes to hepatic steatosis.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) placement of GPAT1 activity in the mitochondrion. Correct
+      but less precise than the mitochondrial outer membrane localization that is
+      independently supported by structural and subcellular-location evidence.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GPAT1 is indeed active in mitochondria, but the more specific and better-evidenced
+      compartment is the mitochondrial outer membrane (GO:0005741); mitochondrion is a
+      correct but general parent term.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the core molecular function, glycerol-3-phosphate
+      O-acyltransferase activity, consistent with all experimental evidence for this gene.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining, experimentally validated molecular function of GPAT1; the IBA
+      call agrees with EXP/IMP/ISS evidence and the UniProt catalytic-activity record.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006650
+    label: glycerophospholipid metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) involvement in glycerophospholipid metabolism. Correct at a
+      general level: GPAT1&#39;s LPA product is the entry point for glycerophospholipid
+      synthesis, but this term is broad relative to the specific biosynthetic processes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but general; GPAT1 initiates glycerophospholipid synthesis. Retained as a
+      non-core contextual process rather than a core function.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0019432
+    label: triglyceride biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) involvement in triglyceride biosynthesis, a core downstream
+      process served by GPAT1&#39;s committed first acylation step.
+    action: ACCEPT
+    reason: &gt;-
+      GPAT1 catalyzes the committed first step of triacylglycerol synthesis; supported
+      here by IBA and independently by IDA (PMID:18238778) and TAS (Reactome).
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (IEA, multiple-method) assignment of the core molecular function, backed
+      by InterPro, RHEA reactions and EC 2.3.1.15. Redundant with experimental evidence
+      but correct.
+    action: ACCEPT
+    reason: &gt;-
+      This IEA reproduces the gene&#39;s own correct core molecular function (EC 2.3.1.15,
+      Rhea RHEA:15325); per policy a correct core MF is accepted, not marked over-annotated,
+      even when redundant.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated transfer from the UniProt subcellular-location vocabulary of mitochondrial
+      outer membrane, matching the experimentally determined location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization; GPAT1 is a peripheral protein of the mitochondrial outer
+      membrane as established by cryo-EM and mutagenesis (PubMed:36522428).
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated InterPro-based (IPR028354, GPAT_PlsB) transfer of a plasma-membrane
+      location. This is a mis-transferred default reflecting the bacterial PlsB/inner-
+      membrane ancestry of the family, not human GPAT1, which resides on the mitochondrial
+      outer membrane.
+    action: REMOVE
+    reason: &gt;-
+      Clearly-wrong IEA. GPAT1 is a mitochondrial-outer-membrane peripheral protein; there
+      is no evidence for plasma-membrane localization, and this InterPro default conflicts
+      with the experimentally determined location (PubMed:36522428).
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated InterPro-based assignment of the very general process lipid metabolism.
+      Correct but uninformative relative to the specific glycerolipid biosynthetic
+      processes GPAT1 initiates.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but a high-level parent; retained as non-core background rather than a core
+      function.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0008654
+    label: phospholipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated InterPro-based assignment of phospholipid biosynthesis. Correct: GPAT1&#39;s
+      LPA product feeds phospholipid synthesis, but the term is general.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general; GPAT1 initiates the pathway. Kept as a non-core process; more
+      specific biosynthetic terms (phosphatidic acid, CDP-diacylglycerol) capture the
+      pathway more precisely.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;phosphatidic acids and lysophosphatidic acids (PubMed:18238778,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated InterPro-based assignment of the general parent term acyltransferase
+      activity. Correct but subsumed by the specific glycerol-3-phosphate
+      O-acyltransferase activity (GO:0004366).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant general parent of the specific, better-evidenced molecular function; adds
+      no information beyond GO:0004366.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated InterPro-based assignment of a general acyltransferase parent term.
+      Correct but subsumed by GO:0004366.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant general parent of the specific glycerol-3-phosphate O-acyltransferase
+      activity; adds no information beyond GO:0004366.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI protein-binding annotation from a systematic human binary interactome screen,
+      corresponding to the reported GPAM (Q9HCL2)-CIDEB (Q9UHD4) interaction. The bare
+      &#34;protein binding&#34; term is uninformative about GPAT1&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding (GO:0005515) conveys no specific functional information; retained
+      (not removed, per policy for IPI protein-binding) but flagged as over-annotated. The
+      underlying interactor is CIDEB, per the UniProt INTERACTION record.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;Q9HCL2; Q9UHD4: CIDEB&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006654
+    label: phosphatidic acid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1483166
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome &#34;Synthesis of PA&#34;) involvement in phosphatidic acid
+      biosynthesis. GPAT1 produces LPA, the immediate precursor of phosphatidic acid,
+      so it is a core contributor to this process.
+    action: ACCEPT
+    reason: &gt;-
+      GPAT1 catalyzes the first step of the de novo PA synthesis route (G3P -&gt; LPA -&gt; PA);
+      accepting as a core downstream biosynthetic process.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1483166
+      supporting_text: &#34;lysophosphatidic acid (LPA) is initially formed by the esterification of sn-1 by glycerol 3-phosphate acyltransferase (GPAT) from glycerol 3-phosphate (G3P)&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0019432
+    label: triglyceride biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-75109
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome &#34;Triglyceride biosynthesis&#34;) involvement in triacylglycerol
+      biosynthesis, a core downstream process fed by GPAT1&#39;s committed first step.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with IDA (PMID:18238778) and IBA evidence; GPAT1 provides the LPA that
+      begins triacylglycerol synthesis.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0016024
+    label: CDP-diacylglycerol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated UniPathway (UPA00557) mapping of GPAT1 to CDP-diacylglycerol biosynthesis.
+      This matches the UniProt PATHWAY line placing GPAT1 at step 1/3 of &#34;CDP-diacylglycerol
+      from sn-glycerol 3-phosphate&#34;, i.e. GPAT1 supplies the LPA that begins this route.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Pathway-based assignment is correct: GPAT1 initiates the route to CDP-diacylglycerol
+      but does not itself make CDP-DAG; retained as a non-core downstream process.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;PATHWAY: Phospholipid metabolism; CDP-diacylglycerol biosynthesis; CDP-&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:18238778
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) assignment of the core glycerol-3-phosphate O-acyltransferase
+      activity. UniProt cites PubMed:18238778 as an ECO:0000269 experimental source for
+      GPAT1 function and catalytic activity (RHEA:15325 and related reactions). Note the
+      cached abstract foregrounds the paralog AGPAT6/GPAT4, but the full text also
+      characterizes GPAM/GPAT1 activity.
+    action: ACCEPT
+    reason: &gt;-
+      Defining experimental molecular function of the gene. Per curation policy an
+      experimental annotation is not removed on the basis of an abstract about a paralog;
+      UniProt&#39;s ECO:0000269 use of this paper for GPAM&#39;s catalytic activity confirms the
+      full text supports GPAT1 activity.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) detection of GPAM in a high-confidence human mitochondrial
+      proteome. Correct compartment; consistent with the specific mitochondrial outer
+      membrane localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general relative to mitochondrial outer membrane (GO:0005741); retained
+      as corroborating, non-core localization evidence.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer of the core molecular function from the mouse
+      ortholog (UniProtKB:P97564). Correct and concordant with experimental human evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Reproduces the gene&#39;s own correct core molecular function; concordant with EXP/IMP/IBA
+      evidence. Accepted per policy (correct core MF, not marked over-annotated).
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: IMP
+  original_reference_id: PMID:19075029
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP assignment of glycerol-3-phosphate O-acyltransferase activity. UniProt cites
+      PubMed:19075029 as an ECO:0000269 experimental source for a GPAT1 catalytic activity
+      (acylation of 1-acyl-LPG). The cached abstract foregrounds ALCAT1, but the full text
+      also assays GPAM activity.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the core molecular function; not removed on the basis of an
+      abstract about a different enzyme, in line with curation policy for experimental
+      annotations.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006651
+    label: diacylglycerol biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer of diacylglycerol biosynthesis from the mouse
+      ortholog. Diacylglycerol lies downstream of GPAT1&#39;s LPA/PA products, so the gene
+      contributes indirectly to this process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Downstream, indirect process; GPAT1 does not itself synthesize DAG. Retained as
+      non-core.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006654
+    label: phosphatidic acid biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer of phosphatidic acid biosynthesis from the mouse
+      ortholog. Concordant with the Reactome TAS annotation; GPAT1 makes the LPA precursor
+      of phosphatidic acid.
+    action: ACCEPT
+    reason: &gt;-
+      Core downstream biosynthetic process; GPAT1 catalyzes the committed first step of PA
+      synthesis. Concordant with TAS (Reactome:R-HSA-1483166).
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;phosphatidic acids and lysophosphatidic acids (PubMed:18238778,&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0006655
+    label: phosphatidylglycerol biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:19075029
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP assignment of phosphatidylglycerol biosynthesis, derived from the PubMed:19075029
+      finding that the enzyme can acylate 1-acyl-lysophosphatidylglycerol to
+      diacyl-phosphatidylglycerol (UniProt catalytic activity RHEA:33203). This is a minor
+      secondary acyltransferase activity, not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental (IMP) so retained (not removed); represents a secondary/minor
+      lysophospholipid-remodeling activity rather than GPAT1&#39;s core committed step in
+      glycerolipid synthesis.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;1,2-diacyl-sn-glycero-3-phospho-(1&#39;-sn-glycerol) + CoA&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1482695
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome) localization to the mitochondrial outer membrane, matching
+      the experimentally determined location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization, concordant with UniProt SubCell and cryo-EM evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1482695
+      supporting_text: &#34;at the outer mitochondrial (OM)&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655837
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome) localization to the mitochondrial outer membrane. Correct;
+      redundant with other TAS/IEA evidence for the same compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization for GPAT1.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-75886
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome) localization to the mitochondrial outer membrane for the
+      GPAM/GPAT2 reaction. Correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization for GPAT1, consistent with all other location evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-75886
+      supporting_text: &#34;associated with the outer mitochondrial membrane catalyzes&#34;
+      reference_section_type: OTHER
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8932020
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated (Reactome) localization to the mitochondrial outer membrane, associated
+      with the GPAM gene-expression regulation entry. Correct compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization for GPAT1.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion outer membrane&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  evidence_type: IMP
+  original_reference_id: PMID:18238778
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP assignment of the core glycerol-3-phosphate O-acyltransferase activity from
+      PubMed:18238778, cited by UniProt (ECO:0000269) for GPAT1 function/catalytic activity.
+      As above, the cached abstract foregrounds the AGPAT6/GPAT4 paralog while the full
+      text characterizes GPAM/GPAT1 activity.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the defining core molecular function; not removed on the
+      basis of a paralog-focused abstract, per curation policy.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+      reference_section_type: DATABASE_ENTRY
+- term:
+    id: GO:0019432
+    label: triglyceride biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:18238778
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) involvement in triglyceride biosynthesis. GPAT1&#39;s committed first
+      acylation step feeds triacylglycerol synthesis; UniProt cites this paper (ECO:0000269)
+      for GPAT1 function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for a core downstream biosynthetic process; concordant with IBA
+      and Reactome TAS. Not removed despite the paralog-focused abstract, per policy.
+    supported_by:
+    - reference_id: file:human/GPAM/GPAM-uniprot.txt
+      supporting_text: &#34;first step of biosynthesis of glycerolipids such as triglycerides,&#34;
+      reference_section_type: DATABASE_ENTRY
+core_functions:
+- description: &gt;-
+    Glycerol-3-phosphate O-acyltransferase (GPAT1) activity: acylation of the sn-1
+    position of sn-glycerol-3-phosphate with a long-chain acyl-CoA (preferentially
+    saturated/palmitoyl-CoA) to yield 1-acyl-sn-glycerol-3-phosphate (lysophosphatidic
+    acid) and CoA - the committed, rate-limiting first step of glycerolipid biosynthesis.
+  molecular_function:
+    id: GO:0004366
+    label: glycerol-3-phosphate O-acyltransferase activity
+  supported_by:
+  - reference_id: file:human/GPAM/GPAM-uniprot.txt
+    supporting_text: &#34;coenzyme A (acyl-CoA) to the sn-1 position of glycerol-3-phosphate, to&#34;
+    reference_section_type: DATABASE_ENTRY
+  directly_involved_in:
+  - id: GO:0019432
+    label: triglyceride biosynthetic process
+  - id: GO:0006654
+    label: phosphatidic acid biosynthetic process
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:18238778
+  title: AGPAT6 is a novel microsomal glycerol-3-phosphate acyltransferase.
+  findings:
+  - statement: &gt;-
+      Used by UniProt (ECO:0000269) as an experimental source for GPAT1 (GPAM) function
+      and catalytic activity, including the core sn-glycerol-3-phosphate + acyl-CoA -&gt;
+      1-acyl-LPA + CoA reaction. The abstract foregrounds the paralog AGPAT6/GPAT4.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached entry is abstract-only and the abstract describes AGPAT6/GPAT4 (a microsomal
+      paralog). UniProt cites PubMed:18238778 with ECO:0000269 for GPAM&#39;s FUNCTION and
+      multiple catalytic-activity reactions, so the full text also characterizes GPAT1;
+      the GPAM annotations sourced from it are experimental and retained per policy.
+- id: PMID:19075029
+  title: The microsomal cardiolipin remodeling enzyme acyl-CoA lysocardiolipin acyltransferase
+    is an acyltransferase of multiple anionic lysophospholipids.
+  findings:
+  - statement: &gt;-
+      Cited by UniProt (ECO:0000269) for a GPAM catalytic activity acylating
+      1-acyl-lysophosphatidylglycerol to diacyl-phosphatidylglycerol; basis for the IMP
+      annotations to GPAT activity and phosphatidylglycerol biosynthesis. Abstract
+      foregrounds ALCAT1.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache foregrounds ALCAT1, but UniProt uses this paper (ECO:0000269)
+      for a GPAM catalytic activity; the derived GPAM annotations are experimental (IMP)
+      and represent a secondary lysophospholipid-remodeling activity, retained as non-core.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      Systematic human binary interactome (HuRI) screen; source of the GPAM (Q9HCL2)
+      protein-binding IPI, corresponding to the GPAM-CIDEB (Q9UHD4) interaction recorded
+      in UniProt.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome map; supports only a bare protein-binding annotation, which
+      is uninformative for GPAT1&#39;s molecular function (marked over-annotated).
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      High-throughput mitochondrial proteomics detecting GPAM in the high-confidence human
+      mitochondrial proteome; corroborates mitochondrial localization.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HTP support for mitochondrial localization, consistent with the specific
+      mitochondrial-outer-membrane placement.
+- id: Reactome:R-HSA-1482695
+  title: G3P is acylated to 1-acyl LPA by GPAM/GPAT2 (OM)
+  findings: []
+- id: Reactome:R-HSA-1483166
+  title: Synthesis of PA
+  findings: []
+- id: Reactome:R-HSA-1655837
+  title: Expression of Glycerol-3-phosphate Acyltransferase (GPAM, GPAT)
+  findings: []
+- id: Reactome:R-HSA-75109
+  title: Triglyceride biosynthesis
+  findings: []
+- id: Reactome:R-HSA-75886
+  title: glycerol 3-phosphate + acyl-CoA =&gt; 1-acylglycerol 3-phosphate + CoASH [mitochondrial
+    membrane-associated]
+  findings: []
+- id: Reactome:R-HSA-8932020
+  title: GPAM gene expression is stimulated by RUNX1 and ESR1
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
