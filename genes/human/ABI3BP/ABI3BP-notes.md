@@ -324,9 +324,27 @@ signalling, not adhesion of the cell to the matrix. Plain `GO:0005178` is the ho
   definition now carries that, and the justification records all three rejected candidates — the
   unmeasurable negative, matrix residence alone, and receptor class as the one that survives.
 
-  Sequence of three passes on one definition is worth noting as a pattern: an unmeasurable negative
-  was replaced by no differentia, which had to be replaced by a real one. The intermediate state was
-  a genuine regression even though the change producing it was correct.
+  **Fourth pass: the receptor-class version over-generalised in the other direction.** Writing "its
+  output is characteristically restraint of proliferation" into the differentia was true of ABI3BP but
+  false of the class — tenascin-C, periostin and CCN1/CCN2 signal through αVβ3, αVβ5 and α6β1 and are
+  characteristically *pro*-proliferative, so the clause would have excluded most of the proteins the
+  same justification cites as the reason the term is needed. A differentia hedged with
+  "characteristically" is not usable as a differentia in any case, and receptor class alone does the
+  whole exclusion job. Removed, along with the sibling comparison itself, which is reasoning *about*
+  the ontology and belongs in `justification` (`ProposedOntologyTerm` has no `comment` slot).
+
+  Two things were added instead. `GO:0004895` is not just a plausible parent class: production GO-CAM
+  `689e7a5d00003515` assigns exactly `GO:0004895 cell adhesion receptor activity` to human ITGB1
+  (`UniProtKB:P05556`), alongside `GO:0007229` and `GO:0005925` — verified at `gocams/index.tsv:8672`.
+  So the differentia matches how GO already types the very receptor ABI3BP engages. And a
+  reasoner-checkable form is now offered for the editors: `GO:0048018 and has-target some GO:0004895`,
+  with matrix residence as a non-defining characteristic.
+
+  Four passes on one definition is worth recording as a pattern. Unmeasurable negative → no
+  differentia at all → a differentia that over-claimed at class level → receptor class alone. Each
+  individual change was correct, and two of the intermediate states were genuine regressions. The
+  lesson: when tightening a class definition, test it against the *other* members of the class you
+  cited as motivation, not only against the gene in front of you.
 - Senescence, antiviral and blood-brain-barrier roles left unannotated and moved into
   `suggested_questions` / `suggested_experiments`. The senescence literature contradicts itself
   (§4) and no term should be asserted until that is resolved. Note the contrast with the neuronal
