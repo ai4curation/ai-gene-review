@@ -56,7 +56,7 @@ gene now has a validated review with core functions:
 | flbA | P38093 | 14 | RGS attenuator of FadA; **GO:0045574 ST catabolic process flagged likely-spurious** (contradicts its ST-positive role) |
 | rodA | P28346 | 8 | Class I rodlet hydrophobin (GO:0005199); spore-wall assembly |
 | dewA | P52750 | 10 | Class I spore-wall hydrophobin (GO:0005199) |
-| wA | Q03149 | 11 | Conidial-pigment PKS. **GO:0052716 laccase activity REMOVED** — PMID:7050088 (the cited paper) states wA *lacks the laccase substrate* and the laccase is yA's; a genuinely-contradicted cross-attribution (`reference_review: WRONG_IDENTIFIER`) |
+| wA | Q03149 | 11 | Conidial-pigment PKS. **GO:0052716 laccase activity REMOVED** — PMID:7050088 (the cited paper) states wA *lacks the laccase substrate* and the laccase is yA's; a genuinely-contradicted cross-attribution (`reference_review: MISCITED` — the identifier resolves to the intended paper, it just does not support the claim) |
 | yA | P17489 | 13 | Conidial laccase (GO:0052716, IDA), downstream of wA |
 
 **Module MF verification (from reviews):** the velvet structural paper
@@ -66,8 +66,10 @@ MF removed; LaeA's `GO:0008168` methyltransferase is confirmed by IDA.
 
 **Status: fully reviewed and PTN-grounded.** Both variants are complete — **28/28** grounded
 genes have validated reviews (21 EMENI + 7 NEUCR; con-10 has no GO annotations to complete),
-module deep research is present and verified
-(`conidiation_regulatory_cascade-deep-research-claude.md`), and **18 conserved-role annotons now
+module deep research is present and its citations are now checkable
+(`conidiation_regulatory_cascade-deep-research-manual.md`; the four previously-uncached PMIDs it
+relies on — PMID:9529886, PMID:7750148, PMID:8617205, PMID:16387865 — are cached in
+`publications/`), and **18 conserved-role annotons now
 carry PANTHER PTN ancestral-node grounding** (FAMILY selectors with a PTHR family term, a verified
 UniProtKB representative, and PAINT `PTN…` nodes resolved from the local IBD index + GOA WITH/FROM,
 `GO_REF:0000033`). Nodes propagating review-flagged terms were excluded (flbD cell-cycle node,
@@ -79,8 +81,11 @@ The Neurospora stage genes `acon-2` and `acon-3` were investigated and added
 phosphodiesterase** (confirmed by PMID:31172300) acting upstream of FL — added to the
 gating tier with PTN grounding (PTHR11347, PTN001682918); **acon-3** (`Q7SB37`/NCU07617,
 "Acr1") is a nuclear **MEDUSA/MedA-family** (PTHR39463) regulator downstream of FL — a new
-stage-regulation tier. The epistasis **acon-2 → FL → acon-3 → con genes** was confirmed
-verbatim from the primary source (PMID:15126394). No further tracked work remains.
+stage-regulation tier. The epistasis **acon-2 → FL → acon-3** was confirmed verbatim from the
+primary source (PMID:15126394); that source does *not* extend the chain to the *con* genes —
+it reports fl-driven morphogenesis correlating with *eas* induction **but not** *con-6* or
+*con-10*, so the downstream acon-3 → *con* step remains uncited and is flagged as such in the
+module.
 
 ## 1. What the module is
 
