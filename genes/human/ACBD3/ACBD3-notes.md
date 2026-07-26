@@ -3,44 +3,74 @@
 PAINT no-IBA project review, using the `affinage` deep-research provider
 (gates passed, `pairwise: win`) plus UniProt Q9H3P7, the GOA TSV and the primary literature.
 
-## Headline: the gene is named for a domain whose activity it may not have
+## Headline, corrected: the ACB domain does bind acyl-CoA
+
+*(Rounds 1–8 of this review said otherwise. This section is the retraction.)*
 
 `GO:0000062 fatty-acyl-CoA binding` (IEA, InterPro) comes from the **ACB domain at residues
-83–174**. It is a domain-implies-function inference, and the case against it is unusually clean:
+83–174**. Rounds 1–8 of this review called it an over-annotation and asserted that **no acyl-CoA
+ligand had ever been reported for ACBD3**. **That was false**, and the correction is now
+`KEEP_AS_NON_CORE`.
 
-- ACBD3's characterised activity lives in **different domains** — the **Q domain (241–308)**
-  recruits PI4KB; the **unique region (UR)** immediately upstream of the GOLD domain carries the
-  **MWT374-376 motif** that giantin and golgin-45 bind redundantly [PMID:38134218 "We therefore
-  concluded that the second mechanism for Golgi recruitment of ACBD3 is between the MWT374-376
-  residues of ACBD3 and two golgins: golgin-45 and giantin."]; and that UR together with the
-  **GOLD domain (384–526)** binds the SEC22B longin domain, PKA RIIα (at its single α
-  helix, ≈379–383) and picornaviral 3A proteins (at I380/K381). None of them is the ACB
-  domain.
-- **No acyl-CoA ligand, affinity or acyl-CoA-dependent activity has ever been reported.**
-- The affinage record for this gene synthesises **30+ primary papers** across Golgi structure,
-  PI4KB recruitment, steroidogenesis, sphingolipid transport, STING trafficking and picornavirus
-  biology — and **never mentions acyl-CoA once**.
+**The source that refutes it was already cited here, in a sentence I quoted the second half of.**
+PMID:38134218's introduction reads:
 
-- **The ACB domain is experimentally dispensable.** Reconstituting ACBD3 domain-deletion
-  mutants in ACBD3-knockout cells shows [PMID:30755512 "we show that acyl-coenzyme A binding
-  (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
-  recruitment and efficient enterovirus replication"]. The assay is the viral one, but what it
-  scores is the ACBD3–PI4KB interaction (the same paper: a PI4KB-binding-deficient ACBD3 restores
-  3A localisation but not replication), which PMID:27009356 maps to the **Q domain**. So this is
-  the strongest point and it is *positive* evidence — the domain the gene is named for is not
-  needed for the recruitment the gene is known for.
+[PMID:38134218 "The ACBD domain oligomerizes upon binding to C18:1-CoA or C16:0-CoA"]
 
-That last point was found late, by filling in `findings` for the six references that had full
-text cached and an empty `findings` list — the campaign's own "an empty `findings:` on a
-full-text reference is a flashing light" rule, applied to this file's own reference list rather
-than to someone else's. Before it, the case rested on *negative* evidence from a source
-that is otherwise dense and specific. Marked `MARK_AS_OVER_ANNOTATED` rather than removed: the
-domain is genuinely present and PROSITE-recognised, ACBD-family members vary in whether the
-domain retains binding, and a ligand may yet be found. But it should not read as characterised.
+I quoted the *tail* of that same sentence — "the GOLD domain and its extended UR interact with
+multiple different golgins…" — for the domain map, and never read the head of it, which names the
+ligands. Rule 1 (*quote to the end of the interpreting clause*) has a mirror image: **read the
+start of the sentence too.** The primary source it points to is Soupene and Kuypers 2015
+(PMID:26290611), whose abstract makes the ACBD3 claim by contrast:
 
-This is the same failure mode as ABHD8 (PR #2230), where α/β-hydrolase-*fold* IBAs assigned
-lipase activity to a protein whose only characterised function is adaptor-like. **Fold and
-domain names propagate into GO as activities.**
+[PMID:26290611 "In contrast to ACBD1 and ACBD3, ligand binding did not result in the dimerization
+of ACBD6."]
+
+That paper is *titled* for ACBD6, which is why it never surfaced in any ACBD3-keyed search — and
+why the campaign rule about not treating a silent record as evidence of absence exists.
+
+**And the ACB domain has a gene-specific function too.** PMID:23166793: ACBD3 binds SREBP1 directly
+and blocks its maturation [PMID:23166793 "ACBD3 blocked intracellular maturation of SREBP1 probably
+through directly binding with the lipid regulator rather than disrupted SREBP1-SCAP-Insig1
+interaction"], and the effect maps to the ACB-containing N-terminus [PMID:23166793 "Taken together,
+these results suggest that ACB domain-containing N-terminal sequence of ACBD3 plays an important
+role in its regulatory effects on SREBP1."]. The lipogenic readout is real but weaker than the
+abstract implies — unchanged at 48 h, reduced only at 72 h [PMID:23166793 "if allowing
+overexpressed ACBD3 to be present in the cells for longer time (72 hours), we could see the
+reduction of palmitate synthesis"].
+
+**Why non-core rather than accepted as core.** The binding is demonstrated, so the InterPro
+inference is corroborated. But no acyl-CoA-*dependent* step in ACBD3's Golgi activity is known: the
+scaffolding, PI4KB recruitment and AKAP functions map to the Q domain and the UR/GOLD surface, and
+the ACB domain is dispensable for PI4KB recruitment [PMID:30755512 "we show that acyl-coenzyme A
+binding (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
+recruitment and efficient enterovirus replication"], with Q+GOLD sufficient [PMID:30755512 "we
+dissected the different domains of ACBD3 and uncovered that the glutamine-rich region (Q) and Golgi
+dynamics domain (GOLD) together suffice to support enterovirus replication"]. A real molecular
+function; not the core one.
+
+### How the error survived eight rounds
+
+Three separate guards failed, and all three failed the same way — by treating an *absence* as a
+finding:
+
+1. **The affinage record's silence was used as evidence.** "Synthesises 30+ primary papers and
+   never mentions acyl-CoA once" was quoted as *support* for the over-annotation call, in four
+   places. It is a coverage gap in one provider's summary, nothing more. The campaign brief says
+   this in as many words — *an empty or silent affinage record is NOT evidence that literature is
+   absent* — and I applied that rule to other genes' records while breaking it here.
+2. **A domain-name-is-not-an-activity heuristic was applied without checking the converse.** The
+   ABHD8 analogy (fold name propagating into GO as activity) was apt in form and wrong in fact:
+   here the domain name *is* backed by biochemistry. Pattern-matching to a known failure mode is
+   not evidence either.
+3. **The papers that had the answer were read only in the parts that concerned other claims.**
+   PMID:38134218 was read for the golgins; PMID:30755512 was read from its abstract, whose ACB
+   sentence is the *dispensability* result — while the results paragraph that names the two ACB
+   functions, with citations, sits at line 164. The reviewer found it by reading the paragraph.
+
+The generalisable rule, added below: **a negative claim about the literature needs a positive
+search, not a silent source.** Before writing "no X has been reported", search for X by name — and
+search under the paralog names too, since the paper that had this answer is titled for ACBD6.
 
 ## The informative/uninformative inversion
 
@@ -68,10 +98,17 @@ annotations. Three PI4KB rows are `MODIFY`ed to `GO:0043495`.
 
 ## Core/non-core consistency
 
-`GO:0005739 mitochondrion` is kept **non-core** (UniProt's steroidogenesis statement is
-`ECO:0000250` by similarity), so it is deliberately *not* listed in `core_functions.locations`
-either — the validator flags that mismatch, and it is the same inconsistency a reviewer caught on
-AAMDC (PR #2221). Stated explicitly in the `core_functions` description rather than left implicit.
+Two annotations are kept **non-core**, and in both cases the term is right while the evidence is
+not core-strength:
+
+- `GO:0005739 mitochondrion` — UniProt's steroidogenesis statement is `ECO:0000250` by similarity,
+  so it is deliberately *not* listed in `core_functions.locations` either. The validator flags that
+  mismatch, and it is the same inconsistency a reviewer caught on AAMDC (PR #2221). Stated
+  explicitly in the `core_functions` description rather than left implicit.
+- `GO:0000062 fatty-acyl-CoA binding` — the binding is *demonstrated* (see the corrected headline),
+  so it is not an over-annotation; but no acyl-CoA-dependent step in ACBD3's Golgi activity is
+  known, and the ACB domain is dispensable for PI4KB recruitment. Real molecular function, not the
+  core one, and so not promoted into `core_functions`.
 
 
 ## Correction: PI4KB binds the Q domain, not GOLD
@@ -350,3 +387,9 @@ flagged here under rule 3 because it is the same class of thing rule 3 warns abo
 gives the helix endpoints. What is sourced is: the GOLD domain has *one* α helix; Q379, I380 and
 K381 were the residues substituted as helix-breakers; and Phe383 is buried. `379–383` is bracketed
 from those facts, which is why it is written as "roughly" everywhere it appears.
+
+4. **A negative claim about the literature needs a positive search, not a silent source.**
+   "No X has been reported" is a claim about all of PubMed, and no summary, however dense,
+   can support it. Search for X by name — and under the **paralog** names, since the paper
+   carrying this gene's acyl-CoA data is titled for ACBD6 and never surfaced in an
+   ACBD3-keyed search.
