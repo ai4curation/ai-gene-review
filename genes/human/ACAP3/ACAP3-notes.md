@@ -178,12 +178,26 @@ cached full text names ACAP3 in its body; the pair is in the supplementary inter
 so the claim is anchored on the UniProt INTERACTION line and the GOA/IntAct records
 rather than on a quotable sentence.
 
-This is not a lone screen artefact, and there is a structural reason to expect it: the
-ACAP BAR–PH module is a dimerisation module (§3), and ACAP2 and ACAP3 both carry it.
-`protein binding` is uninformative, so both rows are upgraded to
-`GO:0046982 protein heterodimerization activity`. The stoichiometry has not been measured
-for this specific pair, so the upgrade is provisional and is flagged as such in the review
-and in `suggested_experiments`.
+This is not a lone screen artefact, and there is a structural reason to expect a real
+association: the ACAP BAR–PH module is a dimerisation module (§3), and ACAP2 and ACAP3
+both carry it.
+
+`GO:0046982 protein heterodimerization activity` was the obvious upgrade, was taken, and was
+then withdrawn during review. Its definition is "Binding to a nonidentical protein to form a
+heterodimer", and neither AP-MS nor split-tag IP-MS measures stoichiometry — both are equally
+consistent with a direct dimer, with co-residence in a larger assembly, and with two BAR
+proteins sharing a membrane surface. The structural precedent is weaker than it first appears
+too: what has actually been solved is ACAP1 dimerising with **itself**, a homotypic
+interaction, and co-purification of BAR-domain paralogues is a known route to exactly this
+signal without a direct dimer. So both rows stay at `GO:0005515`, as `KEEP_AS_NON_CORE`.
+
+The loss from staying at `GO:0005515` is smaller than it looks, because the partner identity
+travels in the WITH/FROM field: the annotation is not "binds something" but "binds
+UniProtKB:Q15057". What is genuinely missing is a GO term for "physically associates with a
+named paralogue" that does not also assert a stoichiometry — recorded as a knowledge gap. The
+heterodimer hypothesis lives in `suggested_experiments`, with SEC-MALS and mass photometry as
+the discriminating measurement, and `GO:0032403 protein-containing complex binding` named as
+the term to use if the answer turns out to be a larger assembly rather than a dimer.
 
 ## 6. Ontology finding: Arf specificity can no longer be expressed as an MF
 
@@ -206,7 +220,15 @@ as an ONTOLOGY knowledge gap.
 - `GO:0008270 zinc ion binding`. ACAP3 has a C4-type zinc finger (FT ZN_FING 418..441)
   inside its ArfGAP domain, and the UniProt entry still carries
   "DR   GO; GO:0008270; F:zinc ion binding; IEA:UniProtKB-KW." but GOA does not: the
-  keyword-derived annotations (GO_REF:0000043) were withdrawn for cellular organisms.
+  keyword-derived annotations (GO_REF:0000043) were withdrawn for cellular organisms, and
+  InterPro2GO did not fill the gap (IPR001164 maps only to `GO:0005096`). Now proposed as a
+  `NEW` ISM row — the only proposal here that rests on ACAP3's own sequence rather than on
+  orthology. Coded ISM rather than an experimental code because the basis is the PROSITE
+  ARFGAP profile call (PS50115 / ProRule PRU00288), not a metal-binding measurement on ACAP3;
+  the family-level mutational evidence that the motif is functionally required is
+  [PMID:8533093 "The GAP function required an intact zinc finger and additional
+  amino-terminal residues."]. Deliberately left out of `core_functions`: zinc coordination
+  here is a structural requirement of the ArfGAP fold, not a distinct activity of ACAP3.
 - `GO:0030426 growth cone`. On the UniProt entry as
   "DR   GO; GO:0030426; C:growth cone; IEA:Ensembl." and on mouse Acap3 at MGI, but absent
   from human GOA.
@@ -226,7 +248,30 @@ as an ONTOLOGY knowledge gap.
   receptor-recycling annotation from PMID:41520057. Every annotation ACAP3 has is
   inferred.
 
-## 8. Affinage record
+## 8. What goes in the review's `references` list
+
+Every PMID appearing anywhere in `ACAP3-ai-review.yaml` — including inside `review.summary`
+prose and `propagation_review.comment` strings — is present in the top-level `references`
+list, checked by script rather than by eye. Three classes:
+
+1. **Evidence about ACAP3**: PMID:27330119, PMID:28919417, PMID:41520057, PMID:39098591.
+   `relevance: HIGH` (the thyroid paper LOW, since it identifies no mechanism).
+2. **Family / structural context**: PMID:11062263, PMID:25284369, PMID:31291238,
+   PMID:8533093, plus the two interactome papers. Each `review_notes` states explicitly that
+   the paper is about ACAP1/ACAP2 or about the family, and not about ACAP3.
+3. **WITH/FROM donor provenance**: PMID:23572513, PMID:22869721, PMID:19076239,
+   PMID:30905672, PMID:23264736, PMID:20062541, PMID:25383666, PMID:15743878, PMID:21118984,
+   PMID:28646092. `relevance: LOW`, each naming which donor annotation it supplies and
+   stating that it is not evidence about ACAP3. These are what make the propagation-quality
+   argument in §4 checkable rather than merely asserted.
+
+`source_entities` in each `propagation_review` covers **every** entry of that row's GOA
+WITH/FROM field, verified by a script that diffs the two sets. This matters: the
+hand-maintained version of that list had silently drifted on three of the six IBA rows before
+the check was run — `GO:0005886` documented 4 of 7 donors, `GO:0005096` 3 of 6, and
+`GO:0010008` was missing the PANTHER node. Do not maintain this list by hand.
+
+## 9. Affinage record
 
 `ACAP3-deep-research-affinage.md` has `gates_passed: True`, five numeric PMIDs, no
 bioRxiv-DOI-in-a-PMID-field entries. Its narrative is accurate on the four functional
