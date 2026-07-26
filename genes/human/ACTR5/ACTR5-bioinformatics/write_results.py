@@ -53,16 +53,20 @@ def main() -> None:
     A("")
     A("## 1. A nucleotide is resolved in the ARP5 chain of the human INO80 complex")
     A("")
-    A(f"| PDB | ARP5 chain | nucleotide in the ARP5 chain | contacts (<= {p['ligand_contact_cutoff_angstrom']} A) |")
-    A("|---|---|---|---|")
+    A(f"| PDB | resolution (A) | ARP5 chain | nucleotide in the ARP5 chain | contacts (<= {p['ligand_contact_cutoff_angstrom']} A) | ATP-mimic group in the ARP5 chain |")
+    A("|---|---|---|---|---|---|")
     for e in r["arp5_structures"]:
         nts = e["arp5_nucleotides"]
         if nts:
             desc = ", ".join(n["comp"] for n in nts)
             n_c = ", ".join(str(n["n_contacts"]) for n in nts)
+            mim = ", ".join(", ".join(n["atp_mimic_in_same_chain"]) or "none" for n in nts)
         else:
-            desc, n_c = "none", "-"
-        A(f"| {e['pdb_id']} | {','.join(e['arp5_chains'])} | {desc} | {n_c} |")
+            desc, n_c, mim = "none", "-", "-"
+        A(f"| {e['pdb_id']} | {e['resolution_angstrom']} | {','.join(e['arp5_chains'])} | "
+          f"{desc} | {n_c} | {mim} |")
+    A("")
+    A("Resolutions are the PDBe-reported values, fetched rather than transcribed.")
     A("")
     A("ARP5 chain assignment comes from the PDBe SIFTS UniProt mapping, not from")
     A("chain letters: a missing Q9H9F9 mapping aborts the run rather than")
@@ -71,13 +75,27 @@ def main() -> None:
     hit = r["arp5_structures_with_nucleotide"]
     A(f"**ADP is modelled in the ARP5 chain in {len(hit)} of "
       f"{len(r['arp5_structures'])} entries ({', '.join(hit)}); ATP never is.**")
-    A("The three entries without it are 6HTS (4.8 A, whose ARP5 was an I-TASSER")
-    A("homology model trimmed of all side chains) and two of the 2026 nucleosome")
-    A("states. In every deposition the sample was soaked with ADP-BeF3, so the")
-    A("structures establish *that* the actin-fold cleft of human ARP5 is")
-    A("occupied by a nucleotide and identify the bound species as ADP under")
-    A("those conditions; they do not test an ADP-versus-ATP preference, because")
-    A("only ADP was offered.")
+    A("The three entries without it are 6HTS (whose ARP5 was an I-TASSER homology")
+    A("model trimmed of all side chains) and two of the 2026 nucleosome states.")
+    A("")
+    A("**The bound species is plain ADP, not an ATP analogue.** Every one of these")
+    A("samples was soaked with ADP-BeF3, which would ordinarily leave the")
+    A("identity of the ligand ambiguous. It does not here: in all three entries")
+    A("the ARP5 chain contains no BeF3, AlF, VO4 or PO4 group alongside its ADP.")
+    mimic_rows = [
+        (e["pdb_id"], n["atp_mimic_in_same_chain"], n["atp_mimic_elsewhere_in_entry"])
+        for e in r["arp5_structures"] for n in e["arp5_nucleotides"]
+    ]
+    for pdb_id, same, elsewhere in mimic_rows:
+        where = ", ".join(f"{c} in chain {ch}" for c, ch in elsewhere) or "none in the entry"
+        A(f"  * {pdb_id}: mimic groups in the ARP5 chain: "
+          f"{', '.join(same) if same else 'none'}; elsewhere in the entry: {where}.")
+    A("")
+    A("In 7ZI4 the only BeF3 in the whole entry sits in chain G, the Ino80 motor")
+    A("domain, which is where the ATP mimic belongs. So the ADP-BeF3 soak")
+    A("qualifies what the *motor* was trapped with, not what ARP5 was: ARP5's")
+    A("cleft holds ADP. What the structures still cannot do is rank ADP against")
+    A("ATP, because no ATP was offered to ARP5 in solution.")
     A("")
     seven = next(n for e in r["arp5_structures"] if e["pdb_id"] == "7ZI4"
                  for n in e["arp5_nucleotides"])

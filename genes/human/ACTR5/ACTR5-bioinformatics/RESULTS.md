@@ -22,27 +22,38 @@ things are tested here, in both directions:
 
 ## 1. A nucleotide is resolved in the ARP5 chain of the human INO80 complex
 
-| PDB | ARP5 chain | nucleotide in the ARP5 chain | contacts (<= 4.0 A) |
-|---|---|---|---|
-| 6HTS | H | none | - |
-| 7ZI4 | H | ADP | 16 |
-| 9GCG | J | ADP | 14 |
-| 9GE5 | J | ADP | 12 |
-| 9GEV | J | none | - |
-| 9GFB | J | none | - |
+| PDB | resolution (A) | ARP5 chain | nucleotide in the ARP5 chain | contacts (<= 4.0 A) | ATP-mimic group in the ARP5 chain |
+|---|---|---|---|---|---|
+| 6HTS | 4.8 | H | none | - | - |
+| 7ZI4 | 3.2 | H | ADP | 16 | none |
+| 9GCG | 3.43 | J | ADP | 14 | none |
+| 9GE5 | 3.35 | J | ADP | 12 | none |
+| 9GEV | 3.47 | J | none | - | - |
+| 9GFB | 3.55 | J | none | - | - |
+
+Resolutions are the PDBe-reported values, fetched rather than transcribed.
 
 ARP5 chain assignment comes from the PDBe SIFTS UniProt mapping, not from
 chain letters: a missing Q9H9F9 mapping aborts the run rather than
 reporting an empty result (a silent zero reads as a finding).
 
 **ADP is modelled in the ARP5 chain in 3 of 6 entries (7ZI4, 9GCG, 9GE5); ATP never is.**
-The three entries without it are 6HTS (4.8 A, whose ARP5 was an I-TASSER
-homology model trimmed of all side chains) and two of the 2026 nucleosome
-states. In every deposition the sample was soaked with ADP-BeF3, so the
-structures establish *that* the actin-fold cleft of human ARP5 is
-occupied by a nucleotide and identify the bound species as ADP under
-those conditions; they do not test an ADP-versus-ATP preference, because
-only ADP was offered.
+The three entries without it are 6HTS (whose ARP5 was an I-TASSER homology
+model trimmed of all side chains) and two of the 2026 nucleosome states.
+
+**The bound species is plain ADP, not an ATP analogue.** Every one of these
+samples was soaked with ADP-BeF3, which would ordinarily leave the
+identity of the ligand ambiguous. It does not here: in all three entries
+the ARP5 chain contains no BeF3, AlF, VO4 or PO4 group alongside its ADP.
+  * 7ZI4: mimic groups in the ARP5 chain: none; elsewhere in the entry: BEF in chain G.
+  * 9GCG: mimic groups in the ARP5 chain: none; elsewhere in the entry: none in the entry.
+  * 9GE5: mimic groups in the ARP5 chain: none; elsewhere in the entry: none in the entry.
+
+In 7ZI4 the only BeF3 in the whole entry sits in chain G, the Ino80 motor
+domain, which is where the ATP mimic belongs. So the ADP-BeF3 soak
+qualifies what the *motor* was trapped with, not what ARP5 was: ARP5's
+cleft holds ADP. What the structures still cannot do is rank ADP against
+ATP, because no ATP was offered to ARP5 in solution.
 
 Contacts in the highest-resolution entry (7ZI4, 3.2 A):
 

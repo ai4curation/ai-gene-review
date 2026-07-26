@@ -72,16 +72,35 @@ and the 2025 yeast study states the role directly
 [PMID:39676660 "its necessity in linking INO80's ATPase activity to nucleosome movement"].
 
 **Consequence for `GO:0030234`.** The vague parent should be replaced by two
-informative terms: `GO:0060590 ATPase regulator activity` (a direct child of
-`GO:0030234`, and exactly what the donor's own IDA measured — modulation of an
-ATP hydrolysis activity) and, with `contributes_to`,
-`GO:0140658 ATP-dependent chromatin remodeler activity` (the activity of the
-machine ARP5 is an obligate part of). Note that `GO:0001671 ATPase activator
-activity` is **not** a descendant of `GO:0030234` (its parents are `GO:0140677`
-and `GO:0098772`), so moving there would be a lateral jump rather than a
-refinement, and the human data isolate coupling rather than stimulation — mutants
-that break the ARP5/IES6-side nucleosome contacts lose sliding while ATPase
-persists. `GO:0060590` is direction-neutral and therefore the safe refinement.
+informative terms: `GO:0060590 ATPase regulator activity` (exactly what the
+donor's own IDA measured — modulation of an ATP hydrolysis activity) and, with
+`contributes_to`, `GO:0140658 ATP-dependent chromatin remodeler activity` (the
+activity of the machine ARP5 is an obligate part of).
+
+The hierarchy here was checked in QuickGO and confirmed in OLS, and the first
+version of this review got part of it wrong — corrected after review of #2291:
+
+| term | its only `is_a` parent | descendant of `GO:0030234`? |
+|---|---|---|
+| `GO:0060590` ATPase regulator activity | `GO:0060589` nucleoside-triphosphatase regulator activity | **yes**, two steps down — *not* a direct child, as originally written |
+| `GO:0060589` | `GO:0030234` | yes, directly |
+| `GO:0001671` ATPase activator activity | `GO:0140677` molecular function activator activity | **no** |
+
+So `GO:0001671` really is outside the `GO:0030234` branch (the reviewer's guess
+that it sits under `GO:0060590` is not what either ontology service reports —
+`GO:0060590`'s single `is_a` child is `GO:0000774` adenyl-nucleotide exchange
+factor activity), but `GO:0060590` is a grandchild rather than a child, and
+naming both `GO:0140677` and `GO:0098772` as `GO:0001671`'s parents was
+redundant since `GO:0140677 is_a GO:0098772`.
+
+`GO:0001671` is now **named as the available alternative rather than dismissed**:
+it is the term the yeast add-back licenses, and a curator who weights
+PMID:26306040's explicit stimulation result above the human coupling data should
+use it. This review prefers the direction-neutral `GO:0060590` because the yeast
+result is an ectopic reconstitution add-back of the whole module, and because in
+human INO80 the mutations that break the ARP5/IES6-side nucleosome contacts lose
+sliding while retaining robust ATPase — so what the *human* evidence isolates is
+coupling, not stimulation.
 
 ## 3. Residues, in both directions: `ACTR5-bioinformatics/`
 
@@ -102,13 +121,24 @@ loops (ACTB G13-S14-G15-M16-K18 → ACTR5 G38-S39-F40-Q41-R43; ACTB G156 → ACT
 G189) and the adenosine shelf (ACTB G302/M305/Y306 → ACTR5 G496/M499/Y500). This
 is the canonical actin cleft, not an adventitious surface site.
 
-Caveat stated in the report and in the review: every one of those depositions was
-prepared with ADP·BeF3
+Every one of those depositions was prepared with ADP·BeF3
 [PMID:41775336 "The structures were determined in the presence of the ATP analog ADP–BeF3 without any chemical crosslinking."],
-so they establish *nucleotide occupancy* and identify the species as ADP under
-those conditions; they do not test an ADP-versus-ATP preference, because only ADP
-was offered. `GO:0043531 ADP binding` follows the campaign's stated rule
-("annotate the ligand actually observed") and matches ACTR1A/ACTR1B.
+which would ordinarily leave the identity of the ligand ambiguous. It does not
+here, and this was **computed rather than argued** (added after review of #2291,
+which asked exactly the right question): in all three entries the ARP5 chain
+contains no BeF3, AlF, VO4 or PO4 group alongside its ADP, and in 7ZI4 the only
+BeF3 in the whole entry sits in chain **G**, the Ino80 motor — which is where an
+ATP mimic belongs. The soak therefore qualifies what the *motor* was trapped
+with, not what ARP5 holds. What the structures still cannot do is rank ADP
+against ATP, because no ATP was offered to ARP5 in solution; that limitation
+stays in `knowledge_gaps`. `GO:0043531 ADP binding` follows the campaign's stated
+rule ("annotate the ligand actually observed") and matches ACTR1A/ACTR1B.
+
+Resolutions in the report are now the PDBe-reported values, fetched rather than
+transcribed (6HTS 4.8, 7ZI4 3.2, 9GCG 3.43, 9GE5 3.35, 9GEV 3.47, 9GFB 3.55 Å).
+These differ from the "3.5–3.7 Å" figures the 2026 paper quotes, which are its
+own overall *map* resolutions for the nucleosome/hexasome states; both are
+correct and the review now says which is which rather than mixing them.
 
 **Negative direction — no ATPase, no filament.** Of the five literature-defined
 actin catalytic positions (ACTB D11/Q137/D154/V159/H161, the same set the ACTL7A
@@ -442,3 +472,36 @@ Two committed scripts, both tested by deliberate mutation rather than by reading
 * `source_entities` on every `propagation_review` were generated from the GOA
   WITH/FROM column programmatically, with an assertion that the token counts
   match GOA — not typed by hand.
+
+## 14. Round-2 changes (review of PR #2291)
+
+The reviewer raised two blocking items and three suggestions. Verified before
+conceding, per the campaign rule that the reviewer's checkable premises should be
+checked:
+
+1. **Hierarchy of `GO:0001671` / `GO:0060590`.** Partly conceded, partly pushed
+   back — see the corrected table in §2. My "not a descendant of `GO:0030234`"
+   claim for `GO:0001671` is confirmed by both QuickGO and OLS; the reviewer's
+   suggestion that it sits under `GO:0060590` is not what either reports. But the
+   reviewer is right that `GO:0060590` is a *grandchild*, not a direct child
+   (`GO:0060589` sits between), and right that listing two parents for
+   `GO:0001671` was redundant. Both corrected, and `GO:0001671` is now offered as
+   a named alternative rather than dismissed.
+2. **Two `supporting_text` entries that pass the verbatim check but do not support
+   their claims.** Conceded outright; this is the failure mode no mechanical check
+   can catch, and both were mine. The filament fragment on the `is_active_in`
+   cytoplasm row and the nucleotide-table row on the `part_of GO:0031011` row are
+   replaced with PMID quotes that actually bear on those claims.
+3. **Suggestion: use the primary structure PMID as `original_reference_id` for the
+   `GO:0043531` IDA** (ACTR1A precedent). Taken: now `PMID:41775336`, with the
+   RESULTS.md quotes retained in `supported_by` and the note that 7ZI4 — the
+   highest-resolution of the three — is an unpublished deposition not covered by
+   that paper.
+4. **Suggestion: surface that the BeF3 in 7ZI4 is in chain G, not ARP5's chain H.**
+   Taken, and made a computed field rather than prose: `nucleotide_site.py` now
+   records, per ARP5 nucleotide, which ATP-mimic groups are in the same chain and
+   which are elsewhere in the entry, and the resolution is fetched from PDBe.
+   This is a genuinely better answer to the ADP-vs-ATP objection than the caveat
+   it replaces.
+5. **Suggestion: reconcile the "3.5–3.7 Å" figures with RESULTS.md.** Taken; the
+   two figures come from different sources and the review now says so.

@@ -61,6 +61,11 @@ F_ACTIN_ENTRY = "8a2s"  # cryo-EM F-actin, 5 protomers (as used by the ACTL7A re
 
 NUCLEOTIDES = {"ATP", "ADP", "AMP", "ANP", "ADX", "AGS", "ACP", "GTP", "GDP"}
 IONS = {"MG", "ZN", "CA", "MN", "BEF", "ALF", "AF3", "PO4", "POP"}
+# Groups that turn a bound ADP into an ATP/transition-state mimic. Whether one of
+# these sits in the SAME chain as the ADP decides whether the ligand is plain ADP
+# or ADP-BeF3, which is the difference between "ADP is what is bound" and "an ATP
+# analogue is what is bound". Raised by the PR review of #2291.
+ATP_MIMICS = {"BEF", "ALF", "AF3", "VO4", "PO4"}
 
 CONTACT_CUTOFF = 4.0
 INTERFACE_CUTOFF = 4.5
@@ -163,6 +168,16 @@ def sifts_chains(pdb_id: str) -> dict[str, dict]:
                 },
             )
     return out
+
+
+def entry_resolution(pdb_id: str) -> float | None:
+    """PDBe-reported resolution, so the report never hardcodes a number."""
+    d = fetch_json(f"https://www.ebi.ac.uk/pdbe/api/pdb/entry/experiment/{pdb_id}")
+    for exp in d.get(pdb_id, []):
+        r = exp.get("resolution")
+        if r is not None:
+            return float(r)
+    return None
 
 
 def load_model(pdb_id: str) -> gemmi.Structure:
@@ -366,6 +381,7 @@ def main() -> None:
             by_comp.setdefault(L["comp"], []).append(L["chain"])
         e = {
             "pdb_id": pdb_id.upper(),
+            "resolution_angstrom": entry_resolution(pdb_id),
             "arp5_chains": arp5,
             "chain_to_protein": {c: chains[c]["name"] for c in sorted(chains)},
             "ligand_inventory": {k: sorted(v) for k, v in sorted(by_comp.items())},
@@ -377,9 +393,20 @@ def main() -> None:
             if L["chain"] in arp5 and L["comp"] in NUCLEOTIDES:
                 cont = ligand_contacts(st, L["chain"], L["comp"], L["seqid"],
                                        L["chain"], chains[L["chain"]], CONTACT_CUTOFF)
+                mimics_same_chain = sorted(
+                    {x["comp"] for x in ligs
+                     if x["chain"] == L["chain"] and x["comp"] in ATP_MIMICS}
+                )
+                mimics_elsewhere = sorted(
+                    {(x["comp"], x["chain"]) for x in ligs
+                     if x["comp"] in ATP_MIMICS and x["chain"] != L["chain"]}
+                )
                 e["arp5_nucleotides"].append(
                     {"comp": L["comp"], "seqid": L["seqid"],
-                     "n_contacts": len(cont), "contacts": cont}
+                     "n_contacts": len(cont), "contacts": cont,
+                     "atp_mimic_in_same_chain": mimics_same_chain,
+                     "atp_mimic_elsewhere_in_entry": [list(x) for x in mimics_elsewhere],
+                     "ligand_is_plain_adp": not mimics_same_chain}
                 )
         entries.append(e)
     res["arp5_structures"] = entries
