@@ -5,11 +5,17 @@ string is verbatim from the cited source.
 
 ## 1. What the gene is
 
-ACTL7A ("actin-like protein 7A"; also **Arp7A**, **T-actin 2**, **Tact2**) is one of a small
-set of testis-restricted actin-related proteins. It is 435 aa, intronless, and sits head-to-head
-with its paralogue ACTL7B on chromosome 9q31 [PMID:10373328 "Genomic analysis revealed ACTL7A and
-ACTL7B to be intronless genes contained on a common 8-kb HindIII fragment in a "head-to-head"
-orientation."].
+ACTL7A ("actin-like protein 7A"; also **Arp7A**, **T-actin 2**, **Tact2**) belongs to a small set
+of largely testis-restricted actin-related proteins, though ACTL7A itself is the least restricted
+of them: HPA calls it "Tissue enriched (testis)" rather than testis-specific, and the original
+human survey detected its message broadly — [PMID:10373328 "ACTL7A is expressed in a wide variety
+of adult tissues, while the ACTL7B message was detected only in the testis and, to a lesser
+extent, in the prostate."]. Mouse work states the opposite for the ortholog
+[PMID:21278383 "Molecular analysis in mice indicates that Arp7A is only expressed in testis (18,
+19)."], so the breadth of ACTL7A expression is not settled; every *functional* observation is in
+germ cells. It is 435 aa, intronless, and sits head-to-head with its paralogue ACTL7B on
+chromosome 9q31 [PMID:10373328 "Genomic analysis revealed ACTL7A and ACTL7B to be intronless genes
+contained on a common 8-kb HindIII fragment in a "head-to-head" orientation."].
 
 Its distinguishing architectural feature is a **64–65 residue N-terminal extension** in front of
 the actin fold, which UniProt records as disordered (`REGION 1..64 /note="Disordered"`) and which
@@ -201,6 +207,45 @@ justifies annotating polymerisation; nothing here justifies asserting the pocket
 No ATP-binding assay on ACTL7A exists, so no MF annotation is proposed — it goes in
 `suggested_experiments`.
 
+## 6b. ACTL7A versus ACTL7B — the paralogue pair, checked rather than assumed
+
+ACTL7A and ACTL7B are head-to-head neighbours with >65% identity to each other
+[PMID:10373328], which makes them the obvious candidates for annotation cross-transfer. Mouse
+Actl7b (`MGI:MGI:1343053`) is in fact already a WITH/FROM donor on ACTL7A's `GO:0005737`
+cytoplasm IBA row. So the pair was checked on every axis where this review makes a claim, rather
+than assumed to behave alike. They are separable on all four.
+
+| axis | ACTL7A | ACTL7B |
+|---|---|---|
+| ATP-hydrolysis catalytic set (D11/Q137/D154/V159/H161) | `DQEVY` — **His161 lost** | `DQEVH` — **His161 retained** |
+| nucleotide cleft identity to actin | 63.2% | 68.4% |
+| phosphate-contact identity | 66.7% | 75.0% |
+| F-actin protomer interface identity | 42.3% | 36.4% |
+| expression | broad by Northern; testis-enriched | testis and prostate only [PMID:10373328] |
+| localisation, mouse germ cells | nucleus; present in sperm heads **and** tails | cytoplasm; **not** in sperm |
+| N-terminal extension | binds TES LIM2-3 (PDB 2XQN) | "distinct" from ACTL7A's |
+
+Three consequences.
+
+1. **The `GO:0005737` cytoplasm IBA rests partly on the paralogue's half of the experiment.**
+   PMID:12672658's localisation sentence — [PMID:12672658 "Although the cellular locations of
+   these two proteins are quite different (T-ACTIN-1 was found in the cytoplasm and T-ACTIN-2 was
+   located in the nucleus)"] — is only usable with the naming key: [PMID:12672658 "The mRNA sizes
+   and deduced molecular masses of t-actin 1/mACTl7b and t-actin 2/mACTl7a were 2.2 kilobases (kb)
+   and 1.8 kb, and Mr 43.1 x 10(3) and Mr 47.2 x 10(3), respectively."] T-ACTIN-1 is **ACTL7B**.
+   So that paper's cytoplasm evidence belongs to the paralogue and its nucleus evidence to ACTL7A.
+   The cytoplasm transfer survives only because mouse Actl7a has *independent* cytoplasm IDAs
+   (PMID:21278383, PMID:36734600). The donor is now marked `SUPPORTS_SOURCE_BUT_NOT_TARGET`.
+2. **`GO:0030274 LIM domain binding` must not be assumed to transfer to ACTL7B.** The TES
+   interaction is carried entirely by ACTL7A's N-terminal extension, and that extension differs
+   between the two: [PMID:21278383 "In addition, we have found that Arp7B, whose N-terminal
+   extension is distinct from that of Arp7A (16), is also strongly enriched in the acroplaxome."]
+   Both proteins reach the acroplaxome; only ACTL7A is known to get there partly via TES.
+3. **The His161 split is the sharpest single discriminator in the family.** ACTL7B keeps actin's
+   hydrolysis trigger; ACTL7A and ACTL9 replace it with tyrosine. That is a within-paralogue
+   functional difference, not shared drift, and it means a "cannot run actin's hydrolysis cycle"
+   argument made for ACTL7A does **not** carry over to ACTL7B.
+
 ## 7. Human disease genetics, and the GO gap it exposes
 
 Bi-allelic ACTL7A variants cause **spermatogenic failure 86 (SPGF86, MIM:620499)**, presenting as
@@ -238,12 +283,27 @@ by the wrong route.
 
 | action | n | rows |
 |---|---|---|
-| ACCEPT | 10 | GO:0005198 IBA; acrosome assembly ×2; spermatid development ×2; fertilization ×2; perinuclear theca ×2; protein-containing complex IDA |
-| KEEP_AS_NON_CORE | 14 | nucleus IBA/IEA/ISS/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; protein binding (CYLC1, ACTL9) |
+| ACCEPT | 10 | **GO:0005200 TAS** (the core MF); acrosome assembly ×2; spermatid development ×2; fertilization ×2; perinuclear theca ×2; protein-containing complex IDA |
+| KEEP_AS_NON_CORE | 15 | nucleus IBA/IEA/ISS/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; **GO:0005198 IBA** (parent of the core MF); protein binding (CYLC1, ACTL9) |
 | MODIFY | 5 | acrosomal vesicle IEA/IMP/IDA → perinuclear theca; cytoskeleton organization → actin cytoskeleton organization; protein binding (TES) → LIM domain binding |
-| MARK_AS_OVER_ANNOTATED | 1 | GO:0005200 structural constituent of cytoskeleton, TAS, PMID:10373328 |
 | NEW | 1 | GO:0007343 egg activation, IMP |
+| MARK_AS_OVER_ANNOTATED | 0 | — |
 | REMOVE | 0 | — |
+
+**How the two structural MF rows were resolved (revised after review).** The first draft flagged
+`GO:0005200` as over-annotated on provenance grounds while `ACCEPT`ing its vaguer parent
+`GO:0005198` and promoting *that* to the core molecular function — which is incoherent, since the
+draft's own reason argued GO:0005200's term was defensible and needed only re-sourcing, and
+`core_functions[0].description` literally began "Structural constituent of the acroplaxome". The
+provenance criticism and the term's correctness are separable judgements and are now recorded
+separately: **`GO:0005200` is `ACCEPT`ed and is the core MF** (the acroplaxome is an F-actin and
+keratin plate; GO:0033011 is a GO:0005856 descendant; the KO loses subacrosomal F-actin; the
+structure audit finds a structural, non-polymerising profile), with the inadequate 1999 TAS
+citation and its GO_REF:0000108 knock-on argued inside `reason`. **`GO:0005198` is
+`KEEP_AS_NON_CORE`**, as a true but redundant parent — the same treatment given to the `cytoplasm`
+and `cytoskeleton` parents. Nothing now carries `MARK_AS_OVER_ANNOTATED`: on inspection no term on
+this gene actually overshoots, and the defect was always the *citation* and the *inference chain*,
+not the terms.
 
 Why the three `GO:0001669` rows get the same MODIFY, including the two experimental ones. The
 argument is definitional rather than a challenge to anyone's data. GO:0001669 is "A structure in
@@ -293,3 +353,30 @@ framing is confirmed against the primary papers. Two cautions applied here:
 Its own GO grounding lists `GO:0008092 cytoskeletal protein binding` and `GO:0005198 structural
 molecule activity` as the molecular activities and `GO:0005634 nucleus, GO:0005856 cytoskeleton`
 as localisation — coarse, and it misses the acroplaxome/PT entirely, so it was not imported.
+
+## 11. Review round log
+
+**Round 2 (PR #2271, `ai4c-agent` CHANGES_REQUESTED).** Two IMPORTANT items, both correct, both
+fixed:
+
+1. *A supporting quote that argued the opposite.* The `GO:0005737` cytoplasm IBA row cited
+   PMID:12672658's "T-ACTIN-1 was found in the cytoplasm and T-ACTIN-2 was located in the nucleus".
+   Since T-ACTIN-2 **is** mACTL7A, that sentence is evidence for the *nucleus* on this gene and for
+   the *cytoplasm* on the paralogue. Replaced with PMID:21278383 and PMID:36734600 quotes that
+   actually bear on ACTL7A, the naming key added as a reference finding, and the paralogue donor
+   `MGI:MGI:1343053` downgraded to `SUPPORTS_SOURCE_BUT_NOT_TARGET`. The general lesson: in a paper
+   that studies a paralogue *pair* under aliases, the alias-to-gene key is part of the evidence and
+   has to be quoted alongside the claim.
+2. *Flagging the specific MF down while promoting its vague parent.* Resolved as described in §9.
+
+Non-blocking items also taken: `core_functions[2]` now says why it asserts no molecular function
+rather than leaving the slot silently empty; the `GO:0001669` IMP row records that `UNDECIDED` was
+considered and why `MODIFY` was preferred; and the `GO:0001673` deferral no longer leans on an mRNA
+Northern survey to hedge a protein-localisation question — the real reasons are donor heterogeneity
+on the phylogenetic row and the absence of any somatic-nucleus experiment either way.
+
+Also added this round, at the coordinator's prompt, the systematic ACTL7A/ACTL7B comparison in §6b.
+That was worth doing independently of the review: it turned up the paralogue-donor problem on the
+cytoplasm row from the other direction, and it establishes that `GO:0030274 LIM domain binding`
+should **not** be assumed to transfer to ACTL7B, whose N-terminal extension is a different
+sequence.
