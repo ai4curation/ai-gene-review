@@ -37,7 +37,11 @@ DEFAULT_CONFIG = REPO_ROOT / ".github" / "cron-profiles.yaml"
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
 
 SCHEDULE_RE = re.compile(r"^(?P<indent>\s*)schedule:\s*$")
-ON_RE = re.compile(r"^(?P<indent>\s*)on:\s*$")
+# `on:` may carry a trailing comment — several workflows here use
+# `on:  # yamllint disable-line rule:truthy` — and YAML also permits the
+# quoted forms "on": / 'on':. Requiring the line to END at the colon made the
+# insert path unreachable for those files, so `off` was a one-way switch.
+ON_RE = re.compile(r"^(?P<indent>\s*)[\"']?on[\"']?:\s*(?:#.*)?$")
 CRON_LINE_RE = re.compile(r"^\s*-\s*cron:\s*")
 COMMENT_LINE_RE = re.compile(r"^\s*#")
 
@@ -263,32 +267,40 @@ def main(argv: list[str] | None = None) -> int:
 
     workflows = config["profiles"][args.profile]["workflows"]
 
-    changed: list[Path] = []
+    # Compute every rewrite BEFORE writing anything. A workflow that cannot be
+    # rewritten must not leave the others half-applied with a stale `active:`.
+    pending: list[tuple[Path, str, str]] = []
     try:
         for stem, entries in workflows.items():
             path = resolve_workflow_file(stem)
             original = path.read_text()
             updated = rewrite_schedule(original, entries, wf_name=stem)
             if updated != original:
-                changed.append(path)
-                if args.dry_run:
-                    diff = difflib.unified_diff(
-                        original.splitlines(keepends=True),
-                        updated.splitlines(keepends=True),
-                        fromfile=f"a/{path.relative_to(REPO_ROOT)}",
-                        tofile=f"b/{path.relative_to(REPO_ROOT)}",
-                    )
-                    sys.stdout.writelines(diff)
-                else:
-                    path.write_text(updated)
+                pending.append((path, original, updated))
 
         config_text = args.config.read_text()
         new_config_text = set_active(config_text, args.profile)
-        config_changed = new_config_text != config_text
-        if config_changed and not args.dry_run:
-            args.config.write_text(new_config_text)
     except ConfigError as exc:
         parser.error(str(exc))
+
+    changed: list[Path] = [path for path, _, _ in pending]
+    config_changed = new_config_text != config_text
+
+    if args.dry_run:
+        for path, original, updated in pending:
+            sys.stdout.writelines(
+                difflib.unified_diff(
+                    original.splitlines(keepends=True),
+                    updated.splitlines(keepends=True),
+                    fromfile=f"a/{path.relative_to(REPO_ROOT)}",
+                    tofile=f"b/{path.relative_to(REPO_ROOT)}",
+                )
+            )
+    else:
+        for path, _, updated in pending:
+            path.write_text(updated)
+        if config_changed:
+            args.config.write_text(new_config_text)
 
     if args.dry_run:
         print(

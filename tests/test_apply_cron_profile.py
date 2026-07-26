@@ -8,6 +8,7 @@ tests pin the three cases that matters: replace, remove, and re-insert.
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from scripts.apply_cron_profile import (
@@ -144,3 +145,69 @@ def test_main_ci_workflow_is_not_managed():
     for profile in config["profiles"].values():
         assert "main" not in profile["workflows"]
     assert "cron:" in (Path(".github/workflows/main.yaml")).read_text()
+
+
+def test_off_then_back_round_trips_every_managed_workflow():
+    """`off` must be reversible for every managed workflow, byte for byte.
+
+    The kill switch removes the `on.schedule` block; restoring a profile has to
+    take the *insert* path, which is only reachable if `on:` is recognised. It
+    was not for workflows written as `on:  # yamllint disable-line rule:truthy`
+    (warm-reference-cache, main, deploy-docs), so `off` was one-way for those —
+    and because writes happened inside the apply loop, a failure part-way left
+    the other workflows rewritten with a stale `active:`. The synthetic bare
+    `on:` in the insert test above cannot catch this; the committed files can.
+    """
+    config = load_config(DEFAULT_CONFIG)
+    active = str(config["active"])
+    for stem, entries in config["profiles"][active]["workflows"].items():
+        path = resolve_workflow_file(stem)
+        original = path.read_text()
+        disabled = rewrite_schedule(original, [], wf_name=stem)
+        assert "cron:" not in disabled, f"{path.name} still scheduled after off"
+        restored = rewrite_schedule(disabled, entries, wf_name=stem)
+        assert restored == original, (
+            f"{path.name} does not survive off -> {active}; the kill switch is "
+            f"one-way for it"
+        )
+
+
+def test_on_key_is_recognised_with_a_trailing_comment():
+    """The yamllint-pragma form is what broke the insert path."""
+    original = """name: Demo
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+"""
+    updated = rewrite_schedule(
+        original, [{"cron": "0 4 * * 1", "comment": "weekly"}], wf_name="demo"
+    )
+    assert '    - cron: "0 4 * * 1"  # weekly' in updated
+    assert "# yamllint disable-line rule:truthy" in updated
+
+
+def test_apply_is_atomic_when_one_workflow_cannot_be_rewritten(tmp_path, monkeypatch):
+    """A failure part-way must not leave other workflows rewritten."""
+    import scripts.apply_cron_profile as mod
+
+    config = load_config(DEFAULT_CONFIG)
+    active = str(config["active"])
+    stems = list(config["profiles"][active]["workflows"])
+    before = {s: resolve_workflow_file(s).read_text() for s in stems}
+
+    real = mod.rewrite_schedule
+
+    def explode(text, entries, *, wf_name):
+        if wf_name == stems[-1]:
+            raise mod.ConfigError("simulated failure")
+        # force a change so the earlier files would be written if not atomic
+        return real(text, [], wf_name=wf_name)
+
+    monkeypatch.setattr(mod, "rewrite_schedule", explode)
+    with pytest.raises(SystemExit):
+        mod.main([active])
+
+    for stem in stems:
+        assert resolve_workflow_file(stem).read_text() == before[stem], (
+            f"{stem} was modified despite a failure on {stems[-1]}"
+        )
