@@ -8,10 +8,13 @@
 - Pseudomonas fprA loss or reduced expression compromises sulfate assimilation,
   while expression of fprA or E. coli cysJI complements the phenotype
   [PMID:23794620, "The Pdt phenotype of finR mutants could be complemented by
-  the known target of FinR regulation, fprA"].
+  the known target of FinR regulation, fprA"]. The experiments used P. putida
+  DSM 3601, so the KT2440 sulfate-assimilation proposal is an orthology transfer
+  to Q88MD5 rather than direct mutant-phenotype evidence.
 - The exact carrier between Fpr-I and CysI remains unresolved. The gene review
-  accepts the enzyme-specific FNR activity and adds sulfate assimilation to the
-  synthesized core function.
+  accepts the enzyme-specific FNR activity, uses ISO for the transferred
+  sulfate-assimilation role, and leaves unsupported TreeGrafter process claims
+  undecided.
 
 ## Boundary decision
 

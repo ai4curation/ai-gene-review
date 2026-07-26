@@ -8,6 +8,9 @@
 - The conserved mechanism couples CysN GTP turnover to sulfate adenylation
   [PMID:16387658, "conserved switch motifs in the G domain of CysN allosterically
   mediate interactions between the nucleotide binding sites"].
+- The imported `enables GO:0004781` relation is too strong for the regulatory
+  GTPase subunit. CysNC contributes to the CysD-catalyzed ATP sulfurylase
+  activity; its own catalytic activity is GTP hydrolysis.
 - Q88NA8 contains an APS-kinase-like C-terminal domain, but the exact record
   does not assign an APS kinase reaction. The first pass therefore does not add
   a PAPS-producing pathway step.

@@ -58,11 +58,11 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 | Gene | Locus | UniProt | Module role | First-pass result |
 |---|---|---|---|---|
 | `cysD` | PP_1303 | Q88NA9 | ATP sulfurylase catalytic subunit | Exact sulfate adenylyltransferase MF and sulfate-assimilation process accepted |
-| `cysNC` | PP_1304 | Q88NA8 | ATP sulfurylase regulatory GTPase | GTPase activity accepted; contributes to sulfate adenylyltransferase |
+| `cysNC` | PP_1304 | Q88NA8 | ATP sulfurylase regulatory GTPase | GTPase activity accepted; imported ATP-sulfurylase relation corrected to contributes_to |
 | `cysH` | PP_2328 | Q88KG2 | APS reductase | APS-reductase MF accepted; conflicting PAPS-reductase annotation removed |
-| `cysI` | PP_2371 | Q88KB9 | sulfite-reductase hemoprotein | Ferredoxin-dependent sulfite reduction synthesized as the current model |
-| `fpr-I` | PP_1638 | Q88MD5 | FprA-type electron supply | Exact FNR MF accepted and sulfate-assimilation role added to the synthesis |
-| `PP_0860` | PP_0860 | Q88PJ0 | questionable CysJ-like candidate | FMN binding retained; exact redox role undecided and excluded from the module |
+| `cysI` | PP_2371 | Q88KB9 | sulfite-reductase hemoprotein | Ferredoxin-dependent activity inferred from PTHR32439/Sir orthology and pathway context |
+| `fpr-I` | PP_1638 | Q88MD5 | FprA-type electron supply | Exact FNR MF accepted; DSM 3601 sulfate role transferred to KT2440 by orthology |
+| `PP_0860` | PP_0860 | Q88PJ0 | questionable CysJ-like candidate | FMN binding retained as non-core; exact redox role undecided and excluded from the module |
 
 ## Evidence Notes
 
@@ -80,8 +80,16 @@ was checked against the primary evidence above.
 The gene-level `cysI` report correctly recovered the sulfite-reductase
 hemoprotein role but overgeneralized the classical *E. coli* CysJ architecture
 and promoted `PP_0860`/`PP_1703` from KEGG context. That inference was not
-imported: PMID:23794620 remains the direct Pseudomonas evidence for an
-FprA/ferredoxin-fed system, and `PP_0860` remains unresolved.
+imported. Q88KB9 instead maps to broad family PTHR32439, which contains the
+reviewed ferredoxin-dependent sulfite reductase Sir P9WJ02; classical E. coli
+CysI P17846 maps to PTHR11493:SF47. Because Q88KB9's own SF9 label is
+misleading, the activity proposal uses the family, exact Sir exemplar, and
+GO:0050311 function constraint rather than the SF name.
+
+PMID:23794620 used *P. putida* DSM 3601 rather than KT2440. It corroborates the
+Pseudomonas FprA-fed physiology, but the `fpr-I` process proposal is therefore
+an orthology transfer and the paper is not treated as direct Q88MD5 or Q88KB9
+mutant evidence. `PP_0860` remains unresolved.
 
 The separate `PP_0860` report reached the opposite and better-supported
 architecture-level conclusion. It identified an N-terminal polytopic

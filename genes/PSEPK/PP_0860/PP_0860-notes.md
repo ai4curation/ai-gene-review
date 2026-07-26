@@ -15,6 +15,8 @@
 
 ## Curation decision
 
-PP_0860 remains an unresolved membrane flavoprotein. FMN binding is accepted,
-the exact ARBA electron-acceptor assignment is undecided, and the protein is not
-used to satisfy the core sulfate-reduction module.
+PP_0860 remains an unresolved membrane flavoprotein. FMN binding is retained as
+a plausible non-core property, the exact ARBA electron-acceptor assignment is
+undecided, and the protein is not used to satisfy the core sulfate-reduction
+module. Its FAD-binding-domain architecture motivates direct cofactor testing
+before proposing GO:0050660.
