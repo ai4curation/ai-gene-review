@@ -30,7 +30,9 @@ broad KEGG map do not make them TauABC-TauD core members.
 
 - [x] Fetch the four focused genes from UniProt and GOA.
 - [x] Create the species-neutral two-part module.
-- [ ] Complete OpenScientist research for the four genes.
+- [x] Attempt OpenScientist research for the four genes; TauC and TauD reports
+  completed, while the corrected TauA and TauB requests each exhausted the
+  7,200-second provider timeout without a report.
 - [x] Complete generic module OpenScientist research.
 - [x] Complete module + `ppu00430` + PSEPK OpenScientist research.
 - [x] Curate all four gene reviews.
@@ -53,3 +55,9 @@ structure, and tetrameric assembly. The TauABC organization and transport
 stoichiometry are grounded in the reviewed Q88RA1 UniProtKB record. The broad
 candidate inventory remains in
 [`ppu00430_taurine_uptake_and_desulfonation.tsv`](ppu00430_taurine_uptake_and_desulfonation.tsv).
+
+The completed TauD report recovered the exact taurine/2-oxoglutarate
+dioxygenase chemistry, distinguished KT2440 TauD from the S-313 alkylsulfatase
+AtsK paralog, and confirmed the tetrameric assembly from PMID:22221834. The
+completed TauC report and the full-timeout TauA/TauB outcomes do not alter the
+manually curated TauABC active-unit model.
