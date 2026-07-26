@@ -19,7 +19,9 @@ carboxylation.
 ## Workflow
 
 - [x] Fetch the eleven selected gene records.
-- [ ] Run full OpenScientist research for every selected gene.
+- [x] Attempt full OpenScientist research for every selected gene. Reports completed
+  for `purF`, `purD`, `purN`, and `purC`; the remaining requests exhausted their
+  configured provider windows without reports.
 - [x] Curate every GOA row in the selected gene reviews.
 - [x] Revise and validate the species-neutral `de_novo_purine_synthesis` module.
 - [x] Run full OpenScientist module research.
@@ -74,3 +76,11 @@ The species-aware OpenScientist request was allowed the full configured 7,200
 seconds with three iterations and returned no report. The module therefore
 cites the completed generic report and inspectable gene, exact-record, and
 ontology evidence, not a nonexistent taxon-specific source.
+
+Gene-level OpenScientist reports completed for `purF`, `purD`, `purN`, and
+`purC`. The corrected `purL`, `purT`, `purB`, and `purH` requests each exhausted
+the full 7,200-second provider timeout; the `purM`, `purK`, and `purE` attempts
+also returned no report. These retrieval outcomes do not create pathway holes:
+all eleven target assignments were adjudicated against exact UniProt records,
+domain/family evidence, the completed generic module research, and the
+available primary literature.
