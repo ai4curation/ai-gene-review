@@ -260,11 +260,11 @@ wrong aspect regardless of status: it is a CC term for the CapZ heterodimer at t
 *barbed* end. On status, QuickGO returns `isObsolete: true`, renders the label as
 "obsolete actin capping protein of dynactin complex" and prefixes the definition
 "OBSOLETE."; OLS adds `term_replaced_by: GO:0008290 F-actin capping protein complex`,
-which is again barbed-end CapZ and again a CC. Worth flagging to maintainers: the term is
-**absent from `cache/ontologies/go.tsv`** yet still present in
-`cache/enums/gotermenum` and `cache/enums/goproteincontainingcomplexenum`, so those enum
-files look stale rather than the term being live — which is what prompted the reviewer's
-query.
+which is again barbed-end CapZ and again a CC. Separately, and recorded in the PR rather than in the GO-facing justification: the term is
+still present in `cache/enums/gotermenum` and
+`cache/enums/goproteincontainingcomplexenum`, so **enum-membership validation can admit a
+term that is obsolete upstream**. Two inferences about *why* are withdrawn as unsupported —
+see §11.
 
 Two placements are offered in the proposal, since the choice is an editorial call about
 `GO:0051693`'s intended scope: as its child if `actin filament capping` is meant to cover
@@ -333,3 +333,68 @@ Six items from `ai4c-agent`; none changed a GO term, evidence code or action.
 
 Reproducibility re-checked after all three code changes: a fresh `uv run python
 analyze.py` is `diff`-identical to the committed `RESULTS.md`.
+
+## 11. Round-3 review response (PR #2274) — and two withdrawn inferences
+
+`ai4c-reviewer` **APPROVED**, closing both round-2 🟡 items, and raised two optional 🔵
+items. Both are done, because both turned out to matter more than "optional" suggested.
+
+### 🔵 7 — the cross-subunit number now has a module, and it found two errors in my prose
+
+The reviewer's point was procedural: the per-subunit Reactome check was the only
+load-bearing number in the review with no module behind it, and it was the one number that
+had drifted twice. `subunit_granule_survey.py` (RESULTS.md §F) computes it. Building it
+immediately exposed two mistakes that hand-checking had missed:
+
+1. **`O15507` is an *inactive* (deleted) UniProt entry.** I had used it as DCTN3. It returns
+   no gene name and no annotations, so querying it is indistinguishable from a subunit that
+   genuinely carries nothing — my "DCTN3 carries none" was vacuous. The real accession is
+   **O75935** (`DCTN3_HUMAN`). The module now prints the entry name for every accession so
+   this cannot recur silently. *A dead accession is the quietest possible false negative.*
+2. **CAPZA1's extracellular TAS is not the granule route.** It comes from `R-HSA-879377`,
+   "The TRTK-12 fragment of F-actin capping protein alpha binds the AGER ligand S100B",
+   which is **not** under Neutrophil degranulation (`R-HSA-6798695`). Counting it beside
+   ACTR10's, as my prose did, overstated how shared the pattern is.
+
+With the route resolved from Reactome rather than guessed from the reaction id, the number
+the four `REMOVE`s rest on is sharper than what I had claimed:
+
+- canonical subunits on the Neutrophil degranulation route: **1/11 — ACTR10 alone**
+- canonical subunits annotated to azurophil granule lumen: **1/11 — ACTR10 alone**
+- carrying any of the three terms by *any* evidence code: 3/11 (ACTB by HDA mass
+  spectrometry, CAPZA1 by the unrelated S100B reaction, ACTR10)
+- outside the canonical 11: ACTR1B shares the route (`R-HSA-6798748`, `R-HSA-6800434`)
+
+So the argument improved by being automated. Lesson for the campaign: *the claim worth
+building a module for is the one that has already drifted.*
+
+### 🔵 8 — the cache parenthetical is out of the GO-facing justification, and two inferences are withdrawn
+
+Removed from `proposed_new_terms[].justification`, which is written for GO editors and where
+repo housekeeping is noise. It lives in the PR body and here instead.
+
+More importantly, the reviewer showed my *reasoning* was wrong, and checking it myself showed
+a second inference was wrong too. Both withdrawn:
+
+1. ~~The enums are stale because `GO:0005870` is absent from `cache/ontologies/go.tsv`.~~
+   Does not follow. `go.tsv` is a lazily-populated label-fetch cache — `fetched_date` column,
+   **7,717** rows against GO's ~40k — so absence means "never fetched", not "removed". Its
+   `is_obsolete` column is unreliable in the same direction: **261** rows carry an
+   `obsolete `-prefixed label but only **26** are flagged `True`.
+2. ~~The enum generator's obsolete filter depends on `go.tsv` coverage, so a never-fetched
+   term escapes it.~~ Also unsupported. The two caches have **independent producers**:
+   `cache/enums/*.csv` are branch-reachability sets from the external
+   `linkml-term-validator`/oaklib expansion (`gotermenum` is a flat 38,751-CURIE list),
+   while `go.tsv` comes from this repo's own label fetches. There is no shared code path.
+
+What *is* verified: `GO:0005870` is obsolete upstream (QuickGO `isObsolete: true`; OLS
+`is_obsolete: true` with `term_replaced_by: GO:0008290`) yet present in two enum caches, so
+enum-membership validation can admit an upstream-obsolete term. As a corroborating pattern
+only — not a mechanism — all **261** `obsolete `-labelled `go.tsv` terms appear in **zero**
+of the 7 enum files, which makes `GO:0005870` an anomaly rather than the rule. Actionable
+item is a scheduled enum regeneration, not a per-PR fix.
+
+Also noted from the reviewer, not acted on: ACTB appears under the HPA "excluded from those
+denominators" line although as `conventional actin` it was never in either clade denominator
+— the parenthetical clade label makes it readable, and the reviewer agreed it was not worth
+a commit on its own.
