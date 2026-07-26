@@ -214,8 +214,10 @@ GOA gives ACTRT3 one molecular-function row of experimental grade, and it is bar
 `GO:0005515 protein binding` to PDCL3. Meanwhile the interaction the gene is actually known
 for is absent.
 
-The mouse orthologue carries `GO:0005515 protein binding` **IPI twice** from PMID:18692047,
-with WITH/FROM `UniProtKB:Q9DAD6`, which resolves to `PROF3_MOUSE`, gene `Pfn3`, 137 aa,
+The mouse orthologue carries `GO:0005515 protein binding` by IPI from PMID:18692047 — four
+annotation rows spread over only two entities, i.e. one co-immunoprecipitation logged once by
+UniProt and once by IntAct and recorded reciprocally on Actrt3 and Pfn3, not two experiments (see
+§14b) — with WITH/FROM `UniProtKB:Q9DAD6`, which resolves to `PROF3_MOUSE`, gene `Pfn3`, 137 aa,
 Swiss-Prot — profilin-3 [PMID:18692047 "By co-immunoprecipitation analysis, profilin III was
 identified as ArpM1-interacting protein."]. UniProt carries the human side by similarity:
 `file:human/ACTRT3/ACTRT3-uniprot.txt` line 88, `CC   -!- SUBUNIT: Interacts with PFN3.
@@ -418,6 +420,206 @@ Recorded so a later reviewer knows they were done rather than skipped.
   donors. It has 25 / 24. The discrepancy surfaced only when the generator that builds
   `source_entities` asserted its emitted count against the GOA field, which is the whole reason
   that list is generated rather than typed.
+
+## 14b. Reference scope: ask what a reference covers before treating a row as independent support
+
+`ACTRT3-bioinformatics/reference_scope.py` queries QuickGO **by reference** rather than by gene
+for every PMID this review cites. The technique comes from the merged ACTR8 review, where a
+reference returning 16 entities × 5 terms exposed a complex-to-subunit projection that a per-gene
+view could not see. Results here, and what each one changed:
+
+| PMID | total | complete? | reading |
+|---|---|---|---|
+| 35793634 | 35 | yes (35 of 35 rows) | 12 PT proteins carry `GO:0033011` IDA; the phenotype row does **not** spread |
+| 18692047 | 5 | yes (5 of 5) | one co-IP, logged by two databases **and** reciprocally on both partners |
+| 33961781 | 9514 | **no** — 200 rows sampled, 1 unaccounted | 9508 `GO:0005515`; plus a 5-row ComplexPortal projection tail |
+| 41668650, 34869336, 11750065 | 0 | — | not curated by GOA at all |
+
+Two of these changed the review.
+
+1. **`GO:0033011` is not a projection, and the discriminator is which row *fails* to spread.**
+   PMID:35793634 carries `GO:0033011` by IDA for twelve mouse theca proteins (Actl9, Actrt1,
+   Actrt2, Actrt3, Capza3, Capzb, Ccin, Cylc1, Fabp9, Gsto2, H2bl1, Wbp2nl), all `assignedBy:
+   UniProt`. A ComplexPortal-style projection would spread the *phenotype* too — and this one does
+   not: the paper's only functional row, `GO:0007286` IMP, is confined to **Ccin alone**, the gene
+   actually knocked out. So these are twelve per-protein localisation calls from one
+   immunolocalisation study. The ACCEPT stands, now on a stated basis rather than an assumed one.
+   Side benefit: it places ACTRT1, ACTRT2 and ACTL9 in the theca by IDA *independently* of the 2026
+   co-IPs, which is what turns "the ARP-T clade is a theca clade" from an inference from one paper
+   into a curated fact — and it strengthens the `suggested_questions` item addressed to that set.
+2. **A doubled-count phrasing was mis-statable and has been corrected.** The draft said mouse
+   Actrt3 carries protein binding by IPI two separate times from that reference, which reads as two
+   experiments. The reference covers only 2 entities in total, so the rows are one
+   co-immunoprecipitation logged once by UniProt and once by IntAct, recorded reciprocally on
+   Actrt3 and Pfn3 — one experiment recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my
+   own review. The `GO:0005522`
+   proposal never depended on a replicate count, so the term survives; the sentence supporting it
+   did not.
+
+### The round-2 correction: this checker mixed a total with a 2 per cent sample
+
+The reviewer of the follow-up PR caught the sharper defect, and it is the same class the script
+was written to catch. The first version fetched **one `limit=200` page** and reported the
+per-term, per-code and per-database breakdowns *from that page*, while taking `total_annotations`
+from the API's own hit count. For five of the six references that is harmless, because the page
+covers everything. For **PMID:33961781** it is not: 9514 annotations, 200 examined, so every
+page-derived field was a 2 per cent sample — and the review then stated two of them as totals.
+Both were false:
+
+- *"it is the only term that publication contributes"* — false. `GO:0005515` exact is **9508**,
+  not 9514, and the aspect totals are MF 9509 / CC 5 / BP 0.
+- *"all assigned by IntAct"* — false. **IntAct 9509 + ComplexPortal 5.**
+
+And the five hidden rows are the interesting part: `GO:0005813 centrosome`, IPI, assigned by
+**ComplexPortal**, projected onto the ted-tubulin complex and its four subunits. So the very
+reference this review cites to illustrate what is *not* a projection contains a projection tail —
+which a 200-row sample of a 9,514-row screen could not show. None of it touches ACTRT3, and no
+action changed, but the prose was asserting coverage it did not have.
+
+Every count is now its own **filtered count query** (`limit=1`, read `numberOfHits`); page-derived
+fields are renamed `*_seen`; `truncated`, `unaccounted_annotations` and
+`term_list_provably_complete` are emitted; and **ComplexPortal is probed unconditionally**, because
+a projected tail can sit entirely outside a sample. Three further things came out of doing it
+properly:
+
+1. **The verdict function then inverted.** With bare `GO:0005515` excluded from the functional set,
+   the newly-visible ComplexPortal rows presented as "multi-entity localisation with no functional
+   claim" and were reported as *NOT* a projection — exactly backwards for rows a projecting database
+   assigned. Fixed by naming projecting-database rows as such before the heuristic runs at all.
+2. **Per-code totals do not partition the total.** QuickGO's `evidenceCode` filter is not
+   exact-only: on PMID:35793634 the per-code counts sum to 57 against a total of 35. They are kept
+   for orientation and used for no claim.
+3. **Completeness is the precondition for the projection test**, and stating it
+   makes the two theca ACCEPTs rest on a checkable property rather than on the absence of a
+   surprise. PMID:35793634 is complete, 35 of 35, so the twelve-versus-one comparison is sound.
+
+### The round-3 correction: an annotation count is not an entity count
+
+The reviewer then caught a subtler version of the same confusion, one level down, and the file
+proved it against itself. `count(reference, goId, goUsage=exact)` returns `numberOfHits` — which
+counts **annotation rows** and never collapses per gene product — but the field holding it was
+called `true_entities_per_term`. The disproof is in this very audit: PMID:18692047's `GO:0005515`
+value read **4** while only **2** entities are involved, Q8BXF8 and Q9DAD6, each logged once by
+UniProt and once by IntAct. The double-logging this whole section is about was mislabelled as an
+entity count inside the JSON that explains it.
+
+Why the biology survived anyway, and it is worth being explicit that this was luck plus an
+asymmetry rather than care:
+
+- **`GO:0007286` = 1 is rigorous either way**, because entities ≤ annotations, so one annotation
+  implies exactly one entity. "Confined to Ccin alone" follows regardless of which quantity the
+  field held. That is the half of the projection argument that carries the weight.
+- **The 12 needed distinct entities**, and it happens to be 12 either way — no theca protein is
+  double-logged in that reference. But the audit guard was confirming the sentence against a field
+  that could have read 12 while the truth was 11, so the guard was right by luck of the data.
+
+Fixed: the field is now `true_annotations_per_term`; a separate `entities_per_term` is computed
+from distinct `geneProductId` values and emitted **only when `rows_complete`**, since
+a distinct count taken from a sampled page is a lower bound wearing a total's clothes;
+`projection_test_basis` records which of the two the verdict used; and the audit reaches entity
+counts through an accessor that raises a named error rather than a bare `KeyError` when the count
+is unavailable. `unaccounted_annotations` deliberately stays on the annotation counts — it is
+`total - sum(annotations)` and is sound precisely because those are rows.
+
+### The round-4 correction: the gate tested the wrong completeness
+
+One more level down, and the sharpest of the four. `entities_per_term` was gated on
+`unaccounted_annotations == 0` — which proves every annotation's **term** was queried. But the
+entity counts are computed by collecting distinct `geneProductId` values **from the returned
+rows**, so the property they actually need is that every **row** was seen: `not truncated`, which
+was already computed two dozen lines earlier and is strictly stronger. The docstring gave the
+right reason ("a distinct count taken from a sampled page is a lower bound") while the condition
+underneath it enforced something else.
+
+**It missed by one annotation on this very dataset.** PMID:33961781 has 9508 + 5 = 9513 against a
+total of 9514, so the single stray row — a `GO:0005515` descendant the sampled page never showed —
+is the *only* reason its term list stayed open. Without it, `unaccounted` would have been 0 while
+the page still held 200 of 9514 rows, and the block would have emitted
+`entities_per_term[GO:0005515] ≈ 119` with `entities_per_term_available: true`,
+`projection_test_basis: entities_per_term` and `projection_test_reliable: true`. That is the
+round-1 sampling defect returning under a label asserting it had been fixed — and the audit guard,
+which inherited the same precondition, would have confirmed it rather than caught it.
+
+Fixed to `rows_complete = not truncated and total > 0`, with `term_list_provably_complete` kept as
+a separate, separately-reported property, and `projection_test_reliable` now requiring row
+completeness. Both are asserted in the audit so a regression in either is visible.
+
+Same root, smaller: `max_entities_on_a_functional_term` and `max_entities_on_a_location_term` held
+**annotation** counts in the fallback branch under names saying "entities" — the round-2 misnomer
+surviving in the two fields the rename had not reached (PMID:33961781 read
+`max_entities_on_a_location_term: 5`). Renamed to `max_functional_spread` / `max_location_spread`
+with a `spread_units` field carrying `entities` or `annotations`, and `verdict()` now prints the
+units rather than assuming them.
+
+### The round-5 correction: the same fix, in the output a human reads
+
+The units fix from round 4 reached the JSON and three of `verdict()`'s five branches. Two still
+hardcoded the noun: the general fallback said "functional rows on N entities" outright, and the
+branch the whole theca argument prints through was units-correct on the localisation count and
+hardcoded on the functional one ("confined to N entity"). Both render
+`max_functional_spread`/`max_location_spread`, which hold **annotation** counts whenever
+`spread_units == "annotations"` — the truncated large-screen case the docstring names as its
+motivation. Unreachable with these six references today, and irrelevant that the JSON was right
+beside it: `verdict()` is what `main()` prints, and the printed sentence is where a reader forms
+the projection judgement.
+
+That is the second time a defect has survived because its branch was unreachable from the cited
+data. So the coverage is no longer left to the dataset: `selftest()` runs on every invocation,
+before any report is written, driving `verdict()` with synthetic blocks that take the fallback,
+localisation and same-count branches on an annotations basis and asserting that **no printed count
+carries a unit the block did not declare** — plus the mirror, that an entities basis says entities.
+Verified by reintroducing the exact regression: the run aborts in `selftest()` rather than emitting
+a report.
+
+Also this round: `audit_claims.py` reaches every JSON field through a `flag()` helper that reports a
+renamed or dropped field **by name** instead of raising `KeyError` (verified by renaming
+`rows_complete`); the previously unguarded 19-entities figure is now value-checked against
+`distinct_entities_seen`; and the review's prose no longer justifies the projection precondition by
+naming term-list closure when row completeness is what does the work.
+
+The pattern across all five rounds is one thing, stated five ways at five depths: **a number's
+name must match how it was obtained.** Round 1 mixed a total with a sample; round 2 mixed an
+annotation count with an entity count; round 3 left two fields the rename missed; round 4 gated a
+row-derived count on a term-derived property; round 5 left the hardcoded noun in the two branches
+a reader actually sees. Each was invisible to every mechanical check in the repository, and each
+was found by someone asking what a specific number was actually counting.
+
+The second, procedural lesson is that **a fix verified only against reachable data is half
+verified**. Rounds 3 and 5 were both branches the six cited references never enter; both were
+correct in the JSON and wrong in the code path. `selftest()` exists because the reviewer had to
+find the same class twice.
+
+Two further guard gaps surfaced from break-testing this round, both of the same family as the
+round-2 blindness:
+
+- **The retraction string was too long.** Banning the whole sentence let an emphasised or reworded
+  variant walk past — which is exactly how the phrase survived in §5 while §14b declared it
+  corrected. The banned string is now just the two words that carry the claim, and `norm()` strips
+  markdown emphasis and backticks so `**twice**` and `` `twice` `` cannot bypass it. Both variants
+  now fail.
+- **A guard that runs after the thing it guards is not a guard.** The availability check for
+  `entities_per_term` sat *below* the patterns that indexed into it, so the intended message was
+  unreachable behind a `KeyError`. Moved above, and verified by deleting the field.
+
+The general rule, which is the transferable part: **a count taken from a page and a count taken
+from `numberOfHits` must never be reported side by side without saying which is which.** The
+`*_seen` suffix and the `truncated` flag exist to make that impossible to do by accident again.
+
+The checker itself needed a fix, found by reading its output rather than trusting it: counting
+bare `GO:0005515` as a functional claim made *every* interaction paper look like a projection and
+mis-flagged PMID:35793634 as "possible projection" until that term was excluded from the
+functional set. Same shape as the ACTL8 family survey excluding `GO:0005515` from
+"informative MF".
+
+Also checked and negative: **`CommentsCorrections`/`RefType` on all six cited PMIDs is empty** —
+no erratum, no Publisher Correction, no retraction. That field is checked directly on each cited
+article's own record, because a Publisher Correction is not findable by a publication-type query.
+
+And every cross-gene fact this review leans on was verified against the merged YAML rather than
+taken from a summary: ACTL7A `GO:0005198` IBA ACCEPT + `GO:0005200` TAS REMOVE + core MF
+`GO:0005198`; ACTL7B the same plus `GO:0015629` TAS REMOVE; ACTR10 `GO:0005200` IBA **ACCEPT**
+with core MF `GO:0005200`; ACTL8 `GO:0015629` IBA **KEEP_AS_NON_CORE**; ACTR1B `GO:0005515` from
+PMID:33961781 **KEEP_AS_NON_CORE**. All five as relied on.
 
 ## 15. The committed lint, and the two real defects it caught
 
