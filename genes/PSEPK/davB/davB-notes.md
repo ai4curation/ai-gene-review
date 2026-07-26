@@ -10,6 +10,12 @@
 - Purified KT2440 DavB directly catalyzes oxidative decarboxylation of L-lysine
   [PMID:25012259, "DavB is a FAD-dependent monooxygenase that catalyzes
   oxidative decarboxylation of l-lysine"].
+- The 2019 statement that DavAB lacked rigorous in-vitro characterization
+  overlooks the 2014 purified-enzyme study above; the latter supports a new
+  curator evidence upgrade from the current IEA annotation for GO:0050067.
+- KT2440 genetics identify davB and davA in the aminovalerate route required
+  for L-lysine utilization [PMID:16237033, "New genes were identified in both
+  pathways, including the davB and davA genes"].
 - The gene identity, local DavA/DavB pathway context, and GO:0050067 assignment
   support lysine 2-monooxygenase as the core function. Direct comparative
   L-lysine versus L-tryptophan kinetics would still sharpen the specificity

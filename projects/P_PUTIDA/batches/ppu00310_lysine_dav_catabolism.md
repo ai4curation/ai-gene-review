@@ -76,3 +76,10 @@ three iterations but returned no report. No generic report is cited or
 represented as evidence; the completed species-aware module/pathway/taxon
 report was retained as retrieval context and checked against the primary
 evidence above.
+
+The available PANTHER subfamily calls are not tighter reaction selectors:
+DavB maps to a histone-demethylase-labeled subfamily, DavA to
+beta-ureidopropionase, DavT to leucine/methionine racemase, and DavD to a
+mixed succinate-semialdehyde-dehydrogenase family. The module therefore uses
+honest fold-level families constrained by exact exemplars and leaf molecular
+functions.
