@@ -370,9 +370,23 @@ was discriminating per protein, not projecting one localisation onto every partn
 
 ## 8. What the measurements do and do not support
 
-**The pocket is intact.** Of the 10 literature-named nucleotide-binding positions (D11, S14, G15, K18, Q137, D154, G156, D157, V159, R183), ACTRT2 matches actin at **10 identically**, 0 conservatively, 0 non-conservatively. So Harata et al. 2001's sequence-inspection claim that actin's ATP-binding motif is highly conserved in this protein is confirmed from structure-derived contacts. A retained pocket means a nucleotide-binding claim is **untested, not refuted** - it is not itself evidence that ACTRT2 binds a nucleotide.
+**Whole computed contact set first, so no sub-selection can flatter the result.** Of the 19 residues within 4.0 A of ATP or the divalent cation in PDB 2BTF, ACTRT2 matches actin at **13 identically** and 4 conservatively, with **2 non-conservative** substitutions.
 
-**The polymerisation-coupled hydrolysis switch is not intact.** At A108, P109, H161 ACTRT2 has A108->P, P109->S, H161->C - 3 of 3 non-conservative.
+**The phosphate, cation and sensor positions are fully conserved; the adenine/ribose region is not.** Split by role:
+
+| group | positions | identical | conservative | non-conservative | substitutions |
+|---|---|---|---|---|---|
+| phosphate loops, cation site, sensor | D11, S14, G15, K18, Q137, D154, G156, D157, V159, R183 | 10 | 0 | 0 | none |
+| adenine/ribose region | E214, Y306, K336 | 0 | 1 | 2 | E214->K, Y306->F, K336->W |
+
+Which of those named positions are inside the computed 4 A contact set, and which are not:
+
+- phosphate loops, cation site, sensor: inside S14, G15, K18, Q137, G156, D157, V159; outside D11, D154, R183
+- adenine/ribose region: inside E214, Y306, K336; outside none
+
+So Harata et al. 2001's sequence-inspection claim that actin's ATP-binding motif is highly conserved in this protein is confirmed where it matters most - every phosphate-binding-loop residue, the divalent-cation ligand and the sensor arginine are identical - while the adenine/ribose region has diverged. Either way a retained pocket means a nucleotide-binding claim is **untested, not refuted**: it is not itself evidence that ACTRT2 binds anything.
+
+**The ATP-hydrolysis trigger is lost.** Actin's His161 is C in ACTRT2 (non-conservative). The Pro-rich loop that governs its rotamer has also changed (A108->P, P109->S), but that is reported as context only: PMID:37009486 reports the A108G and P109A actin mutants polymerise and hydrolyse like wild type, so these substitutions modulate the His161 rotamer rather than gating hydrolysis; they are context for the His161 loss, not independent evidence of lost hydrolysis.
 
 - His161 is retained in every panel member that either extends a filament or nucleates one: `his161_retained_in_all_filament_builders_and_nucleators` = **True**.
 - His161 is lost in **all reported members of the sperm perinuclear-theca ARP complex**: `his161_lost_in_all_reported_PT_complex_members` = **True** (Q8TC94=Y, Q8TDG2=C, Q8TDY3=C, Q9BYD9=Q, Q9Y615=Y). It is also lost outside that complex, in Q9H568=R, Q9NZ32=L - so the loss is not exclusive to the PT ARPs, only universal within them.
@@ -380,7 +394,7 @@ was discriminating per protein, not projecting one localisation onto every partn
 
 **The filament interface is not intact either.** ACTRT2 matches actin at 14/38 protomer-contact positions. `ACTRT2_below_every_filament_builder` = **True** (filament builders: P45891=29, P60709=37, P61163=20, P63261=37, P68032=38, P68133=38; lowest is P61163 at 20). ACTRT2 instead sits with the proteins that nucleate a filament without extending one (P61158=5, P61160=15). So the measurement argues against ACTRT2 extending an F-actin filament; it does not exclude an Arp2/3-like role, and no such role has been proposed for it.
 
-These last two are **one coupled observation, not two independent ones**: actin's ATPase activity operates in the F-form and His161 flips as part of the G-to-F transition, so a protein that cannot make the F-form contacts has no route to the hydrolysis step regardless of His161. Counting them as separate lines of evidence would inflate the case.
+The His161 loss and the interface degeneracy are **one coupled observation, not two independent ones**: actin's ATPase activity operates in the F-form and His161 flips as part of the G-to-F transition, so a protein that cannot make the F-form contacts has no route to the hydrolysis step regardless of His161. Counting them as separate lines of evidence would inflate the case, as would counting the Pro-rich loop substitutions as a third.
 
 **The IBA donors are not weak.** Sources carrying their own experimental evidence for the term they donated: GO:0015629 24/24; GO:0005200 10/10. So any objection to these rows has to be about propagation, not about donor quality.
 

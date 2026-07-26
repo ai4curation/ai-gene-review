@@ -1264,11 +1264,38 @@ def synthesise(r: dict) -> dict:
     his161_reference_set = filament_builders | nucleators_not_polymerisers
     probe = r["nucleotide_site"]["named_site_probe"]
     h161 = {acc: rec["sites"]["H161"]["aligned_residue"] for acc, rec in probe.items()}
-    pocket_positions = ["D11", "S14", "G15", "K18", "Q137", "D154", "G156", "D157", "V159", "R183"]
-    switch_positions = ["A108", "P109", "H161"]
+    # The named nucleotide positions, split by role. The split matters and the first version of
+    # this function got it wrong: it reported a single ten-position set as "the pocket", and that
+    # set happened to omit E214, Y306 and K336 - three of the script's own computed ATP contacts,
+    # and precisely the three where ACTRT2 differs - while including D11, D154 and R183, which the
+    # contact computation places OUTSIDE the 4 A contact set. "All ten identical" was therefore
+    # true and selectively bounded. Both groups are now reported separately, and membership of the
+    # computed contact set is printed per position, so a reader can see which is which.
+    pocket_core_positions = ["D11", "S14", "G15", "K18", "Q137", "D154", "G156", "D157", "V159", "R183"]
+    adenine_ribose_positions = ["E214", "Y306", "K336"]
+    # His161 is the ATP-hydrolysis trigger and carries this argument on its own. Ala108 and Pro109
+    # are the Pro-rich loop that governs the His161 rotamer, but PMID:37009486 reports that the
+    # A108G and P109A actin mutants "polymerize into filaments similar to wild-type actin (WT)"
+    # with ATPase activity "similar to that of the wild type", so substituting them does not by
+    # itself abolish either polymerisation or hydrolysis. They are reported as context for the
+    # His161 loss, never as independent evidence of lost hydrolysis.
+    trigger_position = "H161"
+    prorich_loop_positions = ["A108", "P109"]
 
     def count(acc, positions, call):
         return sum(1 for p in positions if probe[acc]["sites"][p]["call"] == call)
+
+    contact_set = set(r["nucleotide_site"]["named_actin_sites_in_contact_set"])
+
+    def detail(acc, positions):
+        return {
+            pos: {
+                "aligned_residue": probe[acc]["sites"][pos]["aligned_residue"],
+                "call": probe[acc]["sites"][pos]["call"],
+                "in_computed_ATP_contact_set": pos in contact_set,
+            }
+            for pos in positions
+        }
 
     fi = r["filament_interface"]["panel"][list(ALIGNMENT_SCHEMES)[0]]
     return {
@@ -1289,17 +1316,38 @@ def synthesise(r: dict) -> dict:
             "note": "testis-specific but not a reported PT-complex member",
             "H161": h161["Q9Y614"],
         },
-        "ACTRT2_pocket": {
-            "positions": pocket_positions,
-            "identical": count(ACTRT2, pocket_positions, "identical"),
-            "conservative": count(ACTRT2, pocket_positions, "conservative"),
-            "non_conservative": count(ACTRT2, pocket_positions, "non-conservative"),
+        "ACTRT2_pocket_core": {
+            "positions": pocket_core_positions,
+            "identical": count(ACTRT2, pocket_core_positions, "identical"),
+            "conservative": count(ACTRT2, pocket_core_positions, "conservative"),
+            "non_conservative": count(ACTRT2, pocket_core_positions, "non-conservative"),
+            "detail": detail(ACTRT2, pocket_core_positions),
         },
-        "ACTRT2_hydrolysis_switch": {
-            "positions": switch_positions,
-            "identical": count(ACTRT2, switch_positions, "identical"),
-            "non_conservative": count(ACTRT2, switch_positions, "non-conservative"),
-            "residues": {p: probe[ACTRT2]["sites"][p]["aligned_residue"] for p in switch_positions},
+        "ACTRT2_adenine_ribose": {
+            "positions": adenine_ribose_positions,
+            "identical": count(ACTRT2, adenine_ribose_positions, "identical"),
+            "conservative": count(ACTRT2, adenine_ribose_positions, "conservative"),
+            "non_conservative": count(ACTRT2, adenine_ribose_positions, "non-conservative"),
+            "detail": detail(ACTRT2, adenine_ribose_positions),
+        },
+        "ACTRT2_whole_contact_set": {
+            "n_positions": r["nucleotide_site"]["n_contact_positions"],
+            "identical": r["nucleotide_site"]["panel"][list(ALIGNMENT_SCHEMES)[0]][ACTRT2]["identical"],
+            "conservative": r["nucleotide_site"]["panel"][list(ALIGNMENT_SCHEMES)[0]][ACTRT2]["conservative"],
+            "non_conservative": r["nucleotide_site"]["panel"][list(ALIGNMENT_SCHEMES)[0]][ACTRT2]["non_conservative"],
+        },
+        "ACTRT2_hydrolysis_trigger": {
+            "position": trigger_position,
+            "aligned_residue": probe[ACTRT2]["sites"][trigger_position]["aligned_residue"],
+            "call": probe[ACTRT2]["sites"][trigger_position]["call"],
+        },
+        "ACTRT2_prorich_loop": {
+            "positions": prorich_loop_positions,
+            "detail": detail(ACTRT2, prorich_loop_positions),
+            "caveat": "PMID:37009486 reports the A108G and P109A actin mutants polymerise and "
+            "hydrolyse like wild type, so these substitutions modulate the His161 rotamer rather "
+            "than gating hydrolysis; they are context for the His161 loss, not independent "
+            "evidence of lost hydrolysis.",
         },
         "filament_interface_identical": {
             "ACTRT2": fi[ACTRT2]["identical"],
@@ -1621,19 +1669,51 @@ def render(r: dict) -> str:
     s = r["synthesis"]
     a("## 8. What the measurements do and do not support")
     a("")
-    pk, sw, ff = s["ACTRT2_pocket"], s["ACTRT2_hydrolysis_switch"], s["filament_interface_identical"]
-    a(f"**The pocket is intact.** Of the {len(pk['positions'])} literature-named "
-      f"nucleotide-binding positions ({', '.join(pk['positions'])}), ACTRT2 matches actin at "
-      f"**{pk['identical']} identically**, {pk['conservative']} conservatively, "
-      f"{pk['non_conservative']} non-conservatively. So Harata et al. 2001's sequence-inspection "
-      f"claim that actin's ATP-binding motif is highly conserved in this protein is confirmed "
-      f"from structure-derived contacts. A retained pocket means a nucleotide-binding claim is "
-      f"**untested, not refuted** - it is not itself evidence that ACTRT2 binds a nucleotide.")
+    pk = s["ACTRT2_pocket_core"]
+    ar = s["ACTRT2_adenine_ribose"]
+    wc = s["ACTRT2_whole_contact_set"]
+    tr = s["ACTRT2_hydrolysis_trigger"]
+    pl = s["ACTRT2_prorich_loop"]
+    ff = s["filament_interface_identical"]
+    a(f"**Whole computed contact set first, so no sub-selection can flatter the result.** Of the "
+      f"{wc['n_positions']} residues within {CONTACT_CUTOFF} A of ATP or the divalent cation in "
+      f"PDB 2BTF, ACTRT2 matches actin at **{wc['identical']} identically** and "
+      f"{wc['conservative']} conservatively, with **{wc['non_conservative']} non-conservative** "
+      f"substitutions.")
     a("")
-    switch_calls = ", ".join(f"{p}->{sw['residues'][p]}" for p in sw["positions"])
-    a(f"**The polymerisation-coupled hydrolysis switch is not intact.** At "
-      f"{', '.join(sw['positions'])} ACTRT2 has {switch_calls}"
-      f" - {sw['non_conservative']} of {len(sw['positions'])} non-conservative.")
+    a(f"**The phosphate, cation and sensor positions are fully conserved; the adenine/ribose "
+      f"region is not.** Split by role:")
+    a("")
+    a("| group | positions | identical | conservative | non-conservative | substitutions |")
+    a("|---|---|---|---|---|---|")
+    for label, rec in (("phosphate loops, cation site, sensor", pk),
+                       ("adenine/ribose region", ar)):
+        subs = ", ".join(
+            f"{pos}->{v['aligned_residue']}"
+            for pos, v in rec["detail"].items() if v["call"] != "identical"
+        ) or "none"
+        a(f"| {label} | {', '.join(rec['positions'])} | {rec['identical']} | "
+          f"{rec['conservative']} | {rec['non_conservative']} | {subs} |")
+    a("")
+    a("Which of those named positions are inside the computed 4 A contact set, and which are not:")
+    a("")
+    for label, rec in (("phosphate loops, cation site, sensor", pk),
+                       ("adenine/ribose region", ar)):
+        inside = [q for q, v in rec["detail"].items() if v["in_computed_ATP_contact_set"]]
+        outside = [q for q, v in rec["detail"].items() if not v["in_computed_ATP_contact_set"]]
+        a(f"- {label}: inside {', '.join(inside) or 'none'}; outside {', '.join(outside) or 'none'}")
+    a("")
+    a("So Harata et al. 2001's sequence-inspection claim that actin's ATP-binding motif is highly "
+      "conserved in this protein is confirmed where it matters most - every phosphate-binding-loop "
+      "residue, the divalent-cation ligand and the sensor arginine are identical - while the "
+      "adenine/ribose region has diverged. Either way a retained pocket means a nucleotide-binding "
+      "claim is **untested, not refuted**: it is not itself evidence that ACTRT2 binds anything.")
+    a("")
+    a(f"**The ATP-hydrolysis trigger is lost.** Actin's His161 is "
+      f"{tr['aligned_residue']} in ACTRT2 ({tr['call']}). The Pro-rich loop that governs its "
+      f"rotamer has also changed ("
+      + ", ".join(f"{q}->{v['aligned_residue']}" for q, v in pl["detail"].items())
+      + f"), but that is reported as context only: {pl['caveat']}")
     a("")
     a(f"- His161 is retained in every panel member that either extends a filament or nucleates "
       f"one: `his161_retained_in_all_filament_builders_and_nucleators` = "
@@ -1660,10 +1740,11 @@ def render(r: dict) -> str:
       + "). So the measurement argues against ACTRT2 extending an F-actin filament; it does not "
       "exclude an Arp2/3-like role, and no such role has been proposed for it.")
     a("")
-    a("These last two are **one coupled observation, not two independent ones**: actin's ATPase "
-      "activity operates in the F-form and His161 flips as part of the G-to-F transition, so a "
-      "protein that cannot make the F-form contacts has no route to the hydrolysis step regardless "
-      "of His161. Counting them as separate lines of evidence would inflate the case.")
+    a("The His161 loss and the interface degeneracy are **one coupled observation, not two "
+      "independent ones**: actin's ATPase activity operates in the F-form and His161 flips as part "
+      "of the G-to-F transition, so a protein that cannot make the F-form contacts has no route to "
+      "the hydrolysis step regardless of His161. Counting them as separate lines of evidence would "
+      "inflate the case, as would counting the Pro-rich loop substitutions as a third.")
     a("")
     a("**The IBA donors are not weak.** Sources carrying their own experimental evidence for the "
       "term they donated: "

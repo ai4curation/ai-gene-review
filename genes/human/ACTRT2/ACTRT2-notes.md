@@ -123,19 +123,34 @@ see below, where it is confirmed.
 All numbers are computed by `analyze_actrt2.py` from live UniProt/RCSB/QuickGO/IntAct plus the
 repository's cached PANTHER PAINT table; a fresh run reproduces `RESULTS.md` byte-identically.
 
-### The nucleotide pocket is intact — Harata 2001 was right
+### The nucleotide pocket is largely retained — Harata 2001 was right where it matters
 
 Contacts computed from PDB 2BTF (profilin:beta-actin, ATP + Sr in the Mg site), 19 contact
-positions. ACTRT2: 13 identical, 4 conservative, 2 non-conservative, 0 gaps; unchanged under a
-second substitution matrix and gap model.
+positions. **Whole contact set first**, so no sub-selection can flatter the result: ACTRT2 has
+13 identical, 4 conservative, **2 non-conservative**, 0 gaps; unchanged under a second
+substitution matrix and gap model.
 
-At the ten literature-named nucleotide positions — D11, S14, G15, K18, Q137, D154, G156, D157,
-V159, R183 — **ACTRT2 is identical to actin at all ten**. The only non-conservative losses in
-the whole contact set are E214→K and K336→W, both in the adenine/ribose region.
+Split by role, which is where the interesting asymmetry is:
 
-So the 2001 sequence-inspection claim is confirmed from structure-derived contacts. But a
-retained pocket means the question is **untested, not answered**: no structure, no ligand and no
-binding measurement exists for ACTRT2, so no nucleotide-binding term is proposed. Worth noting
+| group | positions | id | cons | non-cons | substitutions |
+|---|---|---|---|---|---|
+| phosphate loops, cation site, sensor | D11, S14, G15, K18, Q137, D154, G156, D157, V159, R183 | 10 | 0 | 0 | none |
+| adenine/ribose region | E214, Y306, K336 | 0 | 1 | 2 | E214→K, Y306→F, K336→W |
+
+**A correction to an earlier draft of this review, caught by the reviewer.** That draft reported
+only the first row and called the pocket "fully retained". The number was true but *selectively
+bounded*: the ten-position set omitted E214, Y306 and K336 — three of the script's own computed ATP
+contacts, and exactly the three where ACTRT2 differs — while including D11, D154 and R183, which
+the same computation places *outside* the 4 Å contact set. The set was, in effect, selected so that
+"all ten identical" would follow. Both groups and their contact-set membership are now printed by
+the script, so the sub-selection cannot recur silently. This is the brief's "a verbatim quote can
+be TRUE and selectively bounded" failure committed in a *number* rather than a quote.
+
+The honest statement loses nothing: every phosphate-binding-loop residue, the cation ligand D154,
+the catalytic-water glutamine Q137 and the sensor R183 are identical to actin, while the
+adenine/ribose region has diverged. Harata 2001's ATP-binding-motif claim is confirmed where it
+matters. But a retained pocket means the question is **untested, not answered**: no structure, no
+ligand and no binding measurement exists for ACTRT2, so no nucleotide-binding term is proposed. Worth noting
 that this gap is family-wide rather than gene-specific — QuickGO returns **zero** `GO:0005524`
 annotations for beta-actin itself (P60709), which is the same observation the merged ACTR10
 review made.
@@ -150,8 +165,18 @@ Actin's ATPase is coupled to filament incorporation, and the coupling runs throu
 - [PMID:37009486 "our results support the hypothesis that the rotameric conformation of His161, which is a key determinant of the configuration of the active site water molecules that catalyze hydrolysis, is governed by the Pro-rich loop."]
 - [PMID:36252034 "This mechanical work is driven by the ATPase activity at the catalytic site in the F-form."]
 
-ACTRT2 has lost **all three** components of that switch: A108→P and P109→S (the Pro-rich loop
-that governs the flip) and H161→C (the trigger itself).
+ACTRT2 has **H161→C** — the trigger itself. It has also lost both Pro-rich loop residues
+(A108→P, P109→S), but a second correction from the reviewer applies here, and reading the cached
+full text confirms it: the actin mutants A108G and P109A
+[PMID:37009486 "These mutants polymerize into filaments similar to wild-type actin (WT), which were examined using a conventional electron microscope."]
+and
+[PMID:37009486 "The ATPase activities of A108G and P109A, which were estimated from the rate of Pi release, were similar to that of the wild type (Iwasa et al."]
+— so substituting those residues does **not** abolish polymerisation or hydrolysis. The Pro-rich
+loop *modulates the His161 rotamer*; it does not gate hydrolysis. Grouping all three as "the
+residues that couple filament incorporation to ATP hydrolysis" overstated two of them. **His161
+carries the argument alone**, and that is how it is now stated. Same failure shape as the ACBD3
+proline lesson: a substitution whose actin counterpart has no effect cannot be cited as evidence
+of lost function.
 
 The census across the panel is the interesting part, and it is computed rather than asserted:
 
@@ -198,7 +223,8 @@ for which, separately, nothing has ever been proposed.
 
 Also note these two results are **one coupled observation**: hydrolysis happens in the F-form,
 so a protein that cannot make the F-form contacts has no route to the hydrolysis step
-regardless of His161. Counting them as two independent lines would inflate the case.
+regardless of His161. Counting them as two independent lines would inflate the case — as would
+counting the Pro-rich loop substitutions as a third.
 
 ### IBA donor quality — the objection cannot be about the donors
 
@@ -288,8 +314,12 @@ PhLP2A, Swiss-Prot, 239 aa), from BioPlex 3.0 (PMID:33961781). IntAct returns **
 ACTRT2, all from that one publication and all `anti tag coip`; nine are spoke-expanded at
 MI-score 0.35 and the PDCL3 pair also has a non-expanded record at 0.50.
 
-The nine spoke partners are not a random set: **TCP1(CCT1), CCT2, CCT3, CCT6A, CCT6B, CCT7**
-plus SLC25A19 and ACSL4. That is the CCT/TRiC chaperonin together with its co-chaperone.
+The eight partners besides PDCL3 are not a random set: **TCP1(CCT1), CCT2, CCT3, CCT6A, CCT6B,
+CCT7** plus SLC25A19 and ACSL4 — six CCT/TRiC chaperonin subunits alongside the chaperonin's
+co-chaperone. (Ten records, nine distinct partners, so **eight** besides PDCL3; PDCL3 appears
+twice, once spoke-expanded and once not, both at MI 0.50, and the other eight spoke rows are at
+0.35. An earlier draft said "nine partners besides PDCL3" and "nine at 0.35" — both off by one,
+caught by the reviewer.)
 Querying PDCL3 itself confirms the reading — across IntAct it has 91 partners including
 **12 actin-superfamily proteins (ACTA2, ACTB, ACTBL2, ACTG1, ACTR1A, ACTR1B, ACTR2, ACTRT1,
 ACTRT2, ACTRT3, POTEF, POTEI), all nine CCT subunits, and three tubulins.**
@@ -347,6 +377,23 @@ biological-process term (`GO:0007286`, IMP) went to **Ccin alone**, the gene act
 That is correct practice, and it explains ACTRT2's process gap precisely — the gap is not an
 oversight in this paper's curation, it is that no *Actrt2* perturbation has been curated at all
 (PMID:40811009 exists and has zero annotations).
+
+### Both NEW rows are ISS onto donors that hold nothing — stated as a precondition
+
+The reviewer's sharpest catch, and this review's own reference-scope table is what proves it:
+`PMID:12243744` and `PMID:40811009` have each produced **zero** GOA annotations anywhere, so
+bovine `Q2TA43` cannot donate `GO:0033150` and mouse `Q9D9L5` cannot donate `GO:0007283`
+(confirmed directly: 0 QuickGO hits for each accession/term pair). GO's ISS convention wants the
+WITH/FROM entry to carry an experimental annotation to the same term, so as first written both
+rows were dangling — a curator importing them would find the source empty.
+
+The biology is unaffected and the terms and evidence codes are unchanged. What changed is that
+each row now states its **precondition** explicitly: `GO:0033150` is contingent on a prior bovine
+IDA from `PMID:12243744`, and `GO:0007283` on a prior mouse IMP from `PMID:40811009`. For
+`GO:0033150` the alternative is also named — a human IDA on `PMID:25293813`, which the reviewer
+rightly notes is a shorter journey than the original reason allowed, since GO places the calyx "at
+the posterior end of the perinuclear theca" and that paper localises ACTRT2 to the post-acrosomal
+region.
 
 ### The annotation gap, measured
 
