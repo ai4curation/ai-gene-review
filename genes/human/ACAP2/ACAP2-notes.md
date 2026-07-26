@@ -98,6 +98,39 @@ Every accession in column 11 of `ACAP2-goa.tsv`, resolved:
 | InterPro:IPR001164 / IPR045258 | ArfGAP domain / ACAP1-2-3-like | correct signatures |
 | UniProtKB:Q15057 | ACAP2 itself | self-reference: PAN-GO curator marking the function core |
 
+All of this is now reproducible: `ACAP2-bioinformatics/resolve_withfrom.py` regenerates the
+table from primary APIs and writes `RESULTS.md`. It was added in response to PR review,
+which correctly pointed out that the `blow` and `MGI:MGI:2153589` claims were load-bearing
+but had nothing behind them in-repo.
+
+### Does each source hold its own evidence for what it donates?
+
+An IBA/ISS WITH/FROM list is supposed to name experimentally annotated family members, so it
+is worth asking rather than assuming. Querying QuickGO for each source's own annotations to
+the donated term (descendants included):
+
+| source | donated term | source's own evidence |
+|---|---|---|
+| rat Acap2 Q5FVC7 | GO:0010008 / GO:0032456 / GO:1990090 | IDA / IMP / IDA |
+| mouse Acap2 Q6ZQK5 | GO:0031267 | IPI |
+| mouse Acap3 Q6NXL5 | GO:0005096 | IMP |
+| worm cnt-1 Q9XXH8 | GO:0005886 / GO:0010008 | IDA x3 + EXP x2 / IDA x2 |
+| yeast AGE1 Q04412 | GO:0005096 | IDA |
+| Arabidopsis AGD3 Q5W7F2 | GO:0005096 | IDA |
+| Arabidopsis AGD1 Q9FIT8 | GO:0005886 | IDA |
+| pombe csx2 Q9UUE2 | GO:0005886 | IDA |
+| Dicty Q54WI0 | GO:0005096 / GO:0005886 / GO:0030036 | IDA / IDA / IMP + IGI |
+| Dicty Q551Q8 | GO:0030036 | IGI |
+| fly blow A1Z714 | GO:0030036 | IMP |
+
+Every single source carries wet-lab evidence for the term it donates. So none of these
+transfers is an inference recycling another inference, and no verdict here should say
+otherwise. That sharpens the `blow` objection rather than softening it: blow's actin
+annotation is a real experimental result, and the problem is purely that a protein with no
+ArfGAP domain cannot be producing that phenotype the way ACAP2 would. It also softens the
+mouse-Acap3 note — the paralog is a competent donor for GAP activity (its own IMP), so the
+only observation is that the ortholog is absent from that support set.
+
 Two things fall out of this table.
 
 **(i) `blow` is a family-boundary artifact.** PANTHER places blow in PTHR23180 (CENTAURIN/ARF)
@@ -139,6 +172,24 @@ By contrast the **process** side has a real, unused, non-obsolete term:
 annotations (actin cytoskeleton organization IBA, actin filament-based process IDA, endocytic
 recycling ISS, cellular response to NGF ISS) and none of them says that ACAP2 turns ARF6 off,
 which is the whole of its characterised biology. That is the main gap this review closes.
+
+## 5b. A curation asymmetry with ACAP1
+
+PMID:11062263 characterised ACAP1 and ACAP2 together, in the same figures, and ACAP1 was the
+more potent of the two in the protrusion assay
+[PMID:11062263 "As shown in Fig. 9, ACAP1 was most effective at inhibiting protrusions."].
+Yet QuickGO returns three annotations from that reference for ACAP2 (GO:0005096, GO:0030029,
+GO:0001726, all IDA) and **zero** for ACAP1 (UniProtKB:Q15027) — verified directly:
+
+```
+.../annotation/search?geneProductId=UniProtKB:Q15027&reference=PMID:11062263  -> numberOfHits 0
+.../annotation/search?geneProductId=UniProtKB:Q15057&reference=PMID:11062263  -> numberOfHits 3
+```
+
+So the asymmetry is a curation artifact, not biology. Two consequences for this review: ACAP2's
+IDAs from this paper are not over-calls (they are the recorded half of a symmetric experiment),
+and ACAP1 is under-annotated from the same source. Cross-checked against the parallel ACAP1
+review (PR #2251), which reached the same conclusion independently.
 
 ## 6. Interactome triage
 
