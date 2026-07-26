@@ -30,12 +30,16 @@ cellulose synthesis, and central hexose metabolism are also separate.
 - [x] Fetch the focused PSEPK genes from UniProt and GOA.
 - [x] Curate both first-pass gene reviews.
 - [x] Create and semantically validate the species-neutral two-part module.
-- [ ] Complete OpenScientist gene-level research.
-- [ ] Complete generic module OpenScientist research.
+- [x] Attempt full OpenScientist gene-level research; the corrected `treY` and
+  `treZ` requests each exhausted the 7,200-second provider timeout without a
+  report.
+- [x] Attempt generic module OpenScientist research; the corrected request
+  exhausted the 7,200-second provider timeout without a report.
 - [x] Complete module + `ppu00500` + PSEPK OpenScientist research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open and shepherd one PR for this module.
+- [ ] Open one non-draft PR for this module.
+- [ ] Shepherd the PR through review and CI.
 
 ## Focused Genes
 
@@ -52,3 +56,12 @@ inferred rather than directly assayed, so OpenScientist research is being used
 to look for KT2440 genetics or biochemistry. The broad candidate inventory is
 retained in
 [`ppu00500_trey_trez_trehalose_biosynthesis.tsv`](ppu00500_trey_trez_trehalose_biosynthesis.tsv).
+
+The completed species-aware report judged both reactions present and the
+two-step module satisfiable, while correctly retaining weaker evidence for
+TreY than TreZ. Its statement that Q88FN6 has no EC number conflicts with the
+fetched target record, which contains EMBL-derived EC 5.4.99.15; the exact
+record is used for that field, while the absence of target-strain biochemical
+evidence remains explicit. The two gene requests and the generic module
+request each exhausted the full configured 7,200 seconds with three
+iterations.
