@@ -36,9 +36,62 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.tools.audit_fulltext_flags import (
+    cached_full_text_availability,
+    find_stale_flags,
+    remove_stale_flags,
+)
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+
+
+@app.command()
+def audit_fulltext_flags(
+    repo_root: Path = typer.Option(Path("."), help="Repository root."),
+    fix: bool = typer.Option(False, "--fix", help="Remove the stale flags, not just report."),
+) -> None:
+    """Report references flagged full_text_unavailable whose cached publication has full text.
+
+    No validator checks that pair, and the flag discourages extracting the evidence an
+    annotation needs, so the defect is silent. A stale flag on a reference with zero findings
+    is the signature: the flag suppressed the extraction. Exits non-zero if any remain.
+    """
+    publications = repo_root / "publications"
+    if not publications.is_dir():
+        raise typer.BadParameter(f"no publications directory under {repo_root}")
+    availability = cached_full_text_availability(publications)
+    review_paths = sorted((repo_root / "genes").glob("*/*/*-ai-review.yaml"))
+    stale = find_stale_flags(review_paths, availability)
+    typer.echo(
+        f"scanned {len(review_paths)} reviews against {len(availability)} cached publications"
+    )
+    if not stale:
+        typer.echo("no stale full_text_unavailable flags")
+        return
+    by_review: dict[Path, list] = {}
+    for flag in stale:
+        by_review.setdefault(flag.review_path, []).append(flag)
+    suppressed = sum(1 for f in stale if f.suppressed_evidence)
+    typer.echo(
+        f"{len(stale)} stale flag(s) in {len(by_review)} review(s); "
+        f"{suppressed} sit on a reference with zero findings"
+    )
+    for review_path, flags in sorted(by_review.items()):
+        pmids = ", ".join(
+            f.pmid + (" (0 findings)" if f.suppressed_evidence else "") for f in flags
+        )
+        typer.echo(f"  {len(flags):3d}  {review_path}: {pmids}")
+    if not fix:
+        raise typer.Exit(code=1)
+    total = sum(
+        remove_stale_flags(rp, {f.pmid for f in fl}) for rp, fl in sorted(by_review.items())
+    )
+    typer.echo(f"removed {total} flag(s)")
+    if find_stale_flags(sorted(by_review), availability):
+        typer.echo("ERROR: stale flags survived the fix")
+        raise typer.Exit(code=1)
+    typer.echo("verified: no stale flags remain in the edited reviews")
 
 
 @app.command()
