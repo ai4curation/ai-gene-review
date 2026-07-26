@@ -610,18 +610,24 @@ def resolve_token(token: str) -> dict:
             break
     if not out["hits"]:
         out["note"] = "unresolved by both xref and free-text search; deferred, not dismissed"
+    # Both notes can apply at once - one live Swiss-Prot hit plus one merged hit is both ambiguous
+    # AND partly dead - so they are composed rather than made mutually exclusive by an elif.
+    notes: list[str] = []
     inactive = [h for h in out["hits"] if h["reviewed"] == "INACTIVE"]
+    if len(out["hits"]) > 1:
+        reviewed = [h for h in out["hits"] if h["reviewed"] == "Swiss-Prot"]
+        unreviewed = [h for h in out["hits"] if h["reviewed"] == "TrEMBL"]
+        notes.append(
+            f"{len(out['hits'])} candidate entries; {len(reviewed)} reviewed (Swiss-Prot), "
+            f"{len(unreviewed)} unreviewed"
+        )
     if inactive:
-        out["note"] = (
+        notes.append(
             f"{len(inactive)} of {len(out['hits'])} candidate entries are INACTIVE (merged or "
             "deleted) and carry no name, gene or organism; they are not evidence of anything"
         )
-    elif len(out["hits"]) > 1:
-        reviewed = [h for h in out["hits"] if h["reviewed"] == "Swiss-Prot"]
-        out["note"] = (
-            f"{len(out['hits'])} candidate entries; {len(reviewed)} reviewed (Swiss-Prot), "
-            f"{len(out['hits']) - len(reviewed)} unreviewed"
-        )
+    if notes:
+        out["note"] = "; ".join(notes)
     return out
 
 
@@ -683,7 +689,16 @@ def audit_iba_rows(rows: list[dict]) -> dict:
                     ),
                     "per_candidate": per_candidate,
                 }
-        protein_sources = [r for r in resolved if r["hits"]]
+        # A token whose ONLY hit is an inactive (merged or deleted) entry has not resolved to a
+        # protein, however much it looks like it has: the entry carries no name, gene, organism or
+        # annotation. Counting it under n_resolved_to_protein would report "resolved" for a dead
+        # accession - the same half-applied-fix shape as labelling it Swiss-Prot, which is why the
+        # label guard alone was not enough.
+        def is_live(rec: dict) -> bool:
+            return any(h["reviewed"] != "INACTIVE" for h in rec["hits"])
+
+        protein_sources = [r for r in resolved if r["hits"] and is_live(r)]
+        inactive_only = [r for r in resolved if r["hits"] and not is_live(r)]
         with_exp = [
             r for r in protein_sources
             if (r.get("own_evidence") or {}).get("has_experimental")
@@ -698,6 +713,7 @@ def audit_iba_rows(rows: list[dict]) -> dict:
             "n_panther_nodes": sum(1 for t in tokens if t.startswith("PANTHER:")),
             "n_resolved_to_protein": len(protein_sources),
             "n_unresolved": sum(1 for r in resolved if not r["hits"] and r["strategy"] != "none"),
+            "n_inactive_only": len(inactive_only),
             "n_sources_with_own_experimental_evidence": len(with_exp),
             "n_independent_swissprot_sources": sum(
                 1 for r in protein_sources
@@ -1647,10 +1663,15 @@ def render(r: dict) -> str:
         for species in ("human", "mouse"):
             v = rec.get(species) or {}
             if "accession" not in v:
-                # Seven columns, not eight: an earlier version appended the note as a ninth field
-                # after a trailing pipe, which would have misaligned the table for any entry that
-                # failed to resolve. No current entry does, so this was latent rather than visible.
-                note = v.get("note", "unresolved")
+                # Seven cells, matching the header. The earlier version emitted
+                #   | {sym} | {species} | - | - | - | - | - | {note}
+                # which is EIGHT cells under a seven-column header, and with no closing pipe, so
+                # the row ended unterminated. No current entry fails to resolve, so this was latent
+                # rather than visible. (The first version of this comment said "a ninth field after
+                # a trailing pipe" - wrong on both counts, and the same arithmetic slip the fix is
+                # about, which is why the offending row is now written out literally above.)
+                # Escaped, because a note is free text and one stray pipe would misalign the row.
+                note = str(v.get("note", "unresolved")).replace("|", "\\|")
                 a(f"| {sym} | {species} | - | - | - | - | {note} |")
                 continue
             a(f"| {sym} | {species} | {v['accession']} ({v['entry_name']}) | "
