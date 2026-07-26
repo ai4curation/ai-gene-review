@@ -305,6 +305,49 @@ here and as the pro-ferroptotic enzyme upregulated in ACTRT2-deficient testis in
 That is a single spoke-expanded AP-MS association at MI 0.35 in one experiment, so it is a
 hypothesis to test, not evidence.
 
+### Reference scope: does each supporting reference observe this protein, or project onto it?
+
+Querying QuickGO by **reference** rather than by gene. A reference that annotates many entities
+to the same term with identical evidence is one projection, not N independent findings.
+
+| reference | total GOA annotations | entities | distinct terms | assigned by |
+|---|---|---|---|---|
+| PMID:12243744 (calyx, founding) | **0** | 0 | — | — |
+| PMID:11750065 (cloning) | **0** | 0 | — | — |
+| PMID:35616329 (theca ARP complex) | **0** | 0 | — | — |
+| PMID:41668650 (Actrt3 KO) | **0** | 0 | — | — |
+| PMID:40811009 (Actrt2 KO) | **0** | 0 | — | — |
+| PMID:25293813 (human sperm IF) | **0** | 0 | — | — |
+| PMID:33961781 (BioPlex 3.0) | **9,514** | thousands | `GO:0005515` only | IntAct only |
+| PMID:35793634 (calicin) | 35 | 19 | `GO:0005515`, `GO:0007286`, `GO:0033011` | UniProt |
+
+Two conclusions, opposite in direction.
+
+**BioPlex.** 9,514 annotations, every one `GO:0005515`, every one from IntAct — checked on pages 1,
+20 and 40, so the uniformity is not a first-page artefact. That is the strongest possible statement
+that the *term* carries no gene-specific information, and it is part of why the row moved to
+`MARK_AS_OVER_ANNOTATED`. It is **not** the ACTR8 projection failure, though: ACTRT2 was
+individually assayed in that experiment, so this is a real if uninformative observation, not a
+complex-level annotation copied onto subunits that were never perturbed.
+
+**Calicin — and this one had to be tested, not assumed.** The mouse `GO:0033011` IDA that *both*
+of ACTRT2's theca rows descend from comes from a paper that gave that same term to 12 entities. If
+the curator had projected "these are theca proteins" onto every protein named, that IDA would be
+one observation counted twelve times, and the ortholog transfer would be correspondingly weaker.
+The discriminating test is whether the term went to a **subset**:
+
+- given `GO:0033011` (12): Actl9, Actrt1, Actrt2, Actrt3, Capza3, Capzb, Ccin, Cylc1, Fabp9, Gsto2,
+  H2bl1, Wbp2nl
+- touched by the paper but **not** given it (7): Actl7a, Dpy19l2, Fam209, Lbr, Parp11, Spaca1,
+  Spata46
+
+So the curator discriminated per protein rather than projecting — `is_subset_not_blanket = True`.
+The IDA stands. Note also the curation pattern: localisation went to 12 proteins, but the only
+biological-process term (`GO:0007286`, IMP) went to **Ccin alone**, the gene actually knocked out.
+That is correct practice, and it explains ACTRT2's process gap precisely — the gap is not an
+oversight in this paper's curation, it is that no *Actrt2* perturbation has been curated at all
+(PMID:40811009 exists and has zero annotations).
+
 ### The annotation gap, measured
 
 For each reported PT-complex member and its mouse ortholog, all GO annotations were pulled from
@@ -352,32 +395,89 @@ among the genes that need it. That proposal is supported here rather than duplic
 | # | term | ev | action | basis |
 |---|---|---|---|---|
 | 1 | GO:0015629 actin cytoskeleton | IBA | KEEP_AS_NON_CORE | Byte-identical row to ACTL8's, same deep LCA node; matches that merged verdict. Kept because nothing contradicts the compartment; non-core because the evidenced compartment is the PT, and `GO:0033011` is verified **not** to be a `GO:0015629` descendant, so this row is an independent unevidenced claim rather than a redundant ancestor. |
-| 2 | GO:0005200 structural constituent of cytoskeleton | IBA | ACCEPT | Byte-identical row to ACTR10's, which was ACCEPTed as core on exactly this reasoning. The GO definition asks for contribution to the structural integrity of a cytoskeletal structure, not for polymerisation; ACTRT2 is a *major* component of the purified calyx, and `GO:0033011` is a `GO:0005856` descendant. The fold route does not transfer and the review says so. |
+| 2 | GO:0005200 structural constituent of cytoskeleton | IBA | MODIFY -> `GO:0005198` | **Reversed after the merged ACTRT3 review**, which holds the byte-identical row and modified it. See the reversal section below. |
 | 3 | GO:0005856 cytoskeleton | IEA | KEEP_AS_NON_CORE | Strict ancestor of `GO:0033011` (verified in the QuickGO ancestor list), which is on the gene; true but redundant. Matches ACTL7A, whose situation is identical. |
-| 4 | GO:0007010 cytoskeleton organization | IEA | KEEP_AS_NON_CORE | Inter-ontology inference whose sole input is row 2. Defensible in the weak sense that ACTRT2 is a constituent of a cytoskeletal structure whose assembly is developmentally regulated; no observation of ACTRT2 organising anything. Matches ACTR10's verdict on the identical inference row. |
-| 5 | GO:0005515 protein binding | IPI | KEEP_AS_NON_CORE | Real partner (CCT co-chaperone PDCL3), but chaperonin-client status is not a molecular function and no informative term exists. Matches ACTR1B's handling of the same publication. |
+| 4 | GO:0007010 cytoskeleton organization | IEA | KEEP_AS_NON_CORE | Inter-ontology inference whose sole input is row 2, so its machine provenance **lapses** once row 2 is generalised (no such link runs from `GO:0005198`). Survives on the compartment's own classification: ACTRT2 is a bulk theca component and GO places the theca under `GO:0005856`. Same action as ACTR10 and ACTRT3; propagation classification follows ACTRT3's. |
+| 5 | GO:0005515 protein binding | IPI | MARK_AS_OVER_ANNOTATED | **Reversed after the merged ACTRT3 review**, which holds this byte-identical row (same publication, same partner). Real partner, but PDCL3 is the CCT co-chaperone and the row explains itself away as a folding-pathway artefact of an over-expressed actin fold. Follows ACTL8/ACTR10/ACTRT3, not ACTR1B. |
 | 6 | GO:0033011 perinuclear theca | IEA | ACCEPT | Core location. Donor mouse Actrt2 holds the **same** term by IDA, so no downward MODIFY is warranted — the ACRV1-style check run and reported negative. |
 | 7 | GO:0033011 perinuclear theca | ISS | ACCEPT | Same, by the curated route. |
 | 8 | GO:0033150 cytoskeletal calyx | ISS | **NEW** | The structure the founding paper purified ACTRT2 from; term exists and is unused outside the three basic proteins. ISS because the fractionation was bovine and the paper does not state the immunofluorescence species. |
 | 9 | GO:0007283 spermatogenesis | ISS | **NEW** | `Actrt2-/-` mice have significantly shrunken seminiferous tubules and reduced spermatogenesis. Restores the only BP claim ACTRT2 has any experimental basis for. |
 
-### The counterweight to accepting GO:0005200, recorded rather than suppressed
+### Reversal: GO:0005200 ACCEPT -> MODIFY, after the merged ACTRT3 review
 
-Two independent sources prefer the *parent* term for this gene's structural claim. PAINT chose
-`GO:0005198` for the ACTL7A/ACTL7B clade, and the affinage record's own GO grounding also lands
-there: `[file:human/ACTRT2/ACTRT2-deep-research-affinage.md "**molecular_activity:** GO:0005198
-structural molecule activity, GO:0008092 cytoskeletal protein binding"]`. (The second half of that
-line is a fold-to-activity leap — no actin-binding or cytoskeletal-protein-binding measurement
-exists for ACTRT2 — and is not adopted; the ACTL7B review flagged the identical proposal for its
-gene.)
+An earlier round of this review **ACCEPTed** `GO:0005200`. That is withdrawn. ACTRT3's review
+merged while this one was in flight, it holds the **byte-identical** row (11/11 tokens, node
+`PTN000940351` — verified mechanically, not by eye), and it modified the row to `GO:0005198`. It
+also pre-empted the exact argument I had used, and its refutation is a **checkable fact**, which I
+checked before conceding:
 
-`GO:0005200` is kept over `GO:0005198` for one reason that is specific to ACTRT2 rather than
-general to the clade: the calyx fractionation gives it direct evidence of **bulk constituency** of
-a structure GO classifies as cytoskeletal, which ACTL7A does not have — ACTL7A's case rests on
-residence plus a knockout phenotype, and its own review explicitly withdrew the
-residence-implies-constituency argument. The merged ACTR10 verdict on this byte-identical row turns
-on exactly that distinction. If the calyx-abundance evidence were removed, `GO:0005198` would be
-the right call here too.
+> the merged ACTR10 review's ACCEPT of this same row … ACTR10 has an ortholog-strength donor in
+> the seed set and ACTRT3 has none.
+
+Resolving all ten seed donors confirms it: mouse Actg1, rat Actg1, human ACTB, yeast ACT1, yeast
+ARP1, yeast ARP10, human ARP2, human ARP3 and two *Dictyostelium* actins — **no ARP-T of any
+kind**. ACTR10's ACCEPT rests on yeast ARP10 being *its own ortholog* in that set. ACTRT2 has no
+such donor, so the precedent I leaned on does not transfer, and my invocation of it was wrong on a
+fact rather than on a judgement.
+
+Three further reasons the reversal is right, not merely conceded:
+
+1. The interface measurements do not distinguish the two genes — ACTRT2 20/38 chemically
+   compatible protomer contacts, ACTRT3 18/38, both far below the 28/38 floor set by a dynactin
+   Arp1 paralogue that *does* build a filament. Whatever verdict fits one fits the other.
+2. Two more independent sources prefer the parent: PAINT substituted `GO:0005198` at the adjacent
+   node `PTN008986528` on the same day it rejected the child, and the affinage record's own GO
+   grounding also lands on `GO:0005198`
+   `[file:human/ACTRT2/ACTRT2-deep-research-affinage.md "**molecular_activity:** GO:0005198
+   structural molecule activity, GO:0008092 cytoskeletal protein binding"]`. (The second half of
+   that line is a fold-to-activity leap and is not adopted; the ACTL7B review flagged the identical
+   proposal for its gene.)
+3. Nothing real is lost. `GO:0005198` plus `GO:0033011` — a `GO:0005856` descendant — already
+   convey "structural molecule in a cytoskeletal structure". The only thing the child adds is the
+   filament reading, which is the false part.
+
+**The evidence behind the withdrawn argument is not withdrawn.** ACTRT2 *is* one of Heid's two
+major acidic components of the purified calyx, and that is bulk structural constituency of a
+structure GO classifies as cytoskeletal — evidence neither ACTRT3 (not one of the two) nor ACTL7A
+(residence only, and its review withdrew the residence argument) possesses. ACTRT3's review filed
+"can the theca proteins re-earn `GO:0005200` on evidence of their own?" as an open question; this
+review's contribution is the strongest instance of exactly that evidence, and it is carried into
+`suggested_questions` rather than used to publish a filament inference the structure audit excludes.
+
+### GO:0005515 also reversed, and strengthened in the process
+
+`KEEP_AS_NON_CORE` -> `MARK_AS_OVER_ANNOTATED`, again aligning with ACTRT3's byte-identical row
+(same publication, same partner `Q9H2J4`). ACTRT3's argument is that the partner explains the
+observation away: PDCL3/PhLP2A is a CCT/TRiC co-chaperone that modulates cytoskeletal actin
+folding, actin is an obligate CCT client, and BioPlex was run in HEK293T and HCT116 while these
+proteins are testis-restricted.
+
+My evidence **strengthens** that argument rather than opposing it, and this is the one place the
+two genes' data differ materially on a shared row: ACTRT3 had to *infer* the chaperonin from
+PDCL3's identity, having only two IntAct records. ACTRT2 has **ten**, and the other nine are
+TCP1, CCT2, CCT3, CCT6A, CCT6B, CCT7, plus SLC25A19 and ACSL4 — so for ACTRT2 the holo-chaperonin
+is **directly observed** and the inference is confirmed. Querying by reference rather than by gene
+adds the scale: `PMID:33961781` is the source of **9,514** GOA annotations, every one `GO:0005515`,
+every one assigned by IntAct.
+
+So the correct reading is ACTRT3's: the row shows the ACTRT2 polypeptide is recognised as a
+foldable actin-fold client, which is mildly informative about the fold and says nothing about the
+gene's function. ACTR1B kept its row from this same publication because its partner set was
+*assembled dynactin*, its own complex; here the partner set is the folding machinery.
+
+### Retraction and correction checks
+
+Two separate checks, because they catch different things.
+
+- **Retractions/errata by publication type**: all ten cited PMIDs checked via PubMed esummary
+  `pubtype`. All clean.
+- **Publisher Corrections are invisible to a pubtype query** and must be read off the *cited*
+  article's own `CommentsCorrections`/`RefType` field. All ten checked; none has any
+  `CommentsCorrections` entry at all. That negative was only trustworthy after validating the
+  parser on a known positive: `PMID:40205054` correctly returns `ErratumIn -> PMID:41039152`
+  (the Publisher Correction found in the ACTR8 follow-up), so the parser does detect the class
+  and the ten negatives are genuine.
 
 ## Process notes
 
@@ -388,6 +488,16 @@ the right call here too.
 - The affinage record **missed PMID:35793634**, the calicin paper that is the actual source of
   mouse Actrt2's `GO:0033011` IDA and of its only curated protein interaction. It was found by
   querying the ortholog's own GOA record, not from the provider narrative.
+- **Two verdicts were reversed after ACTRT3's review merged mid-flight** (`GO:0005200`
+  ACCEPT -> MODIFY, `GO:0005515` KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED). Both premises were
+  verified before conceding — the seed set genuinely contains no ARP-T, and the rows are genuinely
+  byte-identical — rather than deferred to on authority. The reversal of `GO:0005200` then
+  invalidated a claim in a *different* row: `GO:0007010`'s reason had said "the molecular function
+  it derives from stands", which stopped being true. Found by re-grepping every field for the
+  claim being corrected, which is the only reason it was caught.
+- `source_entities` statuses were **regenerated wholesale** from `source_entities.py` rather than
+  patched token by token, so the status change could not land on some tokens and miss others; the
+  generator's own docstring described the superseded rule and was corrected in the same pass.
 - Guards in `analyze_actrt2.py` were tested by breaking them. A deliberately wrong named-site
   residue raises; a missing input names its fix command. The dead-accession guard **failed** its
   first break test — `O15507` (MERGED into P56159) returns a row whose `primaryAccession` matches

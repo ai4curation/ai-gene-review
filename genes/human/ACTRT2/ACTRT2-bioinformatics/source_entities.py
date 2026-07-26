@@ -18,10 +18,14 @@ The invariant relating what is found to what is checked is stated explicitly and
 are asserted, so a future edit that drops or adds a token fails here rather than shipping.
 
 Source status assignment is a judgement, but a *rule*, applied uniformly rather than per row:
-a donor SUPPORTS_TRANSFER only if the route by which it holds the term also exists in ACTRT2.
-For GO:0005200 that means the non-polymerising structural-subunit route (yeast ARP1 and ARP10 in
-dynactin), not the filament-formation route (the conventional actins, Arp2 and Arp3), because the
-protomer-interface measurement in RESULTS.md shows the latter is not available to ACTRT2.
+a donor SUPPORTS_TRANSFER only if it gives ACTRT2 an ortholog-strength inference for the term it
+donated. For GO:0005200 no donor does: resolving all ten seeds gives conventional actins, the
+Arp2/3 nucleator pair and the two yeast dynactin ARPs, with no ARP-T of any kind, so every source
+on that row is SUPPORTS_SOURCE_BUT_NOT_TARGET and the row is generalised to the parent. (An earlier
+version of this rule granted SUPPORTS_TRANSFER to the two dynactin ARPs on the ground that their
+non-polymerising structural route resembles ACTRT2's; that was withdrawn - see the comment on
+TRANSFERABLE_ROUTE.) For GO:0015629 the node itself supports the transfer, because the term is the
+genuine LCA of its heterogeneous donor set.
 """
 
 from __future__ import annotations
@@ -39,21 +43,33 @@ GOA_TSV = GENE_DIR / "ACTRT2-goa.tsv"
 REVIEW = GENE_DIR / "ACTRT2-ai-review.yaml"
 RESULTS = HERE / "results.json"
 
-# Donors whose route to GO:0005200 is the one ACTRT2 also has: a non-polymerising actin-related
-# protein acting as a structural subunit of an actin-like assembly.
-TRANSFERABLE_ROUTE = {
+# No donor of GO:0005200 supports the term for ACTRT2, so this mapping is empty by design.
+#
+# An earlier version of this file marked the two yeast dynactin ARPs as SUPPORTS_TRANSFER, on the
+# ground that their route to the term (a non-polymerising structural subunit of an actin-like
+# assembly) is the route ACTRT2 also has. That was withdrawn after the merged ACTRT3 review, which
+# holds the byte-identical row, made the decisive point: the merged ACTR10 ACCEPT of this row rests
+# on yeast ARP10 being ACTR10's OWN ORTHOLOG inside the seed set. Resolving all ten seeds confirms
+# there is no ARP-T donor of any kind, so ACTRT2 has no ortholog-strength donor and an analogous
+# route in a different family is not the same thing as one.
+TRANSFERABLE_ROUTE: dict[str, str] = {}
+
+# Kept as commentary because the distinction is real even though it no longer changes any status.
+ANALOGOUS_BUT_NOT_ORTHOLOGOUS = {
     "SGD:S000001171": "S. cerevisiae ARP1/centractin (P38696, Swiss-Prot; IDA). Builds the "
-    "dynactin minifilament as a non-canonical actin-like assembly rather than F-actin, which is "
-    "the analogous route by which ACTRT2 is a structural constituent of the perinuclear theca.",
+    "dynactin minifilament rather than F-actin, so its route to the term does not require "
+    "polymerisation - the closest analogue in the seed set, but a dynactin ARP, not an ARP-T.",
     "SGD:S000002513": "S. cerevisiae ARP10 (Q04549, Swiss-Prot; IPI x3). The true ARP11 ortholog, "
-    "which caps rather than extends the dynactin filament, so its structural role does not "
-    "require polymerisation either.",
+    "which caps rather than extends the dynactin filament. It is the donor that earns ACTR10 its "
+    "ACCEPT of this same row, and it is an ortholog of ACTR10, not of ACTRT2.",
 }
 
 NODE_COMMENTS = {
     "PTN000940351": "PANTHER internal tree node, not a protein. The single node from which "
     "GO:0005200 propagates anywhere in PTHR11937; the same term is explicitly negated as an IRD "
-    "at eight other nodes of the family, and this clade has not yet been given a decision.",
+    "at eight other nodes of the family, and this clade has not yet been given a decision. At the "
+    "nearest adjudicated neighbour, PTN008986528, PAINT substituted the parent GO:0005198 on the "
+    "same day, which is the level this review adopts.",
     "PTN002631484": "PANTHER internal tree node, not a protein. A deep node donating GO:0015629 "
     "to 18 human genes spanning 33.7 to 100 per cent identity to beta-actin, so the generic term "
     "it carries is the true LCA of a heterogeneous donor set.",
@@ -126,7 +142,10 @@ def build(go_id: str, tokens: list[str], res: dict) -> list[dict]:
                 {
                     "source_id": tok,
                     "source_label": f"PANTHER ancestral node {node}",
-                    "source_status": "SUPPORTS_TRANSFER",
+                    # For GO:0005200 the node supports the general parent for this clade, not the
+                    # specific child, so it does not support the transfer as published.
+                    "source_status": "SUPPORTS_SOURCE_BUT_NOT_TARGET"
+                    if go_id == "GO:0005200" else "SUPPORTS_TRANSFER",
                     "comment": NODE_COMMENTS[node],
                 }
             )
@@ -142,11 +161,11 @@ def build(go_id: str, tokens: list[str], res: dict) -> list[dict]:
         else:
             entry["source_status"] = "SUPPORTS_SOURCE_BUT_NOT_TARGET"
             if go_id == "GO:0005200":
-                entry["comment"] = (
+                entry["comment"] = ANALOGOUS_BUT_NOT_ORTHOLOGOUS.get(tok) or (
                     "Carries its own experimental evidence for the term, earned through filament "
                     "formation or nucleation; the protomer-interface measurement shows that route "
-                    "is not available to ACTRT2, which earns the term instead as a bulk "
-                    "constituent of the perinuclear theca."
+                    "is not available to ACTRT2, and no ARP-T donor is present in the seed set to "
+                    "supply an ortholog-strength inference instead."
                 )
             else:
                 entry["comment"] = (

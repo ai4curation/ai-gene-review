@@ -344,6 +344,30 @@ What that partner interacts with across all of IntAct: **91 partners** in 156 re
 | CCIN | human | Q13939 (CALI_HUMAN) | yes | IDA/GO_REF:0000052, IEA/GO_REF:0000107 | GO:0007283 | 5 |
 | CCIN | mouse | Q8CDE2 (CALI_MOUSE) | yes | IDA/PMID:35793634, IDA/PMID:41169243, IEA/GO_REF:0000120, ISO/GO_REF:0000119 | GO:0007283, GO:0007286 | 5 |
 
+### 7b. How many entities does each supporting reference annotate?
+
+Querying QuickGO by reference rather than by gene distinguishes an observation of this
+protein from a projection onto it.
+
+| reference | total annotations in GOA | entities sampled | distinct terms | assigned by |
+|---|---|---|---|---|
+| PMID:12243744 | 0 | 0 | - | - |
+| PMID:11750065 | 0 | 0 | - | - |
+| PMID:35616329 | 0 | 0 | - | - |
+| PMID:41668650 | 0 | 0 | - | - |
+| PMID:40811009 | 0 | 0 | - | - |
+| PMID:25293813 | 0 | 0 | - | - |
+| PMID:33961781 | 9514 | 330 | GO:0005515 | IntAct |
+| PMID:35793634 | 35 | 19 | GO:0005515, GO:0007286, GO:0033011 | UniProt |
+
+Subset test on PMID:35793634 / GO:0033011: **12** of 19 entities the reference touches received the term (`is_subset_not_blanket` = **True**).
+
+- with the term: Actl9, Actrt1, Actrt2, Actrt3, Capza3, Capzb, Ccin, Cylc1, Fabp9, Gsto2, H2bl1, Wbp2nl
+- touched but NOT given the term: Actl7a, Dpy19l2, Fam209, Lbr, Parp11, Spaca1, Spata46
+
+A curator who assigned the term to a strict subset of the proteins named in the paper
+was discriminating per protein, not projecting one localisation onto every partner.
+
 ## 8. What the measurements do and do not support
 
 **The pocket is intact.** Of the 10 literature-named nucleotide-binding positions (D11, S14, G15, K18, Q137, D154, G156, D157, V159, R183), ACTRT2 matches actin at **10 identically**, 0 conservatively, 0 non-conservatively. So Harata et al. 2001's sequence-inspection claim that actin's ATP-binding motif is highly conserved in this protein is confirmed from structure-derived contacts. A retained pocket means a nucleotide-binding claim is **untested, not refuted** - it is not itself evidence that ACTRT2 binds a nucleotide.

@@ -192,6 +192,19 @@ XREF_DB = {
 # wrong accession cannot pass silently.
 PT_COMPLEX_SYMBOLS = ["ACTRT1", "ACTRT2", "ACTRT3", "ACTL7A", "ACTL9", "CCIN"]
 
+# Every PMID this review leans on. Checked for (a) how many entities the reference annotates
+# repo-wide and (b) whether its cellular-component term went to a subset or to everything.
+REFERENCE_PMIDS = [
+    "12243744",  # Heid 2002, the calyx founding paper
+    "11750065",  # Harata 2001, the cloning paper
+    "35616329",  # Zhang 2022, the theca ARP complex
+    "41668650",  # Kovacevic 2026, Actrt3 knockout
+    "40811009",  # Chen 2025, Actrt2 knockout / ferroptosis
+    "25293813",  # Liu 2015, human sperm localisation
+    "33961781",  # Huttlin 2021, BioPlex 3.0 - the only experimentally coded row
+    "35793634",  # Zhang 2022, calicin - donor of the mouse GO:0033011 IDA
+]
+
 # The two terms whose granularity is at issue, and the compartment terms in play.
 TERMS_OF_INTEREST = {
     "GO:0005198": "structural molecule activity",
@@ -958,6 +971,69 @@ def partner_class_census(acc: str, self_symbol: str) -> dict:
 # ------------------------------------------------- PT complex annotation census
 
 
+def reference_scope() -> dict:
+    """How many entities does each supporting reference annotate, repo-wide?
+
+    Querying QuickGO by *reference* rather than by gene is what distinguishes an
+    observation of this protein from a projection onto it. A reference that annotates many
+    entities to the same term with identical evidence is one projection, not N independent
+    findings. Two opposite outcomes are both informative, so both are computed rather than
+    assumed:
+
+      * a proteome-scale reference (BioPlex) yields thousands of identical `protein binding`
+        rows, which says the TERM is uninformative - but the target was still individually
+        assayed, so it is not a projection in the ComplexPortal sense; and
+      * a reference that gives its cellular-component term to only a SUBSET of the entities
+        it touches has been curated per protein rather than projected. That subset test is
+        the discriminator, and it is run below.
+    """
+    out = {}
+    for pmid in REFERENCE_PMIDS:
+        rows = []
+        page = 1
+        while True:
+            data = get_json(
+                "https://www.ebi.ac.uk/QuickGO/services/annotation/search",
+                {"reference": f"PMID:{pmid}", "limit": 200, "page": page},
+            )
+            results = data.get("results", [])
+            rows.extend(results)
+            total_hits = data.get("numberOfHits", 0)
+            total_pages = (data.get("pageInfo") or {}).get("total", 1)
+            # Cap the walk: a proteome-scale reference has thousands of pages and the
+            # uniformity question is answered by sampling, not by exhaustion.
+            if page >= min(total_pages, 3) or not results:
+                break
+            page += 1
+        by_entity = defaultdict(set)
+        for r in rows:
+            by_entity[r.get("symbol") or r.get("geneProductId")].add(r["goId"])
+        terms = sorted({r["goId"] for r in rows})
+        rec = {
+            "total_annotations": total_hits,
+            "n_rows_sampled": len(rows),
+            "n_entities_sampled": len(by_entity),
+            "distinct_terms_sampled": terms,
+            "assigned_by": sorted({r.get("assignedBy") for r in rows if r.get("assignedBy")}),
+            "sampled_exhaustively": len(rows) >= total_hits,
+        }
+        # The subset test: for a reference with one dominant cellular-component term, did the
+        # curator give it to every entity it touched, or only to some?
+        cc_candidates = [t for t in terms if t in ("GO:0033011", "GO:0033150")]
+        if cc_candidates and rec["sampled_exhaustively"]:
+            t = cc_candidates[0]
+            got = sorted(e for e, ts in by_entity.items() if t in ts)
+            didnt = sorted(e for e, ts in by_entity.items() if t not in ts)
+            rec["subset_test"] = {
+                "term": t,
+                "entities_with_term": got,
+                "entities_without_term": didnt,
+                "is_subset_not_blanket": bool(didnt),
+            }
+        out[f"PMID:{pmid}"] = rec
+    return out
+
+
 def resolve_symbol(symbol: str, taxon: int) -> list[dict]:
     data = get_json(
         "https://rest.uniprot.org/uniprotkb/search",
@@ -1132,6 +1208,7 @@ def main() -> None:
 
     # --- Analysis 7: PT complex annotation census -------------------------------------
     results["pt_complex"] = pt_complex_census()
+    results["reference_scope"] = reference_scope()
 
     # --- synthesis: computed, never hand-written --------------------------------------
     results["synthesis"] = synthesise(results)
@@ -1510,6 +1587,35 @@ def render(r: dict) -> str:
               f"{'yes' if v['has_GO_0033011'] else 'no'} | {', '.join(v['GO_0033011_evidence']) or '-'} | "
               f"{', '.join(v['experimental_BP_terms']) or 'none'} | {v['n_BP_annotations']} |")
     a("")
+
+    # 7b reference scope
+    a("### 7b. How many entities does each supporting reference annotate?")
+    a("")
+    a("Querying QuickGO by reference rather than by gene distinguishes an observation of this")
+    a("protein from a projection onto it.")
+    a("")
+    a("| reference | total annotations in GOA | entities sampled | distinct terms | assigned by |")
+    a("|---|---|---|---|---|")
+    for pmid, rec in r["reference_scope"].items():
+        a(f"| {pmid} | {rec['total_annotations']} | {rec['n_entities_sampled']} | "
+          f"{', '.join(rec['distinct_terms_sampled']) or '-'} | "
+          f"{', '.join(rec['assigned_by']) or '-'} |")
+    a("")
+    for pmid, rec in r["reference_scope"].items():
+        st = rec.get("subset_test")
+        if not st:
+            continue
+        a(f"Subset test on {pmid} / {st['term']}: **{len(st['entities_with_term'])}** of "
+          f"{len(st['entities_with_term']) + len(st['entities_without_term'])} entities the "
+          f"reference touches received the term "
+          f"(`is_subset_not_blanket` = **{st['is_subset_not_blanket']}**).")
+        a("")
+        a(f"- with the term: {', '.join(st['entities_with_term'])}")
+        a(f"- touched but NOT given the term: {', '.join(st['entities_without_term'])}")
+        a("")
+        a("A curator who assigned the term to a strict subset of the proteins named in the paper")
+        a("was discriminating per protein, not projecting one localisation onto every partner.")
+        a("")
 
     # 8 synthesis
     s = r["synthesis"]
