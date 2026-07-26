@@ -44,7 +44,8 @@ Verification, all of which should stay empty/green:
 ```bash
 grep -rn "secrets.PAT_FOR_PR" .github/                                      # -> empty
 grep -rL "persist-credentials: false" $(grep -rl "actions/checkout" .github/workflows/)   # -> empty
-uv run pytest tests/test_agent_config.py tests/test_apply_cron_profile.py   # model pins + cron drift
+uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
+  tests/test_apply_cron_profile.py    # model pins, manifests, checkouts, cron drift
 just test-js                                                                # trust gate
 ```
 
