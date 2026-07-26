@@ -60,7 +60,8 @@ genes each node donates to, and aligning each of those genes locally to β-actin
 
 The two narrow nodes contain ACTB, ACTG1, ACTBL2 and the five POTE actin-fusion genes — every
 one of them ≥ 90.7% identical to β-actin over its actin block, because the POTE genes arose by
-segmental duplication of a cytoplasmic actin. ACTL8 is the ninth member at **33.8%**, a
+a C-terminal actin-family domain (UniProt SIMILARITY) that is nearly identical to beta-actin.
+ACTL8 is the ninth member at **33.8%**, a
 57-percentage-point gap to the next-least-similar member of its own subfamily.
 
 So 10 of the 11 IBA rows are not family-level inferences at all: they are transfers of
@@ -183,7 +184,9 @@ family is intrinsically hard, and ACTL8 is HPA testis-enriched while Caco-2 is a
 
 ## 9. The tumour literature: real, reproducible, and about ectopic expression
 
-Five independent groups, five tumour types, consistent direction. Verbatim:
+Five studies, four tumour types (breast, gastric, oral squamous, lung adenocarcinoma), four
+independent laboratories - PMID:31962007 and PMID:35116946 share a Beijing thoracic-surgery group
+and both use A549, so they count once. Direction is consistent throughout. Verbatim:
 
 - TNBC: `[PMID:33883901 "silencing ACTL8 dramatically inhibited the proliferation in MDA-MB-231 and BT-549 cells relative Control and si-NC groups"]`;
   `[PMID:33883901 "the numbers of invasive and migrated cells were markedly repressed after ACTL8 silencing"]`;
@@ -229,7 +232,7 @@ paper shows ACTL8 binding any PI3K/AKT/mTOR component, and "acts upstream of" in
 | GO:0005856 cytoskeleton (IEA) | MARK_AS_OVER_ANNOTATED | Traces to a UniProt `ECO:0000250` line with no cited source entry |
 | GO:0005515 protein binding ×2 (IPI) | MARK_AS_OVER_ANNOTATED | One Y2H pair, one pipeline, no orthogonal validation |
 | GO:0030855 epithelial cell differentiation (IEP) | MARK_AS_OVER_ANNOTATED | Differential abundance in a 2-D gel screen is expression, not involvement |
-| GO:0008284 positive regulation of cell population proliferation | NEW | Replicated across five tumour types and five groups, including xenografts; non-core (ectopic context) |
+| GO:0008284 positive regulation of cell population proliferation | NEW | Five studies, four tumour types, four independent labs, including a xenograft; non-core (ectopic context) |
 
 The affinage record is cited in `references:` as an explicitly-labelled **lead** source
 (`reference_review.correctness: LOW_QUALITY`), with the reason stated: it passed its own gates but
