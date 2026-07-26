@@ -43,7 +43,8 @@ Verification, all of which should stay empty/green:
 
 ```bash
 grep -rn "secrets.PAT_FOR_PR" .github/                                      # -> empty
-grep -rL "persist-credentials: false" $(grep -rl "actions/checkout" .github/workflows/)   # -> empty
+# (per-CHECKOUT, and covering composite actions — a per-file grep misses both)
+uv run pytest tests/test_agent_config.py -k non_persisting
 uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
   tests/test_apply_cron_profile.py    # model pins, manifests, checkouts, cron drift
 just test-js                                                                # trust gate
@@ -139,12 +140,14 @@ Both matched `@dragon-ai-agent please`, so every qualifying event ran the agent
 **twice** — visible as paired runs with identical timestamps. They are now one
 workflow keyed on `@ai4c-agent please`, with the old keyword as an alias.
 
-**The credential was already dead, and nobody knew.** `pr-shepherd` failed 24
-runs in a row before this migration — every one at `Checkout repository`, the
-step that used `token: ${{ secrets.PAT_FOR_PR }}`. The first run on the App token
-passed every step. The same applies to every other workflow that held the PAT.
+**The credential was already dead, and nobody knew.** `pr-shepherd` failed
+**121 scheduled runs in a row over 9 days** (2026-07-16 to 2026-07-26) before
+this migration — every one at `Checkout repository`, the step that used
+`token: ${{ secrets.PAT_FOR_PR }}`. The first run on the App token passed every
+step. The same applied to every other workflow holding the PAT. Nothing alerted,
+because a scheduled workflow's failures land in the Actions tab and nowhere else.
 If an agentic workflow has quietly stopped producing output, check whether it is
-failing at checkout before looking at the agent.
+failing at checkout before you look at the agent.
 
 **Two workflows could not have worked.** `arba-issue-monitor` was still calling
 `claude-code-action` with the v0 inputs `mode:`, `direct_prompt:` and
@@ -222,11 +225,12 @@ routine event in the repo into a red X.
   bump on the org installation).
 - **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
   account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
-  nothing, but the entry should be removed. The recipes that re-added it — and
-  that re-installed `PAT_FOR_PR` — are gone as of the cleanup PR; before that, a
-  single `just gh-add-secrets` would have reinstalled the exposed credential and
-  undone this migration. Worth remembering that a revoked token is not a revoked
-  account, and neither is a deleted account a removed collaborator.
+  nothing, but the entry should be removed — that is a settings click, not a
+  code change. The recipes that re-added it, and that re-installed `PAT_FOR_PR`,
+  were removed in the cleanup PR; before that, a single `just gh-add-secrets`
+  would have reinstalled the exposed credential and undone this migration.
+  Worth remembering that a revoked token is not a revoked account, and a deleted
+  account is not a removed collaborator.
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it. It
   should be deleted. Note it is already non-functional — a checkout using it
   fails outright, which is how `pr-shepherd` came to fail 24 runs in a row — so
@@ -240,12 +244,13 @@ routine event in the repo into a red X.
   restriction. `litscan-module-member`, `claude-code-review` and `claude` all
   enumerate `--allowedTools` instead, so the precedent for tightening the other
   five is already in the repo.
-- **`.github/actions/claude-code-action` is an unmanaged agent path.** It is an
-  older composite — `npm install -g` plus a CBORG endpoint — sitting behind
-  `claude-issue-summarize` and `claude-issue-triage`. None of the guards here
-  can see it: it does not call `anthropics/claude-code-action`, so the pinned-SHA,
-  input-vocabulary and central-model tests all skip it, and it is not in
-  `agent-config.yaml`. Migrating it is its own change.
+- **`.github/actions/claude-code-action` is a partly-unmanaged agent path.** It
+  is an older composite — `npm install -g` plus a CBORG endpoint — sitting behind
+  `claude-issue-summarize` and `claude-issue-triage`. The manifest and checkout
+  tests do reach it, but the pinned-SHA, input-vocabulary and central-model
+  guards do not: it never calls `anthropics/claude-code-action`, and it is not in
+  `agent-config.yaml`, so its model and its agent version are uncontrolled.
+  Migrating it is its own change.
 - **`weekly-compliance` has no post-run assertion that it opened a PR.** The
   missing token that made it a no-op is fixed and its output is captured, but
   "the agent ran cleanly and produced nothing" is still indistinguishable from
