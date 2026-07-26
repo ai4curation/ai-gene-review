@@ -220,7 +220,7 @@ paper shows ACTL8 binding any PI3K/AKT/mTOR component, and "acts upstream of" in
 | Row | Action | One-line reason |
 |---|---|---|
 | GO:0015629 actin cytoskeleton (IBA) | KEEP_AS_NON_CORE | Only row from the deep node whose clade spans the divergent actin-like proteins; correctly scoped ancestral call |
-| GO:0005737 cytoplasm (IBA) | ACCEPT | Independently corroborated by IHC in human tumour tissue |
+| GO:0005737 cytoplasm (IBA) | KEEP_AS_NON_CORE | Independently corroborated by IHC in human tumour tissue, but generic; nothing on this gene can be core |
 | GO:0005884 actin filament (IBA) | MARK_AS_OVER_ANNOTATED | Interface degraded, but heteropolymer incorporation cannot be excluded |
 | GO:0098973 structural constituent of postsynaptic actin cytoskeleton (IBA) | REMOVE | β-actin-specific MF from a node of 91–100%-identical actins; the exact property (filament structural contribution) is the one ACTL8 has lost |
 | GO:0098974 postsynaptic actin cytoskeleton organization (IEA) | REMOVE | Automatic BP step from the row above; falls with it |
@@ -252,6 +252,10 @@ sourced from affinage prose.
 `core_functions` is left **empty**. There is no experimentally supported molecular function, and
 the honest output for an MF-dark gene is an empty list plus the resulting validation warning — not
 invented content to silence it.
+
+That choice constrains the actions: `ACCEPT` means "retain as representing the core function", so
+with no core function established, no row can take it. `GO:0005737 cytoplasm` was initially marked
+ACCEPT and is now `KEEP_AS_NON_CORE`, which is what its own reason had said all along.
 
 ## 11. Process log
 
