@@ -1,6 +1,6 @@
 # ABR (human, Q12979) — review notes
 
-PAINT + affinage campaign. 32 GOA rows, all reviewed; 2 new annotations proposed.
+PAINT + affinage campaign. 32 GOA rows, all reviewed; 3 new annotations proposed.
 
 ## Provenance of this file
 
@@ -130,8 +130,37 @@ redundant double mutant. `GO:0035021` is **entirely absent from GOA** and is pro
 **Why GO:0035021 is not implied by anything already annotated** (the earlier draft got this
 wrong): GO's regulation branch keeps Rho and Rac **disjoint**. `GO:0035021` is NOT a
 descendant of `GO:0035023`; it descends via `GO:0035020` → `GO:0051058` → `GO:0051056`.
-Verified by QuickGO ancestor query. So the already-present `GO:0035023` covers only the Rho
-half of ABR's range, and nothing in GOA entails the Rac-directed negative regulation.
+So the already-present `GO:0035023` covers only the Rho half of ABR's range, and nothing in
+GOA entails the Rac-directed negative regulation.
+
+### All ancestry / merge claims, with the QuickGO result
+
+Every load-bearing ontology-structure claim in this review, verified against QuickGO
+(`/ontology/go/terms/<id>/complete` for merges, `/ancestors?relations=is_a,part_of` for
+ancestry). Recorded in full so none of them rests on assertion:
+
+| Claim | Result |
+|---|---|
+| `GO:0035021` descendant-of `GO:0035023` | **NO** — the load-bearing disjointness result |
+| `GO:0035021` descendant-of `GO:0035020` | YES |
+| `GO:0035021` descendant-of `GO:0051056` | YES (via `GO:0051058`) |
+| `GO:0035023` descendant-of `GO:0051056` | YES |
+| `GO:0035025` descendant-of `GO:0035023` | YES |
+| `GO:0035025` descendant-of `GO:0051057` | YES |
+| `GO:0051057` descendant-of `GO:0051056` | YES |
+| `GO:1900273` descendant-of `GO:1900271` | YES |
+| `GO:1900271` descendant-of `GO:0048167` | YES |
+| `GO:0048167` descendant-of `GO:0050804` | YES |
+| `GO:1900273` descendant-of `GO:0050804` | **YES** — exactly three `is_a` steps |
+| `GO:0099092` descendant-of `GO:0014069` | YES |
+| `GO:0007264` descendant-of `GO:0007165` | YES |
+| `GO:0035023` descendant-of `GO:0007165` | NO (regulation branch is separate) |
+| `GO:0051056` descendant-of `GO:0035556` | NO |
+| `GO:0005096` children | 1, `GO:1902773` via `capable_of` — no substrate-specific child |
+| `GO:0090630` children | **0** |
+
+`GO:0035025` and `GO:0051057` were both confirmed current (not obsolete, no `secondaryIds`)
+before being used.
 
 ## The GEF side is real but context-restricted
 
@@ -157,6 +186,24 @@ This is a real characterised interaction, not a screen hit:
 - Independently described: [PMID:36219160 "ABR possesses a phospholipid-binding C2 domain positioned between the two domains and a PDZ binding motif located at the C-terminus of the protein."]
 
 So `GO:0030165 PDZ domain binding` is the informative replacement for bare protein binding.
+
+**But the PDZ interaction is NOT the synaptic targeting mechanism**, and this is easy to get
+backwards. The full UniProt MUTAGEN note reads (FT lines 387-390):
+
+```
+FT   MUTAGEN         859
+FT                   /note="V->A: Abolishes interaction with DLG4. No effect on
+FT                   synaptic localization."
+FT                   /evidence="ECO:0000269|PubMed:20962234"
+```
+
+Losing DLG4 binding costs ABR *nothing* in synaptic localisation. So ABR reaches the synapse
+by some other route, and what the PSD-95 interaction contributes beyond tethering is **open**
+— which is why the V859A-versus-R683A/N795A rescue is listed under `suggested_experiments`
+rather than being asserted. Note the second half of that FT note spans an `FT` continuation
+line, so "No effect on synaptic localization." **cannot be quoted verbatim** from the file;
+the claim is carried in prose with the one-line "V->A: Abolishes interaction with DLG4."
+fragment as the citation.
 
 ## WITH/FROM resolution and donor evidence
 
@@ -260,7 +307,7 @@ retraction), not bibliographic.
 ## Decisions summary
 
 32 GOA rows: **ACCEPT 19 · KEEP_AS_NON_CORE 7 · MODIFY 5 · MARK_AS_OVER_ANNOTATED 1 ·
-REMOVE 0**, plus **2 NEW**.
+REMOVE 0**, plus **3 NEW**.
 
 - **MODIFY ×5**:
   - `GO:0007165 signal transduction` (IEA, from the RhoGAP domain signature),
@@ -282,10 +329,13 @@ REMOVE 0**, plus **2 NEW**.
   resting-state pool; the activity-bearing compartments are separately annotated).
 - **No REMOVE.** Nothing in the set is demonstrably wrong, and every propagated row has an
   experimentally-annotated donor.
-- **NEW ×2**: `GO:0035021 negative regulation of Rac protein signal transduction` (IMP, human
+- **NEW ×3**: `GO:0035021 negative regulation of Rac protein signal transduction` (IMP, human
   HeLa knockdown — the dominant in vivo role, absent from GOA and not implied by any existing
-  term) and `GO:1900273 positive regulation of long-term synaptic potentiation` (ISS from
-  mouse Abr; ABR-null mice lose LTP maintenance specifically).
+  term); `GO:0035025 positive regulation of Rho protein signal transduction` (IDA — the GEF
+  half's known direction, which GOA records only as the undirected `GO:0035023`, proposed
+  additively because that row's donor holds only the undirected term); and `GO:1900273
+  positive regulation of long-term synaptic potentiation` (ISS from mouse Abr; ABR-null mice
+  lose LTP maintenance specifically).
 - **No `proposed_new_terms`.** Both new terms already exist in GO, so they are `action: NEW`
   annotations, not ontology requests. Deliberately did **not** propose a substrate-specific
   GAP child — those were merged away on purpose.
@@ -308,6 +358,37 @@ REMOVE 0**, plus **2 NEW**.
 5. The arginine finger was cited only via the `ECO:0000255` PROSITE-derived SITE feature. The
    experimental `MUTAGEN` evidence (`ECO:0000269|PubMed:17116687`) is much stronger and is
    what makes the GAP call rest on tested residues.
+
+## Corrections made in review round 2
+
+Three of these were found by the PR reviewer, and all three were real.
+
+6. **A `core_function` asserted a mechanism the cited mutagenesis rules out.** The PDZ core
+   function said the motif "recruits ABR's GAP activity into the postsynaptic density" — but
+   V859A abolishes DLG4 binding with *no effect on synaptic localisation*. The review stated
+   this correctly in the annotation row and listed the rescue as an open experiment, so the
+   file contradicted itself. This is the campaign's recurring failure shape: every constituent
+   quote verbatim, the error in the **join**. Reworded to "tethering", and the
+   `GO:1900273` link was moved off the PDZ-binding function onto the GAP function, where the
+   Rac1-restraint effector activity actually sits.
+7. **The GEF core function was the one place this review's own argument was not applied.** It
+   listed four substrates but `directly_involved_in: GO:0035023` alone — undirected, and
+   covering only the Rho half, which is precisely the reasoning used to retarget four MODIFY
+   rows away from `GO:0035023`. Now `GO:0035025` (positive regulation of Rho protein signal
+   transduction), **plus a matching NEW annotation** so `core_functions` is backed by the
+   annotation set rather than asserting a process nothing else records.
+   Deliberately *not* widened to `GO:0051057`/Rac/Cdc42: the DH domain does load GTP onto
+   CDC42, RAC1 and RAC2, but that is isolated-domain biochemistry, and by the same argument
+   this review makes about the GAP side, that does not establish an in-cell sign — in cells
+   ABR's net effect on Rac is *negative*. Applying my own rule symmetrically was the point.
+8. **The top-level description overstated the arginine finger.** It gave "stabilises the
+   transition state for GTP hydrolysis" as fact; in UniProt that is `SITE 683` with
+   `ECO:0000255|PROSITE-ProRule`, i.e. inferred. Reworded so the measured claim (R683A reduces,
+   R683A/N795A abolishes GAP activity) and the inferred mechanism are distinguished.
+9. **A supporting quote was dropped rather than truncated.** The fix for item 6 initially cited
+   `"No effect on"` — a fragment ending mid-sentence at the very negation it was meant to
+   support, and unquotable in full because the span crosses an `FT` continuation. Removed; the
+   claim now travels in prose.
 
 ## Not annotated, deliberately
 
