@@ -49,7 +49,7 @@ Classification is by gene symbol and by whether the source carries an ArfGAP dom
 - `UniProtKB:Q15286` -> **RAB35** - INTERACTION PARTNER, not a family member
 - `UniProtKB:Q5FVC7` -> **Acap2** - ORTHOLOG of human ACAP2
 - `UniProtKB:Q6ZQK5` -> **Acap2** - ORTHOLOG of human ACAP2
-- `UniProtKB:Q96P50` -> **ACAP3** - PARALOG (not the ACAP2 ortholog)
+- `UniProtKB:Q96P50` -> **ACAP3** - PARALOG (not the ACAP2 ortholog); cited by an IPI row, so here it is a measured INTERACTION PARTNER rather than a phylogenetic donor
 - `WB:WBGene00000565` -> **cnt-1** - invertebrate ACAP family member
 - `ensembl:ENSMUSP00000154983` -> **Acap2** - ORTHOLOG of human ACAP2
 
@@ -104,7 +104,7 @@ Other members of the same PANTHER subfamily, from the cached `interpro/panther/P
 
 ## Scope of PANTHER node PTN001142372
 
-- QuickGO reports 1000 annotations citing this node.
+- QuickGO reports 1000 annotations citing this node. pageInfo reports 5 pages of 200, bracketing the total at 800-1000, so this is a real count and not a service cap.
 - terms propagated from it: GO:0005096 , GO:0005886 , GO:0010008 , GO:0030036 
 - gene symbols in the first page of results (50 distinct): AGD4, AGE1, BnaA02g33110D, BnaA09g53230D, BnaC05g08350D, BnaC09g14600D, BnaC09g43770D, Csa_4G008220, Csa_5G053060, HanXRQr2_Chr09g0412951, HannXRQ_Chr06g0175541, KFL_002900020, LOC100789134, LOC103632959, LOC104591852, LOC104592757, LOC104611806, LOC107784386, LOC107787736, LOC107804522, LOC107886206, LOC107886342, LOC107886724, LOC107909516, LOC107909972, LOC107913499, LOC107920173, LOC107933093, LOC107938473, LOC107938742, MANES_06G126100v8, MANES_08G101900v8, MANES_09G187500v8, MANES_10G069200v8, MIMGU_mgv1a001334mg, MIMGU_mgv1a001429mg, MIMGU_mgv1a001632mg, MTR_4g074170, MTR_8g100100, PRUPE_5G142800, SFC, SORBI_3004G223300, SORBI_3007G189100, TCM_008353, TCM_011296, TCM_014745, ZOSMA_173G00120, ZOSMA_2G00720, ZOSMA_36G00310, acap2.L
 

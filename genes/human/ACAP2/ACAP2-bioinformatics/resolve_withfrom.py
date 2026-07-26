@@ -191,24 +191,31 @@ def source_own_evidence(acc: str, go_id: str) -> dict:
     d = get(
         "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
         f"?geneProductId={acc}&goId={go_id}&goUsage=descendants"
-        "&goUsageRelationships=is_a,part_of&limit=50"
+        f"&goUsageRelationships=is_a,part_of&limit={LIMIT}"
     )
     if not d:
         return {}
     codes: dict[str, int] = {}
     for r in d.get("results", []):
         codes[r.get("goEvidence", "?")] = codes.get(r.get("goEvidence", "?"), 0) + 1
-    return {"n_hits": d.get("numberOfHits"), "codes": codes}
+    n_hits = d.get("numberOfHits")
+    # The tally comes from one page. Say so if the page did not cover everything,
+    # rather than letting a partial count read as a total.
+    truncated = bool(n_hits and n_hits > LIMIT)
+    return {"n_hits": n_hits, "codes": codes, "truncated": truncated}
 
 
 EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HDA", "HMP", "HGI", "HEP", "HTP"}
+
+LIMIT = 50   # page size for per-source evidence tallies
+PAGE = 200   # page size for the node-scope query (QuickGO accepts this)
 
 
 def node_scope(node: str) -> dict:
     """How widely is this PANTHER node's annotation set distributed?"""
     d = get(
         "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
-        f"?withFrom=PANTHER:{node}&limit=200"
+        f"?withFrom=PANTHER:{node}&limit={PAGE}"
     )
     if not d:
         return {}
@@ -218,7 +225,21 @@ def node_scope(node: str) -> dict:
             symbols.add(r["symbol"])
         if r.get("goId"):
             terms[r["goId"]] = r.get("goName") or ""
-    return {"n_hits": d.get("numberOfHits"), "symbols": sorted(symbols), "terms": terms}
+    # A round numberOfHits could be a service cap rather than a count, which would
+    # matter since this figure is quoted. Cross-check it against pageInfo: pages x
+    # per-page should bracket the reported total.
+    page = d.get("pageInfo") or {}
+    per, total_pages = page.get("resultsPerPage"), page.get("total")
+    bracket = None
+    if per and total_pages:
+        bracket = (per * (total_pages - 1), per * total_pages)
+    return {
+        "n_hits": d.get("numberOfHits"),
+        "symbols": sorted(symbols),
+        "terms": terms,
+        "page_info": page,
+        "bracket": bracket,
+    }
 
 
 # --------------------------------------------------------------------------- #
@@ -403,9 +424,11 @@ def main() -> int:
             verdict = "ORTHOLOG of human ACAP2" if tok != f"UniProtKB:{TARGET}" else "the target itself (self-referential)"
         elif low in {"acap1", "acap3"}:
             verdict = "PARALOG (not the ACAP2 ortholog)"
+            if tok in ipi_only:
+                verdict += "; cited by an IPI row, so here it is a measured INTERACTION PARTNER rather than a phylogenetic donor"
         elif low == "cnt-1":
             verdict = "invertebrate ACAP family member"
-        elif has_arfgap(rec) == "NO" and tok in ipi_only:
+        elif tok in ipi_only:
             verdict = "INTERACTION PARTNER, not a family member"
         else:
             verdict = "more distant family member (ArfGAP domain present)"
@@ -439,6 +462,8 @@ def main() -> int:
                     continue
                 codes = ev["codes"]
                 shown = ", ".join(f"{k}x{v}" for k, v in sorted(codes.items())) or "(none)"
+                if ev.get("truncated"):
+                    shown += f" [PARTIAL - only the first {LIMIT} of {ev['n_hits']} tallied]"
                 exp = "**yes**" if set(codes) & EXPERIMENTAL else "no"
                 w(f"| `{tok}` | {acc} | {entry} | {shown} (n={ev['n_hits']}) | {exp} |")
     w("")
@@ -465,7 +490,15 @@ def main() -> int:
 
     w(f"\n## Scope of PANTHER node {PANTHER_NODE}\n")
     if scope:
-        w(f"- QuickGO reports {scope['n_hits']} annotations citing this node.")
+        b = scope.get("bracket")
+        check = (
+            f" pageInfo reports {scope['page_info'].get('total')} pages of "
+            f"{scope['page_info'].get('resultsPerPage')}, bracketing the total at "
+            f"{b[0]}-{b[1]}, so this is a real count and not a service cap."
+            if b
+            else ""
+        )
+        w(f"- QuickGO reports {scope['n_hits']} annotations citing this node.{check}")
         w("- terms propagated from it: " + ", ".join(f"{k} {v}" for k, v in sorted(scope["terms"].items())))
         w(f"- gene symbols in the first page of results ({len(scope['symbols'])} distinct): "
           + ", ".join(scope["symbols"]))
