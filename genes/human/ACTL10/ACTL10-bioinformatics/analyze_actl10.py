@@ -110,6 +110,30 @@ def get_json(url: str, params: dict | None = None) -> dict:
     return r.json()
 
 
+def quickgo_all(params: dict, what: str) -> dict:
+    """QuickGO search whose result set is asserted to be complete.
+
+    QuickGO reports the true total in `numberOfHits` while returning at most `limit` rows, so
+    `len(results)` cannot detect its own truncation. Every conclusion drawn here is an enumeration
+    or a per-donor tally, so a silently short page would understate a count rather than error -
+    the same failure shape as the UniProt page-size trap. Assert instead of assuming.
+    """
+    d = get_json("https://www.ebi.ac.uk/QuickGO/services/annotation/search", params)
+    limit = int(params["limit"])
+    total = d.get("numberOfHits")
+    if total is None:
+        raise RuntimeError(f"QuickGO returned no numberOfHits for {what}; cannot verify coverage")
+    got = len(d.get("results", []))
+    if got < total:
+        raise RuntimeError(
+            f"QuickGO truncated {what}: {got} of {total} rows returned at limit={limit}; "
+            "add pagination before trusting this count")
+    if got >= limit:
+        raise RuntimeError(
+            f"QuickGO returned a full page ({limit}) for {what}; the result set may be truncated")
+    return d
+
+
 def uniprot_entry(acc: str) -> dict:
     """Fetch an entry and prove it is the one asked for.
 
@@ -579,9 +603,9 @@ def resolve_token(token: str) -> dict:
 
 
 def quickgo_evidence(gene_product: str, go_id: str) -> dict:
-    d = get_json("https://www.ebi.ac.uk/QuickGO/services/annotation/search",
-                 {"geneProductId": gene_product, "goId": go_id, "goUsage": "descendants",
-                  "goUsageRelationships": "is_a,part_of", "limit": "100"})
+    d = quickgo_all({"geneProductId": gene_product, "goId": go_id, "goUsage": "descendants",
+                     "goUsageRelationships": "is_a,part_of", "limit": "100"},
+                    f"own-evidence query for {gene_product} / {go_id}")
     codes = Counter()
     terms = Counter()
     for r in d.get("results", []):
@@ -592,9 +616,9 @@ def quickgo_evidence(gene_product: str, go_id: str) -> dict:
 
 
 def go0005200_census() -> dict:
-    d = get_json("https://www.ebi.ac.uk/QuickGO/services/annotation/search",
-                 {"goId": "GO:0005200", "goUsage": "exact", "taxonId": "9606",
-                  "evidenceCode": "ECO:0000318", "limit": "100"})
+    d = quickgo_all({"goId": "GO:0005200", "goUsage": "exact", "taxonId": "9606",
+                     "evidenceCode": "ECO:0000318", "limit": "100"},
+                    "the human GO:0005200 IBA census")
     by_node: dict[str, list[str]] = defaultdict(list)
     for r in d["results"]:
         nodes = [x["id"] for wf in (r.get("withFrom") or []) for x in wf["connectedXrefs"]
