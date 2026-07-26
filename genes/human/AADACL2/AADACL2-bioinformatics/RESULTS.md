@@ -75,7 +75,7 @@ Tabulating every **reviewed** UniProtKB entry carrying `IPR017157`:
 
 Eleven of the twelve transmembrane segments are annotated explicitly as
 "Helical; Signal-anchor for type II membrane protein"; the exception is mouse Aadacl3, which
-carries three plain helices. 14 reviewed members, and AADACL2 is the **only** one whose
+carries three plain helices. Of the 14 reviewed members, AADACL2 is the only one whose
 N-terminal hydrophobic segment UniProt calls a cleaved signal peptide. Its three `WITH/FROM` protein sources for the
 membrane IBA are all type-II signal-anchored: human AADAC (`TRANSMEM 6-23`), mouse Aadac
 (`6-26`) and mouse Nceh1 (`5-25`). So the membrane claim is a transfer of a feature that
