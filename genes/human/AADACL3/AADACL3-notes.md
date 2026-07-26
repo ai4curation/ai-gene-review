@@ -245,9 +245,10 @@ yet it is the catalytic triad that transfers family-wide and the membrane anchor
 that does not. I checked both halves of that against AADACL3's own record rather
 than importing it, and it holds, with two differences worth stating.
 
-**The mechanism half is confirmed, and quantified.** Section 7 of the
-bioinformatics report reads the residue at the first annotated active site of every
-WITH/FROM source on AADACL3's own hydrolase-activity IBA:
+**The mechanism half is confirmed, and quantified — but it does not license a
+term swap on this row.** Section 7 of the bioinformatics report reads the residue at
+the first annotated active site of every WITH/FROM source on AADACL3's own
+hydrolase-activity IBA:
 
 - [file:human/AADACL3/AADACL3-bioinformatics/RESULTS.md "Audited: GO:0016787 (IBA, GO_REF:0000033). 17 WITH/FROM tokens, 14 resolved to a protein, 14 with a readable nucleophile, of which **13 are serine**. Non-serine: HIDH_SOYBN T164."]
 
@@ -255,7 +256,29 @@ The amidohydrolase members are no obstacle to a mechanism term: mouse Afmid, a
 formamidase, is itself a serine hydrolase with `S162`. (Yeast BNA7 and rat Aadac
 could not be resolved to a single reviewed UniProt entry through the Alliance
 record and are reported unresolved rather than counted either way, so the 13-of-14
-figure is a count of what was readable.) The single obstacle at `PTN009058710` is
+figure is a count of what was readable.)
+
+**Crucially, one exception is enough.** `GO:0017171` is defined by mechanism, so it
+can only sit at a node all of whose members have a serine nucleophile — and HIDH's
+`Thr164` means `PTN009058710` is not such a node. Nor can `GO:0052689` sit there,
+because the two formamidases hydrolyse an amide rather than an ester bond. So
+**`GO:0016787` genuinely is the lowest common ancestor of this donor set, and
+PAINT's choice is correct curation rather than a term that stopped short.** I
+initially proposed `GO:0017171` as a second replacement term on both hydrolase rows;
+that was wrong for exactly this reason and has been withdrawn. The rows are
+replaced on **redundancy** grounds only — AADACL3 already carries `GO:0052689` from
+a subfamily-specific signature, which is stronger and more direct evidence for this
+gene than a transfer from a clade that broad — so the propagation root cause is
+`EVIDENCE_CIRCULAR_OR_REDUNDANT`, not `TERM_SCOPING_PROBLEM`/`GRANULARITY_MISMATCH`.
+The `GO:0017171` recommendation lives in `suggested_questions` as a node-placement
+proposal for PAINT, where the HIDH obstacle can be named and worked around.
+
+The same test applies to the location term and gives the same answer. The membrane
+IBA's donors resolve to **four distinct curated location strings** between them —
+endoplasmic reticulum membrane and microsome membrane for AADAC, cell membrane and
+microsome for Nceh1 — so refining `GO:0016020` would mean arbitrarily preferring one
+donor. General is right in both cases. The rule I should have applied before
+proposing a more specific term: *is this term the LCA of its donors?* The single obstacle at `PTN009058710` is
 soybean HIDH, whose nucleophile is **Thr164** — so `GO:0017171` could be placed at
 that node only if HIDH is excluded, whereas at the tighter `PTN009058713` there is
 no obstacle at all. That is a sharper version of the recommendation: the term is
@@ -296,6 +319,22 @@ same gene in mouse. It also means "single-pass type II" is the wrong descriptor
 for this branch, and `GO:0016020 membrane` is the right generic level for reasons
 beyond not knowing which membrane.
 
+**Two method points adopted.** First, the load-bearing condition for a
+conservation claim is that a mapped residue lands on the target's *own annotated
+active site* **and** is the same amino acid — either alone is too weak. The script
+already required the annotated-site half; it now reports both counts separately, and
+HIDH demonstrates why that matters: AADACL3's Ser193 does land on HIDH's annotated
+site 164, but the residue there is a threonine, so HIDH scores 2/3 on the annotated
+site and only **1/3** when identity is also required. Every real family member is
+3/3 on both. Second, each WITH/FROM resolution is now verified against the resolved
+entry's *own* cross-references — an MGI/RGD/SGD mapping must come back through the
+entry's MGI/RGD/SGD cross-reference, and an Arabidopsis locus through its Araport
+cross-reference — and a `self_test_resolution_guard()` run at the start of every
+execution feeds the guard a deliberately wrong mapping (mouse Aadac's MGI id against
+the human protein) and fails loudly if it is accepted, so the check cannot go
+vacuous if a cross-reference database is renamed. No identity threshold is used
+anywhere in the analysis, so there was nothing to re-derive from the distribution.
+
 **Family-wide claims audited.** The AADACL2 review had to retract several
 overstatements. Checking mine: no family-wide specificity claim is made — the
 review states explicitly that substrate must not be inferred from membership, and
@@ -335,10 +374,10 @@ competence is a question for an amendment to that review, not this one.
 
 | # | term | evidence | action | why |
 |---|---|---|---|---|
-| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0017171 + GO:0052689 | correct but subsumed; the term sits at the join of a mechanism axis (triad, 13/14 sources serine) and a reaction axis (subfamily signature, EC 3.1.1.-) |
+| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0052689 | the correct LCA of a heterogeneous donor set, so not over-general; replaced only as redundant with the subfamily-derived term |
 | 2 | GO:0016020 membrane | IBA `is_active_in` | ACCEPT | tight, topologically coherent source set; corroborated by concordant Phobius + TMHMM |
 | 3 | GO:0016020 membrane | IEA `located_in` | ACCEPT | same conclusion from an independent pipeline; supported despite UniProt having no TRANSMEM feature |
-| 4 | GO:0016787 hydrolase activity | IEA (IPR013094) | MODIFY → GO:0017171 + GO:0052689 | fold-derived and subsumed; the fold signature reaches outside the subfamily whose chemistry it asserts |
+| 4 | GO:0016787 hydrolase activity | IEA (IPR013094) | MODIFY → GO:0052689 | fair for the fold it describes; replaced as redundant, and the fold signature reaches outside the subfamily whose chemistry it asserts |
 | 5 | GO:0052689 carboxylic ester hydrolase activity | IEA (IPR017157) | ACCEPT | best-supported statement about the gene: subfamily signature + intact triad + UniProt EC 3.1.1.- |
 
 No REMOVE and no MARK_AS_OVER_ANNOTATED. Nothing in the record over-reaches:

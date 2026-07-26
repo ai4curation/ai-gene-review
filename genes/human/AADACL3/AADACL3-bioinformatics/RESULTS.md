@@ -16,17 +16,17 @@ Oxyanion-hole motif 119-121 reads `HGG`; the nucleophile elbow 191-196 reads `GD
 
 ## 2. Triad conservation against characterised relatives
 
-Global pairwise alignment (BLOSUM62, gap -11/-1). "triad on annotated site" counts how many of AADACL3's three active-site residues align to a position that UniProt annotates as an active site in the partner.
+Global pairwise alignment (BLOSUM62, gap -11/-1). Two different counts are reported because only the stricter one supports a conservation claim. "on annotated site" counts how many of AADACL3's three active-site residues align to a position UniProt annotates as an active site in the partner; "conserved" additionally requires the residue to be identical. HIDH shows why the distinction matters: AADACL3's Ser193 lands on HIDH's annotated site 164, but that residue is a threonine, so it counts for the first column and not the second.
 
-| partner | % identity to AADACL3 | aligned triad residues | triad on annotated site | aligned oxyanion residues |
-|---|---|---|---|---|
-| ADCL4_HUMAN (Q5VUY2) | 55.0 | S193→S193/D347→D347/H377→H377 | 3/3 | `HGG` |
-| ADCL2_HUMAN (Q6P093) | 33.9 | S193→S189/D347→D341/H377→H371 | 3/3 | `HGG` |
-| AAAD_HUMAN (P22760) | 33.3 | S193→S189/D347→D343/H377→H373 | 3/3 | `HGG` |
-| NCEH1_HUMAN (Q6PIU2) | 33.4 | S193→S191/D347→D348/H377→H378 | 3/3 | `HGG` |
-| NCEH1_MOUSE (Q8BLF1) | 32.8 | S193→S191/D347→D348/H377→H378 | 3/3 | `HGG` |
-| ADCL3_MOUSE (A2A7Z8) | 61.9 | S193→S194/D347→D348/H377→H378 | 3/3 | `HGG` |
-| HIDH_SOYBN (Q5NUF3) | 23.6 | S193→T164/D347→D263/H377→Q282 | 2/3 | `HGG` |
+| partner | % identity to AADACL3 | aligned triad residues | on annotated site | conserved (same residue too) | aligned oxyanion residues |
+|---|---|---|---|---|---|
+| ADCL4_HUMAN (Q5VUY2) | 55.0 | S193→S193/D347→D347/H377→H377 | 3/3 | 3/3 | `HGG` |
+| ADCL2_HUMAN (Q6P093) | 33.9 | S193→S189/D347→D341/H377→H371 | 3/3 | 3/3 | `HGG` |
+| AAAD_HUMAN (P22760) | 33.3 | S193→S189/D347→D343/H377→H373 | 3/3 | 3/3 | `HGG` |
+| NCEH1_HUMAN (Q6PIU2) | 33.4 | S193→S191/D347→D348/H377→H378 | 3/3 | 3/3 | `HGG` |
+| NCEH1_MOUSE (Q8BLF1) | 32.8 | S193→S191/D347→D348/H377→H378 | 3/3 | 3/3 | `HGG` |
+| ADCL3_MOUSE (A2A7Z8) | 61.9 | S193→S194/D347→D348/H377→H378 | 3/3 | 3/3 | `HGG` |
+| HIDH_SOYBN (Q5NUF3) | 23.6 | S193→T164/D347→D263/H377→Q282 | 2/3 | 1/3 | `HGG` |
 
 ## 3. PROSITE PS01174 (GDXG-family nucleophile serine site)
 
@@ -97,13 +97,13 @@ Audited: GO:0016787 (IBA, GO_REF:0000033). 17 WITH/FROM tokens, 14 resolved to a
 
 | WITH/FROM token | resolved | nucleophile | serine? | resolution note |
 |---|---|---|---|---|
-| `AGI_LocusCode:AT1G49660` | CXE5_ARATH | S163 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
-| `AGI_LocusCode:AT3G48690` | CXE12_ARATH | S162 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
-| `AGI_LocusCode:AT5G15860` | ICME_ARATH | S235 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
-| `AGI_LocusCode:AT5G23530` | CXE18_ARATH | S173 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
-| `MGI:MGI:1915008` | AAAD_MOUSE | S188 | yes | resolved via Alliance (Aadac); one reviewed entry of 1 |
-| `MGI:MGI:2443191` | NCEH1_MOUSE | S191 | yes | resolved via Alliance (Nceh1); one reviewed entry of 4 |
-| `MGI:MGI:2448704` | KFA_MOUSE | S162 | yes | resolved via Alliance (Afmid); one reviewed entry of 2 |
+| `AGI_LocusCode:AT1G49660` | CXE5_ARATH | S163 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed; confirmed by the entry's own Araport cross-reference |
+| `AGI_LocusCode:AT3G48690` | CXE12_ARATH | S162 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed; confirmed by the entry's own Araport cross-reference |
+| `AGI_LocusCode:AT5G15860` | ICME_ARATH | S235 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed; confirmed by the entry's own Araport cross-reference |
+| `AGI_LocusCode:AT5G23530` | CXE18_ARATH | S173 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed; confirmed by the entry's own Araport cross-reference |
+| `MGI:MGI:1915008` | AAAD_MOUSE | S188 | yes | resolved via Alliance (Aadac); one reviewed entry of 1, confirmed by the entry's own MGI cross-reference |
+| `MGI:MGI:2443191` | NCEH1_MOUSE | S191 | yes | resolved via Alliance (Nceh1); one reviewed entry of 4, confirmed by the entry's own MGI cross-reference |
+| `MGI:MGI:2448704` | KFA_MOUSE | S162 | yes | resolved via Alliance (Afmid); one reviewed entry of 2, confirmed by the entry's own MGI cross-reference |
 | `PANTHER:PTN009058710` | - | - | - | PANTHER ancestral node, not a protein; no nucleophile to read |
 | `RGD:631440` | - | - | - | Alliance (Aadac) gives 4 cross-references, 0 of them reviewed: [] |
 | `SGD:S000002836` | - | - | - | Alliance record carries no UniProtKB cross-reference |

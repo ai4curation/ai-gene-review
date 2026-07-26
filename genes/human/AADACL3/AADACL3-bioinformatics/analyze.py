@@ -38,6 +38,16 @@ UNIPROT = "https://rest.uniprot.org/uniprotkb"
 INTERPRO = "https://www.ebi.ac.uk/interpro/api"
 PROSITE_SER_PATTERN = "https://prosite.expasy.org/PS01174.txt"
 ALLIANCE = "https://www.alliancegenome.org/api"
+
+# Which UniProt cross-reference database must carry a WITH/FROM token back to
+# the entry it was resolved to. A resolution that the resolved entry does not
+# itself corroborate is rejected; see verify_resolution.
+TOKEN_XREF_DB: dict[str, str] = {
+    "MGI": "MGI",
+    "RGD": "RGD",
+    "SGD": "SGD",
+    "AGI_LocusCode": "Araport",
+}
 GOA_TSV = HERE.parent / "AADACL3-goa.tsv"
 
 QUERY = "Q5VUY0"
@@ -300,6 +310,59 @@ def align_pair(query: Entry, target: Entry) -> tuple[float, dict[int, int | None
     return round(pct, 1), mapping
 
 
+def expected_xref(token: str) -> tuple[str, str]:
+    """The (database, id) cross-reference a correct resolution of `token` must carry."""
+    prefix, rest = token.split(":", 1)
+    if prefix not in TOKEN_XREF_DB:
+        raise RuntimeError(
+            f"No cross-reference database known for WITH/FROM prefix {prefix!r} "
+            f"(token {token!r}); add it to TOKEN_XREF_DB rather than resolving unchecked"
+        )
+    return TOKEN_XREF_DB[prefix], rest
+
+
+def verify_resolution(token: str, accession: str) -> None:
+    """Reject a resolution the resolved entry does not itself corroborate.
+
+    Mapping a model-organism identifier through a third-party service, or an
+    Arabidopsis locus through a gene-name search, can land on the wrong protein.
+    The resolved UniProt entry must cross-reference the original token.
+    """
+    db, ident = expected_xref(token)
+    d = get_json(f"{UNIPROT}/{accession}.json?fields=xref_{db.lower()}")
+    have = {
+        (x["database"], x["id"])
+        for x in d.get("uniProtKBCrossReferences", [])
+    }
+    if (db, ident) not in have:
+        raise RuntimeError(
+            f"Resolution rejected: {token} was mapped to {accession}, but that entry "
+            f"carries no {db} cross-reference {ident} (it has {sorted(have) or 'none'}). "
+            "The mapping is wrong, or the cross-reference database has been renamed."
+        )
+
+
+def self_test_resolution_guard() -> None:
+    """Prove the resolution guard rejects a deliberately wrong mapping.
+
+    Without this the guard could silently stop working - for instance if UniProt
+    renamed a cross-reference database and every lookup began returning nothing,
+    which would make the check vacuous rather than loud.
+    """
+    good, bad = ("MGI:MGI:1915008", "P22760")  # mouse Aadac's id against the HUMAN protein
+    try:
+        verify_resolution(good, bad)
+    except RuntimeError:
+        pass
+    else:
+        raise RuntimeError(
+            f"Resolution guard is not working: it accepted {good} -> {bad}, which is wrong "
+            "(that is the mouse gene id against the human protein)"
+        )
+    # and it must accept a correct one, or it would reject everything
+    verify_resolution("MGI:MGI:2443191", "Q8BLF1")
+
+
 def read_iba_sources(term: str, evidence: str) -> list[str]:
     """Read the WITH/FROM tokens for one row of the gene's own GOA table.
 
@@ -351,8 +414,12 @@ def resolve_source(token: str) -> dict:
         d = get_json(f"{UNIPROT}/search?query={quote(q)}&fields=accession&size=10")
         accs = sorted({r["primaryAccession"] for r in d.get("results", [])})
         if len(accs) == 1:
+            verify_resolution(token, accs[0])
             out["accession"] = accs[0]
-            out["note"] = "resolved via UniProt gene-name search restricted to A. thaliana, reviewed"
+            out["note"] = (
+                "resolved via UniProt gene-name search restricted to A. thaliana, reviewed; "
+                "confirmed by the entry's own Araport cross-reference"
+            )
         else:
             out["note"] = f"UniProt gene-name search returned {len(accs)} reviewed entries: {accs}"
         return out
@@ -372,8 +439,12 @@ def resolve_source(token: str) -> dict:
         return out
     reviewed = reviewed_only(xrefs)
     if len(reviewed) == 1:
+        verify_resolution(token, reviewed[0])
         out["accession"] = reviewed[0]
-        out["note"] = f"resolved via Alliance ({symbol}); one reviewed entry of {len(set(xrefs))}"
+        out["note"] = (
+            f"resolved via Alliance ({symbol}); one reviewed entry of {len(set(xrefs))}, "
+            f"confirmed by the entry's own {expected_xref(token)[0]} cross-reference"
+        )
     else:
         out["note"] = (
             f"Alliance ({symbol}) gives {len(set(xrefs))} cross-references, "
@@ -427,6 +498,8 @@ def nucleophile_audit() -> dict:
 
 
 def main() -> None:
+    self_test_resolution_guard()
+
     entries: dict[str, Entry] = {}
     for acc, label in PANEL.items():
         entry = fetch_uniprot(acc, label)
@@ -511,6 +584,12 @@ def main() -> None:
                     "target_position": tp,
                     "target_residue": e.sequence[tp - 1] if tp else None,
                     "target_annotated_active_site": tp in e.act_sites if tp else False,
+                    "residue_identical": (e.sequence[tp - 1] == query.sequence[p - 1]) if tp else False,
+                    "conserved": (
+                        tp in e.act_sites and e.sequence[tp - 1] == query.sequence[p - 1]
+                    )
+                    if tp
+                    else False,
                     "expected_role_residue": EXPECTED_TRIAD[i],
                 }
             )
@@ -616,23 +695,30 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
     L.append("## 2. Triad conservation against characterised relatives")
     L.append("")
     L.append(
-        "Global pairwise alignment (BLOSUM62, gap -11/-1). "
-        "\"triad on annotated site\" counts how many of AADACL3's three active-site "
-        "residues align to a position that UniProt annotates as an active site in the "
-        "partner."
+        "Global pairwise alignment (BLOSUM62, gap -11/-1). Two different counts are "
+        "reported because only the stricter one supports a conservation claim. "
+        "\"on annotated site\" counts how many of AADACL3's three active-site residues align "
+        "to a position UniProt annotates as an active site in the partner; \"conserved\" "
+        "additionally requires the residue to be identical. HIDH shows why the distinction "
+        "matters: AADACL3's Ser193 lands on HIDH's annotated site 164, but that residue is a "
+        "threonine, so it counts for the first column and not the second."
     )
     L.append("")
-    L.append("| partner | % identity to AADACL3 | aligned triad residues | triad on annotated site | aligned oxyanion residues |")
-    L.append("|---|---|---|---|---|")
+    L.append(
+        "| partner | % identity to AADACL3 | aligned triad residues | on annotated site | "
+        "conserved (same residue too) | aligned oxyanion residues |"
+    )
+    L.append("|---|---|---|---|---|---|")
     for acc, a in r["pairwise_alignment_to_query"].items():
         res = "/".join(
             f"{t['query_residue']}{t['query_position']}→{t['target_residue'] or '-'}{t['target_position'] or ''}"
             for t in a["triad"]
         )
         n_ann = sum(1 for t in a["triad"] if t["target_annotated_active_site"])
+        n_cons = sum(1 for t in a["triad"] if t["conserved"])
         L.append(
             f"| {entries[acc].uniprot_id} ({acc}) | {a['percent_identity']} | {res} | "
-            f"{n_ann}/3 | `{a['oxyanion_target_residues']}` |"
+            f"{n_ann}/3 | {n_cons}/3 | `{a['oxyanion_target_residues']}` |"
         )
     L.append("")
 
