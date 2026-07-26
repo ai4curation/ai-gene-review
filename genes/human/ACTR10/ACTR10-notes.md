@@ -205,17 +205,20 @@ Reasons this is not credible for ACTR10:
    table lists only CHAIN, sequence CONFLICTs and secondary structure), and UniProt
    gives one location: `Cytoplasm, cytoskeleton`. A subunit buried in a 1.2 MDa
    cytosolic complex has no route to a secretory granule *lumen*.
-2. Not a complex-level property (checked per subunit via QuickGO). ACTR10 is the only
-   one of the 11 dynactin subunits annotated to azurophil granule lumen at all, and only
-   three (ACTR10, ACTR1B and CAPZA1) carry any Reactome TAS granule or extracellular
-   term; DCTN1, DCTN2, DCTN3, DCTN4, DCTN5, DCTN6, ACTR1A, ACTB and CAPZB carry none.
-   The two that share the pattern are precisely the subunits with large non-dynactin
-   pools - CAPZA1 is a bona fide F-actin capping protein and ACTR1B a centractin paralog
-   - so the pattern is per-protein detection in granule fractions, not secretion of the
-   complex.
-   If dynactin were genuinely packaged into azurophil granules, all subunits would be
-   there. ACTB does carry `GO:0005576` but by **HDA**, i.e. mass spectrometry, not this
-   Reactome route.
+2. Not a complex-level property (checked per subunit via QuickGO). The canonical
+   roster is the 11 in UniProt's own SUBUNIT line — DCTN1/DCTN2/DCTN3 (shoulder),
+   ACTR1A/ACTB (filament), CAPZA1/CAPZB (barbed end), ACTR10/DCTN4/DCTN5/DCTN6 (pointed
+   end). **ACTR10 is the only one of those 11 annotated to azurophil granule lumen at
+   all**, and only **two of the 11** (ACTR10 and CAPZA1) carry any Reactome TAS granule
+   or extracellular term; DCTN1, DCTN2, DCTN3, DCTN4, DCTN5, DCTN6, ACTR1A, ACTB and
+   CAPZB carry none. ACTR1B — the β-centractin paralog that substitutes for ACTR1A in a
+   fraction of dynactin, so a *twelfth* protein rather than one of the 11 — was checked
+   alongside and also carries one. The two proteins sharing ACTR10's pattern are exactly
+   those with large non-dynactin pools (CAPZA1 is a bona fide F-actin capping protein,
+   ACTR1B a centractin paralog), so this is per-protein detection in granule fractions,
+   not secretion of the complex. If dynactin were genuinely packaged into azurophil
+   granules, all 11 would be there. ACTB does carry `GO:0005576` but by **HDA**, i.e.
+   mass spectrometry, not this Reactome route.
 3. It has already misled a downstream paper. A 2024 HCC study describes ACTR10 as
    [PMID:39697424 "ACTR10 is predicted to involve in the retrograde axonal transport of mitochondria and is suggested to be present in the cytosol, extracellular region and secretory granules."]
    — reading the GO annotations back out as ACTR10 biology. That is the concrete cost
@@ -252,8 +255,16 @@ further actin subunits"*, and `GO:0005884 actin filament` is *"A filamentous str
 formed of a two-stranded helical polymer of the protein actin and associated proteins"* —
 whereas dynactin's backbone is, per `GO:0005869`'s own definition, *"an actin-like 40 nm
 filament composed of actin-related protein"*. The subunits Arp11 blocks are Arp1, not
-actin. `GO:0005870 actin capping protein of dynactin complex` is obsolete with no
-replacement and was a CC term for the CapZ heterodimer at the *barbed* end.
+actin. `GO:0005870 actin capping protein of dynactin complex` is about the wrong end and the
+wrong aspect regardless of status: it is a CC term for the CapZ heterodimer at the
+*barbed* end. On status, QuickGO returns `isObsolete: true`, renders the label as
+"obsolete actin capping protein of dynactin complex" and prefixes the definition
+"OBSOLETE."; OLS adds `term_replaced_by: GO:0008290 F-actin capping protein complex`,
+which is again barbed-end CapZ and again a CC. Worth flagging to maintainers: the term is
+**absent from `cache/ontologies/go.tsv`** yet still present in
+`cache/enums/gotermenum` and `cache/enums/goproteincontainingcomplexenum`, so those enum
+files look stale rather than the term being live — which is what prompted the reviewer's
+query.
 
 Two placements are offered in the proposal, since the choice is an editorial call about
 `GO:0051693`'s intended scope: as its child if `actin filament capping` is meant to cover
@@ -281,3 +292,44 @@ subunit-specific activity) and
   adaptor activity`, `GO:0005739 mitochondrion`) was not imported.
 - `ACTR10-bioinformatics/` regenerates its own `RESULTS.md`; a second run was
   `diff`-identical to the committed file.
+
+## 10. Round-2 review response (PR #2274)
+
+Six items from `ai4c-agent`; none changed a GO term, evidence code or action.
+
+1. **Cross-subunit arithmetic, second pass.** The reviewer was right that ACTR1B is a
+   *twelfth* protein, not one of the 11 canonical subunits, so "only three of the 11" was
+   3-of-12. Reframed in four YAML sites and here: **two of the 11** (ACTR10, CAPZA1)
+   carry a Reactome TAS granule/extracellular term, ACTR10 alone carries azurophil
+   granule lumen, and ACTR1B was checked alongside as the β-centractin paralog. The
+   roster is now stated explicitly from UniProt's own SUBUNIT line rather than left
+   implicit, which is what allowed the count to drift twice.
+2. **`GO:0005870` status re-verified.** It *is* obsolete — see §"Ontology gap" above for
+   the QuickGO/OLS evidence and the `cache/enums` staleness that prompted the query. The
+   justification no longer *rests* on obsoletion: the term is barbed-end CapZ and a
+   cellular component, so it is the wrong end and the wrong aspect either way.
+3. **BP-vs-MF framing.** Correct catch: the proposed term is a BP, so it could never
+   replace the `GO:0005200` MF row. The reason now says so and explains why no
+   `proposed_replacement_terms` is given.
+4. **ATP vs an ADP-majority observation set.** Answered with data rather than prose — new
+   `RESULTS.md` section E surveys nucleotide-binding annotation across a 12-member
+   actin/Arp panel, and section A now tallies the ligand split. Results: the Arp11 chain
+   carries **ADP in 14 entries and ATP in 5**; only **2/12** panel members carry any term
+   under `GO:0000166`, and both use `GO:0005524` — human ACTA1 (TAS, together with
+   `GO:0043531 ADP binding`) and yeast ACT1 (IDA). So the gap is family-wide (ACTB,
+   ACTG1 and ACTR1A all carry nothing), `GO:0005524` is the term GO actually uses for
+   this site, and `GO:0043531` or the parent `GO:0032559` are named as defensible
+   alternatives. **Note the reviewer's premise was wrong in one detail:** ACTB does *not*
+   carry `GO:0005524` (QuickGO returns zero annotations under `GO:0000166` for P60709).
+   The precedents are ACTA1 and yeast ACT1.
+5. **The `GO:0005856` MODIFY collapses into an existing row.** Stated in the reason: the
+   gene already has `GO:0005869` as `part_of` by IBA, and the SubCell pipeline behind
+   `GO_REF:0000044` cannot emit a complex term from `SL-0090`, so this is a
+   drop-the-redundant-ancestor recommendation, not a new `located_in` annotation.
+6. **HPA denominators no longer shrink silently.** `nuclear_arp_control.py` now prints
+   which genes were excluded and why (ACTR5 and ACTB, both "HPA record present but no
+   location reported") plus the clade sizes before exclusion, so "3/4" and "0/3" cannot
+   be read as a census of the panel.
+
+Reproducibility re-checked after all three code changes: a fresh `uv run python
+analyze.py` is `diff`-identical to the committed `RESULTS.md`.

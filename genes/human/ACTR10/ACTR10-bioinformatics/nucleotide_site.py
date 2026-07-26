@@ -285,6 +285,19 @@ def main() -> str:
         + (", ".join(f"{p} ({'/'.join(l)})" for p, l in informative) if informative else "none")
     )
     out("")
+    # Which nucleotide was modelled matters for term choice downstream, so the split is
+    # tallied rather than left for a reader to count off the list above.
+    tally: dict[str, int] = {}
+    for _, ligs in informative:
+        for lig in ligs:
+            tally[lig] = tally.get(lig, 0) + 1
+    out(
+        "Split by ligand modelled in the Arp11 chain: "
+        + ("; ".join(f"{k} in {v} entries" for k, v in sorted(tally.items())) if tally else "none")
+        + f" (of {len(entries)} entries surveyed, "
+        + f"{len(entries) - len(informative)} model no nucleotide in that chain)."
+    )
+    out("")
 
     # ---- B. atomic contacts ----------------------------------------------
     cif = download_cif(CONTACT_PDB)

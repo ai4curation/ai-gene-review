@@ -129,15 +129,21 @@ def main() -> str:
     out("| gene | UniProt | clade (hypothesis) | recommended name | HPA subcellular locations | nuclear compartment? |")
     out("|---|---|---|---|---|---|")
     summary = {"dynactin": [], "nuclear": []}
+    # Genes that HPA cannot score are dropped from the denominators below, so they are
+    # recorded here and printed with the tally. A denominator that silently shrinks is
+    # the same failure as a silently degrading script.
+    excluded: list[tuple[str, str, str]] = []
     for symbol, acc, clade in PANEL:
         genes, name = uniprot_name(acc)
         locs = hpa_locations(symbol)
         if locs is None:
             cell = "_no HPA immunofluorescence record_"
             nuclear = "n/a"
+            excluded.append((symbol, clade, "no HPA immunofluorescence record"))
         elif not locs:
             cell = "_HPA record present but no location reported_"
             nuclear = "n/a"
+            excluded.append((symbol, clade, "HPA record present but no location reported"))
         else:
             cell = ", ".join(locs)
             matched = [loc for loc in locs if loc.lower() in HPA_NUCLEAR_LOCATIONS]
@@ -168,6 +174,24 @@ def main() -> str:
             f"- {label}: {hits}/{len(rows)} genes with a nuclear compartment in their HPA "
             "location list (" + ", ".join(f"{s}:{'nuclear' if h else 'non-nuclear'}" for s, h in rows) + ")"
         )
+    # The denominators above count only genes HPA could score. State which genes that
+    # dropped, and how large each clade was before the drop, so the tally is not read as
+    # a complete census of the panel.
+    if excluded:
+        out(
+            "- excluded from those denominators because HPA reports no location: "
+            + "; ".join(f"{s} ({c}) - {why}" for s, c, why in excluded)
+        )
+    panel_sizes: dict[str, int] = {"nuclear-ARP clade": 0, "dynactin clade": 0}
+    for _, _, clade in PANEL:
+        if clade.startswith("nuclear"):
+            panel_sizes["nuclear-ARP clade"] += 1
+        elif clade != "conventional actin":
+            panel_sizes["dynactin clade"] += 1
+    out(
+        "- clade sizes in the panel before exclusions: "
+        + "; ".join(f"{k} {v}" for k, v in panel_sizes.items())
+    )
     out("")
     return "\n".join(lines)
 
