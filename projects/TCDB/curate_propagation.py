@@ -12,17 +12,24 @@ GO term?" -- is answered here with **empirical evidence**, not assertion:
 
     frac high  -> the activity is shared across the TC group  -> PROPAGATION JUSTIFIED
     frac low   -> the GO term is a minority/subfamily property -> NOT JUSTIFIED here
-    no members -> nothing to test                              -> UNCERTAIN (kept a source)
+    k == 0     -> members exist but none carry it              -> GAP_CANDIDATE (reverse gap)
+    no members -> nothing to test                              -> NO_REVIEWED_MEMBER
 
 TC id matching respects level: a 5-level system is matched exactly; a coarser id
 (family/subfamily) is matched by `<id>` OR `<id>.*` (the dot forces a boundary so
 `2.A.1` does not spuriously match `2.A.10`). GO closure is computed locally from
 the cached ``go-basic.obo`` (is_a), so only ONE UniProt call per TC is needed.
 
-Verdict rule (encoded as the SSSOM predicate):
-  * exactMatch  (JUSTIFIED)      : N>=2 and frac>=0.7, or N==1 and frac==1.0
-  * narrowMatch (NOT_AT_LEVEL)   : N>=3 and frac<0.5
-  * relatedMatch(UNCERTAIN)      : everything else (no members, or ambiguous middle)
+Verdict rule (encoded as the SSSOM predicate), applied in this order:
+  * broadMatch  (CLASS_LEVEL)        : level<=2 -- a whole TC class/subclass, not scored
+  * relatedMatch(NO_REVIEWED_MEMBER) : N==0 -- nothing to test
+  * relatedMatch(UNCERTAIN)          : N>=CAP -- member count truncated, frac unreliable
+  * exactMatch  (JUSTIFIED)          : N>=2 and frac>=0.7, or N==1 and frac==1.0
+  * relatedMatch(GAP_CANDIDATE)      : level>=4 and K==0 -- specific system, members all missing
+                                       the term (checked before the narrow rule, which K==0 would
+                                       otherwise always satisfy)
+  * narrowMatch (NOT_AT_LEVEL)       : N>=3 and frac<0.5
+  * relatedMatch(UNCERTAIN)          : the ambiguous small-N middle
 
 Emits:
   * data/propagation_evidence.tsv   -- tc, go, level, n_members, n_with_go, frac, verdict, members
@@ -144,10 +151,13 @@ def verdict(n: int, k: int, level: int) -> tuple[str, str, str]:
     frac = k / n
     if (n >= 2 and frac >= 0.7) or (n == 1 and frac == 1.0):
         return "skos:exactMatch", "exact match", "JUSTIFIED"
-    if n >= 3 and frac < 0.5:
-        return "skos:narrowMatch", "narrow match", "NOT_JUSTIFIED_AT_LEVEL"
+    # GAP_CANDIDATE is checked BEFORE the narrow rule: k==0 implies frac<0.5, so without this
+    # ordering every specific system with >=3 members and zero carrying the term would be filed
+    # as "not justified at this level" -- the opposite reading of the same evidence.
     if level >= 4 and k == 0:
         return "skos:relatedMatch", "related match", "GAP_CANDIDATE"
+    if n >= 3 and frac < 0.5:
+        return "skos:narrowMatch", "narrow match", "NOT_JUSTIFIED_AT_LEVEL"
     return "skos:relatedMatch", "related match", "UNCERTAIN"
 
 
@@ -289,6 +299,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[{i}/{len(tcs)}] TC:{tc}"
               + (f" (norm {norm})" if norm != tc else "") + f"  members={n}")
         time.sleep(args.delay)
+
+    if args.limit:
+        # A smoke test must not overwrite the full curated set with its handful of rows.
+        counts: dict[str, int] = defaultdict(int)
+        for r in rows:
+            counts[r["verdict"]] += 1
+        print(f"# --limit {args.limit}: {len(rows)} pairs -> verdicts {dict(counts)} (outputs NOT written)")
+        return 0
 
     emit(rows)
     return 0

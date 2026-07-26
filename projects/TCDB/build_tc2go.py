@@ -10,9 +10,11 @@ member-protein annotations. This script distils the **clean, in-scope slice**:
   2. drop obsolete GO terms and attach the current QuickGO label;
   3. aggregate the surviving 5-level TC numbers up to the **TC family** (3-level),
      counting how many distinct members support each (family, GO) pair;
-  4. emit SSSOM: a family with a single surviving MF term -> ``skos:exactMatch``
+  4. emit SSSOM: a family associated with a single in-scope MF term -> ``skos:exactMatch``
      (mono-specific: one GO term fits the whole family); a family with several -> ``skos:narrowMatch``
-     (poly-specific; the GO term applies to a subfamily).
+     (poly-specific; the GO term applies to a subfamily). Mono-specificity is judged **before**
+     the ``--min-support`` filter, so a poly-specific family is never promoted to ``exactMatch``
+     just because its other substrate terms are thinly supported.
 
 Mirrors projects/GLYCOBIOLOGY/build_cazy2go.py. **Machine-derived: every row is a
 live join of TCDB's own assertion with the QuickGO ontology -- no row is hand-typed.**
@@ -75,17 +77,26 @@ def build(min_support: int) -> list[dict]:
 
     mappings: list[dict] = []
     for fam in sorted(fam_go):
-        # surviving = non-obsolete MF term with >= min_support members
-        surviving = {
+        # in_scope = every non-obsolete transporter-activity MF term TCDB associates with the
+        # family, BEFORE the support threshold. Mono-specificity must be judged on this set:
+        # judging it on the filtered set would call a family "mono-specific" (and emit the
+        # propagate-safe exactMatch) merely because its other substrate terms each happen to have
+        # a single supporting member -- manufacturing the over-generality this project warns about.
+        in_scope = {
             g: n for g, n in fam_go[fam].items()
-            if n >= min_support and g in labels and not labels[g]["obsolete"]
+            if g in labels and not labels[g]["obsolete"]
         }
+        surviving = {g: n for g, n in in_scope.items() if n >= min_support}
         if not surviving:
             continue
-        mono = len(surviving) == 1
+        mono = len(in_scope) == 1
+        below = len(in_scope) - len(surviving)
         for go_id, support in sorted(surviving.items(), key=lambda kv: (-kv[1], kv[0])):
             pred = ("skos:exactMatch", "exact match") if mono else ("skos:narrowMatch", "narrow match")
             kind = "mono-specific" if mono else "poly-specific (term applies to a subfamily)"
+            if below:
+                kind += (f"; {below} further MF term(s) for this family fell below the "
+                         f"--min-support {min_support} threshold")
             mappings.append({
                 "subject_id": f"TC:{fam}",
                 "subject_label": fam_name.get(fam, "").strip(),

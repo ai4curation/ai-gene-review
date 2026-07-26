@@ -137,11 +137,17 @@ a more specific child still counts). The fraction is the propagation signal:
 | Verdict (SSSOM predicate) | Rule | Count |
 |---|---|---:|
 | **JUSTIFIED** (`exactMatch`) | ≥2 members, ≥70% carry the term (or 1/1) | **80** |
-| **NOT JUSTIFIED at this TC level** (`narrowMatch`) | ≥3 members, <50% carry it | **23** |
-| **GAP_CANDIDATE** (`relatedMatch`) | specific system (≥4-level), member(s) exist but 0 carry it | **62** |
+| **GAP_CANDIDATE** (`relatedMatch`) | specific system (≥4-level), member(s) exist but 0 carry it | **67** |
+| **NOT JUSTIFIED at this TC level** (`narrowMatch`) | ≥3 members, <50% carry it | **18** |
 | **CLASS_LEVEL** (`broadMatch`) | whole TC class/subclass (≤2-level); broad by construction | **12** |
 | **NO_REVIEWED_MEMBER** (`relatedMatch`) | no reviewed protein xref'd to the TC id | **10** |
 | **UNCERTAIN** (`relatedMatch`) | ambiguous small-n middle | **7** |
+
+The rows are listed in **evaluation order**, which matters for the two middle rules:
+`k=0` also satisfies "<50% carry it", so GAP_CANDIDATE is tested *first*. A specific
+system whose members all lack the term is a reverse-gap lead (the members are
+under-annotated), not evidence that the term fails to propagate — filing it as
+`narrowMatch` would both hide it from the gap harvest and overstate the narrow count.
 
 Shipped as [`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml)
 with the per-pair evidence (`k/n`) in every comment; the full table is
@@ -155,7 +161,7 @@ with the per-pair evidence (`k/n`) in every comment; the full table is
   sugar-porter subfamily `2.A.1.1 → GO:0005351 carbohydrate:proton symporter
   activity` (only 35/88 members, 40%), or `1.A.9 → GO:0160039 serotonin-gated
   chloride channel activity` (1/59): correct for a few members, wrong for the rest.
-- **`GAP_CANDIDATE` is a reverse-gap harvest.** 62 leads are specific systems where
+- **`GAP_CANDIDATE` is a reverse-gap harvest.** 67 leads are specific systems where
   GO curates a precise term but the reviewed member is annotated only to a
   *parent/sibling* — e.g. `2.A.1.1.10 → GO:0005364 maltose:proton symporter` whose
   member P15685 carries the general `carbohydrate:proton symporter activity` but not
@@ -225,9 +231,13 @@ closure-filtered review**, not a confirmed missing annotation.
   family→GO row is therefore usually a `narrowMatch` (the GO term is really a
   *subfamily* property), not an `exactMatch`.
 - **…but some families are clean.** `2.A.69` (auxin efflux carrier) →
-  `GO:0010329 auxin efflux transmembrane transporter activity` and `1.A.8` (MIP)
-  → `GO:0015250 water channel activity` are mono-specific — one GO term fits the whole family —
-  ready-to-add `exactMatch` rows.
+  `GO:0010329 auxin efflux transmembrane transporter activity` is mono-specific —
+  one GO term fits the whole family — a ready-to-add `exactMatch` row.
+- **A family name is not a specificity claim.** `1.A.8` (MIP) looks like a clean
+  water-channel family, but it splits into classical aquaporins (water) and
+  aquaglyceroporins (glycerol), so `GO:0015250 water channel activity` is a
+  *subfamily* property and the mapping is a `narrowMatch`. Mono-specificity has to
+  be checked against the member set, not inferred from the family label.
 
 The curated seed encodes this distinction directly (below).
 
@@ -243,14 +253,18 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
   — not a mapping to adopt as-is.
 - **[`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml)** — those
   same 194 leads **scored for propagation by UniProt member evidence** (80
-  JUSTIFIED `exactMatch`, 23 `narrowMatch`, 62 GAP_CANDIDATE, 12 CLASS_LEVEL, 17 other;
-  see above). Evidence-
-  derived (`semapv:CompositeMatching`), the systematic first pass over every lead.
+  JUSTIFIED `exactMatch`, 67 GAP_CANDIDATE, 18 `narrowMatch`, 12 CLASS_LEVEL, 17
+  other; see above). Evidence-derived (`semapv:CompositeMatching`), the systematic
+  first pass over every lead.
 - **[`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)** — a second,
-  noisier candidate pool: **machine-derived coverage extension** (154 families,
-  477 rows) from TCDB's `go.py` × QuickGO (see below). **110 of its 154 families
-  are *not* in GO's xrefs** — the genuine coverage it adds — but it is
-  family-level and needs review.
+  noisier candidate pool: a **machine-derived coverage extension** (154 families,
+  477 rows: 46 `exactMatch`, 431 `narrowMatch`) distilled by
+  [`build_tc2go.py`](TCDB/build_tc2go.py) from the live join of TCDB's `go.py`
+  with QuickGO, keeping only non-obsolete transporter-activity MF terms and
+  aggregating to the TC family (min 2 supporting members). **110 of its 154
+  families are *not* in GO's xrefs** — the genuine coverage it adds. No row is
+  hand-typed; this is TCDB's own assertion filtered for aspect + obsolescence, and
+  it is family-level, so it must be reviewed before adoption.
 - **[`tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml)** — the **hand-curated exemplar
   layer**: 8 mappings, each with an explicit *propagation verdict* and backed by a
   **reviewed Swiss-Prot transporter** read individually (deeper than the automated
@@ -261,36 +275,31 @@ same format as [RHEA](RHEA/rhea2go.sssom.yaml) and
     P05023) — both curated *up* from GO sources — plus the mono-specific family
     `2.A.69` AEC → `GO:0010329` (PIN1 Q9C6B8, IDA/IMP).
   - `narrowMatch` — **propagation NOT justified at that TC level** (the GO term is
-    a subfamily property): `1.A.8` MIP → water (aquaglyceroporins move glycerol,
-    not water); `2.A.17` POT/PTR → nitrate (CHL1/NRT1.1 Q05085); `2.A.18` AAAP →
-    auxin influx (AUX1 Q96247); `2.A.36` CPA1 → Na⁺/H⁺ (SOS1 Q9LKW9); `2.A.38` Trk
-    → K⁺ (HKT1 Q84TI7). Six of the eight fall in a family GO already xrefs
-    (independent corroboration).
-  - `exactMatch` (mono-specific, ready-to-add): `2.A.69` AEC → `GO:0010329`
-    (backing PIN1 Q9C6B8, IDA/IMP); `1.A.8` MIP → `GO:0015250` (backing AQP1
-    P29972).
-  - `narrowMatch` (GO term is a subfamily property of a poly-specific family):
-    `2.A.17` POT/PTR → `GO:0015112 nitrate transmembrane transporter activity`
-    (backing CHL1/NRT1.1 Q05085, IMP — a classic too-general-family case: a *peptide*
-    transporter family whose plant NPF subfamily moves nitrate); `2.A.18` AAAP →
-    `GO:0010328` (AUX1 Q96247, IDA); `2.A.36` CPA1 → `GO:0015385` (SOS1 Q9LKW9);
-    `2.A.38` Trk → `GO:0015079` (HKT1 Q84TI7).
-- **[`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml)** — a
-  **machine-derived candidate set** (154 families, 477 rows: 82 `exactMatch`, 395
-  `narrowMatch`) distilled by [`build_tc2go.py`](TCDB/build_tc2go.py): the live
-  join of TCDB's `go.py` with QuickGO, keeping only non-obsolete
-  transporter-activity MF terms, aggregated to the TC family (min 2 supporting
-  members). No row is hand-typed; this is TCDB's own assertion filtered for aspect
-  + obsolescence, and must be reviewed before adoption.
+    a subfamily property): `1.A.8` MIP → `GO:0015250` water (aquaglyceroporins move
+    glycerol, not water); `2.A.17` POT/PTR → `GO:0015112` nitrate (CHL1/NRT1.1
+    Q05085, IMP — a classic too-general-family case: a *peptide* transporter family
+    whose plant NPF subfamily moves nitrate); `2.A.18` AAAP → `GO:0010328` auxin
+    influx (AUX1 Q96247, IDA); `2.A.36` CPA1 → `GO:0015385` Na⁺/H⁺ (SOS1 Q9LKW9);
+    `2.A.38` Trk → `GO:0015079` K⁺ (HKT1 Q84TI7 — see the file comment; HKT1 is the
+    counter-example, not the backing).
+  - **Corroboration by GO's own xrefs is uneven.** Six of the eight sit in a family
+    GO already xrefs (`1.A.8` and `2.A.69` do not). For `2.A.22.1.1` → `GO:0005335`,
+    `3.A.3.1.1` → `GO:0005391` and `2.A.36` → `GO:0015385`, GO's xref is the *same*
+    TC→GO pair — genuine independent corroboration. For `2.A.17`, `2.A.18` and
+    `2.A.38` only the family co-occurs: GO xrefs `2.A.17` to `GO:0015333` (peptide,
+    not nitrate), `2.A.38` to `GO:0015387`/`GO:0009674` (not `GO:0015079`), and
+    `2.A.18` only at 5-level ids for other substrates. Family co-occurrence alone is
+    not corroboration of the mapped term.
 
 Every GO id/label is validated non-obsolete and molecular-function; the GO object
-is bound to the MF branch. Validate all three with `just validate-tcdb-mappings`
+is bound to the MF branch. Validate all four with `just validate-tcdb-mappings`
 (SSSOM structural validation + GO term/label validation; generated nested views
 [`tc2go.terms.yaml`](TCDB/tc2go.terms.yaml),
 [`tc2go.generated.terms.yaml`](TCDB/tc2go.generated.terms.yaml),
+[`tc2go.propagation.terms.yaml`](TCDB/tc2go.propagation.terms.yaml),
 [`tc2go.from_go.terms.yaml`](TCDB/tc2go.from_go.terms.yaml)).
 
-Across all three sources, **173 of TCDB's 2,235 families (8%)** have at least one
+Across all sources, **173 of TCDB's 2,235 families (8%)** have at least one
 candidate GO transporter-activity mapping.
 
 ## How this differs from EC, RHEA, and CAZy
@@ -341,7 +350,7 @@ over-generality problem (prefer the subfamily-specific child term).
 | Exemplar gene reviews | Run the full review workflow on 2–3 confirmed-gap transporters already in this repo (353 candidates), mirroring the RHEA/UniPathway exemplar pattern. |
 | "No transporter-activity MF at all" family set | The 367 TC families with no MF-activity term in `go.py` → candidates for `proposed_new_terms` or accessory (class 8/9) exclusion. |
 | Propose a `tc2go` **propagation pipeline** to GO | The strategic deliverable: the 80 evidence-JUSTIFIED leads (mostly 5-level systems) are a ready `external2go` starter set; package them (plus reviewed extensions) so a protein's TC number yields a GAF annotation. |
-| Promote the 62 GAP_CANDIDATE leads | Specific systems whose reviewed member carries only a parent term — run them through the gene-review workflow to add the specific GO term. |
+| Promote the 67 GAP_CANDIDATE leads | Specific systems whose reviewed member carries only a parent term — run them through the gene-review workflow to add the specific GO term. |
 | Chase the 10 NO_REVIEWED_MEMBER cases | Reviewed protein exists but lacks the `DR TCDB` xref (e.g. MelB) — a UniProt cross-reference gap to report upstream. |
 | Extend GO's 63 xref'd families | Promote the 110 novel `go.py`-generated families (and the 16 GO-xref families `go.py` misses) toward curated term-xrefs. |
 
@@ -349,8 +358,8 @@ over-generality problem (prefer the subfamily-specific child term).
 
 - **Started**: 2026-07-18
 - **Maturity**: SCOPING — GO's neglected TC term-xrefs extracted (194 leads) and
-  **every one scored for propagation against UniProt evidence** (80 JUSTIFIED / 23
-  narrow / 62 gap-candidate / 12 class-level / 17 other); the missing piece identified as the *annotation
+  **every one scored for propagation against UniProt evidence** (80 JUSTIFIED / 67
+  gap-candidate / 18 narrow / 12 class-level / 17 other); the missing piece identified as the *annotation
   pipeline*, not the mapping; TCDB's `go.py` dump characterised as a noisy second
   candidate pool; the structural reverse gap quantified; four SSSOM sets built and
   validated.
@@ -370,7 +379,7 @@ over-generality problem (prefer the subfamily-specific child term).
 - **Mapping sets** (all pass `just validate-tcdb-mappings`):
   [`tc2go.from_go.sssom.yaml`](TCDB/tc2go.from_go.sssom.yaml) — 194 GO-xref source
   leads; [`tc2go.propagation.sssom.yaml`](TCDB/tc2go.propagation.sssom.yaml) — the
-  same 194 scored for propagation (80 JUSTIFIED / 23 narrow / 62 gap-candidate / 12
+  same 194 scored for propagation (80 JUSTIFIED / 67 gap-candidate / 18 narrow / 12
   class-level / 17 other);
   [`tc2go.generated.sssom.yaml`](TCDB/tc2go.generated.sssom.yaml) — 477
   machine-derived candidate rows; [`tc2go.sssom.yaml`](TCDB/tc2go.sssom.yaml) — 8

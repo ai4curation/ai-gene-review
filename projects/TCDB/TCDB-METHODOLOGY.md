@@ -46,11 +46,16 @@ The fraction `k/n` drives the verdict, encoded as the SSSOM predicate:
 - `exactMatch` **JUSTIFIED** — `n≥2, k/n≥0.7` (or `1/1`): the activity is shared
   across the TC group, so a member can inherit it. **80 leads**, 70 of them
   5-level systems.
-- `narrowMatch` **NOT JUSTIFIED at this level** — `n≥3, k/n<0.5`: the GO term is a
-  minority/subfamily property; wholesale propagation would over-annotate. **23**.
 - `relatedMatch` **GAP_CANDIDATE** — specific system (level ≥4) with member(s) but
   `k=0`: the member is annotated only to a parent/sibling term, so the specific GO
-  term is a refinement/gap lead, not a propagation basis. **62**.
+  term is a refinement/gap lead, not a propagation basis. **67**.
+- `narrowMatch` **NOT JUSTIFIED at this level** — `n≥3, k/n<0.5`: the GO term is a
+  minority/subfamily property; wholesale propagation would over-annotate. **18**.
+
+  These two are listed in **evaluation order**, and the order is load-bearing: `k=0`
+  also satisfies `k/n<0.5`, so GAP_CANDIDATE must be tested first or every specific
+  system with zero carrying members would be filed as narrow — inverting the reading
+  of the evidence and hiding the lead from the gap harvest.
 - `broadMatch` **CLASS_LEVEL** — a whole TC class/subclass (level ≤2): broad by
   construction, out of scope for substrate-level propagation. **12**.
 - `relatedMatch` **NO_REVIEWED_MEMBER** — `n=0`: only TrEMBL members, or the
