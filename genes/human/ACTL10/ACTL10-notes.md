@@ -263,6 +263,62 @@ IRD blocks propagation rather than deleting the direct annotation, so this is no
 contradictory; but the ancestral state is being supported by proteins whose own clades have been
 excluded from it, and it is worth asking PAINT whether that is intended.
 
+## 7b. Three late checks, run rather than inherited
+
+Added after the coordinator relayed three lessons from reviews that merged during this work. The
+instruction was to verify rather than inherit, including the ACTL8 leads — a coordinator summary
+carries more apparent authority than the review behind it.
+
+**(i) Count how many entities each supporting reference annotates.** ACTL10's GOA has **no
+PMID-backed rows at all**, so the "one paper projected across N entities" pattern has nothing to
+bite on in its literal form. The node-level analogue does apply, and both IBA rows are guilty of
+it: they **share the same reference, `GO_REF:0000033`**, and each is a single projection —
+`GO:0015629` from PTN002631484 to **18** human genes, `GO:0005200` from PTN000940351 to **10**,
+each with identical evidence. Neither is an independent statement about ACTL10.
+
+The two rows are not independent of *each other* either. Of the 10 protein donors on the
+`GO:0005200` row, **6 also appear on the `GO:0015629` row** (`MGI:MGI:87906`, `RGD:1304556`,
+`SGD:S000001855`, `UniProtKB:P60709`, `dictyBase:DDB_G0269234`, `dictyBase:DDB_G0289811`). The **4
+that are unique** to the `GO:0005200` row — and therefore the only ones making it more specific
+than a generic actin-cytoskeleton call — are yeast **Arp1** (`SGD:S000001171`), yeast **Arp10**
+(`SGD:S000002513`), human **Arp3** (`P61158`) and human **Arp2** (`P61160`). Arp2 and Arp3 are
+seeds *at* PTN000233596 and PTN000233796, which are two of the eight nodes carrying the
+`GO:0005200` IRD negation; yeast Arp1 is a dynactin filament subunit and the centractin clade node
+PTN007551901 also carries an IRD. So the specificity of this row rests largely on donors from
+clades GO's own pipeline has excluded from the very term they donate. That is a substantive
+strengthening of `PROPAGATION_BAD`, found only by asking what each donor contributes rather than
+counting donors.
+
+**(ii) Publisher Corrections are invisible to a publication-type query.** Checked
+`CommentsCorrections/RefType` on the efetch XML for both load-bearing PMIDs: **PMID:32742462 and
+PMID:35180326 have no `CommentsCorrections` element at all** — no correction, erratum or
+retraction. Separately, ACTL8's affinage record cites the **retracted** `PMID:32125225`; ACTL10's
+affinage record has `citation_count: 0` and cites nothing whatsoever, so there is no shared
+reference and nothing in this review can rest on it. Verified by grep, not assumed.
+
+**(iii) The ACTL8 census, re-derived from QuickGO.** The brief asked whether ACTL8's mis-placement
+applies to ACTL10. Queried directly for all eight divergent human actin-like / actin-related-T
+proteins:
+
+| gene | IBA rows | under PTN002631586 / PTN007551913? |
+|---|---|---|
+| ACTL7A | 3 | no |
+| ACTL7B | 3 | no |
+| **ACTL8** | **11** | **yes, both** |
+| ACTL9 | 2 | no |
+| **ACTL10** | **2** | **no** |
+| ACTRT1 | 5 | no |
+| ACTRT2 | 2 | no |
+| ACTRT3 | 2 | no |
+
+ACTL8's finding is **confirmed** (it alone is under either narrow node; 11 rows against a median
+of 2 for the other seven), and it **does not extend to ACTL10**, which sits at the family median
+of 2 and under neither narrow node. I also re-derived the 18-gene membership of PTN002631484 and
+it matches ACTL8's claim exactly. So the answer to the brief's first lead is a clean negative:
+**ACTL10 is correctly placed in the tree; its problem is not mis-placement but a mis-annotated
+protein sequence.** A negative result from a check is still a finding, which is why it is recorded
+here and in the review rather than dropped.
+
 ## 8. Negative results, recorded because a null from a check is still a finding
 
 - **IntAct**: `findInteractions/Q5JWF8` returns `totalElements: 0`. No interaction data at all, so
