@@ -11,6 +11,9 @@ FruB as an EI-HPr-EIIA(Fru) polyprotein
 system for fructose intake."; PMID:22708906 "FruB (i.e. the
 EI-HPr-EIIA(Fru) polyprotein)"].
 
+The literature name follows phosphate-flow order. In the Q88PQ5 primary
+sequence, the domains run EIIA(Fru)-HPr-EI from the N to the C terminus.
+
 The fructose-dependent transfer of phosphate from FruB to the nitrogen-related
 PTS is experimentally supported, but it is treated as a regulatory side branch
 rather than the core FruB function. Broad kinase and transferase annotations
