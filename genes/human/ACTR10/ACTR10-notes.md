@@ -517,8 +517,11 @@ blocking. All three taken, because the first was the round-4 mistake about to re
    since that sentence is doing the provenance work for the byte-identical `RESULTS.md`
    claim.
 
-Reactome's ContentService was still returning HTTP 521 at the close of this round, so
-`RESULTS.md` has still not been regenerated end-to-end since `9c348858c`. It is byte-identical
-to that commit, and the three non-Reactome modules were re-run and emit only lines already
-present in it — that is the whole basis for the claim, and it is a partial re-run, not a full
-one. A background retry is still cycling.
+**Reproducibility, resolved.** Reactome's ContentService was returning HTTP 521 throughout
+rounds 4 and 5, so at the close of round 5 the byte-identical `RESULTS.md` claim rested only on
+a partial re-run: the three non-Reactome modules emitted lines already present in the file, and
+section F could not be regenerated at all. A retry loop was left cycling, and Reactome came back
+(HTTP 200). On attempt 9 a **full end-to-end `uv run python analyze.py` produced a file
+identical to the committed `RESULTS.md`** — so all five modules, section F included, are now
+verified reproducible, and the partial-re-run caveat above is superseded. This is the
+`diff`-reproducibility gate met properly rather than argued around.
