@@ -50,6 +50,21 @@ Two consequences:
   genuinely sub-stoichiometric subunit of a hetero-oligomeric filament, not a
   separate beta-only dynactin.
 
+A 2025 result closes the loop using the same trick the 1994 paper used — a
+paralog-specific antibody. The study that solved the human dynactin structure probed
+its effector's binding with **anti-Arp1b**:
+
+> [PMID:40186871 "These Dre1 variants were tested in co-transfection assays for binding to multiple dynactin subunits (p150glued, p50-dynamitin [DCTN2], Arp1b) as well as to dynein"]
+
+> [PMID:40186871 "Eluates were immunoblotted with anti-p150glued, anti-p50-dynamitin, anti-dynein 74 kDa, anti-Arp1b, anti-FHL2, anti-Strep, and anti-GAPDH antibodies."]
+
+So beta-centractin is recovered from affinity-purified human dynactin by a reagent
+that cannot be reporting alpha, thirty years after the original result and
+independently of AP-MS. Note the irony: those authors used **anti-Arp1b** as their
+representative Arp1-filament readout while depositing a structure that models all
+eight protomers as alpha. (Missed on the first pass because the paper spells it
+`Arp1b`, lower-case b, and my grep used `Arp1B`; the PR reviewer caught it.)
+
 ## 2. Where the two paralogs are, and are not, distinguishable
 
 **Not distinguishable by tissue.** The founding paper's Northerns:
@@ -76,6 +91,43 @@ the stoichiometry: alpha is the workhorse, beta is dispensable in most lines.
 **Not distinguishable by disease genetics.** ACTR1B was screened alongside
 ACTR1A and DCTN1-6 in inherited peripheral neuropathy and came up empty:
 > [PMID:26662454 "No variants of disease significance were identified in this study suggesting the dynactin genes are unlikely to be a common cause of IPNs."]
+
+## 2b. The QuickGO queries behind the load-bearing claims
+
+Three claims here rest on QuickGO rather than on a file in the repo, so the exact
+queries are recorded for reproducibility. All run **2026-07-26** against
+`https://www.ebi.ac.uk/QuickGO/services`.
+
+1. **"ACTR1A carries none of the four Reactome granule/extracellular annotations"**
+   — corroborates the four REMOVEs; the topological argument stands without it:
+   ```
+   /annotation/search?geneProductId=UniProtKB:P42025&limit=200
+   /annotation/search?geneProductId=UniProtKB:P61163&limit=200
+   ```
+   Totals 21 and 43. On ACTR1B but not ACTR1A: `GO:0005576` (x2 TAS), `GO:0034774`,
+   `GO:1904813`, `GO:0016020`. On ACTR1A but not ACTR1B: `GO:0005875`, `GO:0005938`,
+   `GO:0016192`. Everything else — including all three IBAs and the centrosome
+   IEA+IDA pair — is identical between the paralogs.
+
+2. **"GO:0106006 IBA reaches only five human proteins, and PTN007551901 delivers it
+   to exactly ACTR1A and ACTR1B"** — load-bearing for the MODIFY:
+   ```
+   /annotation/search?goId=GO:0106006&taxonId=9606&geneProductType=protein&evidenceCode=ECO:0000318&limit=200
+   ```
+   5 hits: HIP1 and HIP1R (`PTN000045135|SPAC688.11`), DCTN2
+   (`PTN000394123|SPCC11E10.03`), ACTR1A and ACTR1B (`PTN007551901|SPBC1347.12`).
+   The same query on `GO:0030473` returns 4 hits and shows the *other* node,
+   `PTN000233666`, on both centractins — which is how the two-node structure was found.
+
+3. **Per-donor evidence for each propagated term** (used throughout section 3):
+   ```
+   /annotation/search?geneProductId=UniProtKB:<ACC>&goId=<GO_ID>&goUsage=descendants&goUsageRelationships=is_a,part_of&limit=100
+   ```
+   run for every WITH/FROM accession x term pair, collecting `goEvidence`. Also
+   ```
+   /annotation/search?goId=GO:0140660&taxonId=9606&geneProductType=protein&limit=50
+   ```
+   which returns **zero hits** — the basis for the annotation-gap claim.
 
 ## 3. WITH/FROM resolution, and what each donor carries itself
 
@@ -262,34 +314,62 @@ backbone filament of the dynactin rod structure and serves as the scaffold for
 the remaining subunits"* — which is verbatim the definition of `GO:0140378
 protein complex scaffold activity`: *"A structural molecule activity of a
 protein-containing complex component that serves to hold the complex together.
-Protein complex scaffolds are integral members of complexes."* Hence
-**MODIFY -> GO:0140378**.
+Protein complex scaffolds are integral members of complexes."* So there are two defensible structural MFs. **MODIFY -> GO:0005200 structural
+constituent of cytoskeleton** is listed first, on precedent: it is the term
+conventional beta-actin carries, *S. cerevisiae* ARP1 holds it by its own **IDA**
+(PMID:9658168), and **ACTR10/Arp11 -- the capping subunit of this very filament --
+already holds it by IBA with the `enables` qualifier**. `GO:0140378 protein complex
+scaffold activity` is offered second: its definition is tighter but it has no
+precedent in this family. Decisive for the ordering: the term is attached to the
+*shared* node `PTN007551901`, so one node cannot deliver a different structural MF
+to each paralog — and the independent ACTR1A review converged on GO:0005200. PAINT
+should receive one actionable recommendation, not two competing ones.
 
-A collateral observation: UniProt's cross-reference block for P42025 still lists
+A collateral observation reinforcing the choice: UniProt's cross-reference block for
+P42025 still lists
 [file:human/ACTR1B/ACTR1B-uniprot.txt "DR   GO; GO:0005200; F:structural constituent of cytoskeleton; IBA:GO_Central."]
 which is **absent from current GOA for both paralogs**, while GO:0106006 sits at a
 *different* PANTHER node and is dated 2026-04-16. Whatever the edit history, the
 present state is that the two human centractins carry a membrane-anchor MF and no
 structural MF, even though *S. cerevisiae* ARP1 holds GO:0005200 with its own
-**IDA** (PMID:9658168, verified in QuickGO). GO:0005200 is a perfectly acceptable
-alternative replacement if curators prefer the cytoskeletal-structure framing.
+**IDA** (PMID:9658168, verified in QuickGO) — i.e. the term GOA dropped from these two
+genes is the one an orthologue holds experimentally.
 
 Also: the qualifier should become `enables`, not `contributes_to`. Scaffold
 activity is the subunit's own activity; `contributes_to` is for complex-level
 activities the subunit cannot perform alone.
 
-## 6. `GO:0005524 ATP binding` was lost as collateral, not corrected
+## 6. The nucleotide MF was lost as collateral — and the right ligand is ADP, not ATP
 
 UniProt still shows
 [file:human/ACTR1B/ACTR1B-uniprot.txt "DR   GO; GO:0005524; F:ATP binding; IEA:UniProtKB-KW."]
 and the `ATP-binding` / `Nucleotide-binding` keywords are on the entry, but the
 term is absent from the current GOA download. This is the GO_REF:0000043
 Swiss-Prot-keyword pipeline retirement, which removed keyword-derived
-annotations wholesale — not a judgement about ACTR1B. The evidence that it
-should come back is strong and specific: every Arp1 protomer in the human
-dynactin structure has ADP bound, and ACTR1B retains 17/18 nucleotide-contact
-residues with the one change being to the residue five other family members
-carry (§4). Proposed as a `NEW` row with ISS evidence.
+annotations wholesale — not a judgement about ACTR1B.
+
+But the term to restore is **`GO:0043531 ADP binding`, not `GO:0005524 ATP binding`**.
+ATP binding by Arp1 has never been shown. The paper that purified native Arp1 and
+characterised its polymerisation says so in as many words:
+
+> [PMID:10074429 "is predicted to bind ATP and possibly polymerize"]
+
+What *has* been observed is ADP: entity 10 of PDB 9B85 is ADENOSINE-5'-DIPHOSPHATE,
+present in all eight Arp1 protomers (chains A-G, I), while the single
+conventional-actin protomer (chain H) carries AMP-PNP instead. Combined with the
+residue retention from §4 — 17/18 nucleotide contacts conserved, the single change
+being to the residue five other family members carry — `GO:0043531` is proposed as a
+`NEW` row with **ISS** evidence (inferred from the ADP-bound ACTR1A protomers, since
+ACTR1B is in no structure). The with/from is the sequence accession `UniProtKB:P61163`
+alone; the PDB entry is cited as a reference rather than placed in with/from. If a
+curator objects even to ADP, the fallback is the parent `GO:0000166 nucleotide
+binding`, still better than the present state of no nucleotide MF at all. The
+independent ACTR1A review reached the same ADP-over-ATP conclusion from the same
+coordinates.
+
+The same paper also bounds the polymerisation claim in the other direction: Arp1
+filaments annealed over time but never reached conventional actin-filament length, so
+no filament-dynamics term is proposed for either paralog.
 
 ## 7. The Reactome neutrophil-granule rows: a paralog-pair argument
 
@@ -375,14 +455,17 @@ cytoskeleton.
 
 ## 10. Curation recommendations issued
 
-1. `GO:0106006` -> `GO:0140378 protein complex scaffold activity`, qualifier
-   `contributes_to` -> `enables`. Affects **both** ACTR1A and ACTR1B via
-   PANTHER node `PTN007551901`; stated once, naming both genes.
+1. `GO:0106006` -> `GO:0005200 structural constituent of cytoskeleton` (alternative:
+   `GO:0140378 protein complex scaffold activity`), qualifier `contributes_to` ->
+   `enables`. Affects **both** ACTR1A and ACTR1B via PANTHER node `PTN007551901`;
+   stated once, naming both genes.
 2. Re-code the `GO:0005869` TAS PMID:7696711 row as **IDA**. The cited paper is
    not a review — it made isoform-specific antibodies and ran 2D gels on
    cytosolic fractions. TAS understates the strongest evidence ACTR1B has.
    Applies to ACTR1A's row from the same paper too.
-3. Restore `GO:0005524 ATP binding`, lost to the GO_REF:0000043 retirement.
+3. Restore a nucleotide MF lost to the GO_REF:0000043 retirement, as `GO:0043531 ADP
+   binding` rather than `GO:0005524 ATP binding` — ADP is what is modelled in all eight
+   Arp1 protomers of 9B85, whereas ATP binding by Arp1 is still only predicted.
 4. Retire the four Reactome granule-lumen/extracellular rows.
 5. Fix the pig ACTR1A `GO:0030989` IDA (ComplexPortal, PMID:36071160) —
    spindle-pole-body-defined meiotic term on a mammalian in vitro motility paper.
