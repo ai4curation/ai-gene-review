@@ -147,6 +147,20 @@ def entity_descriptions(block) -> dict[str, str]:
     return out
 
 
+def entity_source_organisms(block) -> dict[str, str]:
+    """entity_id -> source organism, so the reference actin is not silently
+    assumed to be human. 2BTF is bovine beta-actin, which is sequence-identical
+    to human ACTB over the modelled region; the identity is computed below rather
+    than asserted."""
+    out: dict[str, str] = {}
+    for tag, cols in (
+        ("_entity_src_gen.", ["entity_id", "pdbx_gene_src_scientific_name"]),
+        ("_entity_src_nat.", ["entity_id", "pdbx_organism_scientific"]),
+    ):
+        for row in block.find(tag, cols):
+            out.setdefault(row.str(0), row.str(1))
+    return out
+
 def entity_sequences(block) -> dict[str, str]:
     out = {}
     for row in block.find("_entity_poly.", ["entity_id", "pdbx_seq_one_letter_code_can"]):
@@ -316,6 +330,8 @@ def main() -> None:
     # entity (label_seq_id) numbering -> human ACTB numbering
     ent_seq = ent_seq2[actin_ent]
     ent2ref = index_map(aligner, ent_seq, ref)
+    actin_organism = entity_source_organisms(block2).get(actin_ent, "unrecorded")
+    actin_vs_human_actb = pct_identity(aligner, ent_seq, ref)
 
     module_a_rows = []
     for ent_i, (res, dist) in actin_contacts.items():
@@ -456,10 +472,35 @@ def main() -> None:
     if not arp1_pairs:
         raise ValueError("no ACTR1A-ACTR1A interface found; check chain labelling")
     biggest = max(arp1_pairs, key=lambda kv: kv[1])[0]
+    # Separate the two contact-size classes rather than eyeballing them: the
+    # intra-protofilament (longitudinal) interfaces are several-fold larger than
+    # the lateral ones, so split at the largest gap in the sorted contact counts.
+    sizes = sorted((v for _, v in arp1_pairs), reverse=True)
+    gaps = [(sizes[i] - sizes[i + 1], i) for i in range(len(sizes) - 1)]
+    split_after = max(gaps)[1] if gaps else 0
+    threshold = sizes[split_after]
+    long_pairs = sorted(
+        (k for k, v in arp1_pairs if v >= threshold),
+        key=lambda k: -pair_counts[k],
+    )
+    per_pair = {
+        f"{k[0]}-{k[1]}": {
+            "n_atom_contacts": pair_counts[k],
+            "actr1a_positions": sorted(pair_res[k]),
+        }
+        for k in long_pairs
+    }
+    consensus = sorted(
+        set.intersection(*[set(pair_res[k]) for k in long_pairs])
+    ) if long_pairs else []
     longitudinal = {
         "chains": list(biggest),
         "n_atom_contacts": pair_counts[biggest],
         "actr1a_positions": sorted(pair_res[biggest]),
+        "longitudinal_class_threshold_atom_contacts": threshold,
+        "n_longitudinal_actr1a_actr1a_pairs": len(long_pairs),
+        "per_longitudinal_pair": per_pair,
+        "consensus_positions_all_longitudinal_pairs": consensus,
     }
     longitudinal["mapped_to_actb"] = [
         {
@@ -469,6 +510,23 @@ def main() -> None:
         }
         for p in longitudinal["actr1a_positions"]
     ]
+    longitudinal["consensus_mapped_to_actb"] = [
+        {
+            "actr1a_pos": p,
+            "actr1a_res": seqs["ACTR1A"][mp - 1] if (mp := model2up.get(p)) else None,
+            "actb_pos": actr1a_to_actb.get(model2up.get(p)),
+        }
+        for p in longitudinal["consensus_positions_all_longitudinal_pairs"]
+    ]
+    cons_actb = [
+        m["actb_pos"] for m in longitudinal["consensus_mapped_to_actb"] if m["actb_pos"]
+    ]
+    longitudinal["consensus_actb_positions_below_70"] = sorted(
+        p for p in cons_actb if p < 70
+    )
+    longitudinal["consensus_actb_positions_70_and_above"] = sorted(
+        p for p in cons_actb if p >= 70
+    )
     actb_positions = [
         m["actb_pos"] for m in longitudinal["mapped_to_actb"] if m["actb_pos"]
     ]
@@ -488,6 +546,8 @@ def main() -> None:
             "pdb": ACTIN_ATP_PDB.upper(),
             "actin_chain": actin_chain,
             "actin_entity_description": ent_desc2.get(actin_ent),
+            "actin_source_organism": actin_organism,
+            "actin_entity_pct_identity_to_human_ACTB": actin_vs_human_actb,
             "contact_cutoff_A": CONTACT_CUTOFF_A,
             "n_contact_residues": len(actin_contacts),
             "table": module_a_rows,
@@ -560,9 +620,13 @@ def render(r: dict) -> str:
     o.append("")
     o.append(
         f"Reference: PDB **{a['pdb']}** chain `{a['actin_chain']}` "
-        f"({a['actin_entity_description']}), ligand ATP, heavy-atom cutoff "
+        f"({a['actin_entity_description']}, source organism "
+        f"*{a['actin_source_organism']}*, "
+        f"{a['actin_entity_pct_identity_to_human_ACTB']}% identical to human ACTB "
+        f"over the modelled region), ligand ATP, heavy-atom cutoff "
         f"{a['contact_cutoff_A']} A. Nucleotide-contacting residues found from "
-        f"coordinates: **{a['n_contact_residues']}**."
+        f"coordinates: **{a['n_contact_residues']}**. The reference is not human, so "
+        f"contacts are transferred through human ACTB rather than read off directly."
     )
     o.append("")
     o.append("| protein | global % identity to ACTB | site positions aligned | identical | % identical |")
@@ -670,9 +734,34 @@ def render(r: dict) -> str:
     )
     o.append("")
     o.append(
-        "ACTR1A interface residues (P61163 numbering): "
-        + ", ".join(str(p) for p in lg["actr1a_positions"])
+        "Full ACTR1A interface residue list for that pair (P61163 numbering, nothing "
+        "omitted): " + ", ".join(str(p) for p in lg["actr1a_positions"]) + ". The "
+        "subdomain-2 residues are the ones that carry the polymerisation argument; the "
+        "higher-numbered positions are subdomain-3/4 contacts on the partner face and "
+        "are reported here for completeness."
     )
+    o.append("")
+    o.append(
+        f"Generalising beyond that single pair: splitting the ACTR1A-ACTR1A interfaces "
+        f"at the largest gap in their contact counts separates "
+        f"{lg['n_longitudinal_actr1a_actr1a_pairs']} large "
+        f"(>= {lg['longitudinal_class_threshold_atom_contacts']} atom contacts, "
+        f"intra-protofilament) interfaces from the smaller lateral ones. Positions "
+        f"present in **every** large interface: "
+        + ", ".join(str(p) for p in lg["consensus_positions_all_longitudinal_pairs"])
+        + f". In beta-actin numbering, those below residue 70 (subdomain 2) are "
+        f"{lg['consensus_actb_positions_below_70']} and the rest are "
+        f"{lg['consensus_actb_positions_70_and_above']}."
+    )
+    o.append("")
+    o.append("| pair | atom contacts | ACTR1A interface residues |")
+    o.append("|---|---|---|")
+    for name, v in lg["per_longitudinal_pair"].items():
+        o.append(
+            f"| {name} | {v['n_atom_contacts']} | "
+            + ", ".join(str(x) for x in v["actr1a_positions"])
+            + " |"
+        )
     o.append("")
     return "\n".join(o) + "\n"
 

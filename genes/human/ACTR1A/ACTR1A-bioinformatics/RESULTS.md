@@ -6,7 +6,7 @@ Sequences: ACTB P60709 (375 aa), ACTR1A P61163 (376 aa), ACTR1B P42025 (376 aa),
 
 ## A. Actin's ATP site, transferred by alignment
 
-Reference: PDB **2BTF** chain `A` (BETA-ACTIN), ligand ATP, heavy-atom cutoff 4.5 A. Nucleotide-contacting residues found from coordinates: **25**.
+Reference: PDB **2BTF** chain `A` (BETA-ACTIN, source organism *Bos taurus*, 99.7% identical to human ACTB over the modelled region), ligand ATP, heavy-atom cutoff 4.5 A. Nucleotide-contacting residues found from coordinates: **25**. The reference is not human, so contacts are transferred through human ACTB rather than read off directly.
 
 | protein | global % identity to ACTB | site positions aligned | identical | % identical |
 |---|---|---|---|---|
@@ -146,5 +146,16 @@ Inter-chain heavy-atom contacts (cutoff 4.5 A) among the filament chains of 9B85
 
 Largest ACTR1A-ACTR1A interface: chains E-G, 265 atom contacts over 21 ACTR1A residues. In beta-actin numbering these span 38-245, of which 14 lie N-terminal to actin residue 70 (subdomain 2, the DNase-I-binding loop that makes actin's longitudinal filament contact): [38, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 62, 63, 64].
 
-ACTR1A interface residues (P61163 numbering): 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 65, 66, 67, 68, 205, 209, 213, 243, 244, 245, 246
+Full ACTR1A interface residue list for that pair (P61163 numbering, nothing omitted): 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 65, 66, 67, 68, 205, 209, 213, 243, 244, 245, 246. The subdomain-2 residues are the ones that carry the polymerisation argument; the higher-numbered positions are subdomain-3/4 contacts on the partner face and are reported here for completeness.
+
+Generalising beyond that single pair: splitting the ACTR1A-ACTR1A interfaces at the largest gap in their contact counts separates 6 large (>= 230 atom contacts, intra-protofilament) interfaces from the smaller lateral ones. Positions present in **every** large interface: 44, 45, 46, 47, 48, 49, 51, 52, 65, 66, 67, 68, 205, 213, 243, 244, 245, 246. In beta-actin numbering, those below residue 70 (subdomain 2) are [40, 41, 42, 43, 44, 45, 47, 48, 61, 62, 63, 64] and the rest are [200, 208, 242, 243, 244, 245].
+
+| pair | atom contacts | ACTR1A interface residues |
+|---|---|---|
+| E-G | 265 | 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 65, 66, 67, 68, 205, 209, 213, 243, 244, 245, 246 |
+| C-E | 253 | 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 64, 65, 66, 67, 68, 204, 205, 209, 210, 213, 243, 244, 245, 246 |
+| B-D | 247 | 42, 44, 45, 46, 47, 48, 49, 50, 51, 52, 65, 66, 67, 68, 205, 209, 210, 213, 243, 244, 245, 246 |
+| G-I | 245 | 44, 45, 46, 47, 48, 49, 51, 52, 65, 66, 67, 68, 205, 207, 209, 210, 213, 243, 244, 245, 246 |
+| D-F | 241 | 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 65, 66, 67, 68, 204, 205, 209, 210, 213, 243, 244, 245, 246 |
+| A-C | 230 | 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 64, 65, 66, 67, 68, 205, 210, 213, 243, 244, 245, 246 |
 

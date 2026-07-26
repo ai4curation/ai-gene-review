@@ -27,9 +27,11 @@ argument; the script and its output are in
 `ACTR1A-bioinformatics/RESULTS.md`.
 
 Method: derive the nucleotide-contacting residues of beta-actin from a real
-ATP-bound structure (PDB 2BTF chain A, 4.5 A heavy-atom cutoff — 25 residues
-found from coordinates, nothing hard-coded), map them through human ACTB onto
-ACTR1A/ACTR1B/ACTR10; then do the same inside the *human* dynactin cryo-EM
+ATP-bound structure (PDB 2BTF chain A — **bovine** beta-actin, source organism
+read from the mmCIF and 99.7% identical to human ACTB over the modelled region,
+which is why the contacts are transferred *through* human ACTB rather than read
+off directly; 4.5 A heavy-atom cutoff, 25 residues found from coordinates,
+nothing hard-coded), map them onto ACTR1A/ACTR1B/ACTR10; then do the same inside the *human* dynactin cryo-EM
 structure (PDB 9B85); then compute the inter-subunit interfaces of that
 structure.
 
@@ -44,10 +46,18 @@ Results:
   [file:human/ACTR1A/ACTR1A-bioinformatics/RESULTS.md "ACTR1A chains with a modelled nucleotide: **8/8**, ligand(s) ADP."].
   20 of the 22 nucleotide-contacting ACTR1A positions align onto residues that
   contact ATP in beta-actin, i.e. the nucleotide is in the conserved actin cleft.
-- The largest ACTR1A-ACTR1A interface uses ACTR1A residues 42-52 and 65-68,
-  which map onto beta-actin 38-48 and 61-64 — actin's own subdomain-2
-  DNase-I-binding loop, the canonical longitudinal polymerisation contact. So
-  Arp1 polymerises using actin's polymerisation surface, not a repurposed one.
+- The ACTR1A-ACTR1A interfaces split cleanly by contact count into **six** large
+  intra-protofilament contacts (>= 230 heavy-atom contacts: A-C, B-D, C-E, D-F,
+  E-G, G-I) and a set of smaller lateral ones. All six large interfaces share
+  ACTR1A residues **44-49, 51, 52, 65-68, 205, 213 and 243-246**
+  [file:human/ACTR1A/ACTR1A-bioinformatics/RESULTS.md "splitting the ACTR1A-ACTR1A interfaces at the largest gap in their contact counts separates 6 large (>= 230 atom contacts, intra-protofilament) interfaces from the smaller lateral ones"].
+  In beta-actin numbering the subdomain-2 members of that consensus are 40-45, 47,
+  48 and 61-64 — actin's own DNase-I-binding loop, the canonical longitudinal
+  polymerisation contact; the rest (beta-actin 200, 208, 242-245) are
+  subdomain-3/4 contacts on the partner face. So Arp1 polymerises using actin's
+  polymerisation surface, not a repurposed one — and this is a property of the
+  whole filament, not of one hand-picked chain pair. The full per-pair residue
+  lists are in RESULTS.md; nothing is omitted there.
 - ACTR10 appears in a **single** copy and touches only the two chains at the
   pointed end; CAPZA1/CAPZB cap the other end. That is the structural
   difference between a subunit that builds a filament and subunits that stop one.
@@ -108,6 +118,15 @@ DR   GO; GO:0005200; F:structural constituent of cytoskeleton; IBA:GO_Central.
 
 and `DR   PAN-GO; P61163; 2 GO annotations based on evolutionary models.`
 QuickGO returns **0 hits** for both `GO:0005524` and `GO:0005200` on P61163.
+
+Important caveat, and the obvious counter-argument to pre-empt: **that `DR   GO`
+block diverges in both directions.** It also *omits* `GO:0030473`, `GO:0106006`,
+`GO:0005515`, `GO:0005815` and `GO:0005856`, all of which GOA does have. So it is
+a divergent snapshot, and "UniProt still lists it" would on its own be consistent
+with nothing more than a stale cross-reference block. The load-bearing evidence
+for the losses is therefore the QuickGO queries, not the DR lines: 0 human hits
+for `GO_REF:0000043`, and 0 hits for `GO:0000166` with `goUsage=descendants` on
+ACTB, ACTR1A, ACTR1B and ACTR10.
 
 Two separate losses, with different causes:
 
