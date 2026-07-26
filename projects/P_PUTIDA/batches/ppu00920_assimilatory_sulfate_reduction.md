@@ -41,7 +41,9 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Fetch the focused PSEPK genes from UniProt and GOA.
 - [x] Curate all six first-pass gene reviews.
 - [x] Create and semantically validate the species-neutral multi-part module.
-- [ ] Complete OpenScientist gene-level research.
+- [x] Attempt OpenScientist gene-level research; `cysH`, `cysI`, and `PP_0860`
+  returned reports, while the corrected `cysD`, `cysNC`, and `fpr-I` requests
+  each exhausted the 7,200-second provider timeout without a report.
 - [x] Attempt generic module OpenScientist research; the corrected request
   exhausted its 7,200-second provider timeout without returning a report.
 - [x] Complete module + `ppu00920` + PSEPK OpenScientist research.
@@ -88,6 +90,11 @@ inner-membrane-protein PANTHER placement rather than a canonical soluble CysJ
 subunit. Its proposed ferric-siderophore or membrane-partner acceptor remains
 an untested hypothesis, so the report supports exclusion from this module but
 does not justify a new substrate-specific molecular function.
+
+The `cysH` report agreed with the exact-record APS-reductase assignment. The
+`cysD`, `cysNC`, and `fpr-I` retrieval failures are recorded as provider
+timeouts rather than incomplete curation; their reviews rely on exact UniProt
+records and the primary biochemical or genetic evidence cited above.
 
 Exact local family grounding uses PTHR43196:SF1 for CysD,
 PTHR47878:SF1 for Fpr-I, and specific InterPro families for CysN, CysH, and
