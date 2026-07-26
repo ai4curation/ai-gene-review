@@ -69,12 +69,14 @@ Tabulating every **reviewed** UniProtKB entry carrying `IPR017157`:
 
 | N-terminal feature | count |
 |---|---|
-| `TRANSMEM` (all annotated "Signal-anchor for type II membrane protein") | 12 |
+| `TRANSMEM` | 12 |
 | cleaved `SIGNAL` and no `TRANSMEM` | **1 — AADACL2 (human)** |
 | neither | 1 — AADACL3 (human) |
 
-14 reviewed members, and AADACL2 is the **only** one whose N-terminal hydrophobic segment
-UniProt calls a cleaved signal peptide. Its three `WITH/FROM` protein sources for the
+Eleven of the twelve transmembrane segments are annotated explicitly as
+"Helical; Signal-anchor for type II membrane protein"; the exception is mouse Aadacl3, which
+carries three plain helices. 14 reviewed members, and AADACL2 is the **only** one whose
+N-terminal hydrophobic segment UniProt calls a cleaved signal peptide. Its three `WITH/FROM` protein sources for the
 membrane IBA are all type-II signal-anchored: human AADAC (`TRANSMEM 6-23`), mouse Aadac
 (`6-26`) and mouse Nceh1 (`5-25`). So the membrane claim is a transfer of a feature that
 AADACL2's own record says it does not have.

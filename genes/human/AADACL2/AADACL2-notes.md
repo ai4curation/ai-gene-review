@@ -92,9 +92,9 @@ From `RESULTS.md` section 5: `GO:0017171` sits only at the ortholog-specific nod
 `PTN002745055` (AADAC) and `PTN002745068` (NCEH1), so AADACL2/3/4 inherit no mechanism term.
 What they *do* inherit at the shared family node `PTN009058713` is `GO:0016020 membrane`.
 This is backwards with respect to what transfers safely: the catalytic triad is conserved in
-all five human members; the type-II signal anchor is not (12 of the 14 reviewed `IPR017157`
-entries carry one, and AADACL2 is the only one whose equivalent segment is annotated as a
-cleaved signal peptide instead). Moving `GO:0017171` down to
+all five human members; the N-terminal anchor is not (12 of the 14 reviewed `IPR017157`
+entries carry a `TRANSMEM`, 11 of them an explicit type-II signal anchor, and AADACL2 is the
+only one whose equivalent segment is annotated as a cleaved signal peptide instead). Moving `GO:0017171` down to
 `PTN009058713` and dropping `GO:0016020` from it would correct AADACL2, AADACL3 and AADACL4
 in one edit.
 
