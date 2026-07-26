@@ -36,10 +36,21 @@ Deliberate discipline, each point having cost a previous round:
   * An unreviewed (TrEMBL) entry's NAME is never used as evidence of what a protein does;
     only its curated GO annotations and annotated features count, and the reviewed status
     is printed next to every claim.
-  * The WITH/FROM sets are read out of the committed GOA TSVs, never retyped, and their
-    equality across the three genes is asserted.
-  * A missing input is a hard error naming the regeneration command; no fetch failure is
-    converted into an absence.
+  * The WITH/FROM sets are read out of the committed GOA TSVs, never retyped. Equality across
+    the three paralogs is *measured*, not assumed - and because AADACL3's folder is not in the
+    tree while its review is still an open PR, the sets are also fetched per accession from
+    QuickGO (Q6P093, Q5VUY0, Q5VUY2) so that all three genes are covered by a live source
+    rather than two by file and one by assertion. Where both sources exist they are
+    cross-checked against each other.
+  * A missing input is never silently converted into an absence: a gene whose TSV is absent is
+    named in the output with the reason, and the run aborts unless QuickGO covers it, so no
+    gene drops out of the equality test unnoticed.
+  * The nucleophile call is reported with its basis. For most donors UniProt annotates the
+    triad but does not label which member is the nucleophile, so the call rests on the
+    N-terminal-most position of a nucleophile-acid-base triad; the GDXG elbow pentapeptide is
+    reported alongside it so the reader can check the position independently. A sensitivity
+    analysis re-runs the term test with every positionally-inferred nucleophile downgraded to
+    undetermined, to show whether the verdict depends on that rule.
 
 Run with:
     uv run --no-project --with requests python audit_node_PTN009058710.py
@@ -63,6 +74,9 @@ while REPO != REPO.parent and not (REPO / "genes").is_dir():
     REPO = REPO.parent
 
 GENES = ["AADACL2", "AADACL3", "AADACL4"]
+# The three human paralogs that share this row. AADACL3's gene folder is not in the tree while
+# its review is an open PR, so its WITH/FROM set is measured from QuickGO instead of from a TSV.
+PARALOG_ACCESSIONS = {"AADACL2": "Q6P093", "AADACL3": "Q5VUY0", "AADACL4": "Q5VUY2"}
 AUDITED_TERM = "GO:0016787"
 AUDITED_REF = "GO_REF:0000033"
 FAMILY_ROW_TERM = "GO:0016020"  # the other IBA row, transferred from the family node
@@ -109,11 +123,41 @@ def get(url: str, **params):
 # --------------------------------------------------------------------------- inputs
 
 
+def quickgo_with_from(accession: str) -> list[str]:
+    """The audited row's WITH/FROM set for one protein, fetched live from QuickGO.
+
+    This exists so that the "identical across all three paralogs" claim is measured for every
+    gene, including one whose review is still an open PR and whose folder is therefore not in
+    this tree. Returned in GOA token form (db:id), sorted, so it is directly comparable with
+    the TSV column.
+    """
+    payload = get(QUICKGO_ANN, geneProductId=f"UniProtKB:{accession}", goId=AUDITED_TERM,
+                  evidenceCode="ECO:0000318", limit=100).json()
+    rows = [r for r in payload.get("results", [])
+            if r["goId"] == AUDITED_TERM and r["goEvidence"] == "IBA"
+            and r["reference"] == AUDITED_REF]
+    if len(rows) != 1:
+        die(f"QuickGO returned {len(rows)} {AUDITED_TERM} IBA/{AUDITED_REF} rows for "
+            f"{accession}; expected exactly 1")
+    tokens = [f"{x['db']}:{x['id']}"
+              for c in (rows[0].get("withFrom") or []) for x in c["connectedXrefs"]]
+    if not tokens:
+        die(f"QuickGO returned no WITH/FROM tokens for {accession}")
+    return sorted(tokens)
+
+
 def read_with_from(gene: str) -> dict:
     """Read the WITH/FROM sets straight out of the committed GOA TSV. Never retyped."""
     tsv = REPO / "genes" / "human" / gene / f"{gene}-goa.tsv"
     if not tsv.exists():
-        return {"present": False, "path": str(tsv.relative_to(REPO))}
+        # Not silently an absence: named in the output, printed, and the run aborts later
+        # unless QuickGO covers this gene instead.
+        print(f"NOTE: {tsv.relative_to(REPO)} is not in this tree "
+              f"(regenerate with `just fetch-gene human {gene}`); "
+              f"{gene}'s WITH/FROM set will be measured from QuickGO instead.")
+        return {"present": False, "path": str(tsv.relative_to(REPO)),
+                "why_absent": "gene folder not in this tree",
+                "covered_by": "QuickGO"}
     rows = list(csv.DictReader(tsv.open(), delimiter="\t"))
     if not rows:
         die(f"{tsv} is empty; regenerate with `just fetch-gene human {gene}`")
@@ -281,6 +325,13 @@ def describe(entry: dict) -> dict:
             or next((s.get("fullName", {}).get("value")
                      for s in desc.get("submissionNames", [])), None))
     sites = act_sites(entry)
+    nuc = nucleophile(sites)
+    seq = entry.get("sequence", {}).get("value", "")
+    # The GDXG nucleophile elbow is a G-x-[ST]-x-G pentapeptide centred on the nucleophile, so
+    # printing it lets a reader check a positionally-inferred call without trusting the rule.
+    if nuc.get("determined") and seq:
+        p = nuc["position"]
+        nuc["elbow_pentapeptide"] = seq[max(p - 3, 0):p + 2]
     interpro = sorted({x["id"] for x in entry.get("uniProtKBCrossReferences", [])
                        if x.get("database") == "InterPro"})
     reviewed = entry.get("entryType", "").endswith("(Swiss-Prot)")
@@ -297,7 +348,7 @@ def describe(entry: dict) -> dict:
         "ec": ec_numbers(entry),
         "reactions": reactions(entry),
         "act_sites": sites,
-        "nucleophile": nucleophile(sites),
+        "nucleophile": nuc,
         "interpro_of_interest": {k: (k in interpro) for k in SIGNATURES},
         "go_mf": go_mf_profile(acc),
     }
@@ -362,15 +413,30 @@ def truth(donor: dict) -> dict:
 def main() -> int:
     withfrom = {g: read_with_from(g) for g in GENES}
     present = [g for g in GENES if withfrom[g]["present"]]
-    if "AADACL2" not in present or "AADACL4" not in present:
-        die("need at least the AADACL2 and AADACL4 GOA TSVs; run `just fetch-gene human AADACL2`")
+    if "AADACL2" not in present:
+        die("need at least the AADACL2 GOA TSV; run `just fetch-gene human AADACL2`")
 
-    sets = {g: withfrom[g]["audited_row"] for g in present}
-    reference = sets[present[0]]
-    identical = all(sets[g] == reference for g in present)
+    # Equality is measured for every paralog, not only the ones with a folder in this tree:
+    # the TSV where it exists, QuickGO for all three, and the two cross-checked against each
+    # other wherever both are available.
+    from_tsv = {g: withfrom[g]["audited_row"] for g in present}
+    from_quickgo = {g: quickgo_with_from(acc) for g, acc in PARALOG_ACCESSIONS.items()}
+    for g in present:
+        if sorted(from_tsv[g]) != from_quickgo[g]:
+            die(f"{g}: committed GOA TSV and live QuickGO disagree on the WITH/FROM set "
+                f"({len(from_tsv[g])} vs {len(from_quickgo[g])} tokens); re-run "
+                f"`just fetch-gene human {g}`")
+    uncovered = [g for g in GENES if g not in present and g not in from_quickgo]
+    if uncovered:
+        die(f"no WITH/FROM source for {uncovered}; the three-gene equality test would be "
+            f"incomplete, so this is a hard error rather than a silent gap")
+
+    reference = from_tsv["AADACL2"]
+    identical_genes = sorted(from_quickgo)
+    identical = all(from_quickgo[g] == sorted(reference) for g in identical_genes)
     if not identical:
-        die("the WITH/FROM sets differ between genes; the shared-node premise of this "
-            f"audit does not hold: { {g: len(v) for g, v in sets.items()} }")
+        die("the WITH/FROM sets differ between paralogs; the shared-node premise of this "
+            f"audit does not hold: { {g: len(v) for g, v in from_quickgo.items()} }")
 
     donors: dict[str, dict] = {}
     for token in reference:
@@ -428,6 +494,23 @@ def main() -> int:
         {donors[t]["protein"]["entry_name"] for t in family_tokens
          if t in donors and donors[t]["kind"] == "protein"}
     )
+    # What the family node's own donors carry for the mechanism term, so the node-move
+    # recommendation rests on their evidence codes rather than on a recollection of them.
+    family_mechanism = {}
+    for t in family_tokens:
+        d = donors.get(t)
+        if not d or d["kind"] != "protein":
+            continue
+        pr_ = d["protein"]
+        rec = pr_["go_mf"]["terms"].get("GO:0017171")
+        family_mechanism[pr_["entry_name"]] = {
+            "accession": pr_["accession"],
+            "GO:0017171_evidence": rec["evidence"] if rec else [],
+            "GO:0017171_experimental": rec["experimental"] if rec else [],
+            "in_IPR017157": pr_["interpro_of_interest"]["IPR017157"],
+            "nucleophile": pr_["nucleophile"].get("residue"),
+        }
+    n_family_ida = sum(1 for v in family_mechanism.values() if "IDA" in v["GO:0017171_evidence"])
     blockers = {t: counts[t]["FALSE"] for t in CANDIDATES if counts[t]["FALSE"]}
     signature_split = {
         sig: {
@@ -439,10 +522,37 @@ def main() -> int:
         for sig in SIGNATURES
     }
 
+    # Sensitivity: does the verdict depend on the positional nucleophile rule? Re-test the
+    # mechanism term with every positionally-inferred nucleophile downgraded to undetermined,
+    # and separately with only the single refuting donor downgraded.
+    LABELLED = "UniProt describes this ACT_SITE as the nucleophile"
+    sensitivity = {}
+    for name, downgrade in (
+        ("only_the_refuting_donor_undetermined",
+         lambda d: d["assessment"]["verdict"]["GO:0017171"] == "FALSE"),
+        ("every_positionally_inferred_nucleophile_undetermined",
+         lambda d: d["protein"]["nucleophile"].get("basis") != LABELLED),
+    ):
+        tally = {"TRUE": [], "FALSE": [], "UNDETERMINED": []}
+        for d in proteins.values():
+            v = "UNDETERMINED" if downgrade(d) else d["assessment"]["verdict"]["GO:0017171"]
+            tally[v].append(d["protein"]["entry_name"])
+        sensitivity[name] = {
+            "term": "GO:0017171",
+            "n_true": len(tally["TRUE"]), "n_false": len(tally["FALSE"]),
+            "n_undetermined": len(tally["UNDETERMINED"]),
+            "true_of_every_donor": not tally["FALSE"] and not tally["UNDETERMINED"],
+            "TRUE": sorted(tally["TRUE"]),
+        }
+
     out = {
         "audited": {"term": AUDITED_TERM, "reference": AUDITED_REF,
                     "node": "PANTHER:PTN009058710",
-                    "genes_sharing_the_row": present,
+                    "genes_sharing_the_row": identical_genes,
+                    "measured_from_committed_tsv": present,
+                    "measured_from_quickgo": sorted(from_quickgo),
+                    "genes_with_no_tsv_in_this_tree":
+                        {g: withfrom[g]["why_absent"] for g in GENES if g not in present},
                     "with_from_identical_across_genes": identical,
                     "n_with_from_tokens": len(reference)},
         "candidate_terms": CANDIDATES,
@@ -452,26 +562,32 @@ def main() -> int:
         "most_specific_licensed_term": most_specific,
         "blockers_per_term": blockers,
         "family_node": {"node": "PANTHER:PTN009058713", "row": FAMILY_ROW_TERM,
-                        "with_from": family_tokens, "members": family_members},
+                        "with_from": family_tokens, "members": family_members,
+                        "mechanism_term_support": family_mechanism,
+                        "n_members_with_GO_0017171_IDA": n_family_ida},
         "interpro_membership_split": signature_split,
+        "sensitivity_GO_0017171": sensitivity,
     }
     (HERE / "node_PTN009058710.json").write_text(json.dumps(out, indent=1, default=list))
 
     # console summary
-    print(f"WITH/FROM identical across {present}: {identical} ({len(reference)} tokens)")
+    print(f"WITH/FROM identical across {identical_genes}: {identical} "
+          f"({len(reference)} tokens); TSV for {present}, QuickGO for {sorted(from_quickgo)}")
     print(f"{len(proteins)} of {len(reference)} tokens resolve to a protein\n")
-    hdr = f"{'entry':16s} {'status':11s} {'nuc':5s} {'EC':22s} 787 689 171"
+    hdr = f"{'entry':16s} {'status':11s} {'nuc':5s} {'elbow':6s} {'EC':22s} 787 689 171"
     print(hdr)
     print("-" * len(hdr))
     for t, d in donors.items():
         if d["kind"] != "protein":
-            print(f"{t:16s} {'-':11s} {'-':5s} {'PANTHER tree node':22s}")
+            print(f"{t:16s} {'-':11s} {'-':5s} {'-':6s} {'PANTHER tree node':22s}")
             continue
         p, a = d["protein"], d["assessment"]
         nuc = p["nucleophile"]
         nucs = f"{nuc.get('residue','?')}{nuc.get('position','')}" if nuc.get("determined") else "?"
         v = a["verdict"]
-        print(f"{p['entry_name']:16s} {p['status']:11s} {nucs:5s} {','.join(p['ec'])[:22]:22s} "
+        elbow = nuc.get("elbow_pentapeptide", "-")
+        print(f"{p['entry_name']:16s} {p['status']:11s} {nucs:5s} {elbow:6s} "
+              f"{','.join(p['ec'])[:22]:22s} "
               f"{v['GO:0016787']:3.3s} {v['GO:0052689']:3.3s} {v['GO:0017171']:3.3s}")
     print()
     for term, label in CANDIDATES.items():
@@ -481,8 +597,14 @@ def main() -> int:
               + (f"  -- refuted by {c['FALSE']}" if c["FALSE"] else ""))
     print(f"\nterms no donor refutes: {licensed}")
     print(f"most specific licensed term: {most_specific}")
-    print(f"family node PTN009058713 donors: {family_members}")
+    print(f"family node PTN009058713 donors: {family_members}; "
+          f"{n_family_ida} of {len(family_mechanism)} carry GO:0017171 by IDA")
     print(f"IPR017157 members among donors: {signature_split['IPR017157']['in']}")
+    print("\nGO:0017171 sensitivity to the positional nucleophile rule:")
+    for name, r in sensitivity.items():
+        print(f"  {name}: TRUE {r['n_true']}, FALSE {r['n_false']}, "
+              f"UNDETERMINED {r['n_undetermined']}, "
+              f"true_of_every_donor={r['true_of_every_donor']}")
     return 0
 
 

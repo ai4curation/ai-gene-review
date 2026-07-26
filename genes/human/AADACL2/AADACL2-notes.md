@@ -255,3 +255,47 @@ it and it is pursued as the node move above rather than asserted as a second act
 `GO:0003824` ARBA row's replacement was moved to `GO:0052689` for the same reason: all three
 general molecular-function rows on this record now collapse onto the one specific term the
 record actually has.
+
+### Round-2 corrections to the adjudication (PR #2286 review)
+
+Five factual/rhetorical items, all conceded after checking:
+
+1. **The three-gene equality was asserted but only measured for two.** `genes/human/AADACL3/` is
+   not in the tree while #2264 is open, so the first version of the audit recorded
+   `genes_sharing_the_row: ["AADACL2","AADACL4"]` while the prose claimed all three. Fixed by
+   *measuring* rather than softening: the audit now fetches the audited row's `WITH/FROM` set per
+   accession from QuickGO for **Q6P093, Q5VUY0 and Q5VUY2**, cross-checks it against the committed
+   TSVs wherever both exist, and treats a gene covered by neither source as a hard error. AADACL3's
+   set comes back as the **same 17 tokens**, so the claim now rests on measurement for all three.
+   The script's missing-TSV path also prints the absence and its reason instead of returning a
+   silent `{"present": False}`, which is what its own docstring had promised.
+2. **The family node is IDA-supported by all three donors, not two.** Human AADAC (`IBA,IDA,IEA`),
+   mouse Aadac (`IBA,IDA,IEA,ISO`) and mouse Nceh1 (`IBA,IDA`) all hold `GO:0017171`
+   experimentally. The audit now records this per member (`family_node.mechanism_term_support`), so
+   the node-move recommendation is stronger than first stated.
+3. **The Thr164 call is a fold-position inference and the whole verdict turns on it.** UniProt
+   describes HIDH's `ACT_SITE 164` as **"Proton acceptor"** (`ECO:0000305`), not as a nucleophile —
+   unlike Afmid and BNA7, where the nucleophile *is* labelled. Two things now carry the call
+   instead of the label: the **elbow pentapeptide**, added to the audit for every donor, shows 15 of
+   16 reading G-x-S-x-G (`GDSAG` ×12, `GQSAG`, `GHSAG`, `GHSVG`) while HIDH alone reads **`GETSG`**;
+   and a **sensitivity analysis** shows the verdict is robust — downgrading HIDH to undetermined
+   still leaves `GO:0017171` untrue of every donor, and downgrading *every* positionally-inferred
+   nucleophile leaves it supportable for only the 2 donors UniProt labels explicitly.
+4. **"All fifteen donors place their catalytic serine on position 189" contradicted the threonine
+   donor.** It is the catalytic *nucleophile* that aligns on 189 in 15 of 15, with a serine there in
+   14 of 15. Corrected in the row summary and in `core_functions`.
+5. **The `core_functions` rationale leaned on cross-gene consistency.** It now leads with the
+   evidence that actually carries `GO:0052689` — `IPR017157` is a family-specific signature over
+   almost the whole chain, and every biochemically characterised family member is a carboxylic ester
+   hydrolase — with the paralog consistency noted afterwards rather than doing the work.
+
+**One item held, with the reasoning recorded.** The reviewer notes that dropping
+`GRANULARITY_MISMATCH` goes beyond the enum's literal definition ("parent term is true but
+uninformative"), which would fit this row. Held, because `failure_modes` is documented as the
+*biological shape of a propagation issue* and this propagation has none: the parent is
+uninformative because the donors are heterogeneous, not because the transfer could have been more
+specific. That is the rule this campaign already adopted ("ask whether the term is the LCA of its
+donors; `GRANULARITY_MISMATCH` is only apt when the donors agree and the term still sits above
+them"). The reasoning is now stated inline in both hydrolase rows rather than left implicit, and
+the schema's enum description is flagged as worth clarifying so the two readings stop being
+interchangeable.
