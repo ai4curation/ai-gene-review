@@ -5,3 +5,12 @@ single-stranded DNA degradation, and an SSB-interaction prediction. The
 InterPro-derived RNA exonuclease annotation was removed because it conflicts
 with the substrate-specific record. A mismatch-repair role remains a candidate
 module implementation, not a gene-level claim.
+
+## OpenScientist adjudication
+
+The OpenScientist report corroborated the Mg-dependent, processive 3'-to-5'
+single-stranded-DNA exonuclease reaction and SSB interaction from the exact
+record and characterized orthologs. Its mismatch-repair discussion is not
+target-specific and includes evidence from non-Pseudomonas and eukaryotic ExoI
+systems, so it does not justify adding mismatch repair as a core Q88N51
+process.

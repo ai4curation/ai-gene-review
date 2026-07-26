@@ -61,15 +61,19 @@ gene-review batch.
 - [x] Attempt module + pathway + PSEPK OpenScientist deep research; the
   corrected request exhausted the 7,200-second provider timeout without a
   report.
-- [ ] Run OpenScientist deep research for selected genes.
+- [x] Attempt OpenScientist deep research for selected genes; `uvrD`, `xseA`,
+  `xseB`, `sbcB`, and `recJ` returned reports, while the corrected `mutS` and
+  `mutL` requests each exhausted the 7,200-second provider timeout.
 - [ ] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Notes
 
-The batch TSV is the unmodified KEGG-derived candidate inventory. It is useful
-for audit and later curation of shared machinery, but is intentionally broader
-than this focused review.
+The [batch TSV](ppu03430_muth_independent_mismatch_repair.tsv) preserves the
+KEGG-derived candidate inventory and adds current local review and
+OpenScientist-retrieval status columns. It is useful for audit and later
+curation of shared machinery, but is intentionally broader than this focused
+review.
 
 The generic and species-aware OpenScientist requests were each allowed the full
 configured 7,200 seconds with three iterations. Neither returned a report, so
@@ -82,3 +86,16 @@ mismatch-repair discussion relies mainly on orthologs and does not supersede
 the direct KT2440 result in PMID:30292721: UvrD makes a strong but nonexclusive
 contribution, so it remains a pathway participant without being modeled as the
 only possible repair helicase.
+
+The XseA, XseB, SbcB, and RecJ reports corroborated the exact-record enzyme or
+complex assignments and the conserved directional nuclease activities. Their
+mismatch-repair claims remain orthology-based, so these proteins are retained
+as alternative candidate excision routes rather than promoted to
+organism-specific mismatch-repair annotations.
+
+Two genomic-context claims in the provider output were rejected against the
+exact KT2440 records. The XseB report incorrectly identifies `PP_0528` as XseA
+and infers an adjacent `xseA`/`xseB` operon; `PP_0528` is IspA, while XseA is
+Q88P26 at `PP_1027`. The RecJ report likewise calls `recJ` (`PP_1477`) adjacent
+to `recO` (`PP_1435`), although those loci are not adjacent. Neither claim is
+used in the gene reviews or module.
