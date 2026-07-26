@@ -18,7 +18,10 @@ with valine and isoleucine.
 ## Required Workflow
 
 - [x] Fetch the selected PSEPK records from UniProt and GOA.
-- [ ] Run OpenScientist deep research for the selected genes.
+- [x] Attempt OpenScientist deep research for the selected genes; LiuC and
+  MvaB reports completed, Ivd and MccA exhausted corrected 7,200-second
+  requests, and MccB plus PP_3394 exhausted their earlier 3,600-second
+  provider requests without reports.
 - [x] Curate the six selected gene reviews.
 - [x] Revise and semantically validate the species-neutral module.
 - [x] Attempt generic module-level OpenScientist research; the corrected
@@ -58,3 +61,7 @@ with valine and isoleucine.
   full configured 7,200 seconds with three iterations. Neither returned a
   report, so the module retains only the direct Reactome, exact-record, gene
   review, and primary-literature evidence that can be inspected locally.
+- The completed LiuC and MvaB reports corroborated their bacterial hydratase
+  and HMG-CoA-lyase roles. They supplied no evidence that overrides the
+  sequence conflict for `PP_3394`; it remains an unresolved candidate outside
+  the module.
