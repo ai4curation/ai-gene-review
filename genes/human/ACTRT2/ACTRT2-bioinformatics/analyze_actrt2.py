@@ -581,13 +581,25 @@ def resolve_token(token: str) -> dict:
                     or (desc.get("submissionNames") or [{}])[0].get("fullName", {}).get("value")
                     or "(no name)"
                 )
+                # An inactive (merged or deleted) accession IS returned by the search endpoint -
+                # verified against O15507, which comes back with primaryAccession O15507,
+                # entryType "Inactive", uniProtkbId equal to the accession, no name, no gene and no
+                # organism. Without this branch it was labelled "Swiss-Prot", i.e. the strongest
+                # provenance label available, on an entry carrying nothing at all. `uniprot_entry`
+                # was hardened against exactly this earlier; leaving the second accession path
+                # unguarded is the scope divergence that makes a check structurally blind.
+                entry_type = entry.get("entryType") or ""
+                if "Inactive" in entry_type:
+                    reviewed = "INACTIVE"
+                elif "unreviewed" in entry_type:
+                    reviewed = "TrEMBL"
+                else:
+                    reviewed = "Swiss-Prot"
                 out["hits"].append(
                     {
                         "accession": entry["primaryAccession"],
                         "entry_name": entry.get("uniProtkbId"),
-                        "reviewed": "TrEMBL"
-                        if "unreviewed" in (entry.get("entryType") or "")
-                        else "Swiss-Prot",
+                        "reviewed": reviewed,
                         "name": name,
                         "genes": [
                             g["geneName"]["value"] for g in entry.get("genes", []) if g.get("geneName")
@@ -598,6 +610,12 @@ def resolve_token(token: str) -> dict:
             break
     if not out["hits"]:
         out["note"] = "unresolved by both xref and free-text search; deferred, not dismissed"
+    inactive = [h for h in out["hits"] if h["reviewed"] == "INACTIVE"]
+    if inactive:
+        out["note"] = (
+            f"{len(inactive)} of {len(out['hits'])} candidate entries are INACTIVE (merged or "
+            "deleted) and carry no name, gene or organism; they are not evidence of anything"
+        )
     elif len(out["hits"]) > 1:
         reviewed = [h for h in out["hits"] if h["reviewed"] == "Swiss-Prot"]
         out["note"] = (
@@ -1629,7 +1647,11 @@ def render(r: dict) -> str:
         for species in ("human", "mouse"):
             v = rec.get(species) or {}
             if "accession" not in v:
-                a(f"| {sym} | {species} | - | - | - | - | - | {v.get('note', '')}")
+                # Seven columns, not eight: an earlier version appended the note as a ninth field
+                # after a trailing pipe, which would have misaligned the table for any entry that
+                # failed to resolve. No current entry does, so this was latent rather than visible.
+                note = v.get("note", "unresolved")
+                a(f"| {sym} | {species} | - | - | - | - | {note} |")
                 continue
             a(f"| {sym} | {species} | {v['accession']} ({v['entry_name']}) | "
               f"{'yes' if v['has_GO_0033011'] else 'no'} | {', '.join(v['GO_0033011_evidence']) or '-'} | "

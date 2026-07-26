@@ -502,8 +502,9 @@ proteins are testis-restricted.
 
 My evidence **strengthens** that argument rather than opposing it, and this is the one place the
 two genes' data differ materially on a shared row: ACTRT3 had to *infer* the chaperonin from
-PDCL3's identity, having only two IntAct records. ACTRT2 has **ten**, and the other nine are
-TCP1, CCT2, CCT3, CCT6A, CCT6B, CCT7, plus SLC25A19 and ACSL4 — so for ACTRT2 the holo-chaperonin
+PDCL3's identity, having only two IntAct records. ACTRT2 has **ten records over nine
+partners**, and the **eight** besides PDCL3 are TCP1, CCT2, CCT3, CCT6A, CCT6B, CCT7, SLC25A19 and
+ACSL4 — six of them CCT subunits — so for ACTRT2 the holo-chaperonin
 is **directly observed** and the inference is confirmed. Querying by reference rather than by gene
 adds the scale: `PMID:33961781` is the source of **9,514** GOA annotations, every one `GO:0005515`,
 every one assigned by IntAct.
@@ -545,6 +546,17 @@ Two separate checks, because they catch different things.
 - `source_entities` statuses were **regenerated wholesale** from `source_entities.py` rather than
   patched token by token, so the status change could not land on some tokens and miss others; the
   generator's own docstring described the superseded rule and was corrected in the same pass.
+- **The reviewer's one unverified premise turned out to be wrong, and checking it found a real
+  defect.** Reviewing round 3, it read Cursor's `resolve_token` finding as low-risk because
+  "`/uniprotkb/search` does not return obsolete entries at all", explicitly flagged as unverified.
+  It does return them: `resolve_token('UniProtKB:O15507')` returns one hit with
+  `primaryAccession: O15507`, `entryType: Inactive`, `uniProtkbId` equal to the accession, and no
+  name, gene or organism — and the old code labelled that **"Swiss-Prot"**, the strongest
+  provenance label available, on an entry carrying nothing. `uniprot_entry` had been hardened
+  against exactly this two rounds earlier; leaving the *second* accession path unguarded is the
+  detector/mutator scope divergence that makes a check structurally blind. Now returns `INACTIVE`
+  with an explanatory note, break-tested in both directions. No reported number changes, because
+  no WITH/FROM token in ACTRT2's GOA is a dead accession — so this was latent, not active.
 - Guards in `analyze_actrt2.py` were tested by breaking them. A deliberately wrong named-site
   residue raises; a missing input names its fix command. The dead-accession guard **failed** its
   first break test — `O15507` (MERGED into P56159) returns a row whose `primaryAccession` matches
