@@ -11,6 +11,7 @@ autolink_gene_symbols: false
 
 - Module: `aps_dependent_assimilatory_sulfate_reduction`
 - Pathway context: KEGG `ppu00920` (sulfur metabolism)
+- Pull request: [#2254](https://github.com/ai4curation/ai-gene-review/pull/2254)
 - Focused genes: 6
 - Broad membership-table candidates: 54
 
@@ -50,7 +51,7 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open and shepherd one PR for this module.
+- [x] Open one PR for this module; automated review and CI are in progress.
 
 ## Focused Genes
 
