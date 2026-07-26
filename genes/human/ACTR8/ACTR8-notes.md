@@ -273,14 +273,20 @@ I expected this to be an unvalidated screen artefact and **it is not** — check
 assuming changed the verdict. Yeast ARP8 is in the paper's confirmed set:
 [PMID:20844764 "Novel RBPs identified in the protein microarray experiments and confirmed by IP-microarray experiments."]
 [PMID:20844764 "Other candidate RBPs (Vtc1, Arc15, Hsp26, Arp8, Gis2) co-purified with smaller sets of mRNAs, but these small sets of putative mRNA targets shared distinct functional and/or cytotopical themes, increasing our confidence that the RNA-protein interactions we observed were genuine."]
-231 targets at FDR ≤ 0.01, and only
+231 targets at FDR ≤ 0.01 **%** — the Methods define the cut-off as a SAM-calculated false
+discovery rate *"less than or equal to 0.01%"*, i.e. 100-fold stricter than a bare 0.01 — and only
 [PMID:20844764 "Of 35 putative novel RBPs identified by either or both of these methods, 12, including 75% of the eight most highly-ranked candidates, reproducibly associated with specific cellular RNAs."]
 So the SGD `IDA` is sound and `SOURCE_EVIDENCE_WEAK` would be **factually wrong**.
 
 What is wrong is the **propagation**, on three independent grounds:
 
-1. **One donor, one study, whole eukaryotic clade.** `GO:0003729` is the only one of the four
-   node terms with a single donor, added 2025-08-05, and it now sits on all 87 members.
+1. **One donor, one study, whole eukaryotic clade.** `GO:0003729` is IBD from `SGD:S000005667`
+   alone, added 2025-08-05, and now sits on all 87 members, no member outside *S. cerevisiae*
+   having ever been assayed for RNA binding. **A single donor is not by itself the objection** —
+   claiming otherwise would contradict this review's own `GO:0006302` row. Donor counts at the
+   node are `GO:0031011` 4, `GO:0006355` 2, and `GO:0003729` and `GO:0006302` **one each**, yet
+   `GO:0006302` is accepted. What separates them is target-side evidence: human ARP8 has direct
+   DSB-repair data and no RNA data at all.
 2. **The assay cannot distinguish RNA from DNA binding.** The primary screen is
    [PMID:20844764 "We describe here a proteome-wide approach to identify RNA-protein interactions based on in vitro binding of RNA samples to yeast protein microarrays that represent over 80% of the yeast proteome."]
    — RNA in, RNA out. No DNA competitor was included anywhere in the design. For a protein whose
