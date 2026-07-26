@@ -386,3 +386,28 @@ rows on the same axis must move together.**
   convention question rather than a silent omission.
 
 Final actions: **7 REMOVE, 6 MARK_AS_OVER_ANNOTATED, 3 KEEP_AS_NON_CORE, 2 NEW, 0 MODIFY.**
+
+### 12.5 Round 2 approval, plus three residual accuracy edits
+
+`ai4c-reviewer` re-reviewed and **approved**, confirming all three blocking items resolved against
+the data rather than against the response text, and noting that moving the Arp3 caveat into the
+generating script was the right fix because it cannot be re-omitted on a rerun. Three 🔵 items
+remained; all three were taken rather than merged over, because each was a small factual
+overstatement and those are worse left inside a curation record than a short delay:
+
+- **One absolute survived my own softening pass.** The synapse row still read "a cell type in which
+  ACTL8 has never been detected" while the sibling axon row had already been softened and given the
+  brain-cDNA caveat. Two rows making the same argument must read the same way; fixed.
+- **A "consequently" carried more than the premises.** The `description` said the interface loss
+  meant "there is consequently no evidence that ACTL8 polymerises". The absence of evidence comes
+  from the absence of experiments, not from the sequence comparison — and after the Arp3 disclosure
+  the sequence half is explicitly the weaker premise. Split into two claims: the interface loss makes
+  canonical two-stranded incorporation unlikely, and separately no polymerisation experiment has ever
+  been done.
+- **Residual arithmetic in the NuA4 reason.** It said the correction "applies to ACTL8, ACTBL2 and
+  the five POTE genes" — seven of the node's nine descendants, with ACTB correctly excluded but ACTG1
+  silently unaddressed. Now states all nine explicitly: ACTB stands, seven have no supporting
+  purification, and ACTG1 is the borderline case the "include not only" wording covers.
+
+**Rule from this round: a softening pass has to be re-grepped, not eye-checked. I changed one of the
+two rows making the same argument and believed I had changed both.**
