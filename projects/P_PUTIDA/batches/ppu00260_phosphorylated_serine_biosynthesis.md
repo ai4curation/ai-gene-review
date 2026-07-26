@@ -30,7 +30,7 @@ and phospholipid synthesis.
 - [x] Validate and render all changed reviews, the module, and project pages.
 - [x] Open one non-draft PR for this module:
   [#2236](https://github.com/ai4curation/ai-gene-review/pull/2236).
-- [ ] Resolve review and CI feedback.
+- [x] Resolve review and CI feedback.
 
 ## Selected Genes
 

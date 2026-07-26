@@ -6,8 +6,9 @@ confirmation of its GOA calls
 [file:PSEPK/serA/serA-uniprot.txt
 "RecName: Full=D-3-phosphoglycerate dehydrogenase"].
 
-The positive inference combines the target's D-isomer-specific
-dehydrogenase/nucleotide-binding architecture with characterized PGDH
+The positive inference combines the target's reaction-discriminating PGDH_3
+CDD assignment
+[file:PSEPK/serA/serA-uniprot.txt "cd12176; PGDH_3"] with characterized PGDH
 chemistry. PGDH converts 3-phosphoglycerate to phosphohydroxypyruvate in the
 phosphorylated serine pathway
 [PMID:22023909
@@ -22,4 +23,7 @@ mediate L-serine feedback
 [PMID:22023909
 "In many species, particularly bacteria, the catalytic activity is regulated allosterically through binding of l-serine to a distinct structural domain, termed the ACT domain."],
 but that response has not been demonstrated for KT2440 SerA and remains an
-experimental question.
+experimental question. Direct enzyme-class kinetics establish that
+phosphoglycerate dehydrogenase can behave as a V-type allosteric enzyme
+[PMID:14154
+"Phosphoglycerate dehydrogenase corresponds to a V-type allosteric enzyme."].
