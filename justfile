@@ -41,6 +41,12 @@ test-full: test pytest-integration test-examples
 pytest:
   uv run pytest tests
 
+# Run the Node tests for the GitHub Actions guard scripts (.github/scripts/).
+# Kept out of `just test` so a missing node does not break the Python workflow;
+# CI runs it whenever tests/ or .github/scripts/ change.
+test-js:
+  node --test tests/js/*.test.mjs
+
 # Run integration tests (replays VCR cassettes)
 pytest-integration:
 	uv run pytest -m integration --vcr-record=none

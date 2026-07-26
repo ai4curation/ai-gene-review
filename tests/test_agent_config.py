@@ -104,7 +104,6 @@ def _workflow_texts() -> dict[str, str]:
 # must only ever shrink, and the test fails if an entry becomes stale. Anything
 # NOT listed here that pins a model fails.
 UNMIGRATED_MODEL_PINS = {
-    "claude",
     "curation-scanner",
     "go-annotation-scanner",
     "litscan-module-member",
