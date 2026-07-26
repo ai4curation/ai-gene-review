@@ -1,0 +1,4452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gcA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gcA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q553Y7" target="_blank" class="term-link">
+                        Q553Y7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gcA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q553Y7" data-a="DESCRIPTION: gcA encodes GCA (DdGCA), a large membrane-bound gu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>gcA encodes GCA (DdGCA), a large membrane-bound guanylyl cyclase of Dictyostelium discoideum that catalyzes the synthesis of the second messenger cGMP from GTP. Unusually for a membrane guanylyl cyclase, GCA has the topology of a metazoan membrane adenylyl cyclase, with 12 transmembrane-spanning regions and two intramolecular cyclase domains (arranged in transposed order relative to adenylyl cyclases) that fold into a single catalytic center. It requires Mg2+, is inhibited by calcium, and is activated in vitro by GTPgammaS, apparently through a monomeric G protein. In vivo the enzyme is activated by extracellular cAMP acting through a G-protein-coupled cAMP receptor. GCA is one of two guanylyl cyclases in Dictyostelium (the other being the soluble sGC/sgcA); the two are partially redundant, and only the double null loses all detectable guanylyl cyclase activity. GCA is expressed mainly during growth and later multicellular development, whereas sGC predominates during aggregation. The cGMP produced by these cyclases acts as a diffusible second messenger that promotes cortical myosin II filament assembly in the rear and sides of chemotaxing cells, suppressing lateral pseudopodia and thereby refining directional movement during cAMP-mediated chemotaxis, cell streaming, and electrotaxis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0004383" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of guanylate cyclase activity is correct and is strongly corroborated by direct biochemical evidence for GCA. This is the core molecular function of the gene product.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA is a bona fide guanylyl cyclase demonstrated experimentally to synthesize cGMP from GTP. The IBA inference agrees with the direct assays.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GCA is an integral, multi-pass membrane protein that is exclusively membrane-bound. Plasma membrane localization is consistent with its activation downstream of the plasma-membrane cAMP receptor and with its localization to the leading-edge membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme is membrane-bound with 12 transmembrane spans; activation by the plasma-membrane cAMP GPCR and leading-edge localization support a plasma membrane site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                        PMID:11777934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GCA is exclusively membrane-bound and is active mainly with Mg(2+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have cloned a Dictyostelium gene, DdGCA, encoding a protein with 12 transmembrane spanning regions and two cyclase domains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006182" target="_blank" class="term-link">
+                                    GO:0006182
+                                </a>
+                            </span>
+                            <span class="term-label">cGMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0006182" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP biosynthesis is the core biological process carried out by GCA and is well supported by direct enzymology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA synthesizes cGMP from GTP; the double gca/sgc null loses all detectable guanylyl cyclase activity, confirming these enzymes are the source of cGMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                        PMID:11777934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all detectable GC activity is lost in a cell line in which both genes have been inactivated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007168" target="_blank" class="term-link">
+                                    GO:0007168
+                                </a>
+                            </span>
+                            <span class="term-label">receptor guanylyl cyclase signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0007168" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA transfers the metazoan receptor-guanylyl-cyclase signaling role (as in natriuretic peptide receptors NPR-A/B) to GCA. GCA is not a receptor guanylyl cyclase. Metazoan receptor GCs have a single transmembrane span and one cyclase domain and are directly activated by extracellular peptide ligand binding, whereas GCA has 12 transmembrane spans and two cyclase domains (adenylyl-cyclase topology) and is activated indirectly, downstream of a G-protein-coupled cAMP receptor. The inference does not transfer to this divergent enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA does not act in a receptor guanylyl cyclase signaling pathway. It is a G-protein-activated 12-transmembrane cyclase, not a ligand-binding receptor cyclase; the phylogenetic inference from metazoan peptide-receptor guanylyl cyclases is a mis-propagation to a structurally and mechanistically distinct enzyme.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000229249</span>
+
+                                    &middot; PANTHER node for the guanylyl cyclase family
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The receptor-guanylyl-cyclase signaling role reflects metazoan single-pass receptor GCs in the family; GCA is a 12-transmembrane, G-protein-activated cyclase and does not use this receptor mechanism</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P16066</span>
+
+                                    &middot; human guanylyl cyclase GUCY2C (heat-stable enterotoxin/guanylin receptor)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">GUCY2C is a genuine peptide-activated receptor guanylyl cyclase; this signaling-pathway role does not transfer to the topologically distinct GCA</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">membrane-bound guanylate cyclase activity is induced after cAMP stimulation; a G-protein-coupled cAMP receptor and G-proteins are essential for this activation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                        PMID:11522784
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA is a Dictyostelium guanylyl cyclase with a topology typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning regions and two cyclase domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001653" target="_blank" class="term-link">
+                                    GO:0001653
+                                </a>
+                            </span>
+                            <span class="term-label">peptide receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0001653" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA transfers peptide receptor activity from metazoan receptor guanylyl cyclases (natriuretic peptide receptors) to GCA. GCA has no ligand- binding ectodomain of a peptide receptor; it is a 12-transmembrane, adenylyl-cyclase-topology enzyme activated indirectly via a G-protein, not by direct peptide binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA is not a peptide receptor. The inference derives from mammalian single-pass receptor guanylyl cyclases that bind natriuretic peptides; this function does not transfer to a G-protein-activated 12-transmembrane cyclase.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000229249</span>
+
+                                    &middot; PANTHER node for the guanylyl cyclase family
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Peptide receptor activity reflects metazoan single-pass receptor guanylyl cyclases (natriuretic/guanylin receptors) in the family; GCA has no peptide-receptor ectodomain</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P20594</span>
+
+                                    &middot; human natriuretic peptide receptor NPR2 (guanylyl cyclase)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">NPR2 is a bona fide peptide-binding receptor guanylyl cyclase; this ligand-receptor activity does not transfer to the G-protein-activated 12-transmembrane GCA</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                        PMID:11522784
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA is a Dictyostelium guanylyl cyclase with a topology typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning regions and two cyclase domain</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                        PMID:11522784
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GTPgammaS activation is not mediated by a heterotrimeric G-protein but possibly by a monomeric G-protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0004383" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated EC-to-GO mapping (EC 4.6.1.2) for guanylate cyclase activity. Correct and consistent with the direct biochemical evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA catalyzes GTP to 3&#39;,5&#39;-cyclic GMP (EC 4.6.1.2), matching this annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009190" target="_blank" class="term-link">
+                                    GO:0009190
+                                </a>
+                            </span>
+                            <span class="term-label">cyclic nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0009190" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference from the adenylyl/guanylyl cyclase domain. It is correct but general; the more specific cGMP biosynthetic process is captured by another annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA produces the cyclic nucleotide cGMP, so cyclic nucleotide biosynthetic process is a correct (if general) parent term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping to membrane. Correct; GCA is a multi-pass integral membrane protein and is exclusively membrane-bound.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA is an integral membrane protein (12 transmembrane spans) that is exclusively membrane-bound, so the membrane annotation is accurate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                        PMID:11777934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GCA is exclusively membrane-bound and is active mainly with Mg(2+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035556" target="_blank" class="term-link">
+                                    GO:0035556
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0035556" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference. GCA produces the intracellular second messenger cGMP downstream of receptor activation, so participation in intracellular signal transduction is correct, though general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cGMP synthesis by GCA is an intracellular signal transduction event downstream of the cAMP receptor; the term is correct at a general level.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">membrane-bound guanylate cyclase activity is induced after cAMP stimulation; a G-protein-coupled cAMP receptor and G-proteins are essential for this activation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007168" target="_blank" class="term-link">
+                                    GO:0007168
+                                </a>
+                            </span>
+                            <span class="term-label">receptor guanylyl cyclase signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0007168" data-r="PMID:15473840" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term implies GCA is a ligand-binding receptor guanylyl cyclase, which it is not. GCA participates in cGMP signaling downstream of the cAMP GPCR, but the specific receptor-guanylyl-cyclase term is a misnomer for this 12-transmembrane, G-protein-activated enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA functions in cGMP-mediated signaling downstream of a G-protein- coupled cAMP receptor, not as a receptor guanylyl cyclase. The term over- specifies a receptor-cyclase mechanism that does not apply; the genuine signaling role is better captured by cGMP biosynthetic process and the chemotaxis/myosin annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                        PMID:11522784
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA is a Dictyostelium guanylyl cyclase with a topology typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning regions and two cyclase domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019722" target="_blank" class="term-link">
+                                    GO:0019722
+                                </a>
+                            </span>
+                            <span class="term-label">calcium-mediated signaling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40295210
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Intracellular Calcium Responses to External Calcium Stimuli ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0019722" data-r="PMID:40295210" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT annotation. In gca/sgc double-null cells, the intracellular calcium response to external calcium is only slightly delayed rather than abolished, indicating that GCA (and cGMP synthesis) is not required for calcium-mediated signaling. The negation is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The genetic evidence shows the calcium response persists (merely delayed) without GCA/sGC, so GCA does not act within calcium-mediated signaling. The negated annotation correctly records this non-requirement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                                        PMID:40295210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">gca/sgc-null cells showed a slightly delayed response</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                                        PMID:40295210
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Although calcium signaling is not strictly necessary for chemotaxis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0016020" data-r="PMID:15473840" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization of GCA. Correct; the enzyme is an integral multi-pass membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA is exclusively membrane-bound, consistent with a membrane localization annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                        PMID:11777934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GCA is exclusively membrane-bound and is active mainly with Mg(2+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11522784
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GTPgammaS regulation of a 12-transmembrane guanylyl cyclase ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0004383" data-r="PMID:11522784" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of GCA guanylyl cyclase activity, including GTPgammaS stimulation and mutagenesis of catalytic residues. This is core, well- supported experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Roelofs et al. directly measured GCA guanylyl cyclase activity and its regulation, firmly establishing the catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                        PMID:11522784
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">guanylyl cyclase activity is strongly stimulated by guanosine 5&#39;-3-O-(thio) triphosphate (GTPgammaS)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031252" target="_blank" class="term-link">
+                                    GO:0031252
+                                </a>
+                            </span>
+                            <span class="term-label">cell leading edge</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19346484
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Switching direction in electric-signal-induced cell migratio...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0031252" data-r="PMID:19346484" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Components of the guanylyl-cyclase-dependent signaling pathway localize to the leading edge of migrating cells in an actin-dependent manner. As a membrane cyclase in this pathway, GCA at the leading edge is consistent with the data, though leading-edge enrichment is best characterized for the soluble sGC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Leading-edge localization is a context-dependent property tied to directed migration rather than the core catalytic function; it is supported for the GCase-dependent signaling components in migrating cells.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                                        PMID:19346484
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Molecular components of the GCase- and PI3K-dependent signaling pathways localized at the leading edge of migrating cells during electrotaxis in an actin-dependent manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051602" target="_blank" class="term-link">
+                                    GO:0051602
+                                </a>
+                            </span>
+                            <span class="term-label">response to electrical stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19346484
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Switching direction in electric-signal-induced cell migratio...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0051602" data-r="PMID:19346484" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Genetic modulation of the guanylyl cyclases (with cGMP-binding GbpC and PI3K) reverses the preferred direction of electrotaxis, implicating the GCase pathway in the response to a direct-current electric field. This is a valid accessory role, not the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GCA contributes, via cGMP, to directional bias during electrotaxis, an accessory physiological process downstream of its catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                                        PMID:19346484
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the preferential direction of migration during electrotaxis in Dictyostelium cells can be reversed by genetically modulating both guanylyl cyclases (GCases)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11237875
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylate cyclase in Dictyostelium discoideum with the topol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0004383" data-r="PMID:11237875" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration that expressed DdGCA has high guanylyl cyclase activity and no detectable adenylyl cyclase activity. Core experimental evidence for the molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the original biochemical characterization establishing GCA as a guanylyl cyclase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                        PMID:11237875
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                                    GO:0004383
+                                </a>
+                            </span>
+                            <span class="term-label">guanylate cyclase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11777934
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of two unusual guanylyl cyclases from dicty...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0004383" data-r="PMID:11777934" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Gene-inactivation evidence from characterizing GCA in sgc-null cells and the loss of all guanylyl cyclase activity in the gca/sgc double null confirms GCA guanylyl cyclase activity in vivo. Core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The double-null result (all detectable GC activity lost) and single- null characterization firmly attribute guanylyl cyclase activity to GCA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                        PMID:11777934
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all detectable GC activity is lost in a cell line in which both genes have been inactivated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050920" target="_blank" class="term-link">
+                                    GO:0050920
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22081140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dictyostelium chemotaxis: essential Ras activation and acces...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0050920" data-r="PMID:22081140" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The guanylyl cyclase pathway (sGC/GCA-derived cGMP) is one of several accessory signaling enzymes that are not required for the basal Ras module but improve orientation and sensitivity of chemotaxis in shallow gradients. This is a modulatory, non-core role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> cGMP signaling amplifies and refines chemotaxis rather than being essential; GCA&#39;s contribution here is downstream of its catalytic function and is redundant with sGC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link">
+                                        PMID:22081140
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The signalling enzymes PI3K, TorC2, PLA2 and sGC are not required for Ras activation and chemotaxis to folate or to steep gradients of cAMP, but they provide a memory of direction and improved orientation of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18073238
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The role of cGMP and the rear of the cell in Dictyostelium c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0006935" data-r="PMID:18073238" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP signaling controls the quiescent rear of the cell during cAMP- wave chemotaxis and cell streaming. GCA-derived cGMP contributes to this process, an accessory role downstream of catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chemotaxis is a downstream physiological process supported by cGMP; it is a valid but non-core role for GCA, which is redundant with sGC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                                        PMID:18073238
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Wild-type cells efficiently retract pseudopodia in the rear of the cell during the rising flank of the cAMP wave and have a quiescent cell posterior</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120320" target="_blank" class="term-link">
+                                    GO:0120320
+                                </a>
+                            </span>
+                            <span class="term-label">lateral pseudopodium retraction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18073238
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The role of cGMP and the rear of the cell in Dictyostelium c...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0120320" data-r="PMID:18073238" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP suppresses pseudopod formation in the rear and sides of the cell by promoting cortical myosin, so lateral pseudopodia are retracted. GCA- derived cGMP contributes to this rear/side response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Suppression/retraction of lateral pseudopodia is a downstream effect of cGMP signaling; a valid non-core role for GCA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                                        PMID:18073238
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a quiescent rear of the cell increases the efficiency of directional movement and is essential to maintain stable cell-cell contacts</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cGMP suppresses pseudopod formation in the back of the cell, whereas the sGC protein refines pseudopod formation at the leading edge</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031033" target="_blank" class="term-link">
+                                    GO:0031033
+                                </a>
+                            </span>
+                            <span class="term-label">myosin filament organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16790492
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guanylyl cyclase protein and cGMP product independently cont...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0031033" data-r="PMID:16790492" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP mediates the formation of cortical myosin II filaments in response to a cAMP stimulus, organizing myosin in the back of the cell. GCA- derived cGMP contributes to this, downstream of its catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Regulation of myosin filament organization is a key downstream effect of the cGMP produced by GCA, but is not GCA&#39;s core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One of the second messengers used during Dictyostelium chemotaxis is cGMP, which mediates the formation of myosin filaments in response to a cAMP stimulus</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In a cAMP gradient, myosin is mostly found in the back of the cell, where it increases the cortical tension and suppress pseudopod extension</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031037" target="_blank" class="term-link">
+                                    GO:0031037
+                                </a>
+                            </span>
+                            <span class="term-label">myosin II filament disassembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14710184
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemotaxis: signalling modules join hands at front and tail.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0031037" data-r="PMID:14710184" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cGMP-signaling cascade regulates cortical myosin II filament dynamics in the posterior of the cell. The cited review emphasizes cGMP- driven myosin filament formation in the rear; the specific disassembly framing is one side of the assembly/disassembly regulation attributed to this pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Regulation of cortical myosin II filament dynamics is a downstream role of GCA-derived cGMP. The annotation captures a real regulatory role, though the primary reported effect of the cGMP cascade is promotion of myosin filament formation in the posterior.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                                        PMID:14710184
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a cyclic-GMP-signalling cascade has been identified that regulates myosin filament formation in the posterior of the cell, thereby inhibiting the formation of lateral pseudopodia that could misdirect the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120320" target="_blank" class="term-link">
+                                    GO:0120320
+                                </a>
+                            </span>
+                            <span class="term-label">lateral pseudopodium retraction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14710184
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemotaxis: signalling modules join hands at front and tail.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0120320" data-r="PMID:14710184" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cGMP cascade inhibits formation of lateral pseudopodia (favoring their retraction) by promoting posterior myosin. GCA-derived cGMP contributes to this rear/side function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Suppression/retraction of lateral pseudopodia is a downstream effect of cGMP signaling; a valid non-core role for GCA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                                        PMID:14710184
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a cyclic-GMP-signalling cascade has been identified that regulates myosin filament formation in the posterior of the cell, thereby inhibiting the formation of lateral pseudopodia that could misdirect the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15473840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chemoattractant signaling in dictyostelium discoideum.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q553Y7" data-a="GO:0006935" data-r="PMID:15473840" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cGMP signaling contributes to the cortical-myosin module that underlies cAMP chemotaxis in Dictyostelium. GCA-derived cGMP participates in chemotaxis as an accessory role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chemotaxis is a downstream physiological process to which GCA contributes via cGMP; it is valid but non-core and redundant with sGC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                                        PMID:16790492
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">One of the second messengers used during Dictyostelium chemotaxis is cGMP, which mediates the formation of myosin filaments in response to a cAMP stimulus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GCA is a membrane-bound guanylyl cyclase that synthesizes the second messenger cGMP from GTP at the plasma membrane. It has an adenylyl-cyclase-like topology (12 transmembrane spans and two intramolecular cyclase domains), requires Mg2+, is inhibited by calcium, and is activated in vivo by extracellular cAMP acting through a G-protein-coupled cAMP receptor. The cGMP it produces acts as a diffusible second messenger that promotes cortical myosin II assembly in the rear of chemotaxing cells; GCA is partially redundant with the soluble guanylyl cyclase sGC.</h3>
+                <span class="vote-buttons" data-g="Q553Y7" data-a="FUNCTION: GCA is a membrane-bound guanylyl cyclase that synt..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004383" target="_blank" class="term-link">
+                            guanylate cyclase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006182" target="_blank" class="term-link">
+                                cGMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                                PMID:11237875
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                                PMID:11777934
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GCA is exclusively membrane-bound and is active mainly with Mg(2+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                                PMID:11522784
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">DdGCA is a Dictyostelium guanylyl cyclase with a topology typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning regions and two cyclase domain</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11237875" target="_blank" class="term-link">
+                            PMID:11237875
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Guanylate cyclase in Dictyostelium discoideum with the topology of mammalian adenylate cyclase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DdGCA encodes a protein with 12 transmembrane spanning regions and two cyclase domains, unlike single-pass metazoan receptor guanylyl cyclases.</div>
+
+                        <div class="finding-text">"We have cloned a Dictyostelium gene, DdGCA, encoding a protein with 12 transmembrane spanning regions and two cyclase domains"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Expressed DdGCA has high guanylate cyclase activity and no detectable adenylate cyclase activity.</div>
+
+                        <div class="finding-text">"DdGCA expressed in Dictyostelium exhibits high guanylate cyclase activity and no detectable adenylate cyclase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DdGCA deletion is not essential for chemotaxis, and a second guanylyl cyclase remains active in the knockout.</div>
+
+                        <div class="finding-text">"The knock-out strain still exhibits substantial guanylate cyclase activity, demonstrating that Dictyostelium contains at least one other guanylate cyclase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11522784" target="_blank" class="term-link">
+                            PMID:11522784
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GTPgammaS regulation of a 12-transmembrane guanylyl cyclase is retained after mutation to an adenylyl cyclase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DdGCA is a 12-transmembrane guanylyl cyclase with adenylyl-cyclase topology, activated by GTPgammaS possibly via a monomeric G protein.</div>
+
+                        <div class="finding-text">"GTPgammaS activation is not mediated by a heterotrimeric G-protein but possibly by a monomeric G-protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11777934" target="_blank" class="term-link">
+                            PMID:11777934
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of two unusual guanylyl cyclases from dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GCA and sGC are the two Dictyostelium guanylyl cyclases; the double null loses all detectable GC activity.</div>
+
+                        <div class="finding-text">"all detectable GC activity is lost in a cell line in which both genes have been inactivated"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GCA is exclusively membrane-bound and active mainly with Mg2+, and is expressed mainly during growth and multicellular development.</div>
+
+                        <div class="finding-text">"GCA is expressed mainly during growth and multicellular development, whereas sGC is expressed mainly during cell aggregation"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Both enzymes are activated in vivo by extracellular cAMP via a G-protein-coupled receptor and inhibited by calcium.</div>
+
+                        <div class="finding-text">"Ca(2+) inhibits both GCA and sGC with K(i) of about 50 and 200 nm, respectively"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14710184" target="_blank" class="term-link">
+                            PMID:14710184
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chemotaxis: signalling modules join hands at front and tail.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A cGMP-signalling cascade regulates myosin filament formation in the posterior of the cell and inhibits lateral pseudopod formation.</div>
+
+                        <div class="finding-text">"a cyclic-GMP-signalling cascade has been identified that regulates myosin filament formation in the posterior of the cell, thereby inhibiting the formation of lateral pseudopodia that could misdirect the cell"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15473840" target="_blank" class="term-link">
+                            PMID:15473840
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chemoattractant signaling in dictyostelium discoideum.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16790492" target="_blank" class="term-link">
+                            PMID:16790492
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Guanylyl cyclase protein and cGMP product independently control front and back of chemotaxing Dictyostelium cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">cGMP mediates cortical myosin II filament formation and suppresses pseudopod formation in the back of the cell during chemotaxis.</div>
+
+                        <div class="finding-text">"cGMP suppresses pseudopod formation in the back of the cell, whereas the sGC protein refines pseudopod formation at the leading edge"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18073238" target="_blank" class="term-link">
+                            PMID:18073238
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The role of cGMP and the rear of the cell in Dictyostelium chemotaxis and cell streaming.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A quiescent, cGMP-controlled rear increases directional movement efficiency and maintains cell-cell contacts during streaming.</div>
+
+                        <div class="finding-text">"a quiescent rear of the cell increases the efficiency of directional movement and is essential to maintain stable cell-cell contacts"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19346484" target="_blank" class="term-link">
+                            PMID:19346484
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Switching direction in electric-signal-induced cell migration by cyclic guanosine monophosphate and phosphatidylinositol signaling.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genetically modulating both guanylyl cyclases (and GbpC/PI3K) reverses the preferred direction of electrotaxis.</div>
+
+                        <div class="finding-text">"the preferential direction of migration during electrotaxis in Dictyostelium cells can be reversed by genetically modulating both guanylyl cyclases (GCases)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GCase-dependent signaling components localize to the leading edge of migrating cells in an actin-dependent manner.</div>
+
+                        <div class="finding-text">"Molecular components of the GCase- and PI3K-dependent signaling pathways localized at the leading edge of migrating cells during electrotaxis in an actin-dependent manner"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22081140" target="_blank" class="term-link">
+                            PMID:22081140
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dictyostelium chemotaxis: essential Ras activation and accessory signalling pathways for amplification.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">sGC/cGMP signaling is an accessory pathway that is not required for basal Ras-driven chemotaxis but improves orientation and sensitivity in shallow gradients.</div>
+
+                        <div class="finding-text">"The signalling enzymes PI3K, TorC2, PLA2 and sGC are not required for Ras activation and chemotaxis to folate or to steep gradients of cAMP, but they provide a memory of direction and improved orientation of the cell"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40295210" target="_blank" class="term-link">
+                            PMID:40295210
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Intracellular Calcium Responses to External Calcium Stimuli in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">gca/sgc double-null cells still respond to external calcium (only slightly delayed), indicating GCA/cGMP is not required for calcium-mediated signaling.</div>
+
+                        <div class="finding-text">"gca/sgc-null cells showed a slightly delayed response"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q553Y7
+gene_symbol: gcA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: gcA encodes GCA (DdGCA), a large membrane-bound guanylyl cyclase of
+  Dictyostelium discoideum that catalyzes the synthesis of the second messenger
+  cGMP from GTP. Unusually for a membrane guanylyl cyclase, GCA has the topology of
+  a metazoan membrane adenylyl cyclase, with 12 transmembrane-spanning regions and
+  two intramolecular cyclase domains (arranged in transposed order relative to
+  adenylyl cyclases) that fold into a single catalytic center. It requires Mg2+,
+  is inhibited by calcium, and is activated in vitro by GTPgammaS, apparently
+  through a monomeric G protein. In vivo the enzyme is activated by extracellular
+  cAMP acting through a G-protein-coupled cAMP receptor. GCA is one of two guanylyl
+  cyclases in Dictyostelium (the other being the soluble sGC/sgcA); the two are
+  partially redundant, and only the double null loses all detectable guanylyl
+  cyclase activity. GCA is expressed mainly during growth and later multicellular
+  development, whereas sGC predominates during aggregation. The cGMP produced by
+  these cyclases acts as a diffusible second messenger that promotes cortical
+  myosin II filament assembly in the rear and sides of chemotaxing cells,
+  suppressing lateral pseudopodia and thereby refining directional movement during
+  cAMP-mediated chemotaxis, cell streaming, and electrotaxis.
+existing_annotations:
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic inference of guanylate cyclase activity is correct and is
+      strongly corroborated by direct biochemical evidence for GCA. This is the
+      core molecular function of the gene product.
+    action: ACCEPT
+    reason: GCA is a bona fide guanylyl cyclase demonstrated experimentally to
+      synthesize cGMP from GTP. The IBA inference agrees with the direct assays.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+        cyclase activity and no detectable adenylate cyclase activity
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: GCA is an integral, multi-pass membrane protein that is exclusively
+      membrane-bound. Plasma membrane localization is consistent with its
+      activation downstream of the plasma-membrane cAMP receptor and with its
+      localization to the leading-edge membrane.
+    action: ACCEPT
+    reason: The enzyme is membrane-bound with 12 transmembrane spans; activation by
+      the plasma-membrane cAMP GPCR and leading-edge localization support a plasma
+      membrane site of action.
+    supported_by:
+    - reference_id: PMID:11777934
+      supporting_text: GCA is exclusively membrane-bound and is active mainly with
+        Mg(2+)
+    - reference_id: PMID:11237875
+      supporting_text: We have cloned a Dictyostelium gene, DdGCA, encoding a
+        protein with 12 transmembrane spanning regions and two cyclase domains
+- term:
+    id: GO:0006182
+    label: cGMP biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: cGMP biosynthesis is the core biological process carried out by GCA
+      and is well supported by direct enzymology.
+    action: ACCEPT
+    reason: GCA synthesizes cGMP from GTP; the double gca/sgc null loses all
+      detectable guanylyl cyclase activity, confirming these enzymes are the source
+      of cGMP.
+    supported_by:
+    - reference_id: PMID:11777934
+      supporting_text: all detectable GC activity is lost in a cell line in which
+        both genes have been inactivated
+- term:
+    id: GO:0007168
+    label: receptor guanylyl cyclase signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: This IBA transfers the metazoan receptor-guanylyl-cyclase signaling
+      role (as in natriuretic peptide receptors NPR-A/B) to GCA. GCA is not a
+      receptor guanylyl cyclase. Metazoan receptor GCs have a single transmembrane
+      span and one cyclase domain and are directly activated by extracellular
+      peptide ligand binding, whereas GCA has 12 transmembrane spans and two
+      cyclase domains (adenylyl-cyclase topology) and is activated indirectly,
+      downstream of a G-protein-coupled cAMP receptor. The inference does not
+      transfer to this divergent enzyme.
+    action: REMOVE
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN000229249
+        source_label: &#34;PANTHER node for the guanylyl cyclase family&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;The receptor-guanylyl-cyclase signaling role reflects metazoan single-pass receptor GCs in the family; GCA is a 12-transmembrane, G-protein-activated cyclase and does not use this receptor mechanism&#34;
+      - source_id: UniProtKB:P16066
+        source_label: &#34;human guanylyl cyclase GUCY2C (heat-stable enterotoxin/guanylin receptor)&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;GUCY2C is a genuine peptide-activated receptor guanylyl cyclase; this signaling-pathway role does not transfer to the topologically distinct GCA&#34;
+    reason: GCA does not act in a receptor guanylyl cyclase signaling pathway. It
+      is a G-protein-activated 12-transmembrane cyclase, not a ligand-binding
+      receptor cyclase; the phylogenetic inference from metazoan peptide-receptor
+      guanylyl cyclases is a mis-propagation to a structurally and mechanistically
+      distinct enzyme.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: membrane-bound guanylate cyclase activity is induced after
+        cAMP stimulation; a G-protein-coupled cAMP receptor and G-proteins are
+        essential for this activation
+    - reference_id: PMID:11522784
+      supporting_text: DdGCA is a Dictyostelium guanylyl cyclase with a topology
+        typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning
+        regions and two cyclase domain
+- term:
+    id: GO:0001653
+    label: peptide receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: This IBA transfers peptide receptor activity from metazoan receptor
+      guanylyl cyclases (natriuretic peptide receptors) to GCA. GCA has no ligand-
+      binding ectodomain of a peptide receptor; it is a 12-transmembrane,
+      adenylyl-cyclase-topology enzyme activated indirectly via a G-protein, not by
+      direct peptide binding.
+    action: REMOVE
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN000229249
+        source_label: &#34;PANTHER node for the guanylyl cyclase family&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;Peptide receptor activity reflects metazoan single-pass receptor guanylyl cyclases (natriuretic/guanylin receptors) in the family; GCA has no peptide-receptor ectodomain&#34;
+      - source_id: UniProtKB:P20594
+        source_label: &#34;human natriuretic peptide receptor NPR2 (guanylyl cyclase)&#34;
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &#34;NPR2 is a bona fide peptide-binding receptor guanylyl cyclase; this ligand-receptor activity does not transfer to the G-protein-activated 12-transmembrane GCA&#34;
+    reason: GCA is not a peptide receptor. The inference derives from mammalian
+      single-pass receptor guanylyl cyclases that bind natriuretic peptides; this
+      function does not transfer to a G-protein-activated 12-transmembrane cyclase.
+    supported_by:
+    - reference_id: PMID:11522784
+      supporting_text: DdGCA is a Dictyostelium guanylyl cyclase with a topology
+        typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning
+        regions and two cyclase domain
+    - reference_id: PMID:11522784
+      supporting_text: GTPgammaS activation is not mediated by a heterotrimeric
+        G-protein but possibly by a monomeric G-protein
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated EC-to-GO mapping (EC 4.6.1.2) for guanylate cyclase
+      activity. Correct and consistent with the direct biochemical evidence.
+    action: ACCEPT
+    reason: GCA catalyzes GTP to 3&#39;,5&#39;-cyclic GMP (EC 4.6.1.2), matching this
+      annotation.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+        cyclase activity and no detectable adenylate cyclase activity
+- term:
+    id: GO:0009190
+    label: cyclic nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO inference from the adenylyl/guanylyl cyclase domain. It is
+      correct but general; the more specific cGMP biosynthetic process is captured
+      by another annotation.
+    action: ACCEPT
+    reason: GCA produces the cyclic nucleotide cGMP, so cyclic nucleotide
+      biosynthetic process is a correct (if general) parent term.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+        cyclase activity and no detectable adenylate cyclase activity
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: UniProt subcellular-location mapping to membrane. Correct; GCA is a
+      multi-pass integral membrane protein and is exclusively membrane-bound.
+    action: ACCEPT
+    reason: GCA is an integral membrane protein (12 transmembrane spans) that is
+      exclusively membrane-bound, so the membrane annotation is accurate.
+    supported_by:
+    - reference_id: PMID:11777934
+      supporting_text: GCA is exclusively membrane-bound and is active mainly with
+        Mg(2+)
+- term:
+    id: GO:0035556
+    label: intracellular signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO inference. GCA produces the intracellular second messenger
+      cGMP downstream of receptor activation, so participation in intracellular
+      signal transduction is correct, though general.
+    action: ACCEPT
+    reason: cGMP synthesis by GCA is an intracellular signal transduction event
+      downstream of the cAMP receptor; the term is correct at a general level.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: membrane-bound guanylate cyclase activity is induced after
+        cAMP stimulation; a G-protein-coupled cAMP receptor and G-proteins are
+        essential for this activation
+- term:
+    id: GO:0007168
+    label: receptor guanylyl cyclase signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: This term implies GCA is a ligand-binding receptor guanylyl cyclase,
+      which it is not. GCA participates in cGMP signaling downstream of the cAMP
+      GPCR, but the specific receptor-guanylyl-cyclase term is a misnomer for this
+      12-transmembrane, G-protein-activated enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GCA functions in cGMP-mediated signaling downstream of a G-protein-
+      coupled cAMP receptor, not as a receptor guanylyl cyclase. The term over-
+      specifies a receptor-cyclase mechanism that does not apply; the genuine
+      signaling role is better captured by cGMP biosynthetic process and the
+      chemotaxis/myosin annotations.
+    supported_by:
+    - reference_id: PMID:11522784
+      supporting_text: DdGCA is a Dictyostelium guanylyl cyclase with a topology
+        typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning
+        regions and two cyclase domain
+- term:
+    id: GO:0019722
+    label: calcium-mediated signaling
+  evidence_type: IGI
+  original_reference_id: PMID:40295210
+  qualifier: acts_upstream_of_or_within
+  negated: true
+  review:
+    summary: NOT annotation. In gca/sgc double-null cells, the intracellular
+      calcium response to external calcium is only slightly delayed rather than
+      abolished, indicating that GCA (and cGMP synthesis) is not required for
+      calcium-mediated signaling. The negation is supported.
+    action: ACCEPT
+    reason: The genetic evidence shows the calcium response persists (merely
+      delayed) without GCA/sGC, so GCA does not act within calcium-mediated
+      signaling. The negated annotation correctly records this non-requirement.
+    supported_by:
+    - reference_id: PMID:40295210
+      supporting_text: gca/sgc-null cells showed a slightly delayed response
+    - reference_id: PMID:40295210
+      supporting_text: Although calcium signaling is not strictly necessary for
+        chemotaxis
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: located_in
+  review:
+    summary: Membrane localization of GCA. Correct; the enzyme is an integral
+      multi-pass membrane protein.
+    action: ACCEPT
+    reason: GCA is exclusively membrane-bound, consistent with a membrane
+      localization annotation.
+    supported_by:
+    - reference_id: PMID:11777934
+      supporting_text: GCA is exclusively membrane-bound and is active mainly with
+        Mg(2+)
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11522784
+  qualifier: enables
+  review:
+    summary: Direct assay of GCA guanylyl cyclase activity, including GTPgammaS
+      stimulation and mutagenesis of catalytic residues. This is core, well-
+      supported experimental evidence.
+    action: ACCEPT
+    reason: Roelofs et al. directly measured GCA guanylyl cyclase activity and its
+      regulation, firmly establishing the catalytic function.
+    supported_by:
+    - reference_id: PMID:11522784
+      supporting_text: guanylyl cyclase activity is strongly stimulated by
+        guanosine 5&#39;-3-O-(thio) triphosphate (GTPgammaS)
+- term:
+    id: GO:0031252
+    label: cell leading edge
+  evidence_type: IDA
+  original_reference_id: PMID:19346484
+  qualifier: located_in
+  review:
+    summary: Components of the guanylyl-cyclase-dependent signaling pathway
+      localize to the leading edge of migrating cells in an actin-dependent manner.
+      As a membrane cyclase in this pathway, GCA at the leading edge is consistent
+      with the data, though leading-edge enrichment is best characterized for the
+      soluble sGC.
+    action: KEEP_AS_NON_CORE
+    reason: Leading-edge localization is a context-dependent property tied to
+      directed migration rather than the core catalytic function; it is supported
+      for the GCase-dependent signaling components in migrating cells.
+    supported_by:
+    - reference_id: PMID:19346484
+      supporting_text: Molecular components of the GCase- and PI3K-dependent
+        signaling pathways localized at the leading edge of migrating cells during
+        electrotaxis in an actin-dependent manner
+- term:
+    id: GO:0051602
+    label: response to electrical stimulus
+  evidence_type: IGI
+  original_reference_id: PMID:19346484
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Genetic modulation of the guanylyl cyclases (with cGMP-binding GbpC and
+      PI3K) reverses the preferred direction of electrotaxis, implicating the GCase
+      pathway in the response to a direct-current electric field. This is a valid
+      accessory role, not the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: GCA contributes, via cGMP, to directional bias during electrotaxis, an
+      accessory physiological process downstream of its catalytic activity.
+    supported_by:
+    - reference_id: PMID:19346484
+      supporting_text: the preferential direction of migration during electrotaxis
+        in Dictyostelium cells can be reversed by genetically modulating both
+        guanylyl cyclases (GCases)
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11237875
+  qualifier: enables
+  review:
+    summary: Direct demonstration that expressed DdGCA has high guanylyl cyclase
+      activity and no detectable adenylyl cyclase activity. Core experimental
+      evidence for the molecular function.
+    action: ACCEPT
+    reason: This is the original biochemical characterization establishing GCA as a
+      guanylyl cyclase.
+    supported_by:
+    - reference_id: PMID:11237875
+      supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+        cyclase activity and no detectable adenylate cyclase activity
+- term:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  evidence_type: IMP
+  original_reference_id: PMID:11777934
+  qualifier: enables
+  review:
+    summary: Gene-inactivation evidence from characterizing GCA in sgc-null cells
+      and the loss of all guanylyl cyclase activity in the gca/sgc double null
+      confirms GCA guanylyl cyclase activity in vivo. Core function.
+    action: ACCEPT
+    reason: The double-null result (all detectable GC activity lost) and single-
+      null characterization firmly attribute guanylyl cyclase activity to GCA.
+    supported_by:
+    - reference_id: PMID:11777934
+      supporting_text: all detectable GC activity is lost in a cell line in which
+        both genes have been inactivated
+- term:
+    id: GO:0050920
+    label: regulation of chemotaxis
+  evidence_type: IGI
+  original_reference_id: PMID:22081140
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: The guanylyl cyclase pathway (sGC/GCA-derived cGMP) is one of several
+      accessory signaling enzymes that are not required for the basal Ras module
+      but improve orientation and sensitivity of chemotaxis in shallow gradients.
+      This is a modulatory, non-core role.
+    action: KEEP_AS_NON_CORE
+    reason: cGMP signaling amplifies and refines chemotaxis rather than being
+      essential; GCA&#39;s contribution here is downstream of its catalytic function
+      and is redundant with sGC.
+    supported_by:
+    - reference_id: PMID:22081140
+      supporting_text: The signalling enzymes PI3K, TorC2, PLA2 and sGC are not
+        required for Ras activation and chemotaxis to folate or to steep gradients
+        of cAMP, but they provide a memory of direction and improved orientation of
+        the cell
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IGI
+  original_reference_id: PMID:18073238
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP signaling controls the quiescent rear of the cell during cAMP-
+      wave chemotaxis and cell streaming. GCA-derived cGMP contributes to this
+      process, an accessory role downstream of catalysis.
+    action: KEEP_AS_NON_CORE
+    reason: Chemotaxis is a downstream physiological process supported by cGMP; it
+      is a valid but non-core role for GCA, which is redundant with sGC.
+    supported_by:
+    - reference_id: PMID:18073238
+      supporting_text: Wild-type cells efficiently retract pseudopodia in the rear
+        of the cell during the rising flank of the cAMP wave and have a quiescent
+        cell posterior
+- term:
+    id: GO:0120320
+    label: lateral pseudopodium retraction
+  evidence_type: IGI
+  original_reference_id: PMID:18073238
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP suppresses pseudopod formation in the rear and sides of the cell
+      by promoting cortical myosin, so lateral pseudopodia are retracted. GCA-
+      derived cGMP contributes to this rear/side response.
+    action: KEEP_AS_NON_CORE
+    reason: Suppression/retraction of lateral pseudopodia is a downstream effect of
+      cGMP signaling; a valid non-core role for GCA.
+    supported_by:
+    - reference_id: PMID:18073238
+      supporting_text: a quiescent rear of the cell increases the efficiency of
+        directional movement and is essential to maintain stable cell-cell contacts
+    - reference_id: PMID:16790492
+      supporting_text: cGMP suppresses pseudopod formation in the back of the cell,
+        whereas the sGC protein refines pseudopod formation at the leading edge
+- term:
+    id: GO:0031033
+    label: myosin filament organization
+  evidence_type: IGI
+  original_reference_id: PMID:16790492
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP mediates the formation of cortical myosin II filaments in
+      response to a cAMP stimulus, organizing myosin in the back of the cell. GCA-
+      derived cGMP contributes to this, downstream of its catalytic activity.
+    action: KEEP_AS_NON_CORE
+    reason: Regulation of myosin filament organization is a key downstream effect
+      of the cGMP produced by GCA, but is not GCA&#39;s core molecular function.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: One of the second messengers used during Dictyostelium
+        chemotaxis is cGMP, which mediates the formation of myosin filaments in
+        response to a cAMP stimulus
+    - reference_id: PMID:16790492
+      supporting_text: In a cAMP gradient, myosin is mostly found in the back of
+        the cell, where it increases the cortical tension and suppress pseudopod
+        extension
+- term:
+    id: GO:0031037
+    label: myosin II filament disassembly
+  evidence_type: TAS
+  original_reference_id: PMID:14710184
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: The cGMP-signaling cascade regulates cortical myosin II filament
+      dynamics in the posterior of the cell. The cited review emphasizes cGMP-
+      driven myosin filament formation in the rear; the specific disassembly
+      framing is one side of the assembly/disassembly regulation attributed to this
+      pathway.
+    action: KEEP_AS_NON_CORE
+    reason: Regulation of cortical myosin II filament dynamics is a downstream role
+      of GCA-derived cGMP. The annotation captures a real regulatory role, though
+      the primary reported effect of the cGMP cascade is promotion of myosin
+      filament formation in the posterior.
+    supported_by:
+    - reference_id: PMID:14710184
+      supporting_text: a cyclic-GMP-signalling cascade has been identified that
+        regulates myosin filament formation in the posterior of the cell, thereby
+        inhibiting the formation of lateral pseudopodia that could misdirect the
+        cell
+- term:
+    id: GO:0120320
+    label: lateral pseudopodium retraction
+  evidence_type: TAS
+  original_reference_id: PMID:14710184
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: The cGMP cascade inhibits formation of lateral pseudopodia (favoring
+      their retraction) by promoting posterior myosin. GCA-derived cGMP contributes
+      to this rear/side function.
+    action: KEEP_AS_NON_CORE
+    reason: Suppression/retraction of lateral pseudopodia is a downstream effect of
+      cGMP signaling; a valid non-core role for GCA.
+    supported_by:
+    - reference_id: PMID:14710184
+      supporting_text: a cyclic-GMP-signalling cascade has been identified that
+        regulates myosin filament formation in the posterior of the cell, thereby
+        inhibiting the formation of lateral pseudopodia that could misdirect the
+        cell
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: TAS
+  original_reference_id: PMID:15473840
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: cGMP signaling contributes to the cortical-myosin module that
+      underlies cAMP chemotaxis in Dictyostelium. GCA-derived cGMP participates in
+      chemotaxis as an accessory role.
+    action: KEEP_AS_NON_CORE
+    reason: Chemotaxis is a downstream physiological process to which GCA
+      contributes via cGMP; it is valid but non-core and redundant with sGC.
+    supported_by:
+    - reference_id: PMID:16790492
+      supporting_text: One of the second messengers used during Dictyostelium
+        chemotaxis is cGMP, which mediates the formation of myosin filaments in
+        response to a cAMP stimulus
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11237875
+  title: Guanylate cyclase in Dictyostelium discoideum with the topology of mammalian
+    adenylate cyclase.
+  findings:
+  - statement: DdGCA encodes a protein with 12 transmembrane spanning regions and
+      two cyclase domains, unlike single-pass metazoan receptor guanylyl cyclases.
+    supporting_text: We have cloned a Dictyostelium gene, DdGCA, encoding a protein
+      with 12 transmembrane spanning regions and two cyclase domains
+  - statement: Expressed DdGCA has high guanylate cyclase activity and no detectable
+      adenylate cyclase activity.
+    supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+      cyclase activity and no detectable adenylate cyclase activity
+  - statement: DdGCA deletion is not essential for chemotaxis, and a second guanylyl
+      cyclase remains active in the knockout.
+    supporting_text: The knock-out strain still exhibits substantial guanylate
+      cyclase activity, demonstrating that Dictyostelium contains at least one other
+      guanylate cyclase
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original cloning and characterization of DdGCA; PubMed-verified,
+      establishes topology, catalytic activity, and redundancy with a second
+      guanylyl cyclase.
+- id: PMID:11522784
+  title: GTPgammaS regulation of a 12-transmembrane guanylyl cyclase is retained after
+    mutation to an adenylyl cyclase.
+  findings:
+  - statement: DdGCA is a 12-transmembrane guanylyl cyclase with adenylyl-cyclase
+      topology, activated by GTPgammaS possibly via a monomeric G protein.
+    supporting_text: GTPgammaS activation is not mediated by a heterotrimeric
+      G-protein but possibly by a monomeric G-protein
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Direct assay of GCA activity and regulation; supports the
+      guanylate cyclase MF (IDA) annotation.
+- id: PMID:11777934
+  title: Characterization of two unusual guanylyl cyclases from dictyostelium.
+  findings:
+  - statement: GCA and sGC are the two Dictyostelium guanylyl cyclases; the double
+      null loses all detectable GC activity.
+    supporting_text: all detectable GC activity is lost in a cell line in which both
+      genes have been inactivated
+  - statement: GCA is exclusively membrane-bound and active mainly with Mg2+, and is
+      expressed mainly during growth and multicellular development.
+    supporting_text: GCA is expressed mainly during growth and multicellular
+      development, whereas sGC is expressed mainly during cell aggregation
+  - statement: Both enzymes are activated in vivo by extracellular cAMP via a
+      G-protein-coupled receptor and inhibited by calcium.
+    supporting_text: Ca(2+) inhibits both GCA and sGC with K(i) of about 50 and 200
+      nm, respectively
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Defines GCA versus sGC redundancy, membrane localization,
+      expression pattern, and calcium inhibition.
+- id: PMID:14710184
+  title: &#39;Chemotaxis: signalling modules join hands at front and tail.&#39;
+  findings:
+  - statement: A cGMP-signalling cascade regulates myosin filament formation in the
+      posterior of the cell and inhibits lateral pseudopod formation.
+    supporting_text: a cyclic-GMP-signalling cascade has been identified that
+      regulates myosin filament formation in the posterior of the cell, thereby
+      inhibiting the formation of lateral pseudopodia that could misdirect the cell
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Review framing the cGMP/rear module of chemotaxis; supports
+      downstream myosin and pseudopod annotations.
+- id: PMID:15473840
+  title: Chemoattractant signaling in dictyostelium discoideum.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Broad review of chemoattractant signaling modules; the TAS
+      receptor-guanylyl-cyclase pathway annotation derived from it over-specifies
+      GCA&#39;s mechanism.
+- id: PMID:16790492
+  title: Guanylyl cyclase protein and cGMP product independently control front and
+    back of chemotaxing Dictyostelium cells.
+  findings:
+  - statement: cGMP mediates cortical myosin II filament formation and suppresses
+      pseudopod formation in the back of the cell during chemotaxis.
+    supporting_text: cGMP suppresses pseudopod formation in the back of the cell,
+      whereas the sGC protein refines pseudopod formation at the leading edge
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Focuses on sGC but establishes the cGMP-myosin rear module to
+      which GCA-derived cGMP contributes.
+- id: PMID:18073238
+  title: The role of cGMP and the rear of the cell in Dictyostelium chemotaxis and
+    cell streaming.
+  findings:
+  - statement: A quiescent, cGMP-controlled rear increases directional movement
+      efficiency and maintains cell-cell contacts during streaming.
+    supporting_text: a quiescent rear of the cell increases the efficiency of
+      directional movement and is essential to maintain stable cell-cell contacts
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports the chemotaxis and lateral pseudopodium retraction
+      annotations via the cGMP rear module.
+- id: PMID:19346484
+  title: Switching direction in electric-signal-induced cell migration by cyclic guanosine
+    monophosphate and phosphatidylinositol signaling.
+  findings:
+  - statement: Genetically modulating both guanylyl cyclases (and GbpC/PI3K)
+      reverses the preferred direction of electrotaxis.
+    supporting_text: the preferential direction of migration during electrotaxis in
+      Dictyostelium cells can be reversed by genetically modulating both guanylyl
+      cyclases (GCases)
+  - statement: GCase-dependent signaling components localize to the leading edge of
+      migrating cells in an actin-dependent manner.
+    supporting_text: Molecular components of the GCase- and PI3K-dependent signaling
+      pathways localized at the leading edge of migrating cells during electrotaxis
+      in an actin-dependent manner
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports the electrotaxis and leading-edge annotations for the
+      GCase pathway.
+- id: PMID:22081140
+  title: &#39;Dictyostelium chemotaxis: essential Ras activation and accessory signalling
+    pathways for amplification.&#39;
+  findings:
+  - statement: sGC/cGMP signaling is an accessory pathway that is not required for
+      basal Ras-driven chemotaxis but improves orientation and sensitivity in
+      shallow gradients.
+    supporting_text: The signalling enzymes PI3K, TorC2, PLA2 and sGC are not
+      required for Ras activation and chemotaxis to folate or to steep gradients of
+      cAMP, but they provide a memory of direction and improved orientation of the
+      cell
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Places the guanylyl cyclase pathway as accessory/amplifying for
+      chemotaxis; supports the regulation of chemotaxis non-core call.
+- id: PMID:40295210
+  title: Intracellular Calcium Responses to External Calcium Stimuli in Dictyostelium.
+  findings:
+  - statement: gca/sgc double-null cells still respond to external calcium (only
+      slightly delayed), indicating GCA/cGMP is not required for calcium-mediated
+      signaling.
+    supporting_text: gca/sgc-null cells showed a slightly delayed response
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Genetic-interaction basis for the NOT calcium-mediated signaling
+      annotation.
+core_functions:
+- description: GCA is a membrane-bound guanylyl cyclase that synthesizes the second
+    messenger cGMP from GTP at the plasma membrane. It has an adenylyl-cyclase-like
+    topology (12 transmembrane spans and two intramolecular cyclase domains),
+    requires Mg2+, is inhibited by calcium, and is activated in vivo by
+    extracellular cAMP acting through a G-protein-coupled cAMP receptor. The cGMP it
+    produces acts as a diffusible second messenger that promotes cortical myosin II
+    assembly in the rear of chemotaxing cells; GCA is partially redundant with the
+    soluble guanylyl cyclase sGC.
+  molecular_function:
+    id: GO:0004383
+    label: guanylate cyclase activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0016020
+    label: membrane
+  directly_involved_in:
+  - id: GO:0006182
+    label: cGMP biosynthetic process
+  supported_by:
+  - reference_id: PMID:11237875
+    supporting_text: DdGCA expressed in Dictyostelium exhibits high guanylate
+      cyclase activity and no detectable adenylate cyclase activity
+  - reference_id: PMID:11777934
+    supporting_text: GCA is exclusively membrane-bound and is active mainly with
+      Mg(2+)
+  - reference_id: PMID:11522784
+    supporting_text: DdGCA is a Dictyostelium guanylyl cyclase with a topology
+      typical for mammalian adenylyl cyclases containing 12 transmembrane-spanning
+      regions and two cyclase domain
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
