@@ -122,6 +122,66 @@ def action_counts() -> collections.Counter:
     return collections.Counter(a["review"]["action"] for a in doc["existing_annotations"])
 
 
+def duplicate_key_problems() -> list[str]:
+    """Detect duplicated mapping keys in the review YAML.
+
+    PyYAML keeps the LAST of a duplicated key, so a second ``supported_by:`` under one
+    review silently deletes the first one's entries. Nothing else in this repo can see
+    it: the quote checker and both validators walk the *parsed* document, so a quote
+    that parsing already removed is simply not there to fail. Checked two ways - a
+    strict loader that rejects duplicates outright, and a raw-versus-parsed count of
+    provenance entries.
+    """
+    problems: list[str] = []
+    path = SURFACES["review"]
+    raw = path.read_text()
+
+    class Strict(yaml.SafeLoader):
+        pass
+
+    def construct_mapping(loader, node, deep=False):
+        keys = [loader.construct_object(k, deep=deep) for k, _ in node.value]
+        dups = [k for k, c in collections.Counter(keys).items() if c > 1]
+        if dups:
+            raise RuntimeError(
+                f"duplicate mapping key(s) {dups} near line {node.start_mark.line + 1}"
+            )
+        return yaml.SafeLoader.construct_mapping(loader, node, deep)
+
+    Strict.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
+    try:
+        yaml.load(raw, Loader=Strict)
+    except RuntimeError as exc:
+        problems.append(f"duplicate YAML key: {exc}")
+
+    # Independent cross-check. `- reference_id:` counts provenance entries; note that
+    # `original_reference_id:` also contains the substring "reference_id:", which is why
+    # the pattern is anchored to the list-item form.
+    raw_n = len(re.findall(r"^\s*- reference_id:", raw, flags=re.M))
+    doc = yaml.safe_load(raw)
+    parsed_n = 0
+
+    def walk(o):
+        nonlocal parsed_n
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k == "supported_by" and isinstance(v, list):
+                    parsed_n += len(v)
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(doc)
+    if raw_n != parsed_n:
+        problems.append(
+            f"provenance entries: {raw_n} '- reference_id:' lines in the raw file but "
+            f"{parsed_n} after parsing - a duplicated key has silently dropped "
+            f"{raw_n - parsed_n} entry/entries"
+        )
+    return problems
+
+
 def check(surfaces: dict[str, str]) -> list[str]:
     problems: list[str] = []
     blob = "\n".join(surfaces.values())
@@ -167,6 +227,7 @@ def check(surfaces: dict[str, str]) -> list[str]:
         problems.append(f"{counts['PENDING']} annotation(s) still PENDING")
     if f"{goa_rows} GOA rows" not in blob:
         problems.append(f"no surface states the GOA row count ({goa_rows} GOA rows)")
+    problems.extend(duplicate_key_problems())
     return problems
 
 

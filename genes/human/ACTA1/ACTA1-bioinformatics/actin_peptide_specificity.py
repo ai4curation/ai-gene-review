@@ -42,6 +42,11 @@ SUBJECT = "ACTA1"
 # Peptide length window in which tryptic peptides are routinely observed by LC-MS/MS.
 MIN_LEN, MAX_LEN = 7, 30
 
+# How far below the panel median a sequence may fall before it is treated as truncated
+# rather than merely divergent. The conventional actins span 375-377 aa, so 5 admits the
+# genuine N-terminal-processing differences and nothing else.
+MAX_LENGTH_DEFICIT = 5
+
 
 def fetch_sequence(acc: str) -> str:
     url = f"https://rest.uniprot.org/uniprotkb/{acc}.fasta"
@@ -95,6 +100,26 @@ def main() -> None:
     seqs = {name: fetch_sequence(acc) for name, acc in ACTINS.items()}
     for name, seq in seqs.items():
         print(f"{name:6} {ACTINS[name]}  {len(seq)} aa")
+
+    # Length guard on the comparator panel. A Swiss-Prot entry that is truncated
+    # relative to its orthologues manufactures apparent divergence out of residues the
+    # sequence never reaches - the ACTL10 case, where a 245 aa entry against 346-368 aa
+    # orthologues turned 20 absent positions into 20 "non-conservative substitutions".
+    # Here it would inflate the distinguishing-peptide count, because a peptide absent
+    # from a short comparator looks unique to ACTA1. So require every sequence to be
+    # within a few residues of the panel median, and fail loudly naming the offender
+    # rather than scoring a truncation.
+    lengths = {n: len(q) for n, q in seqs.items()}
+    median = sorted(lengths.values())[len(lengths) // 2]
+    short = {n: L for n, L in lengths.items() if median - L > MAX_LENGTH_DEFICIT}
+    if short:
+        raise SystemExit(
+            f"comparator panel has truncated entry/entries {short} against a panel median "
+            f"of {median} aa; conservation and uniqueness counts computed on these would be "
+            "artefacts of absent residues, not of sequence divergence"
+        )
+    print(f"length guard OK: all {len(lengths)} sequences within "
+          f"{MAX_LENGTH_DEFICIT} aa of the panel median ({median} aa)")
 
     # The six isoforms are 375-377 aa (they differ in N-terminal processing), so an
     # ungapped identity is only meaningful for equal-length pairs. Report those and

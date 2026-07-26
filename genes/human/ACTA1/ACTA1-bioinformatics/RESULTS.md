@@ -44,11 +44,22 @@ O45815, *C. elegans* act-5) both carry their own IDA, but neither entry's *name*
 citable as evidence of what the family does, because the names are automatic.
 
 `GO:0005200` is asserted at exactly one node in PTHR11937 — `PTN000940351`, the
-conventional-actin node — and **negated by IRD at eight descendant nodes**. ACTA1
-sits on the accepting side of that split, which is the whole point of this gene:
-it is the recipient the term was meant for. Its ten donors include human ACTB
-(`EXP`, `IDA`, `IMP`, `TAS`), *S. cerevisiae* ACT1, ARP1 and ARP10, and human ARP2
-and ARP3.
+conventional-actin node — and **negated by IRD at eight descendant nodes**, in two
+dated batches: five on 2025-08-05 (`PTN000233752`, `PTN000233887`, `PTN000234048`,
+`PTN001732543`, `PTN008986528`) and three on 2026-04-16 (`PTN000233596`,
+`PTN000233796`, `PTN007551901`). Its ten donors include human ACTB (`EXP`, `IDA`,
+`IMP`, `TAS`), *S. cerevisiae* ACT1, ARP1 and ARP10, and human ARP2 and ARP3.
+
+**ACTA1 is in the retained set, checked positively rather than inferred from the
+absence of a negation.** A QuickGO query for `GO:0005200` restricted to human and to
+evidence code `ECO:0000318` returns 55 annotations over 55 distinct entities (equal
+here by coincidence — an annotation count is not an entity count, so the entities were
+enumerated from the rows, and 55 hits fit in one page so no pagination caveat applies).
+Within PTHR11937 the recipients are ACTA1, ACTA2, ACTC1, ACTG2, ACTB, ACTG1, ACTBL2,
+the five POTE paralogues, ACTR10, and the divergent genes the sweep has not yet
+adjudicated (ACTL8, ACTL9, ACTL10, ACTRT1-3). So this is one of the places the negation
+sweep deliberately left the term standing, and the reasoning developed for the divergent
+genes must not be imported here.
 
 ### Four rows are self-referential, and that is valid
 
@@ -114,6 +125,18 @@ Missed cleavages are *included* deliberately: a peptide spanning a missed site i
 more likely to carry an isoform-specific residue, so excluding them would bias the
 answer towards "distinguishable".
 
+### Length guard on the comparator panel, before any scoring
+
+A Swiss-Prot entry truncated relative to its orthologues manufactures apparent
+divergence out of residues the sequence never reaches — the ACTL10 case, where a 245 aa
+entry against 346-368 aa orthologues turned 20 *absent* positions into 20
+"non-conservative substitutions". Here it would inflate the distinguishing-peptide
+count, because a peptide missing from a short comparator looks unique to ACTA1. The
+script therefore requires every sequence to be within 5 aa of the panel median before it
+scores anything, and fails naming the offender otherwise. **All six pass: 377, 377, 377,
+376, 375, 375 aa against a median of 377.** So the numbers below are not a truncation
+artefact.
+
 ### Identity
 
 ACTA1|ACTA2 **97.9%**, ACTA1|ACTC1 **98.9%**, ACTA2|ACTC1 98.4%, ACTB|ACTG1 98.9%.
@@ -164,15 +187,22 @@ the evidence differs in strength.
 
 Recorded so the next reviewer knows they were run, not skipped.
 
-- **Reference-projection check** (the ACTR8 defect). Every one of ACTA1's
-  functional and localisation references was queried by PMID in QuickGO and counted
-  by entity. `PMID:1423520` → **1** annotation total; `PMID:11333380` → **1**;
-  `PMID:15198992` → **3**, all on ACTA1; `PMID:12849983` → **3** (2 on ACTA1, 1 the
-  reciprocal on DNASE1); `PMID:10508519` → **5**, all on ACTA1. **No projection:**
-  no reference annotates a complex plus its subunits, and no phenotype term spreads
-  beyond the gene assayed. The high-count references (`PMID:32814053` → 20,010;
-  `PMID:33961781` → 9,514; `PMID:28514442` → 3,731) are declared screens whose
-  evidence codes already say so.
+- **Reference-projection check** (the ACTR8 defect). Every one of ACTA1's functional and
+  localisation references was queried by PMID in QuickGO. **An annotation count is not an
+  entity count**, so entities were enumerated from the returned rows rather than inferred
+  from the total, and that is only legitimate here because each of these totals is small
+  enough to fit in one page: `PMID:1423520` → **1** annotation, on ACTA1;
+  `PMID:11333380` → **1**, on ACTA1; `PMID:15198992` → **3**, all on ACTA1;
+  `PMID:12849983` → **3** — 2 on ACTA1 plus the reciprocal on DNASE1, i.e. **2 entities**;
+  `PMID:10508519` → **5**, all on ACTA1. **No projection:** no reference annotates a complex
+  plus its subunits, and no phenotype term spreads beyond the gene assayed.
+
+  The high-count references are declared screens whose evidence codes already say so, and for
+  them only the **annotation** total was read — `PMID:32814053` 20,010, `PMID:33961781` 9,514,
+  `PMID:28514442` 3,731. **Entity counts for those three are unavailable** and are not
+  estimated from a sample: the results are paginated, so a page total is not the whole, and
+  substituting one would be exactly the annotation-for-entity confusion this check exists to
+  avoid. Nothing in the review rests on an entity count for them.
 - **Retraction / erratum / expression-of-concern check.** 28 cited PMIDs were read
   from `CommentsCorrections/RefType` on each *cited* article's own PubMed record —
   not by a publication-type search, which cannot see a Publisher Correction. **Zero
@@ -214,6 +244,13 @@ Two things it got wrong first:
   and deleted all 36 section comments - a mutation far larger than the intended one, and
   invisible to a re-run of the checker. It now uses `ruamel.yaml` round-trip mode and
   refuses to write if the comment count drops.
+
+`audit_claims.py` also detects **duplicated YAML mapping keys**, which nothing else in
+this repo can see: PyYAML keeps the *last* of a duplicated key, so a second
+`supported_by:` under one review silently deletes the first one's entries — and the quote
+checker and both validators walk the *parsed* document, so a quote that parsing already
+removed is not there to fail. Checked two ways, a strict loader that rejects duplicates
+outright and a raw-versus-parsed count of provenance entries (**51 = 51**).
 
 `audit_claims.py` pins the numbers that appear on more than one prose surface (the review
 YAML, the notes, this file) and derives every expected value **from the JSON outputs, not

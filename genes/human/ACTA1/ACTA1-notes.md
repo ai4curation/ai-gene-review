@@ -20,6 +20,15 @@ or generalised. ACTA1 sits on the *accepting* side of that split and is the reci
 the assertion was made for. All ten of its donors resolve and all ten carry their own
 experimental evidence for the term.
 
+The negation sweep ran in two dated batches — five nodes on 2025-08-05
+(`PTN000233752`, `PTN000233887`, `PTN000234048`, `PTN001732543`, `PTN008986528`) and
+three on 2026-04-16 (`PTN000233596`, `PTN000233796`, `PTN007551901`). **ACTA1's presence
+in the retained set was checked positively, not inferred from the absence of a
+negation**: a QuickGO query for `GO:0005200` in human with evidence `ECO:0000318` returns
+ACTA1 among the recipients, alongside the other conventional actins (ACTA2, ACTC1, ACTG2,
+ACTB, ACTG1, ACTBL2, the POTE paralogues), ACTR10, and the divergent genes not yet
+adjudicated. Absence of a negation would have been an absence, not a finding.
+
 So the campaign's reflex — that an IBA over-reaches — is wrong here, and PAINT's node
 placement in this family is demonstrably working: it discriminates ACTA1 from ACTL8
 correctly. That is worth recording as a positive result, because the family's PAINT
@@ -260,6 +269,28 @@ the exclusivity is established independently [PMID:16288873].
   WormBase donors initially came back empty because `xref:wormbase-WBGene…` does not
   resolve in UniProt; fixed with a plain identifier query, then each mapping verified
   against the resolved entry's own cross-references.
+
+## Three checks added after the coordinator flagged them mid-review
+
+- **Duplicate YAML keys.** PyYAML keeps the *last* of a duplicated mapping key, so a
+  second `supported_by:` silently deletes the first one's entries — and no existing gate
+  can see it, because the quote checker and both validators walk the *parsed* document.
+  `audit_claims.py` now checks it two ways, a strict loader plus a raw-versus-parsed count
+  of provenance entries. Result here: **51 raw `- reference_id:` lines = 51 parsed
+  entries, no duplicate keys anywhere.** (Note `original_reference_id:` also contains the
+  substring, which is why the pattern is anchored to the list-item form.)
+- **Comparator sequence length, before any scoring.** A truncated Swiss-Prot entry
+  manufactures divergence out of residues the sequence never reaches. `actin_peptide_
+  specificity.py` now refuses to score a panel containing an entry more than 5 aa below
+  the panel median. All six conventional actins pass (377/377/377/376/375/375, median
+  377), so the distinguishing-peptide count is not a truncation artefact. ACTA1 being a
+  conventional actin, this was always more likely to bite the comparators than the
+  subject — but it is now asserted rather than assumed.
+- **Annotation count is not entity count, and results paginate.** Corrected in
+  RESULTS.md: entities are enumerated from the returned rows for the small
+  gene-specific references, and for the three high-throughput ones (20,010 / 9,514 /
+  3,731 annotations) the entity count is recorded as **unavailable** rather than
+  estimated from a page. Nothing in the review rests on an entity count for them.
 
 ## Notes on the tooling (both cost a cycle, both are guarded now)
 
