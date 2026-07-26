@@ -1,0 +1,227 @@
+"""Lint the ACTA1 review's load-bearing claims against their computed sources.
+
+The dominant failure mode in this campaign is not a wrong term or a fake quote: it
+is one claim asserted at several sites and corrected at all but one of them. Quote
+validation cannot catch that, because every individual quote stays verbatim - the
+error is in the joins. So the claims that appear in more than one place are checked
+here, mechanically, against the JSON that produced them.
+
+Scope is every prose surface a claim can hide on: the review YAML, the notes, and
+RESULTS.md. Run with --self-test to confirm the checks actually fire.
+
+    uv run python genes/human/ACTA1/ACTA1-bioinformatics/audit_claims.py
+    uv run python genes/human/ACTA1/ACTA1-bioinformatics/audit_claims.py --self-test
+"""
+import argparse
+import collections
+import csv
+import re
+import json
+import sys
+from pathlib import Path
+
+import yaml
+
+HERE = Path(__file__).resolve().parent
+GENE = HERE.parent
+SURFACES = {
+    "review": GENE / "ACTA1-ai-review.yaml",
+    "notes": GENE / "ACTA1-notes.md",
+    "results": HERE / "RESULTS.md",
+}
+PEPTIDES = HERE / "peptide_specificity.json"
+WITHFROM = HERE / "withfrom_resolution.json"
+GOA = GENE / "ACTA1-goa.tsv"
+
+# Prose spells small counts as words; the lint compares against both forms.
+WORDS = {10: "ten", 11: "eleven", 24: "twenty-four", 8: "eight", 5: "five", 3: "three"}
+
+# Phrasings that were WRONG at some point in this review's history. If any
+# reappears anywhere, an edit has regressed. Each records what replaced it.
+RETRACTED = {
+    "Comparison of alpha-skeletal and alpha-cardiac actin expression":
+        "PMID:16288873's title, written from memory; the real title begins 'Defining alpha-skeletal'",
+    "20 / 24": "an undercount of the GO:0015629 donors caused by a silent QuickGO zero; it is 24/24",
+    "| MARK_AS_OVER_ANNOTATED | 19 |":
+        "a stale action tally from before the GO:0005829 rows were made consistent; it is 16",
+    "| KEEP_AS_NON_CORE | 10 |": "a stale action tally; it is 13",
+    "3 CDH1 Reactome cytosol": "implies a split verdict on GO:0005829; all eight rows are KEEP_AS_NON_CORE",
+}
+
+
+def flatten(text: str) -> str:
+    """Collapse whitespace runs to single spaces.
+
+    Load-bearing. Both the review YAML and the markdown wrap prose, so a claim like
+    "9 of ACTA1's 63 peptides" routinely straddles a newline; matching the raw text
+    reported such claims as absent when they were present, which is the same
+    false-negative shape as a silent zero. Also undoes YAML's doubled-apostrophe
+    escaping so a quoted scalar matches the same string as the markdown.
+    """
+    return re.sub(r"\s+", " ", text.replace("''", "'"))
+
+
+def load_surfaces() -> dict[str, str]:
+    out = {}
+    for name, path in SURFACES.items():
+        if not path.exists():
+            raise SystemExit(f"missing surface {path}")
+        out[name] = flatten(path.read_text())
+    return out
+
+
+def required_claims() -> list[tuple[str, str, int]]:
+    """(claim string, why it is load-bearing, minimum occurrences across all surfaces).
+
+    Values come from the JSON outputs, never from literals here, so a recomputation
+    that changes a number makes this lint fail rather than silently disagree.
+    """
+    pep = json.loads(PEPTIDES.read_text())
+    wf = json.loads(WITHFROM.read_text())
+    rows = {r["goa_row"]: r for r in wf["rows"]}
+    ident = pep["pairwise_identity_pct"]
+
+    n_unique = pep["n_unique_to_subject"]
+    n_total = pep["n_subject_peptides_in_window"]
+    n_regions = pep["n_independent_distinguishing_regions"]
+    n_cyto = pep["n_shared_with_cytoplasmic_actins"]
+    pct_shared = round(100.0 * pep["n_shared"] / n_total, 1)
+
+    r1, r2 = rows[1], rows[2]
+    claims = [
+        (f"{ident['ACTA1|ACTA2']} per cent identical",
+         "the reason an ISS between alpha-actins carries no isoform information", 1),
+        (f"{ident['ACTA1|ACTA2']}%",
+         "same identity figure, stated in the markdown surfaces", 1),
+        (f"{n_unique} of ACTA1's {n_total}",
+         "the HDA verdicts rest on this fraction", 1),
+        (f"{n_regions} independent", "the collapsed region count, not the raw peptide count", 2),
+        (f"{n_cyto} of", "peptides shared with the ubiquitous cytoplasmic actins", 1),
+        (f"{pct_shared} per cent", "the shared fraction as quoted in the review reasons", 1),
+        (f"{r1['n_with_own_experimental']} / {r1['n_protein_sources']}",
+         "GO:0015629 donors with their own experimental evidence", 1),
+        ((f"| {r2['n_protein_sources']} | **{r2['n_with_own_experimental']} / "
+          f"{r2['n_protein_sources']}**",
+          f"all {WORDS[r2['n_with_own_experimental']]} carry their own experimental",
+          f"all {r2['n_with_own_experimental']} carry their own experimental"),
+         "GO:0005200 donors, the basis of the headline ACCEPT", 1),
+        ("P08023", "the chicken ACTA2 donor accession behind the five REMOVEs", 3),
+        ("P68139", "chicken's own ACTA1: the ortholog that should have been used", 3),
+        ("eight descendant nodes", "the IRD negation count that places ACTA1 on the accepting side", 2),
+        ("PTN000940351", "the conventional-actin node asserting GO:0005200", 3),
+        ("PTN000233075", "the self-referential PAN-GO node behind the stress fiber row", 3),
+        ("F-actin (all)", "Reactome's generic polymer, the vehicle for the epithelial pathways", 3),
+        ("0.56", "the IntAct MI-score shared by all seven two-hybrid partners", 3),
+    ]
+    return claims
+
+
+def action_counts() -> collections.Counter:
+    """Read actions from the YAML on disk, never from the flattened prose copy."""
+    doc = yaml.safe_load(SURFACES["review"].read_text())
+    return collections.Counter(a["review"]["action"] for a in doc["existing_annotations"])
+
+
+def check(surfaces: dict[str, str]) -> list[str]:
+    problems: list[str] = []
+    blob = "\n".join(surfaces.values())
+
+    for phrase, why in RETRACTED.items():
+        where = [n for n, t in surfaces.items() if phrase in t]
+        if where:
+            problems.append(f"RETRACTED phrasing {phrase!r} reappeared in {where}: {why}")
+
+    for claim, why, minimum in required_claims():
+        # A claim may be given as a tuple of equivalent phrasings; prose legitimately
+        # spells a small count as a word in one place and a digit in another, and a
+        # lint that insists on one spelling reports a false positive rather than a
+        # regression. Satisfied if ANY variant reaches the minimum.
+        variants = claim if isinstance(claim, tuple) else (claim,)
+        best = max(sum(t.count(v) for t in surfaces.values()) for v in variants)
+        if best < minimum:
+            problems.append(
+                f"claim {variants!r} appears {best}x at best, expected >= {minimum} ({why})"
+            )
+
+    # The action tally in the notes must match the YAML it describes.
+    counts = action_counts()
+    for action, n in counts.items():
+        if action == "NEW":
+            continue
+        row = f"| {action} | {n} |"
+        if row not in surfaces["notes"]:
+            problems.append(
+                f"notes action summary disagrees with the YAML: expected row {row!r} "
+                f"({action} appears {n}x in existing_annotations)"
+            )
+
+    # Row coverage: non-NEW annotations must equal the GOA row count.
+    with GOA.open() as fh:
+        goa_rows = sum(1 for _ in csv.DictReader(fh, delimiter="\t"))
+    non_new = sum(v for k, v in counts.items() if k != "NEW")
+    if non_new != goa_rows:
+        problems.append(
+            f"coverage: {non_new} non-NEW annotations against {goa_rows} GOA rows"
+        )
+    if counts.get("PENDING"):
+        problems.append(f"{counts['PENDING']} annotation(s) still PENDING")
+    if f"{goa_rows} GOA rows" not in blob:
+        problems.append(f"no surface states the GOA row count ({goa_rows} GOA rows)")
+    return problems
+
+
+def self_test() -> None:
+    """Break each class of check and require it to fire.
+
+    A passing self-test proves the checks I thought of work; it cannot tell me which
+    check I failed to write. So each case names the real regression it stands for.
+    """
+    surfaces = load_surfaces()
+    assert not check(surfaces), f"baseline must be clean, got {check(surfaces)}"
+    print("self-test 0 OK: baseline is clean")
+
+    # 1. A retracted phrasing creeping back in (the PMID:16288873 title error).
+    mutated = dict(surfaces)
+    bad = "Comparison of alpha-skeletal and alpha-cardiac actin expression"
+    mutated["notes"] = surfaces["notes"] + f"\n{bad} in human skeletal and cardiac muscle.\n"
+    got = check(mutated)
+    assert any("RETRACTED" in p for p in got), got
+    print("self-test 1 OK: retracted phrasing detected")
+
+    # 2. A required claim deleted from every surface (a number silently dropped).
+    mutated = {k: v.replace("P68139", "REDACTED") for k, v in surfaces.items()}
+    assert mutated != surfaces, "mutation did not apply - has the token changed?"
+    got = check(mutated)
+    assert any("P68139" in p for p in got), got
+    print("self-test 2 OK: missing required claim detected")
+
+    # 3. The notes tally drifting from the YAML (the fixed-in-N-1-places failure).
+    counts = action_counts()
+    stale = f"| MARK_AS_OVER_ANNOTATED | {counts['MARK_AS_OVER_ANNOTATED']} |"
+    assert stale in surfaces["notes"], f"anchor {stale!r} absent; cannot exercise case 3"
+    mutated = dict(surfaces)
+    mutated["notes"] = surfaces["notes"].replace(stale, "| MARK_AS_OVER_ANNOTATED | 99 |")
+    got = check(mutated)
+    assert any("action summary disagrees" in p for p in got), got
+    print("self-test 3 OK: notes/YAML tally drift detected")
+
+    print("\nall self-tests passed")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--self-test", action="store_true")
+    args = ap.parse_args()
+    if args.self_test:
+        self_test()
+        return
+    problems = check(load_surfaces())
+    if problems:
+        for p in problems:
+            print(f"FAIL {p}", file=sys.stderr)
+        raise SystemExit(f"{len(problems)} claim problem(s)")
+    print("OK: all load-bearing claims agree across the review, notes and RESULTS.md")
+
+
+if __name__ == "__main__":
+    main()
