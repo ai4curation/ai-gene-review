@@ -449,10 +449,9 @@ Two of these changed the review.
    into a curated fact — and it strengthens the `suggested_questions` item addressed to that set.
 2. **A doubled-count phrasing was mis-statable and has been corrected.** The draft said mouse
    Actrt3 carries protein binding by IPI two separate times from that reference, which reads as two
-   experiments. The
-   reference covers only 2 entities in total, so the rows are one co-immunoprecipitation logged
-   once by UniProt and once by IntAct, recorded reciprocally on Actrt3 and Pfn3 — one experiment
-   recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
+   experiments. The reference covers only 2 entities in total, so the rows are one
+   co-immunoprecipitation logged once by UniProt and once by IntAct, recorded reciprocally on
+   Actrt3 and Pfn3 — one experiment recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
    proposal never depended on a replicate count, so the term survives; the sentence supporting it
    did not.
 
@@ -489,7 +488,7 @@ properly:
 2. **Per-code totals do not partition the total.** QuickGO's `evidenceCode` filter is not
    exact-only: on PMID:35793634 the per-code counts sum to 57 against a total of 35. They are kept
    for orientation and used for no claim.
-3. **`term_list_provably_complete` is the precondition for the projection test**, and stating it
+3. **Completeness is the precondition for the projection test**, and stating it
    makes the two theca ACCEPTs rest on a checkable property rather than on the absence of a
    surprise. PMID:35793634 is complete, 35 of 35, so the twelve-versus-one comparison is sound.
 
@@ -514,12 +513,48 @@ asymmetry rather than care:
   that could have read 12 while the truth was 11, so the guard was right by luck of the data.
 
 Fixed: the field is now `true_annotations_per_term`; a separate `entities_per_term` is computed
-from distinct `geneProductId` values and emitted **only when `term_list_provably_complete`**, since
+from distinct `geneProductId` values and emitted **only when `rows_complete`**, since
 a distinct count taken from a sampled page is a lower bound wearing a total's clothes;
 `projection_test_basis` records which of the two the verdict used; and the audit reaches entity
 counts through an accessor that raises a named error rather than a bare `KeyError` when the count
 is unavailable. `unaccounted_annotations` deliberately stays on the annotation counts — it is
 `total - sum(annotations)` and is sound precisely because those are rows.
+
+### The round-4 correction: the gate tested the wrong completeness
+
+One more level down, and the sharpest of the four. `entities_per_term` was gated on
+`unaccounted_annotations == 0` — which proves every annotation's **term** was queried. But the
+entity counts are computed by collecting distinct `geneProductId` values **from the returned
+rows**, so the property they actually need is that every **row** was seen: `not truncated`, which
+was already computed two dozen lines earlier and is strictly stronger. The docstring gave the
+right reason ("a distinct count taken from a sampled page is a lower bound") while the condition
+underneath it enforced something else.
+
+**It missed by one annotation on this very dataset.** PMID:33961781 has 9508 + 5 = 9513 against a
+total of 9514, so the single stray row — a `GO:0005515` descendant the sampled page never showed —
+is the *only* reason its term list stayed open. Without it, `unaccounted` would have been 0 while
+the page still held 200 of 9514 rows, and the block would have emitted
+`entities_per_term[GO:0005515] ≈ 119` with `entities_per_term_available: true`,
+`projection_test_basis: entities_per_term` and `projection_test_reliable: true`. That is the
+round-1 sampling defect returning under a label asserting it had been fixed — and the audit guard,
+which inherited the same precondition, would have confirmed it rather than caught it.
+
+Fixed to `rows_complete = not truncated and total > 0`, with `term_list_provably_complete` kept as
+a separate, separately-reported property, and `projection_test_reliable` now requiring row
+completeness. Both are asserted in the audit so a regression in either is visible.
+
+Same root, smaller: `max_entities_on_a_functional_term` and `max_entities_on_a_location_term` held
+**annotation** counts in the fallback branch under names saying "entities" — the round-2 misnomer
+surviving in the two fields the rename had not reached (PMID:33961781 read
+`max_entities_on_a_location_term: 5`). Renamed to `max_functional_spread` / `max_location_spread`
+with a `spread_units` field carrying `entities` or `annotations`, and `verdict()` now prints the
+units rather than assuming them.
+
+The pattern across all four rounds is one thing, stated four ways at four depths: **a number's
+name must match how it was obtained.** Round 1 mixed a total with a sample; round 2 mixed an
+annotation count with an entity count; round 3 left two fields the rename missed; round 4 gated a
+row-derived count on a term-derived property. Each was invisible to every mechanical check in the
+repository, and each was found by someone asking what a specific number was actually counting.
 
 Two further guard gaps surfaced from break-testing this round, both of the same family as the
 round-2 blindness:

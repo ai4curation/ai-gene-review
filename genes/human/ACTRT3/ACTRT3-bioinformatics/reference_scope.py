@@ -28,9 +28,13 @@ So every count this script reports as a total is obtained from its own **filtere
   * `true_annotations_per_term`    - one exact-usage query per term. These are ANNOTATION ROW
                                      counts; `numberOfHits` never collapses per gene product.
                                      `entities_per_term` is the distinct-gene-product count, and
-                                     is emitted ONLY when `term_list_provably_complete`, because a
-                                     distinct count taken from a sampled page is a lower bound.
-                                     The projection test uses the entity counts when available.
+                                     is emitted ONLY when `rows_complete` (i.e. NOT truncated),
+                                     because it is counted from the returned rows and a distinct
+                                     count taken from a sampled page is a lower bound. Note this is
+                                     row completeness, not `term_list_provably_complete`, which is
+                                     weaker: the latter only proves every term was queried.
+                                     The projection test uses the entity counts when available, and
+                                     `spread_units` records which quantity the maxima are in.
   * `true_annotations_per_code`    - one query per evidence code seen. NOTE: these do not
                                      partition the total, because QuickGO's `evidenceCode` filter
                                      is not exact-only; on PMID:35793634 they sum to 57 against a
@@ -40,7 +44,7 @@ So every count this script reports as a total is obtained from its own **filtere
   * `true_annotations_per_aspect`  - three queries, so terms absent from the sampled page are
                                      still accounted for
 
-`unaccounted_annotations` is then `total - sum(true_entities_per_term)`; when it is non-zero the
+`unaccounted_annotations` is then `total - sum(true_annotations_per_term)`; when it is non-zero the
 term list is provably incomplete and the script says so rather than implying coverage. The
 sampled page is retained only for the readable row matrix, and every field derived from it is
 named `*_seen` and marked as a lower bound when `truncated` is true.
@@ -160,10 +164,16 @@ def scope(pmid: str) -> dict:
     unaccounted = total - sum(true_annotations_per_term.values())
     db_total = sum(true_per_db.values())
 
-    # Distinct gene products per term, counted from the rows. Only emitted when the term list is
-    # provably complete, because otherwise the rows are a sample and a distinct-entity count from
-    # a sample is a lower bound masquerading as a total.
-    complete = unaccounted == 0 and total > 0
+    # Distinct gene products per term, counted from the rows -- so the precondition is that every
+    # ROW was seen, i.e. `not truncated`. `unaccounted == 0` is a different and weaker property: it
+    # proves every annotation's TERM was queried, not that every row was returned. The two came
+    # within one annotation of diverging on this dataset: PMID:33961781 has 9508 + 5 = 9513 against
+    # a total of 9514, so the single stray row is the only reason its term list stayed open while
+    # the page showed 200 of 9514. Without it the old gate would have emitted a 119-entity count
+    # from that page and labelled it complete -- the round-1 sampling defect wearing a total's name.
+    rows_complete = not truncated and total > 0
+    term_list_complete = unaccounted == 0 and total > 0
+    complete = rows_complete
     all_rows = rows + extra_rows
     entities_per_term = {
         t: len({r["geneProductId"] for r in all_rows if r["goId"] == t})
@@ -179,11 +189,15 @@ def scope(pmid: str) -> dict:
     locational = {t: n for t, n in basis.items() if aspect_of.get(t) == "CC"}
     max_func = max(functional.values(), default=0)
     max_loc = max(locational.values(), default=0)
+    # These are entity counts only when the basis is entities; in the fallback they are annotation
+    # counts. The round-2 rename did not reach them, so the units are now carried alongside rather
+    # than implied by the name.
+    spread_units = "entities" if complete else "annotations"
 
     proj_line = (
         f"{ref} projection test on {('entities' if complete else 'annotations')}: "
         + ", ".join(f"{t}={n}" for t, n in sorted(basis.items()))
-        + f"; max functional {max_func}, max localisation {max_loc}"
+        + f"; max functional {max_func}, max localisation {max_loc} ({spread_units})"
     ) if total else f"{ref} projection test: not curated by GOA"
     summary = (
         f"{ref}: {total} annotations total, {len(rows)} rows examined"
@@ -199,7 +213,7 @@ def scope(pmid: str) -> dict:
         "rows_examined": len(rows),
         "truncated": truncated,
         "unaccounted_annotations": unaccounted,
-        "term_list_provably_complete": unaccounted == 0 and total > 0,
+        "term_list_provably_complete": term_list_complete,
         "distinct_entities_seen": len({r["geneProductId"] for r in rows}),
         "distinct_entities_is_lower_bound": truncated,
         "evidence_codes_seen": codes_seen,
@@ -218,12 +232,14 @@ def scope(pmid: str) -> dict:
         "true_annotations_per_term": true_annotations_per_term,
         "entities_per_term": entities_per_term,
         "entities_per_term_available": complete,
+        "rows_complete": rows_complete,
         "projection_test_basis": "entities_per_term" if complete else "true_annotations_per_term",
         "aspect_per_term": dict(sorted(aspect_of.items())),
         "functional_terms_excluding_protein_binding": dict(sorted(functional.items())),
-        "max_entities_on_a_functional_term": max_func,
-        "max_entities_on_a_location_term": max_loc,
-        "projection_test_reliable": not truncated or unaccounted == 0,
+        "max_functional_spread": max_func,
+        "max_location_spread": max_loc,
+        "spread_units": spread_units,
+        "projection_test_reliable": rows_complete,
         "rows": [
             {"go_id": r["goId"], "aspect": ASPECT.get(r.get("goAspect"), "?"),
              "evidence": r["goEvidence"], "symbol": r.get("symbol"),
@@ -260,24 +276,25 @@ def verdict(s: dict) -> str:
             f"{len(proj)} times, not independent support"
         )
 
-    f, l = s["max_entities_on_a_functional_term"], s["max_entities_on_a_location_term"]
+    f, l = s["max_functional_spread"], s["max_location_spread"]
+    units = s["spread_units"]
     if proj:
         parts.append(
             "the remaining rows are not from a projecting database; the location-versus-function "
             "test is not applied to them here because this reference's non-projected content is "
             "a single interaction term"
             if l and not f else
-            f"the remaining rows carry functional claims on {f} entities and locations on {l}"
+            f"the remaining rows carry functional claims on {f} {units} and locations on {l}"
         )
     elif l > 1 and f <= 1:
         parts.append(
-            f"multi-entity LOCALISATION ({l} entities) with the functional claim confined to {f} "
+            f"multi-entity LOCALISATION ({l} {units}) with the functional claim confined to {f} "
             "entity, and no projecting database involved: honest per-protein curation, NOT a "
             "projection - a projection spreads the phenotype too"
         )
     elif f > 1 and f == l:
         parts.append(
-            f"functional and locational rows cover the same {f} entities: possible projection; "
+            f"functional and locational rows cover the same {f} {units}: possible projection; "
             "check whether the experiment perturbed each gene"
         )
     elif s["distinct_entities_seen"] <= 2 and l <= 1 and not s["truncated"]:

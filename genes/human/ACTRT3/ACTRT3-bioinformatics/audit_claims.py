@@ -263,26 +263,55 @@ def main() -> int:
 
         bioplex, theca, prof = ref("33961781"), ref("35793634"), ref("18692047")
 
-        def entity_count(block: dict, go_id: str, why: str) -> int:
-            """Distinct-entity count, or a named failure. Never an annotation count by accident."""
+        def entity_count(block: dict, go_id: str, why: str) -> int | None:
+            """Distinct-entity count, or None with a recorded problem.
+
+            Records rather than raises: this script's contract is that one run prints every
+            failure, and raising here aborted the remaining patterns so a second, unrelated
+            drift would stay hidden until the first was fixed.
+            """
             if not block.get("entities_per_term_available"):
-                raise RuntimeError(
+                problems_early.append(
                     f"PMID:{block['pmid']} no longer yields a distinct-entity count per term "
-                    f"(term_list_provably_complete is false), so {why} is unsupported: an "
-                    "annotation count is not an entity count. Re-run reference_scope.py and "
-                    "re-read the affected prose rather than substituting the annotation count."
+                    f"(rows_complete is false, i.e. the row list is a sample), so {why} is "
+                    "unsupported: an annotation count is not an entity count. Re-run "
+                    "reference_scope.py and re-read the affected prose rather than substituting "
+                    "the annotation count."
                 )
+                return None
             if go_id not in block["entities_per_term"]:
-                raise RuntimeError(
+                problems_early.append(
                     f"PMID:{block['pmid']} no longer annotates {go_id}; {why} must be re-read. "
                     f"Terms present: {sorted(block['entities_per_term'])}"
                 )
+                return None
             return block["entities_per_term"][go_id]
 
         theca_pt = entity_count(theca, "GO:0033011",
                                 "the prose's '12 mouse perinuclear-theca proteins'")
         theca_pheno = entity_count(theca, "GO:0007286", "the projection argument")
         prof_pb = entity_count(prof, "GO:0005515", "the annotations-versus-entities sentence")
+        # Entity-count patterns are added only where the count is available; the absence is already
+        # recorded above, so skipping here loses nothing and keeps the remaining checks running.
+        if theca_pt is not None:
+            P.extend([
+                ("scope, theca proteins carrying GO:0033011 IDA",
+                 r"carries GO:0033011 by IDA for (\d+) mouse perinuclear-theca proteins",
+                 (theca_pt,), review, 1),
+                ("scope, theca proteins named in the notes table",
+                 r"by IDA for (\w+) mouse theca proteins", (word(theca_pt),), notes, 1),
+            ])
+        if prof_pb is not None:
+            P.append(
+                ("scope, profilin GO:0005515 annotations vs entities (the double-logging itself)",
+                 r"(\d+) protein-binding annotations spread over only (\d+) entities",
+                 (prof["true_annotations_per_term"]["GO:0005515"], prof_pb), review, 1))
+        # rows_complete is the property entity counting actually needs; term-list closure is
+        # weaker and was the wrong gate. Both are asserted so a regression in either is visible.
+        if not theca["rows_complete"]:
+            problems_early.append(
+                "PMID:35793634's row list is no longer complete, so its entity counts are a lower "
+                "bound and the '12 proteins' sentence rests on a sample")
         P.extend([
             ("scope, BioPlex total annotations",
              r"PMID:33961781 accounts for (\d+) GOA annotations",
@@ -294,22 +323,13 @@ def main() -> int:
              r"\(IntAct (\d+), ComplexPortal (\d+)\)",
              (bioplex["true_annotations_per_db"]["IntAct"],
               bioplex["true_annotations_per_db"]["ComplexPortal"]), review, 1),
-            ("scope, theca proteins carrying GO:0033011 IDA",
-             r"carries GO:0033011 by IDA for (\d+) mouse perinuclear-theca proteins",
-             (theca_pt,), review, 1),
-            ("scope, theca proteins named in the notes table",
-             r"by IDA for (\w+) mouse theca proteins",
-             (word(theca_pt),), notes, 1),
             ("scope, profilin reference entity count",
              r"yields (\d+) annotations across just (\d+) entities",
              (prof["total_annotations"], prof["distinct_entities_seen"]), review, 1),
-            ("scope, profilin GO:0005515 annotations vs entities (the double-logging itself)",
-             r"(\d+) protein-binding annotations spread over only (\d+) entities",
-             (prof["true_annotations_per_term"]["GO:0005515"], prof_pb), review, 1),
         ])
         # The projection argument on the two GO:0033011 ACCEPTs depends on three properties of
         # PMID:35793634. If any changes, the prose must be re-read rather than the number bumped.
-        if theca_pheno != 1:
+        if theca_pheno is not None and theca_pheno != 1:
             problems_early.append(
                 "PMID:35793634's GO:0007286 row no longer covers exactly one entity; the "
                 "'not a projection' argument on the GO:0033011 rows depends on it")
