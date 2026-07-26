@@ -116,14 +116,28 @@ jobs:
           #
           # `mcp_config:`, `model:` and `allowed_tools:` were dropped the same way
           # — none of them are v1 inputs. Everything now goes through claude_args,
-          # which is how v1 takes CLI flags.
+          # which is how v1 takes CLI flags. Both flags ACCUMULATE with tag mode's
+          # own values rather than replacing them, so the comment-update and CI
+          # MCP tools survive.
+          #
+          # The old file asked for `Bash(*),Edit,MultiEdit,Write`, but since the
+          # input was being discarded it never took effect — the agent has been
+          # running on tag mode's narrow set. Restoring that literally would grant
+          # arbitrary shell and blanket write for the first time, in the same PR
+          # that calls this workflow out as the incident shape, so it is scoped to
+          # what the gene-review protocol actually needs instead. Edit/Write are
+          # deliberately absent: tag mode runs `--permission-mode acceptEdits`,
+          # which already permits edits inside the workspace, and listing the
+          # tools would extend that to the whole runner.
           claude_args: |
             --model ${{ env.AGENT_MODEL }}
             --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}, "sequential-thinking": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]}}}'
-            --allowedTools "Bash,Edit,MultiEdit,Write,Read,Glob,Grep,WebSearch,WebFetch,mcp__ols__search_all_ontologies,mcp__ols__get_terms_from_ontology"
+            --allowedTools "Read,Glob,Grep,WebSearch,WebFetch,Bash(just:*),Bash(uv:*),Bash(uvx:*),Bash(gh:*),Bash(git:*),mcp__ols__search_all_ontologies,mcp__ols__get_terms_from_ontology,mcp__sequential-thinking__sequentialthinking"
 
       - name: Write step summary
-        if: always()
+        # Not `always()`: with cancel-in-progress a superseded run writes no
+        # execution log, and the summary would report that as breakage.
+        if: ${{ !cancelled() }}
         uses: ./.github/actions/agent-run-summary
         with:
           execution-file: ${{ steps.claude.outputs.execution_file }}

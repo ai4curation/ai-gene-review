@@ -186,8 +186,13 @@ def test_managed_workflows_use_the_resolver_action():
             )
 
 
-# Inputs declared by anthropics/claude-code-action at the SHA every workflow
-# pins (be7b93b, v1). Refresh with:
+# The SHA these input/output sets were read from. If a workflow bumps the pin,
+# the sets below may no longer describe the action —
+# test_claude_action_pin_matches_the_recorded_sets fails so the bump comes with
+# a refresh rather than silently invalidating both guards.
+CLAUDE_ACTION_PINNED_SHA = "be7b93b1907a4abad570368f3c74b6fe3807510b"
+
+# Inputs declared by anthropics/claude-code-action at that SHA. Refresh with:
 #   gh api "/repos/anthropics/claude-code-action/contents/action.yml?ref=<sha>" \
 #     --jq .content | base64 -d | python3 -c \
 #     "import sys,yaml;print(sorted(yaml.safe_load(sys.stdin)['inputs']))"
@@ -281,3 +286,33 @@ def test_every_claude_code_action_workflow_is_in_the_agent_config():
         "workflow(s) run claude-code-action but are not in agent-config.yaml, so "
         f"their model is not centrally configured: {sorted(using - managed)}"
     )
+
+
+def test_claude_action_pin_matches_the_recorded_sets():
+    """Every workflow must pin the SHA the input/output sets were read from.
+
+    The two guards above are only as good as their hardcoded vocabulary. Tying
+    them to the pin means bumping the action forces a deliberate refresh instead
+    of quietly turning both tests into no-ops.
+    """
+    pins = set()
+    for path in WORKFLOW_DIR.glob("*.y*ml"):
+        pins.update(
+            re.findall(r"anthropics/claude-code-action@([0-9a-f]{40})", path.read_text())
+        )
+    unexpected = pins - {CLAUDE_ACTION_PINNED_SHA}
+    assert not unexpected, (
+        "claude-code-action is pinned to a SHA the recorded input/output sets "
+        f"were not read from: {sorted(unexpected)}. Re-read them from that SHA "
+        "and update CLAUDE_ACTION_PINNED_SHA."
+    )
+
+
+def test_claude_code_action_is_always_sha_pinned():
+    """A moved tag could swap in code that exfiltrates the App token."""
+    floating = []
+    for path in WORKFLOW_DIR.glob("*.y*ml"):
+        for ref in re.findall(r"anthropics/claude-code-action@(\S+)", path.read_text()):
+            if not re.fullmatch(r"[0-9a-f]{40}", ref):
+                floating.append(f"{path.stem}: @{ref}")
+    assert not floating, "claude-code-action must be SHA-pinned:\n" + "\n".join(floating)
