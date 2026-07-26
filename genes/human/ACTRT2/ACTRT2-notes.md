@@ -340,7 +340,13 @@ hypothesis to test, not evidence.
 Querying QuickGO by **reference** rather than by gene. A reference that annotates many entities
 to the same term with identical evidence is one projection, not N independent findings.
 
-| reference | total GOA annotations | entities | distinct terms | assigned by |
+Two units must not be conflated, and the second column is where it would happen: QuickGO's total is
+an **annotation** count, not an entity count — one reference can annotate several terms per entity
+(the calicin paper is 35 annotations over 19 entities). And large result sets are **paginated**, so
+a page total is not the whole; where the walk is capped the entity count is reported as *not
+counted* rather than replaced by the sample size.
+
+| reference | GOA **annotations** | entities | distinct terms | assigned by |
 |---|---|---|---|---|
 | PMID:12243744 (calyx, founding) | **0** | 0 | — | — |
 | PMID:11750065 (cloning) | **0** | 0 | — | — |
@@ -348,13 +354,18 @@ to the same term with identical evidence is one projection, not N independent fi
 | PMID:41668650 (Actrt3 KO) | **0** | 0 | — | — |
 | PMID:40811009 (Actrt2 KO) | **0** | 0 | — | — |
 | PMID:25293813 (human sperm IF) | **0** | 0 | — | — |
-| PMID:33961781 (BioPlex 3.0) | **9,514** | thousands | `GO:0005515` only | IntAct only |
-| PMID:35793634 (calicin) | 35 | 19 | `GO:0005515`, `GO:0007286`, `GO:0033011` | UniProt |
+| PMID:33961781 (BioPlex 3.0) | **9,514** | not counted (330+ in a partial walk) | `GO:0005515` only | IntAct only |
+| PMID:35793634 (calicin) | 35 | 19 (walked exhaustively) | `GO:0005515`, `GO:0007286`, `GO:0033011` | UniProt |
+
+An earlier draft of this table wrote "thousands" in the entities column for BioPlex — an inference
+standing in for a measurement, which is the same error as reading a page total as a whole. The
+script now returns `None` with an explanatory note whenever the walk was capped.
 
 Two conclusions, opposite in direction.
 
-**BioPlex.** 9,514 annotations, every one `GO:0005515`, every one from IntAct — checked on pages 1,
-20 and 40, so the uniformity is not a first-page artefact. That is the strongest possible statement
+**BioPlex.** 9,514 **annotations** (not entities), every one `GO:0005515`, every one from IntAct —
+checked on pages 1, 20 and 40, so the uniformity is not a first-page artefact, though sampling three
+pages of a paginated set is evidence of uniformity rather than proof of it. That is the strongest possible statement
 that the *term* carries no gene-specific information, and it is part of why the row moved to
 `MARK_AS_OVER_ANNOTATED`. It is **not** the ACTR8 projection failure, though: ACTRT2 was
 individually assayed in that experiment, so this is a real if uninformative observation, not a

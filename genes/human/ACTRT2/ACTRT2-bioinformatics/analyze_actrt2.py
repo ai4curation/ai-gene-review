@@ -1043,13 +1043,24 @@ def reference_scope() -> dict:
         for r in rows:
             by_entity[r.get("symbol") or r.get("geneProductId")].add(r["goId"])
         terms = sorted({r["goId"] for r in rows})
+        exhaustive = len(rows) >= total_hits
         rec = {
+            # QuickGO's numberOfHits is an ANNOTATION count, not an entity count. One reference can
+            # annotate 35 things across 19 entities, so the two must never be conflated - and for a
+            # proteome-scale reference the walk is capped, so the sampled entity count is a sample
+            # and NOT the total. When the sample is not exhaustive the entity count is reported as
+            # unavailable rather than substituted, because a sample number in a total's place reads
+            # as a measurement.
             "total_annotations": total_hits,
             "n_rows_sampled": len(rows),
-            "n_entities_sampled": len(by_entity),
+            "sampled_exhaustively": exhaustive,
+            "n_entities": len(by_entity) if exhaustive else None,
+            "n_entities_note": None if exhaustive
+            else f"entity count unavailable: results are paginated and only {len(rows)} of "
+                 f"{total_hits} annotations were walked",
+            "n_entities_in_sample": len(by_entity),
             "distinct_terms_sampled": terms,
             "assigned_by": sorted({r.get("assignedBy") for r in rows if r.get("assignedBy")}),
-            "sampled_exhaustively": len(rows) >= total_hits,
         }
         # The subset test: for a reference with one dominant cellular-component term, did the
         # curator give it to every entity it touched, or only to some?
@@ -1685,10 +1696,17 @@ def render(r: dict) -> str:
     a("Querying QuickGO by reference rather than by gene distinguishes an observation of this")
     a("protein from a projection onto it.")
     a("")
-    a("| reference | total annotations in GOA | entities sampled | distinct terms | assigned by |")
+    a("The first column is an **annotation** count, not an entity count - QuickGO's total counts")
+    a("annotations, and one reference can annotate many terms per entity. Where the result set is")
+    a("large enough to paginate, the walk is capped and the entity count is reported as")
+    a("unavailable rather than replaced by the sample size.")
+    a("")
+    a("| reference | annotations in GOA | entities | distinct terms | assigned by |")
     a("|---|---|---|---|---|")
     for pmid, rec in r["reference_scope"].items():
-        a(f"| {pmid} | {rec['total_annotations']} | {rec['n_entities_sampled']} | "
+        ent = (str(rec["n_entities"]) if rec["n_entities"] is not None
+               else f"not counted ({rec['n_entities_in_sample']}+ in a partial walk)")
+        a(f"| {pmid} | {rec['total_annotations']} | {ent} | "
           f"{', '.join(rec['distinct_terms_sampled']) or '-'} | "
           f"{', '.join(rec['assigned_by']) or '-'} |")
     a("")

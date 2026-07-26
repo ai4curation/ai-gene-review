@@ -349,7 +349,12 @@ What that partner interacts with across all of IntAct: **91 partners** in 156 re
 Querying QuickGO by reference rather than by gene distinguishes an observation of this
 protein from a projection onto it.
 
-| reference | total annotations in GOA | entities sampled | distinct terms | assigned by |
+The first column is an **annotation** count, not an entity count - QuickGO's total counts
+annotations, and one reference can annotate many terms per entity. Where the result set is
+large enough to paginate, the walk is capped and the entity count is reported as
+unavailable rather than replaced by the sample size.
+
+| reference | annotations in GOA | entities | distinct terms | assigned by |
 |---|---|---|---|---|
 | PMID:12243744 | 0 | 0 | - | - |
 | PMID:11750065 | 0 | 0 | - | - |
@@ -357,7 +362,7 @@ protein from a projection onto it.
 | PMID:41668650 | 0 | 0 | - | - |
 | PMID:40811009 | 0 | 0 | - | - |
 | PMID:25293813 | 0 | 0 | - | - |
-| PMID:33961781 | 9514 | 330 | GO:0005515 | IntAct |
+| PMID:33961781 | 9514 | not counted (330+ in a partial walk) | GO:0005515 | IntAct |
 | PMID:35793634 | 35 | 19 | GO:0005515, GO:0007286, GO:0033011 | UniProt |
 
 Subset test on PMID:35793634 / GO:0033011: **12** of 19 entities the reference touches received the term (`is_subset_not_blanket` = **True**).
