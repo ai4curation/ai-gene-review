@@ -317,20 +317,26 @@ necessarily includes the acroplaxome underneath. The same paper that reports the
 `REMOVE`) is the right instrument: the observation is real and the intended compartment is one
 step away. Both reasons say explicitly that a curator with figure access should confirm.
 
-Why no REMOVE anywhere. The other two candidates were the `GO:0005200` TAS row and the
-`GO:0005198` IBA. In both cases the *term* survives scrutiny even though its *evidence* does not:
-GO:0005200's claim is supportable by post-2011 work (the PT/acroplaxome is a cytoskeletal
-structure and GO:0033011 is a GO:0005856 descendant), so `MARK_AS_OVER_ANNOTATED` — which needs no
-positive argument — is the right instrument; and GO:0005198, despite having no protein-level
-source, states something the KO phenotype supports.
+Why no REMOVE anywhere. The two structural-MF rows were the other candidates, and neither turned
+out to need it — see the paragraph above on how they were resolved. In both cases the *term*
+survives scrutiny even though its *evidence* does not, and the instruments that fit are `ACCEPT`
+with the provenance criticism inside `reason` (`GO:0005200`) and `KEEP_AS_NON_CORE` for a redundant
+parent (`GO:0005198`). Nothing on this gene overshoots its term, so `MARK_AS_OVER_ANNOTATED` is
+unused; the defects were the citation and the inference chain.
 
 Why the four `nucleus` rows are all `KEEP_AS_NON_CORE` rather than refined to `GO:0001673`. The
 mouse source of the ISS row carries `GO:0001673 male germ cell nucleus` by IDA, so refining is
-tempting and is recorded as a suggested question. Two things held it back: the rows would then
-disagree with each other unless all four were changed, and PMID:10373328 reports ACTL7A message
-"in a wide variety of adult tissues", so a somatic nuclear pool has not been formally excluded.
-The substantive point about the nucleus is not its granularity but that **no nuclear activity has
-been demonstrated**, which `KEEP_AS_NON_CORE` states directly.
+tempting and is recorded as a suggested question. Two things held it back, and neither is the 1999
+Northern survey — an mRNA tissue distribution says nothing about where the protein sits, and citing
+it as a hedge was a first-draft error, corrected in round 2. The actual reasons: on the
+phylogenetic row the donor set spans a yeast SWI/SNF subunit, a *Candida* homologue and a
+trypanosome protein, for which a germ-cell term is meaningless, so `GO:0005634` genuinely is the
+correct least common ancestor there; and no study has looked for ACTL7A protein in a somatic
+nucleus, so the germ-cell restriction rests on where the protein has been observed rather than on
+exclusion elsewhere. Refining only the ortholog-derived rows would also split the four rows'
+actions, which is a curator call rather than one to make unilaterally. The substantive point about
+the nucleus is not its granularity but that **no nuclear activity has been demonstrated**, which
+`KEEP_AS_NON_CORE` states directly.
 
 Two evidence-code observations, recorded here rather than in row summaries. `GO:0001669` /
 **IMP** / PMID:34727571 uses an IMP code for a *location*; the underlying data are
