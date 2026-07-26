@@ -1,0 +1,4497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COQ9 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COQ9</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75208" target="_blank" class="term-link">
+                        O75208
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COQ9";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75208" data-a="DESCRIPTION: COQ9 is a mitochondrial lipid-binding protein esse..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COQ9 is a mitochondrial lipid-binding protein essential for the biosynthesis of coenzyme Q10 (ubiquinone), the lipid-soluble electron carrier of the respiratory chain. It has no catalytic activity of its own. Adopting a bacterial TetR/FadR-like all-alpha fold with a hydrophobic pocket, COQ9 binds membrane phospholipids (notably in cardiolipin-rich membranes) and lipophilic aromatic-isoprene CoQ-pathway intermediates, and presents the substrate 5-demethoxyubiquinone directly to the di-iron hydroxylase COQ7. Through this substrate-presentation role it activates the penultimate C6-hydroxylation step of CoQ biosynthesis. COQ9 forms homodimers and, together with COQ7, assembles into higher-order tetrameric and octameric COQ7:COQ9 modules that warp the membrane surface to access lipid cargo; this module is part of the larger CoQ biosynthetic complex (&#34;complex Q&#34; / COQ synthome, comprising COQ3-COQ9) on the matrix face of the mitochondrial inner membrane. The protein carries an N-terminal mitochondrial transit peptide and, under mitochondrial stress, its precursor is ubiquitinated by the SIFI complex before import. Loss-of-function variants in COQ9 cause primary coenzyme Q10 deficiency type 5 (COQ10D5), an autosomal recessive neonatal-onset multisystem mitochondrial disease with encephalomyopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred role in ubiquinone (CoQ) biosynthesis, fully concordant with the experimentally established, essential role of human COQ9 in CoQ10 biosynthesis and conserved across the COQ9 orthologous family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Represents a core, well-supported biological process for this gene; consistent with the experimental IDA/ISS annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                        PMID:38425362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">COQ9 has been shown to facilitate COQ7 activity in vivo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0008289" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred lipid binding, concordant with the experimentally demonstrated lipid-binding molecular function of COQ9 (crystallized with bound phosphatidylethanolamine; associates with multiple lipid species including CoQ).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of this non-catalytic protein; matches the experimental IDA lipid-binding annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                        PMID:25339443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">multiple lipid species, including CoQ itself</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred localization to the mitochondrial inner membrane, consistent with COQ9 acting on the matrix face of the inner membrane as part of the CoQ synthome and associating with cardiolipin-rich membranes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment; matches experimental (ComplexPortal IDA) and Reactome TAS inner-membrane annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from UniProt subcellular-location mapping. COQ9 is a well-established mitochondrial protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but general organelle assignment; the more specific inner-membrane localization is captured by other annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (multi-method) annotation to ubiquinone biosynthetic process, redundant with the experimental and phylogenetic annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process; well-supported by experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0008289" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of lipid binding based on the COQ9 family signature (IPR012762), redundant with and confirmed by the experimental IDA lipid-binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct molecular function, supported by direct experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005515" data-r="PMID:27499296" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a mitochondrial protein-interaction mapping study. The partners recorded here include genuine CoQ-complex members (COQ5, COQ7, COQ8A) as well as a non-CoQ partner (ACSF2). The specific COQ7 interaction is captured functionally elsewhere; the bare term itself conveys no molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 without a specific partner/function is uninformative; per policy an IPI protein-binding annotation is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; derived from a high-throughput binary (Y2H) interactome map (HuRI). The recorded partners (e.g. ADIPOQ, BMP10, CCL4L2, ALDH18A1) are not biologically meaningful CoQ-pathway interactors and largely reflect assay noise.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative bare protein-binding term from a high-throughput screen; marked as over-annotated per policy (not removed).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization to the mitochondrial inner membrane (ComplexPortal, from the mitochondrial protein interaction mapping study), consistent with COQ9&#39;s role in the inner-membrane-associated CoQ synthome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28927698
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="PMID:28927698" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement (ComplexPortal) placing COQ9 in the terminal-stage CoQ biosynthetic complex (&#34;complex Q&#34;, COQ3-COQ9), consistent with the experimental evidence for its role in CoQ biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process; corroborated by direct experimental annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link">
+                                        PMID:28927698
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Complex Q is thought to contain proteins required for the terminal stage of CoQ biosynthesis (COQ3–COQ9)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                                    GO:0110142
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthesis complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0110142" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> COQ9 is a component of the ubiquinone biosynthesis complex (CoQ synthome / complex Q), demonstrated by co-purification/interaction with other COQ proteins. This is a core aspect of COQ9 biology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported membership in the CoQ biosynthetic complex; captures the accessory subunit role of this non-catalytic protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005739" data-r="PMID:27499296" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence of mitochondrial localization/activity, consistent with COQ9&#39;s established mitochondrial function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct organelle; more specific inner-membrane localization captured elsewhere.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38425362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro construction of the COQ metabolon unveils the molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="PMID:38425362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence from in vitro reconstruction of the animal COQ metabolon that COQ9 participates in CoQ biosynthesis by facilitating COQ7 activity (increased COQ7 catalytic efficiency ~1.5-fold when COQ9 is added).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support for a core biological process; represents a defining function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                        PMID:38425362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">addition of COQ9 increased catalytic efficiency by 1.5-fold, substantiating its role for COQ7 function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019840" target="_blank" class="term-link">
+                                    GO:0019840
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38425362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro construction of the COQ metabolon unveils the molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0019840" data-r="PMID:38425362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that COQ9 binds isoprenoid (aromatic isoprene) CoQ intermediates. This lipophilic-intermediate binding underlies its substrate-presentation role toward COQ7.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific, experimentally supported molecular function of this lipid-binding protein; more informative than the general lipid-binding term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30661980
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An Isoprene Lipid-Binding Protein Promotes Eukaryotic Coenzy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005515" data-r="PMID:30661980" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI protein-binding annotation whose recorded partner is COQ7 (Q99807), the functionally central COQ9 interactor. The interaction is real and biologically important (COQ9 presents substrate to COQ7), but the bare &#34;protein binding&#34; term itself carries no molecular-function content; the meaningful biology is captured by the lipid/isoprenoid-binding, complex-membership and CoQ-biosynthesis annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine, specific COQ7 interaction (never removed per policy), but retained as non-core because bare GO:0005515 is uninformative as a molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                                        PMID:30661980
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identify a molecular interface between COQ9 and the hydroxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30661980
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An Isoprene Lipid-Binding Protein Promotes Eukaryotic Coenzy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="PMID:30661980" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that COQ9&#39;s custom lipid-binding properties promote eukaryotic CoQ biosynthesis by accessing membrane-embedded CoQ intermediates and presenting them to CoQ enzymes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process with strong experimental support.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                                        PMID:30661980
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">presents intermediates directly to CoQ</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019840" target="_blank" class="term-link">
+                                    GO:0019840
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30661980
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An Isoprene Lipid-Binding Protein Promotes Eukaryotic Coenzy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0019840" data-r="PMID:30661980" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (structures 6AWL/6DEW) that COQ9 repurposes the bacterial TetR fold to bind aromatic isoprenes with high specificity, including CoQ intermediates residing within the bilayer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific, structurally and biochemically validated molecular function; central to COQ9&#39;s substrate-selection role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                                        PMID:30661980
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">repurposes the bacterial TetR fold to bind aromatic isoprenes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome evidence for mitochondrial localization, consistent with the established mitochondrial function of COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct organelle; corroborates other localization annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162186
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162186" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization associated with a CoQ-pathway reaction step (COQ3 methylates DeMQ10H2). COQ9 acts on the matrix face of the inner membrane within the CoQ synthome, so the compartment is correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162187
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162187" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization associated with a CoQ-pathway reaction step (COQ6 hydroxylates DHB). Compartment assignment is correct for COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162188
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162188" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization associated with a CoQ-pathway reaction step (COQ5 methylates MDMQ10H2). Compartment assignment is correct for COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162193
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162193" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization associated with a CoQ-pathway reaction step (COQ3 methylates DHDB). Compartment assignment is correct for COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162194
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162194" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization for the reaction step directly involving COQ9 (COQ7:COQ9 octamer hydroxylates DMQ10H2). This is the specific step in which the COQ7:COQ9 module presents DMQ substrate for hydroxylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment; directly reflects the COQ7:COQ9 hydroxylation module.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2162195
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005743" data-r="Reactome:R-HSA-2162195" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome inner-membrane localization associated with a CoQ-pathway reaction step (COQ4 decarboxylates MHDB). Compartment assignment is correct for COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable-author localization to the correct compartment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25339443
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial COQ9 is a lipid-binding protein that associate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005515" data-r="PMID:25339443" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI protein-binding annotation whose recorded partner is COQ7 (Q99807), established here by co-crystallography/interaction mapping. This is the key functional interaction of COQ9, but the bare &#34;protein binding&#34; term itself is uninformative as a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real and important COQ7 interaction (never removed per policy), retained as non-core because GO:0005515 conveys no specific molecular function; the biology is captured by lipid/isoprenoid binding, complex membership and CoQ biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                        PMID:25339443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">COQ9 specifically interacts with COQ7 through a series of conserved residues</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0006744" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity annotation (from mouse ortholog Q8K1Z0) to ubiquinone biosynthetic process, concordant with the experimental annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core process; redundant with strong experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25339443
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial COQ9 is a lipid-binding protein that associate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0008289" data-r="PMID:25339443" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (crystal structure 4RHP with bound di-palmitoyl-phosphatidylethanolamine; mass spectrometry of purified COQ9) that COQ9 is a lipid-binding protein associating with multiple lipid species including CoQ itself.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defining, experimentally validated molecular function of this non-catalytic lipid-binding protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                        PMID:25339443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our structure also reveals a lipid-binding site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25339443
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial COQ9 is a lipid-binding protein that associate...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0042803" data-r="PMID:25339443" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that COQ9 forms a homodimer (an atypical TFR-family dimer). Homodimerization underlies assembly of the higher-order COQ7:COQ9 tetramers and octamers.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported quaternary-structure function relevant to COQ9&#39;s assembly into the CoQ module.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20833797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoproteome analysis of functional mitochondria isolated...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75208" data-a="GO:0005739" data-r="PMID:20833797" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (phosphoproteomics of muscle mitochondria) detection supporting mitochondrial localization, consistent with the established mitochondrial function of COQ9.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct organelle; corroborates other localization annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds membrane phospholipids and lipophilic aromatic-isoprene CoQ-pathway intermediates (including 5-demethoxyubiquinone) within a hydrophobic TetR/FadR-like pocket, as a non-catalytic accessory subunit of the mitochondrial CoQ biosynthetic complex (CoQ synthome).</h3>
+                <span class="vote-buttons" data-g="O75208" data-a="FUNCTION: Binds membrane phospholipids and lipophilic aromat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                            lipid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                            ubiquinone biosynthesis complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                PMID:25339443
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our structure also reveals a lipid-binding site</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                PMID:25339443
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">multiple lipid species, including CoQ itself</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Selectively binds aromatic-isoprene CoQ intermediates and presents the 5-demethoxyubiquinone substrate directly to the hydroxylase COQ7, thereby activating the penultimate C6-hydroxylation step of coenzyme Q biosynthesis (COQ9 increases COQ7 catalytic efficiency but is itself non-catalytic).</h3>
+                <span class="vote-buttons" data-g="O75208" data-a="FUNCTION: Selectively binds aromatic-isoprene CoQ intermedia..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019840" target="_blank" class="term-link">
+                            isoprenoid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                            ubiquinone biosynthesis complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                                PMID:30661980
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">repurposes the bacterial TetR fold to bind aromatic isoprenes</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                                PMID:30661980
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">presents intermediates directly to CoQ</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                PMID:38425362
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">addition of COQ9 increased catalytic efficiency by 1.5-fold, substantiating its role for COQ7 function</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Self-associates into homodimers that, with COQ7, assemble into higher-order membrane-warping COQ7:COQ9 tetramers and octamers of the CoQ biosynthetic module.</h3>
+                <span class="vote-buttons" data-g="O75208" data-a="FUNCTION: Self-associates into homodimers that, with COQ7, a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                            protein homodimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110142" target="_blank" class="term-link">
+                            ubiquinone biosynthesis complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                                PMID:25339443
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">adopts an atypical TFR dimer orientation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link">
+                            PMID:20833797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoproteome analysis of functional mitochondria isolated from resting human muscle reveals extensive phosphorylation of inner membrane protein complexes and enzymes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25339443" target="_blank" class="term-link">
+                            PMID:25339443
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial COQ9 is a lipid-binding protein that associates with COQ7 to enable coenzyme Q biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28927698" target="_blank" class="term-link">
+                            PMID:28927698
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30661980" target="_blank" class="term-link">
+                            PMID:30661980
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An Isoprene Lipid-Binding Protein Promotes Eukaryotic Coenzyme Q Biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                            PMID:38425362
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vitro construction of the COQ metabolon unveils the molecular determinants of coenzyme Q biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162186
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ3 methylates DeMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162187
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ6 hydroxylates DHB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162188
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ5 methylates MDMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162193
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ3 methylates DHDB</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162194
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ7:COQ9 octamer hydroxylates DMQ10H2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2162195
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COQ4 decarboxylates MHDB</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise molecular mechanism by which COQ9 extracts membrane-embedded 5-demethoxyubiquinone and hands it to the COQ7 active site within the COQ7:COQ9 octamer?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75208" data-a="Q: What is the precise molecular mechanism by which C..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does COQ9 present intermediates only to COQ7, or does it also chaperone other lipophilic CoQ intermediates to additional COQ synthome enzymes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75208" data-a="Q: Does COQ9 present intermediates only to COQ7, or d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Time-resolved / single-molecule structural studies (cryo-EM or FRET) of the COQ7:COQ9 octamer during substrate handoff to visualize the lipid-presentation step.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O75208" data-a="EXPERIMENT: Time-resolved / single-molecule structural studies..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute COQ9 substrate presentation with defined CoQ intermediates and membranes of varying cardiolipin content to quantify how membrane composition gates substrate access.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O75208" data-a="EXPERIMENT: Reconstitute COQ9 substrate presentation with defi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COQ9-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O75208" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coq9-human-gene-review-notes">COQ9 (human) — gene review notes</h1>
+<p>UniProt: O75208 (COQ9_HUMAN). Gene: COQ9 (HGNC:25302), synonym C16orf49. 318 aa precursor;<br />
+N-terminal mitochondrial transit peptide (1–44), mature chain 45–318. Two isoforms<br />
+(O75208-1 canonical; O75208-2 truncated, non-functional in the CoQ context).</p>
+<h2 id="core-biology-what-coq9-is-and-does">Core biology (what COQ9 is and does)</h2>
+<p>COQ9 is a <strong>mitochondrial lipid-binding protein</strong> essential for coenzyme Q10 (CoQ10 /<br />
+ubiquinone) biosynthesis. It is <strong>non-catalytic</strong>: it has no known enzymatic activity.<br />
+Its job is to <strong>bind lipophilic CoQ-pathway intermediates (aromatic isoprenes) and<br />
+membrane phospholipids and present the substrate (5-demethoxyubiquinone, DMQ) directly to<br />
+the di-iron hydroxylase COQ7</strong>, thereby activating the penultimate C6-hydroxylation step of<br />
+CoQ biosynthesis. COQ9 and COQ7 form a lipid-binding module within the larger COQ synthome<br />
+("complex Q" / COQ metabolon).</p>
+<ul>
+<li>Membrane-associated protein that "warps the membrane surface to access and bind aromatic<br />
+  isoprenes with high specificity, including ubiquinone (CoQ) isoprene intermediates and<br />
+  presents them directly to COQ7, therefore facilitating the COQ7-mediated hydroxylase step"<br />
+  [file:human/COQ9/COQ9-uniprot.txt "to access and bind aromatic isoprenes with high specificity, including"].</li>
+<li>Structural fold: TetR/TFR-family all-alpha (bacterial transcriptional-regulator) fold with a<br />
+  hydrophobic lipid-binding pocket; adopts an atypical TFR dimer orientation and is NOT<br />
+  predicted to bind DNA. UniProt notes it is "Structurally similar to the bacterial FadR<br />
+  protein (fatty acid metabolism regulator protein)"<br />
+  [file:human/COQ9/COQ9-uniprot.txt "Structurally similar to the bacterial FadR protein"].</li>
+</ul>
+<h2 id="key-evidence-by-publication">Key evidence by publication</h2>
+<ul>
+<li><strong>PMID:25339443</strong> (Lohman et al. 2014, PNAS; crystal structure 4RHP, abstract-only in cache):<br />
+  "COQ9 has structural homology to the TFR family of bacterial transcriptional" regulators;<br />
+  "Our structure also reveals a lipid-binding site"; mass-spec shows COQ9 associates with<br />
+  "multiple lipid species, including CoQ itself"; "COQ9 specifically interacts with COQ7<br />
+  through a series of conserved residues"; and "COQ9 might serve to present its bound lipid"<br />
+  to COQ7. Crystallized with di-palmitoyl-phosphatidylethanolamine bound (BINDING residue 244).<br />
+  Homodimer (SUBUNIT). Basis for GOA IDA: lipid binding (GO:0008289), protein homodimerization<br />
+  (GO:0042803), IPI with COQ7 (Q99807), ubiquinone biosynthetic process (ISS).</li>
+<li><strong>PMID:30661980</strong> (Lohman et al. 2019, Mol Cell; structures 6AWL, 6DEW; full text available):<br />
+  COQ9 "repurposes the bacterial TetR fold to bind aromatic isoprenes" with high specificity,<br />
+  including CoQ intermediates; associates with cardiolipin-rich membranes and "warps the<br />
+  membrane surface to access this cargo"; identifies a molecular interface between COQ9 and<br />
+  the hydroxylase COQ7, motivating a model whereby COQ9 "presents intermediates directly to<br />
+  CoQ" enzymes. Basis for GOA IDA: isoprenoid binding (GO:0019840), ubiquinone biosynthetic<br />
+  process; IPI with COQ7.</li>
+<li><strong>PMID:38425362</strong> (Nicoll et al. 2024, Nat Catal; full text available): in vitro<br />
+  reconstruction of the animal COQ metabolon (COQ3,4,5,6,7,9). "COQ9 has been shown to<br />
+  facilitate COQ7 activity in vivo"; and consistently, "addition of COQ9 increased catalytic<br />
+  efficiency by 1.5-fold, substantiating its role for COQ7 function". Confirms COQ9 is an<br />
+  accessory/activating partner of COQ7, not itself an enzyme. Basis for GOA IDA: isoprenoid<br />
+  binding and ubiquinone biosynthetic process.</li>
+<li><strong>PMID:36306796</strong> (Manicki et al. 2022, Mol Cell; cryo-EM 7SSP/7SSS; NOT cached): multimeric<br />
+  human COQ7:COQ9 octamer with membrane lipids captured in a pseudo-bilayer; W240 required for<br />
+  the octamer. (Referenced via UniProt SUBUNIT; not a GOA reference here.)</li>
+<li><strong>PMID:27499296</strong> (Floyd et al. 2016, Mol Cell; full text available): mitochondrial protein<br />
+  interaction map; source of ComplexPortal IDA mitochondrial inner membrane, IPI protein<br />
+  binding (COQ5 Q5HYK3, COQ8A Q8NI60, COQ7 Q99807, ACSF2 Q96CM8), and part_of ubiquinone<br />
+  biosynthesis complex (GO:0110142).</li>
+<li><strong>PMID:28927698</strong> (Stefely &amp; Pagliarini 2017, Trends Biochem Sci; review; full text): defines<br />
+  "complex Q" / CoQ-synthome; "Complex Q is thought to contain proteins required for the<br />
+  terminal stage of CoQ biosynthesis (COQ3–COQ9)"; "Most eukaryotic CoQ is generated at the<br />
+  inner mitochondrial membrane". Basis for ComplexPortal NAS ubiquinone biosynthetic process.</li>
+<li><strong>PMID:32296183</strong> (Luck et al. 2020, HuRI): high-throughput binary interactome (Y2H). Source<br />
+  of many low-specificity IPI protein-binding partners (ADIPOQ, BMP10, etc.), most of which are<br />
+  not biologically meaningful CoQ-pathway interactors. Treat as over-annotation of bare<br />
+  "protein binding".</li>
+<li><strong>PMID:34800366</strong> (Morgenstern et al. 2021): high-throughput human mitochondrial proteome —<br />
+  supports mitochondrial localization (HTP).</li>
+<li><strong>PMID:20833797</strong> (Zhao et al. 2011): phosphoproteome of muscle mitochondria — supports<br />
+  mitochondrial localization (HDA).</li>
+<li><strong>PMID:19375058</strong> (Duncan et al. 2009, AJHG; NOT cached): nonsense mutation in COQ9 causes<br />
+  autosomal-recessive neonatal-onset primary CoQ10 deficiency (COQ10D5). Disease basis in<br />
+  UniProt DISEASE record.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>Mitochondrion (UniProt SUBCELLULAR LOCATION, by similarity to mouse Q8K1Z0). Functions on the<br />
+matrix face of the mitochondrial inner membrane as part of the CoQ synthome; associates with<br />
+cardiolipin-rich membranes (PMID:30661980). GO terms in GOA: mitochondrion (GO:0005739),<br />
+mitochondrial inner membrane (GO:0005743). Reactome adds inner-membrane TAS localizations for<br />
+the CoQ-pathway reaction steps.</p>
+<h2 id="curation-decisions-summary">Curation decisions (summary)</h2>
+<ul>
+<li><strong>ACCEPT</strong> core, experimentally-grounded annotations: lipid binding (GO:0008289, IDA<br />
+  PMID:25339443), isoprenoid binding (GO:0019840, IDA PMID:38425362 &amp; PMID:30661980),<br />
+  ubiquinone biosynthetic process (GO:0006744, multiple IDA/ISS/IBA), ubiquinone biosynthesis<br />
+  complex (GO:0110142, IPI PMID:27499296), protein homodimerization activity (GO:0042803, IDA<br />
+  PMID:25339443), mitochondrion / mitochondrial inner membrane localizations.</li>
+<li><strong>KEEP_AS_NON_CORE</strong>: the specific COQ7 IPI (GO:0005515, PMID:25339443 / PMID:30661980 with<br />
+  Q99807) — real and functionally important but "protein binding" is uninformative for the MF;<br />
+  the meaningful biology is captured by the lipid/isoprenoid binding + complex membership +<br />
+  ubiquinone biosynthetic process. Keep as non-core rather than remove (never REMOVE an IPI).</li>
+<li><strong>MARK_AS_OVER_ANNOTATED</strong>: the many bare "protein binding" IPI annotations from the HuRI<br />
+  binary interactome (PMID:32296183) and non-CoQ IntAct partners (PMID:27499296 ACSF2) — bare<br />
+  GO:0005515 with no functional MF content; policy is MARK_AS_OVER_ANNOTATED (not REMOVE) for<br />
+  IPI protein binding.</li>
+<li>No catalytic MF is asserted. COQ9 is not a hydroxylase/monooxygenase. The UniProt DR line<br />
+<code>GO:0008047 enzyme activator activity; IEA:Ensembl</code> is NOT in GOA (not an existing<br />
+  annotation), but it is biologically apt: COQ9 activates the COQ7 hydroxylase step by<br />
+  presenting substrate. It is used in <code>core_functions</code> (contributes_to) to capture the<br />
+  presenter/activator role without inventing a catalytic activity.</li>
+</ul>
+<h2 id="core-function-modeling">Core function modeling</h2>
+<ol>
+<li>Lipid/isoprenoid binding (GO:0008289 / GO:0019840) — binds membrane phospholipids and<br />
+   lipophilic CoQ intermediates (aromatic isoprenes incl. DMQ) in a hydrophobic TetR-fold<br />
+   pocket. directly_involved_in ubiquinone biosynthetic process (GO:0006744); in_complex<br />
+   ubiquinone biosynthesis complex (GO:0110142); location mitochondrial inner membrane.</li>
+<li>Substrate presentation / COQ7 hydroxylase activation — molecular_function lipid binding<br />
+   with contributes_to_molecular_function enzyme activator activity (GO:0008047), reflecting<br />
+   that COQ9 presents DMQ to COQ7 and increases COQ7 catalytic efficiency (~1.5-fold in vitro).</li>
+<li>Homodimerization (GO:0042803) — forms homodimers and higher-order COQ7:COQ9 tetramers/octamers.</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75208
+gene_symbol: COQ9
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: COQ9 is a mitochondrial lipid-binding protein essential for the biosynthesis
+  of coenzyme Q10 (ubiquinone), the lipid-soluble electron carrier of the respiratory
+  chain. It has no catalytic activity of its own. Adopting a bacterial TetR/FadR-like
+  all-alpha fold with a hydrophobic pocket, COQ9 binds membrane phospholipids (notably
+  in cardiolipin-rich membranes) and lipophilic aromatic-isoprene CoQ-pathway intermediates,
+  and presents the substrate 5-demethoxyubiquinone directly to the di-iron hydroxylase
+  COQ7. Through this substrate-presentation role it activates the penultimate
+  C6-hydroxylation step of CoQ biosynthesis. COQ9 forms homodimers and, together with
+  COQ7, assembles into higher-order tetrameric and octameric COQ7:COQ9 modules that
+  warp the membrane surface to access lipid cargo; this module is part of the larger
+  CoQ biosynthetic complex (&#34;complex Q&#34; / COQ synthome, comprising COQ3-COQ9) on the
+  matrix face of the mitochondrial inner membrane. The protein carries an N-terminal
+  mitochondrial transit peptide and, under mitochondrial stress, its precursor is
+  ubiquitinated by the SIFI complex before import. Loss-of-function variants in COQ9
+  cause primary coenzyme Q10 deficiency type 5 (COQ10D5), an autosomal recessive
+  neonatal-onset multisystem mitochondrial disease with encephalomyopathy.
+alternative_products:
+- name: &#39;1&#39;
+  id: O75208-1
+- name: &#39;2&#39;
+  id: O75208-2
+  sequence_note: VSP_017683, VSP_017684
+existing_annotations:
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetically inferred role in ubiquinone (CoQ) biosynthesis, fully
+      concordant with the experimentally established, essential role of human COQ9 in
+      CoQ10 biosynthesis and conserved across the COQ9 orthologous family.
+    action: ACCEPT
+    reason: Represents a core, well-supported biological process for this gene; consistent
+      with the experimental IDA/ISS annotations to the same term.
+    supported_by:
+    - reference_id: PMID:38425362
+      supporting_text: COQ9 has been shown to facilitate COQ7 activity in vivo
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetically inferred lipid binding, concordant with the experimentally
+      demonstrated lipid-binding molecular function of COQ9 (crystallized with bound
+      phosphatidylethanolamine; associates with multiple lipid species including CoQ).
+    action: ACCEPT
+    reason: Core molecular function of this non-catalytic protein; matches the experimental
+      IDA lipid-binding annotation.
+    supported_by:
+    - reference_id: PMID:25339443
+      supporting_text: multiple lipid species, including CoQ itself
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred localization to the mitochondrial inner membrane,
+      consistent with COQ9 acting on the matrix face of the inner membrane as part of
+      the CoQ synthome and associating with cardiolipin-rich membranes.
+    action: ACCEPT
+    reason: Correct compartment; matches experimental (ComplexPortal IDA) and Reactome
+      TAS inner-membrane annotations.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation from UniProt subcellular-location mapping. COQ9 is a
+      well-established mitochondrial protein.
+    action: ACCEPT
+    reason: Accurate but general organelle assignment; the more specific inner-membrane
+      localization is captured by other annotations.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (multi-method) annotation to ubiquinone biosynthetic process,
+      redundant with the experimental and phylogenetic annotations to the same term.
+    action: ACCEPT
+    reason: Correct core process; well-supported by experimental evidence.
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO electronic annotation of lipid binding based on the COQ9 family
+      signature (IPR012762), redundant with and confirmed by the experimental IDA
+      lipid-binding annotation.
+    action: ACCEPT
+    reason: Correct molecular function, supported by direct experimental evidence.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from a mitochondrial protein-interaction mapping
+      study. The partners recorded here include genuine CoQ-complex members (COQ5, COQ7,
+      COQ8A) as well as a non-CoQ partner (ACSF2). The specific COQ7 interaction is
+      captured functionally elsewhere; the bare term itself conveys no molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 without a specific partner/function is uninformative; per policy
+      an IPI protein-binding annotation is marked as over-annotated rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; derived from a high-throughput binary (Y2H) interactome
+      map (HuRI). The recorded partners (e.g. ADIPOQ, BMP10, CCL4L2, ALDH18A1) are not
+      biologically meaningful CoQ-pathway interactors and largely reflect assay noise.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative bare protein-binding term from a high-throughput screen; marked
+      as over-annotated per policy (not removed).
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:27499296
+  qualifier: located_in
+  review:
+    summary: Direct experimental localization to the mitochondrial inner membrane
+      (ComplexPortal, from the mitochondrial protein interaction mapping study),
+      consistent with COQ9&#39;s role in the inner-membrane-associated CoQ synthome.
+    action: ACCEPT
+    reason: Experimentally supported localization to the correct compartment.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:28927698
+  qualifier: involved_in
+  review:
+    summary: Author statement (ComplexPortal) placing COQ9 in the terminal-stage CoQ
+      biosynthetic complex (&#34;complex Q&#34;, COQ3-COQ9), consistent with the experimental
+      evidence for its role in CoQ biosynthesis.
+    action: ACCEPT
+    reason: Correct core process; corroborated by direct experimental annotations.
+    supported_by:
+    - reference_id: PMID:28927698
+      supporting_text: Complex Q is thought to contain proteins required for the terminal
+        stage of CoQ biosynthesis (COQ3–COQ9)
+- term:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: part_of
+  review:
+    summary: COQ9 is a component of the ubiquinone biosynthesis complex (CoQ synthome /
+      complex Q), demonstrated by co-purification/interaction with other COQ proteins.
+      This is a core aspect of COQ9 biology.
+    action: ACCEPT
+    reason: Well-supported membership in the CoQ biosynthetic complex; captures the
+      accessory subunit role of this non-catalytic protein.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:27499296
+  qualifier: is_active_in
+  review:
+    summary: Direct experimental evidence of mitochondrial localization/activity,
+      consistent with COQ9&#39;s established mitochondrial function.
+    action: ACCEPT
+    reason: Correct organelle; more specific inner-membrane localization captured elsewhere.
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:38425362
+  qualifier: involved_in
+  review:
+    summary: Direct experimental evidence from in vitro reconstruction of the animal COQ
+      metabolon that COQ9 participates in CoQ biosynthesis by facilitating COQ7 activity
+      (increased COQ7 catalytic efficiency ~1.5-fold when COQ9 is added).
+    action: ACCEPT
+    reason: Strong experimental support for a core biological process; represents a
+      defining function of the gene.
+    supported_by:
+    - reference_id: PMID:38425362
+      supporting_text: addition of COQ9 increased catalytic efficiency by 1.5-fold, substantiating
+        its role for COQ7 function
+- term:
+    id: GO:0019840
+    label: isoprenoid binding
+  evidence_type: IDA
+  original_reference_id: PMID:38425362
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence that COQ9 binds isoprenoid (aromatic isoprene)
+      CoQ intermediates. This lipophilic-intermediate binding underlies its
+      substrate-presentation role toward COQ7.
+    action: ACCEPT
+    reason: Specific, experimentally supported molecular function of this lipid-binding
+      protein; more informative than the general lipid-binding term.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:30661980
+  qualifier: enables
+  review:
+    summary: IPI protein-binding annotation whose recorded partner is COQ7 (Q99807), the
+      functionally central COQ9 interactor. The interaction is real and biologically
+      important (COQ9 presents substrate to COQ7), but the bare &#34;protein binding&#34; term
+      itself carries no molecular-function content; the meaningful biology is captured by
+      the lipid/isoprenoid-binding, complex-membership and CoQ-biosynthesis annotations.
+    action: KEEP_AS_NON_CORE
+    reason: Genuine, specific COQ7 interaction (never removed per policy), but retained as
+      non-core because bare GO:0005515 is uninformative as a molecular function.
+    supported_by:
+    - reference_id: PMID:30661980
+      supporting_text: identify a molecular interface between COQ9 and the hydroxylase
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:30661980
+  qualifier: involved_in
+  review:
+    summary: Direct experimental evidence that COQ9&#39;s custom lipid-binding properties
+      promote eukaryotic CoQ biosynthesis by accessing membrane-embedded CoQ intermediates
+      and presenting them to CoQ enzymes.
+    action: ACCEPT
+    reason: Core biological process with strong experimental support.
+    supported_by:
+    - reference_id: PMID:30661980
+      supporting_text: presents intermediates directly to CoQ
+- term:
+    id: GO:0019840
+    label: isoprenoid binding
+  evidence_type: IDA
+  original_reference_id: PMID:30661980
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence (structures 6AWL/6DEW) that COQ9 repurposes the
+      bacterial TetR fold to bind aromatic isoprenes with high specificity, including CoQ
+      intermediates residing within the bilayer.
+    action: ACCEPT
+    reason: Specific, structurally and biochemically validated molecular function; central
+      to COQ9&#39;s substrate-selection role.
+    supported_by:
+    - reference_id: PMID:30661980
+      supporting_text: repurposes the bacterial TetR fold to bind aromatic isoprenes
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: High-throughput mitochondrial proteome evidence for mitochondrial localization,
+      consistent with the established mitochondrial function of COQ9.
+    action: ACCEPT
+    reason: Correct organelle; corroborates other localization annotations.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162186
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization associated with a CoQ-pathway reaction step
+      (COQ3 methylates DeMQ10H2). COQ9 acts on the matrix face of the inner membrane within
+      the CoQ synthome, so the compartment is correct.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162187
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization associated with a CoQ-pathway reaction step
+      (COQ6 hydroxylates DHB). Compartment assignment is correct for COQ9.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162188
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization associated with a CoQ-pathway reaction step
+      (COQ5 methylates MDMQ10H2). Compartment assignment is correct for COQ9.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162193
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization associated with a CoQ-pathway reaction step
+      (COQ3 methylates DHDB). Compartment assignment is correct for COQ9.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162194
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization for the reaction step directly involving
+      COQ9 (COQ7:COQ9 octamer hydroxylates DMQ10H2). This is the specific step in which the
+      COQ7:COQ9 module presents DMQ substrate for hydroxylation.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment; directly reflects the
+      COQ7:COQ9 hydroxylation module.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2162195
+  qualifier: located_in
+  review:
+    summary: Reactome inner-membrane localization associated with a CoQ-pathway reaction step
+      (COQ4 decarboxylates MHDB). Compartment assignment is correct for COQ9.
+    action: ACCEPT
+    reason: Traceable-author localization to the correct compartment.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25339443
+  qualifier: enables
+  review:
+    summary: IPI protein-binding annotation whose recorded partner is COQ7 (Q99807),
+      established here by co-crystallography/interaction mapping. This is the key
+      functional interaction of COQ9, but the bare &#34;protein binding&#34; term itself is
+      uninformative as a molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Real and important COQ7 interaction (never removed per policy), retained as
+      non-core because GO:0005515 conveys no specific molecular function; the biology is
+      captured by lipid/isoprenoid binding, complex membership and CoQ biosynthesis.
+    supported_by:
+    - reference_id: PMID:25339443
+      supporting_text: COQ9 specifically interacts with COQ7 through a series of conserved
+        residues
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Sequence-similarity annotation (from mouse ortholog Q8K1Z0) to ubiquinone
+      biosynthetic process, concordant with the experimental annotations to the same term.
+    action: ACCEPT
+    reason: Correct core process; redundant with strong experimental evidence.
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IDA
+  original_reference_id: PMID:25339443
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence (crystal structure 4RHP with bound
+      di-palmitoyl-phosphatidylethanolamine; mass spectrometry of purified COQ9) that COQ9
+      is a lipid-binding protein associating with multiple lipid species including CoQ itself.
+    action: ACCEPT
+    reason: Defining, experimentally validated molecular function of this non-catalytic
+      lipid-binding protein.
+    supported_by:
+    - reference_id: PMID:25339443
+      supporting_text: Our structure also reveals a lipid-binding site
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:25339443
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence that COQ9 forms a homodimer (an atypical TFR-family
+      dimer). Homodimerization underlies assembly of the higher-order COQ7:COQ9 tetramers
+      and octamers.
+    action: ACCEPT
+    reason: Experimentally supported quaternary-structure function relevant to COQ9&#39;s
+      assembly into the CoQ module.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:20833797
+  qualifier: located_in
+  review:
+    summary: High-throughput (phosphoproteomics of muscle mitochondria) detection supporting
+      mitochondrial localization, consistent with the established mitochondrial function of
+      COQ9.
+    action: ACCEPT
+    reason: Correct organelle; corroborates other localization annotations.
+core_functions:
+- description: Binds membrane phospholipids and lipophilic aromatic-isoprene CoQ-pathway
+    intermediates (including 5-demethoxyubiquinone) within a hydrophobic TetR/FadR-like
+    pocket, as a non-catalytic accessory subunit of the mitochondrial CoQ biosynthetic
+    complex (CoQ synthome).
+  molecular_function:
+    id: GO:0008289
+    label: lipid binding
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  supported_by:
+  - reference_id: PMID:25339443
+    supporting_text: Our structure also reveals a lipid-binding site
+  - reference_id: PMID:25339443
+    supporting_text: multiple lipid species, including CoQ itself
+- description: Selectively binds aromatic-isoprene CoQ intermediates and presents the
+    5-demethoxyubiquinone substrate directly to the hydroxylase COQ7, thereby activating
+    the penultimate C6-hydroxylation step of coenzyme Q biosynthesis (COQ9 increases COQ7
+    catalytic efficiency but is itself non-catalytic).
+  molecular_function:
+    id: GO:0019840
+    label: isoprenoid binding
+  contributes_to_molecular_function:
+    id: GO:0008047
+    label: enzyme activator activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  supported_by:
+  - reference_id: PMID:30661980
+    supporting_text: repurposes the bacterial TetR fold to bind aromatic isoprenes
+  - reference_id: PMID:30661980
+    supporting_text: presents intermediates directly to CoQ
+  - reference_id: PMID:38425362
+    supporting_text: addition of COQ9 increased catalytic efficiency by 1.5-fold, substantiating
+      its role for COQ7 function
+- description: Self-associates into homodimers that, with COQ7, assemble into higher-order
+    membrane-warping COQ7:COQ9 tetramers and octamers of the CoQ biosynthetic module.
+  molecular_function:
+    id: GO:0042803
+    label: protein homodimerization activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0110142
+    label: ubiquinone biosynthesis complex
+  supported_by:
+  - reference_id: PMID:25339443
+    supporting_text: adopts an atypical TFR dimer orientation
+proposed_new_terms: []
+suggested_questions:
+- question: What is the precise molecular mechanism by which COQ9 extracts membrane-embedded
+    5-demethoxyubiquinone and hands it to the COQ7 active site within the COQ7:COQ9 octamer?
+- question: Does COQ9 present intermediates only to COQ7, or does it also chaperone other
+    lipophilic CoQ intermediates to additional COQ synthome enzymes?
+suggested_experiments:
+- description: Time-resolved / single-molecule structural studies (cryo-EM or FRET) of the
+    COQ7:COQ9 octamer during substrate handoff to visualize the lipid-presentation step.
+- description: Reconstitute COQ9 substrate presentation with defined CoQ intermediates and
+    membranes of varying cardiolipin content to quantify how membrane composition gates
+    substrate access.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20833797
+  title: Phosphoproteome analysis of functional mitochondria isolated from resting
+    human muscle reveals extensive phosphorylation of inner membrane protein complexes
+    and enzymes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput phosphoproteomics; supports only mitochondrial localization
+      of COQ9 (HDA), not function.
+- id: PMID:25339443
+  title: Mitochondrial COQ9 is a lipid-binding protein that associates with COQ7 to
+    enable coenzyme Q biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Landmark crystal structure (4RHP) establishing COQ9 as a TFR/TetR-fold
+      lipid-binding protein with a lipid-binding site, homodimer, and a conserved COQ7
+      interaction surface; source of the lipid-binding, homodimerization and CoQ-biosynthesis
+      annotations. Cached record is abstract-only but the abstract is quoted verbatim.
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Mitochondrial interaction map; source of ComplexPortal inner-membrane
+      localization, ubiquinone biosynthesis complex membership, and several IPI protein-binding
+      partners (some genuine COQ members, some not).
+- id: PMID:28927698
+  title: Biochemistry of Mitochondrial Coenzyme Q Biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative review defining &#34;complex Q&#34;/CoQ-synthome (COQ3-COQ9);
+      basis for the NAS ubiquinone-biosynthesis annotation.
+- id: PMID:30661980
+  title: An Isoprene Lipid-Binding Protein Promotes Eukaryotic Coenzyme Q Biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Structures 6AWL/6DEW; shows COQ9 repurposes the TetR fold to bind aromatic
+      isoprenes, warps cardiolipin-rich membranes, and presents intermediates to COQ7;
+      source of isoprenoid-binding and CoQ-biosynthesis IDA annotations.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: HuRI high-throughput Y2H interactome; source of many bare, biologically
+      non-specific &#34;protein binding&#34; partners for COQ9 (over-annotation).
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput mitochondrial proteome; supports mitochondrial localization
+      only.
+- id: PMID:38425362
+  title: In vitro construction of the COQ metabolon unveils the molecular determinants
+    of coenzyme Q biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: In vitro reconstruction of the animal COQ metabolon; demonstrates COQ9
+      facilitates COQ7 activity (increases catalytic efficiency ~1.5-fold) and binds
+      isoprenoid intermediates; source of isoprenoid-binding and CoQ-biosynthesis IDA.
+- id: Reactome:R-HSA-2162186
+  title: COQ3 methylates DeMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162187
+  title: COQ6 hydroxylates DHB
+  findings: []
+- id: Reactome:R-HSA-2162188
+  title: COQ5 methylates MDMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162193
+  title: COQ3 methylates DHDB
+  findings: []
+- id: Reactome:R-HSA-2162194
+  title: COQ7:COQ9 octamer hydroxylates DMQ10H2
+  findings: []
+- id: Reactome:R-HSA-2162195
+  title: COQ4 decarboxylates MHDB
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

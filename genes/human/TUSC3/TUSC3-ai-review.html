@@ -1,0 +1,4941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUSC3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TUSC3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q13454" target="_blank" class="term-link">
+                        Q13454
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TUSC3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q13454" data-a="DESCRIPTION: TUSC3 (Tumor suppressor candidate 3; N33) is an en..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TUSC3 (Tumor suppressor candidate 3; N33) is an endoplasmic-reticulum membrane protein that functions as an accessory oxidoreductase subunit of the STT3B-containing oligosaccharyltransferase (OST-B) complex. It is a multi-pass membrane protein whose lumenal, N-terminal thioredoxin-like domain carries a redox-active CXXC motif (Cys99-Cys102). Within OST-B, TUSC3 promotes N-linked glycosylation of a subset of asparagine acceptor sites that are near cysteine residues or that are otherwise skipped during co-translational glycosylation; in its oxidized form it is thought to form transient mixed disulfides with a free thiol in a glycoprotein substrate, delaying disulfide-bond formation and giving the catalytic STT3B subunit access to the unmodified sequon. TUSC3 is the close paralog of MAGT1, the two being mutually exclusive and functionally largely redundant subunits of OST-B, and is the metazoan orthologue of yeast Ost3/Ost6. Biallelic loss-of-function of TUSC3 causes autosomal-recessive non-syndromic intellectual disability. A role in cellular magnesium uptake has been proposed by analogy to MAGT1, but the established, mechanistically supported function is the ER OST-B oxidoreductase activity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PANTHER) inference that TUSC3 is involved in protein N-linked glycosylation. This is the core biological process of TUSC3 as an OST-B subunit and is strongly supported by direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core BP for this gene. TUSC3 is an accessory subunit of the STT3B/OST-B complex that catalyzes N-linked glycosylation; UniProt states it is &#34;Involved in N-glycosylation of STT3B-dependent substrates.&#34; A redundant IBA of the gene&#39;s own correct core function is retained, not marked over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Involved in N-glycosylation of STT3B-dependent</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0008250" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that TUSC3 is part of the oligosaccharyltransferase complex. Correct; TUSC3 is an accessory subunit of the STT3B-containing OST complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported core CC. A more specific term (GO:0160227 oligosaccharyltransferase complex B) exists and is used in core_functions, but the parent term is not wrong.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Accessory component of the STT3B-containing form of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903830" target="_blank" class="term-link">
+                                    GO:1903830
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:1903830" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of magnesium ion transmembrane transport. The WITH/FROM for this IBA is a Drosophila gene (FB:FBgn0032015) in a distinct PANTHER family (PTN000976171), not the OST3/OST6 subfamily that contains TUSC3. The established function of TUSC3 is the ER OST-B oxidoreductase, not Mg2+ transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IBA propagates a magnesium-transport role that is at best an indirect consequence of TUSC3&#39;s glycosylation function. The mechanistic literature shows TUSC3/MAGT1 are ER-resident OST oxidoreductase subunits, not plasma-membrane channels, and that a direct dual role is &#34;incompatible&#34; without invoking dual localization and dual activity. Not a core function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0032015</span>
+
+                                    &middot; Drosophila source gene (PANTHER PTN000976171)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The WITH/FROM seed for this IBA is a Drosophila gene in PANTHER family PTN000976171, distinct from the OST3/OST6 (PTN000294174) subfamily that contains TUSC3; a magnesium-transport role does not transfer to the human OST-B oxidoreductase subunit.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                        PMID:25135935
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Direct roles for MagT1 in both N-linked glycosylation and magnesium uptake are incompatible unless one invokes both a dual localization (RER and plasma membrane) and a dual activity (oxidoreductase and Mg+2 channel)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProtKB Subcellular Location vocabulary to the ER membrane. This is the correct localization of TUSC3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core CC. UniProt SUBCELLULAR LOCATION is &#34;Endoplasmic reticulum membrane; Multi-pass membrane protein.&#34; A redundant IEA of the gene&#39;s own correct location is retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic annotation to protein N-linked glycosylation, the correct core BP for TUSC3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant IEA of the gene&#39;s own correct core process; retained per policy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Involved in N-glycosylation of STT3B-dependent</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0008250" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation placing TUSC3 in the oligosaccharyltransferase complex. Correct core CC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant IEA of the gene&#39;s own correct complex membership; retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Accessory component of the STT3B-containing form of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015095" target="_blank" class="term-link">
+                                    GO:0015095
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0015095" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation assigning magnesium ion transmembrane transporter activity as a molecular function. TUSC3 has no demonstrated channel/transporter activity; its established MF is a thioredoxin-like oxidoreductase activity, and any Mg2+ effect is indirect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a clearly-wrong electronic (IEA/ARBA) molecular-function assignment. TUSC3 is an ER OST-B oxidoreductase subunit; the Mg2+ transporter-activity MF conflicts with the mechanistic evidence and UniProt only states it &#34;Could indirectly play a role in Mg(2+) transport.&#34; REMOVE is appropriate for an unsupported IEA MF (not applied to the experimental Mg2+ annotation, which is kept below).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a role in Mg(2+) transport</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5223345
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0055085" data-r="Reactome:R-HSA-5223345" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS to the generic &#34;transmembrane transport&#34; process, derived from the proposed magnesium-transport role. Uninformative and reflecting a role that is peripheral (at most indirect) to TUSC3&#39;s core OST function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Very general BP tied to the magnesium-transport hypothesis rather than the established OST-B oxidoreductase/glycosylation function. Not core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a role in Mg(2+) transport</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS localizing TUSC3 to the ER membrane, consistent with the cryo-EM analysis of human OST-A/OST-B and with UniProt. Correct core CC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location supported by structural work on the human OST complexes and by UniProt SUBCELLULAR LOCATION.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Oligosaccharyltransferase (OST) catalyzes the transfer of a high-mannose glycan onto secretory proteins in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal IDA (from the human OST-A/OST-B cryo-EM structures) that TUSC3, as an OST-B subunit, is involved in protein N-linked glycosylation. This is the core BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimental annotation to the gene&#39;s core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mammals express two distinct OST complexes that act in a cotranslational (OST-A) or posttranslocational (OST-B) manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0008250" data-r="PMID:31831667" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal IPI establishing TUSC3 as part of the oligosaccharyltransferase complex, based on the cryo-EM structure of human OST-B in which the MAGT1/TUSC3 subunit is resolved. Core CC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Physical-interaction evidence for OST complex membership; a more specific OST-B term is captured in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">structural differences in the catalytic subunits STT3A and STT3B facilitate contacts to distinct OST subunits, DC2 in OST-A and MAGT1 in OST-B</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015693" target="_blank" class="term-link">
+                                    GO:0015693
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19717468" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19717468
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian MagT1 and TUSC3 are required for cellular magnesiu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0015693" data-r="PMID:19717468" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation from Zhou &amp; Clapham 2009: knockdown of TUSC3 lowers intracellular Mg2+ and morpholino knockdown in zebrafish arrests development, rescuable with excess Mg2+. This supports a role of TUSC3 upstream of or within magnesium ion transport, though later work reinterprets this as an indirect consequence of the OST oxidoreductase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental annotation - not removed. However the acts_upstream_of_or_within qualifier is appropriately weak, and the established core function is the ER OST-B oxidoreductase; any magnesium-transport contribution is at most indirect (UniProt: &#34;a role in Mg(2+) transport&#34;). Retained as a non-core role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19717468" target="_blank" class="term-link">
+                                        PMID:19717468
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Knockdown of either MagT1 or TUSC3 protein significantly lowers the total and free intracellular Mg(2+) concentrations in mammalian cell lines</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of the protein N-linked glycosylation process to TUSC3. Correct core BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant ISS of the gene&#39;s own correct core process; retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Involved in N-glycosylation of STT3B-dependent</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446209
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-446209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS localizing TUSC3 to the ER membrane in the asparagine N-linked glycosylation pathway. Correct core CC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location, consistent with UniProt and structural data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9694793
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-9694793" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (SARS-CoV-2 spike protein N-glycosylation pathway) placing TUSC3 at the ER membrane. Location is correct; the specific viral pathway context reflects OST acting on a viral glycoprotein substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location. The viral-pathway framing is a substrate context, not a change to TUSC3&#39;s localization or function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918962
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-9918962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (viral envelope E protein N-glycosylation) placing TUSC3 at the ER membrane. Correct location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location; viral-substrate pathway context only.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9918988
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-9918988" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (viral pre-M protein N-glycosylation) placing TUSC3 at the ER membrane. Correct location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location; viral-substrate pathway context only.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9919011
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-9919011" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (viral pre-NS1 folding and N-glycosylation) placing TUSC3 at the ER membrane. Correct location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location; viral-substrate pathway context only.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9931286
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005789" data-r="Reactome:R-HSA-9931286" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (CD274/PD-L1 N-linked glycosylation in ER) placing TUSC3 at the ER membrane. Correct location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ER-membrane location; substrate-pathway context only.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015095" target="_blank" class="term-link">
+                                    GO:0015095
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5339528
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0015095" data-r="Reactome:R-HSA-5339528" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS asserting TUSC3 enables magnesium ion transmembrane transporter activity (in a reaction &#34;TUSC3 transports Mg2+ from extracellular region to cytosol&#34;). TUSC3 has no demonstrated intrinsic transporter/channel activity; its established MF is a thioredoxin-like oxidoreductase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-annotation of a molecular function that has not been demonstrated for TUSC3. As this is a TAS (not IEA) rooted in the Mg2+ hypothesis, it is marked over-annotated rather than removed. The established MF and the indirect nature of the Mg2+ role argue against a direct transporter activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a role in Mg(2+) transport</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26864433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26864433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian cells lacking either the cotranslational or posttr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="PMID:26864433" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental IMP from CRISPR MagT1/TUSC3 double-knockout HEK293 cells: loss of both oxidoreductase subunits dramatically reduces glycosylation of STT3B-dependent substrates (e.g. SHBG, pCatC), demonstrating TUSC3 involvement in protein N-linked glycosylation. This is the strongest experimental evidence for the core BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct genetic evidence (double-KO) for the gene&#39;s core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26864433" target="_blank" class="term-link">
+                                        PMID:26864433
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The absence of both oxidoreductase subunits (MagT1(−/−) TUSC3(−/−)), or elimination of STT3B, causes a dramatic reduction in SHBG glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5339528
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005886" data-r="Reactome:R-HSA-5339528" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS placing TUSC3 in the plasma membrane, tied to the proposed Mg2+-transport reaction. This contradicts the established ER-membrane localization; TUSC3 is an ER OST subunit and shows minimal cell-surface exposure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma-membrane localization is an over-annotation from the magnesium-transport hypothesis. Direct cell-surface biotinylation experiments and colocalization with calreticulin show the paralog MagT1 (and by homology TUSC3) is ER-resident, not plasma-membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                        PMID:25135935
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Colocalization of MagT1-V5 and calreticulin confirmed that MagT1 is an ER resident protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation to mitochondrion, transferred from a mouse ortholog (UniProtKB:Q8BTV1). There is no experimental support for mitochondrial localization of human TUSC3; its established location is the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Clearly-wrong electronic/ISS localization. UniProt SUBCELLULAR LOCATION is ER membrane (multi-pass), and TUSC3 is an OST subunit; a mitochondrial location is inconsistent with all functional and structural evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18455129" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18455129
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oligosaccharyltransferase-subunit mutations in nonsyndromic ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0006487" data-r="PMID:18455129" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS (Molinari et al. 2008) that TUSC3 encodes an OST subunit involved in N-glycosylation. Correct core BP; the paper established TUSC3 as an OTase subunit while showing bulk N-glycosylation was normal in patient fibroblasts (consistent with MAGT1 redundancy).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core process. Non-experimental (NAS), but consistent with the strong experimental evidence for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18455129" target="_blank" class="term-link">
+                                        PMID:18455129
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the gene N33/TUSC3 encoding one subunit of the oligosaccharyltransferase (OTase) complex, which catalyzes the transfer of an oligosaccharide chain on nascent proteins, the key step of N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050890" target="_blank" class="term-link">
+                                    GO:0050890
+                                </a>
+                            </span>
+                            <span class="term-label">cognition</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18455129" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18455129
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oligosaccharyltransferase-subunit mutations in nonsyndromic ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0050890" data-r="PMID:18455129" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental IMP (from human genetics) to &#34;cognition&#34;: biallelic loss-of-function TUSC3 variants cause non-syndromic autosomal-recessive intellectual disability (MRT7), indicating TUSC3 is required for normal cognitive development. This is a downstream, tissue-level phenotype rather than a core molecular/cellular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental annotation grounded in disease genetics - not removed. The cognition phenotype is a consequence of impaired OST-B glycosylation in the developing nervous system, not itself a core function of the gene product. Kept as a non-core, pleiotropic/organismal role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18455129" target="_blank" class="term-link">
+                                        PMID:18455129
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">fine regulation of OTase activity is essential for normal cognitive-function development</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19717468" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19717468
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian MagT1 and TUSC3 are required for cellular magnesiu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0005886" data-r="PMID:19717468" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS plasma-membrane localization from Zhou &amp; Clapham 2009, based on the proposed role of TUSC3 as a plasma-membrane Mg2+ transporter. Contradicted by the established ER-resident OST localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-annotation stemming from the magnesium-transport hypothesis. Direct localization studies place the protein (and its paralog MagT1) in the ER, not the plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                        PMID:25135935
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Colocalization of MagT1-V5 and calreticulin confirmed that MagT1 is an ER resident protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008250" target="_blank" class="term-link">
+                                    GO:0008250
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15835887
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic analysis of mammalian oligosaccharyltransferase re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0008250" data-r="PMID:15835887" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HGNC-UCL IDA from the proteomic analysis of mammalian OST subcomplexes (Shibatani et al. 2005) placing TUSC3 in the oligosaccharyltransferase complex. Core CC supported by direct proteomic identification of OST subunits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental (proteomics) evidence for OST complex membership. Core complex localization for TUSC3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link">
+                                        PMID:15835887
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results identify two potential new subunits of mammalian OST and demonstrate a remarkable heterogeneity in OST composition</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                                    GO:0015035
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25135935
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Oxidoreductase activity is necessary for N-glycosylation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0015035" data-r="PMID:25135935" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation. TUSC3&#39;s lumenal thioredoxin domain (CXXC motif, Cys99-Cys102) is a redox-active protein-disulfide oxidoreductase: in OST-B it forms transient mixed disulfides with glycoprotein substrates and its CXXC motif is required for activity, as shown by TUSC3 fully complementing MagT1 in a CXXC-dependent manner. This core MF is not currently in GOA and should be added.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the established core molecular function of TUSC3 (thioredoxin-like protein-disulfide oxidoreductase), grounded in the CXXC mutagenesis/ complementation experiments and the crystal structure of the thioredoxin domain. Missing from the current GOA annotation set.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                        PMID:25135935
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutants that lacked both active site cysteine residues (e.g., MagT1 m1) were not able to fully restore glycosylation of pCatCΔ234-HA, which indicates that the CXXC motif is necessary for MagT1 and TUSC3 activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">In its oxidized form proposed to form</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160227" target="_blank" class="term-link">
+                                    GO:0160227
+                                </a>
+                            </span>
+                            <span class="term-label">oligosaccharyltransferase complex B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31831667
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-electron microscopy structures of human oligosaccharylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q13454" data-a="GO:0160227" data-r="PMID:31831667" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new, more specific complex annotation. TUSC3 is an accessory subunit specifically of the STT3B-containing OST-B complex (mutually exclusive with MAGT1), as resolved in the cryo-EM structure of human OST-B and captured by ComplexPortal CPX-8738 (&#34;Oligosaccharyltransferase complex B, TUSC3 variant&#34;). This is more precise than the generic GO:0008250 already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Adds the STT3B-specific OST-B complex term, which more precisely reflects TUSC3 membership than the parent GO:0008250. Not currently in GOA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                                        PMID:31831667
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">structural differences in the catalytic subunits STT3A and STT3B facilitate contacts to distinct OST subunits, DC2 in OST-A and MAGT1 in OST-B</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TUSC3/TUSC3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Accessory component of the STT3B-containing form of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Thioredoxin-like protein-disulfide oxidoreductase activity of the lumenal thioredoxin domain (redox-active Cys99-Cys102 CXXC motif) that, within the STT3B/OST-B complex, forms transient mixed disulfides with free thiols in glycoprotein substrates, delaying disulfide-bond formation so that STT3B can glycosylate cysteine-proximal/otherwise-inaccessible acceptor sites.</h3>
+                <span class="vote-buttons" data-g="Q13454" data-a="FUNCTION: Thioredoxin-like protein-disulfide oxidoreductase ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                protein N-linked glycosylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160227" target="_blank" class="term-link">
+                            oligosaccharyltransferase complex B
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                PMID:25135935
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Mutants that lacked both active site cysteine residues (e.g., MagT1 m1) were not able to fully restore glycosylation of pCatCΔ234-HA, which indicates that the CXXC motif is necessary for MagT1 and TUSC3 activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                                PMID:25135935
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">transient formation of mixed disulfides between MagT1 and a glycoprotein substrate to facilitate access of STT3B to unmodified acceptor sites</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TUSC3/TUSC3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">In its oxidized form proposed to form</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As an accessory subunit of OST-B, TUSC3 contributes to the complex-level dolichyl-diphosphooligosaccharide-protein glycotransferase activity that transfers the high-mannose oligosaccharide onto asparagine acceptor sites, enabling STT3B-dependent protein N-linked glycosylation at the ER membrane.</h3>
+                <span class="vote-buttons" data-g="Q13454" data-a="FUNCTION: As an accessory subunit of OST-B, TUSC3 contribute..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                protein N-linked glycosylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160227" target="_blank" class="term-link">
+                            oligosaccharyltransferase complex B
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TUSC3/TUSC3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Acts as accessory component of the N-oligosaccharyl</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26864433" target="_blank" class="term-link">
+                                PMID:26864433
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The absence of both oxidoreductase subunits (MagT1(−/−) TUSC3(−/−)), or elimination of STT3B, causes a dramatic reduction in SHBG glycosylation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15835887" target="_blank" class="term-link">
+                            PMID:15835887
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic analysis of mammalian oligosaccharyltransferase reveals multiple subcomplexes that contain Sec61, TRAP, and two potential new subunits.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18455129" target="_blank" class="term-link">
+                            PMID:18455129
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Oligosaccharyltransferase-subunit mutations in nonsyndromic mental retardation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18452889" target="_blank" class="term-link">
+                            PMID:18452889
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A defect in the TUSC3 gene is associated with autosomal recessive mental retardation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19717468" target="_blank" class="term-link">
+                            PMID:19717468
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian MagT1 and TUSC3 are required for cellular magnesium uptake and vertebrate embryonic development.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24685145" target="_blank" class="term-link">
+                            PMID:24685145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of substrate specificity of human oligosaccharyl transferase subunit N33/Tusc3 and its role in regulating protein N-glycosylation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25135935" target="_blank" class="term-link">
+                            PMID:25135935
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Oxidoreductase activity is necessary for N-glycosylation of cysteine-proximal acceptor sites in glycoproteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26864433" target="_blank" class="term-link">
+                            PMID:26864433
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian cells lacking either the cotranslational or posttranslocational oligosaccharyltransferase complex display substrate-dependent defects in asparagine linked glycosylation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31831667" target="_blank" class="term-link">
+                            PMID:31831667
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cryo-electron microscopy structures of human oligosaccharyltransferase complexes OST-A and OST-B.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12887896" target="_blank" class="term-link">
+                            PMID:12887896
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Oligosaccharyltransferase isoforms that contain different catalytic STT3 subunits have distinct enzymatic properties.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446209
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transfer of N-glycan to the protein</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5223345
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Miscellaneous transport and binding events</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5339528
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TUSC3 transports Mg2+ from extracellular region to cytosol</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9694793
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Spike protein gets N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918962
+
+                    </span>
+                </div>
+
+                <div class="reference-title">E is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9918988
+
+                    </span>
+                </div>
+
+                <div class="reference-title">pre-M is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9919011
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pre-NS1 folds and is N-glycosylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9931286
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CD274 N-linked glycosylation in ER</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TUSC3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q13454" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tusc3-q13454-gene-review-notes">TUSC3 (Q13454) — gene review notes</h1>
+<h2 id="summary-core-biology">Summary / core biology</h2>
+<p>TUSC3 (Tumor suppressor candidate 3; N33; also called Magnesium uptake/transporter TUSC3)<br />
+is an accessory subunit of the <strong>STT3B-containing oligosaccharyltransferase (OST-B) complex</strong><br />
+in the endoplasmic reticulum membrane. It is a multi-pass membrane protein with a lumenal<br />
+<strong>thioredoxin-like domain</strong> bearing a redox-active CXXC motif (Cys99–Cys102). It is the<br />
+close paralog of MAGT1 and the metazoan orthologue of yeast Ost3/Ost6.</p>
+<ul>
+<li>UniProt authoritative function statement: "Acts as accessory component of the<br />
+  N-oligosaccharyl transferase (OST) complex ... Involved in N-glycosylation of<br />
+  STT3B-dependent substrates. Specifically required for the glycosylation of a subset of<br />
+  acceptor sites that are near cysteine residues; in this function seems to act redundantly<br />
+  with MAGT1. In its oxidized form proposed to form transient mixed disulfides with a<br />
+  glycoprotein substrate to facilitate access of STT3B to the unmodified acceptor site.<br />
+  Also has oxidoreductase-independent functions in the STT3B-containing OST complex possibly<br />
+  involving substrate recognition. Could indirectly play a role in Mg(2+) transport."<br />
+  [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>UniProt SUBUNIT: "Accessory component of the STT3B-containing form of the<br />
+  oligosaccharyltransferase (OST) complex. OST exists in two different complex forms which<br />
+  contain common core subunits RPN1, RPN2, OST48, OST4, DAD1 and TMEM258, either STT3A or<br />
+  STT3B as catalytic subunits ... The association of TUSC3 or MAGT1 with the STT3B-containing<br />
+  complex seems to be mutually exclusvice." [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>UniProt SUBCELLULAR LOCATION: "Endoplasmic reticulum membrane; Multi-pass membrane protein."<br />
+  [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>UniProt PATHWAY: "Protein modification; protein glycosylation." [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>UniProt DOMAIN 59..187 "Thioredoxin"; DISULFID 99..102 "Redox-active"; MUTAGEN C99/C102 -&gt;S<br />
+  "Reduces N-glycosylation of cysteine-proximal acceptor sites" [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>UniProt SIMILARITY: "Belongs to the OST3/OST6 family." [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+<li>ComplexPortal: CPX-8738 "Oligosaccharyltransferase complex B, TUSC3 variant."<br />
+  [file:human/TUSC3/TUSC3-uniprot.txt]</li>
+</ul>
+<h2 id="mechanistic-evidence-oxidoreductase-activity-core-mf">Mechanistic evidence — oxidoreductase activity (core MF)</h2>
+<p>PMID:25135935 (Cherepanova, Shrimal, Gilmore 2014, J Cell Biol; full text available) is the<br />
+key mechanistic paper. It studies MagT1 but directly tests TUSC3 by complementation:</p>
+<ul>
+<li>"MagT1, an ER-localized thioredoxin homologue, is a subunit of the STT3B isoform of the<br />
+  oligosaccharyltransferase (OST). The lumenally oriented active site CVVC motif in MagT1 is<br />
+  required for glycosylation of STT3B-dependent acceptor sites" <a href="https://pubmed.ncbi.nlm.nih.gov/25135935">PMID:25135935</a></li>
+<li>"The predominant form of MagT1 in vivo is oxidized, which is consistent with transient<br />
+  formation of mixed disulfides between MagT1 and a glycoprotein substrate to facilitate<br />
+  access of STT3B to unmodified acceptor sites." <a href="https://pubmed.ncbi.nlm.nih.gov/25135935">PMID:25135935</a></li>
+<li>"MagT1-depleted cells were fully complemented by expression of TUSC3, which is indicative<br />
+  of functional redundancy between MagT1 and TUSC3." <a href="https://pubmed.ncbi.nlm.nih.gov/25135935">PMID:25135935</a></li>
+<li>"Human MagT1 and TUSC3 are 73% identical in sequence in the mature region of the protein<br />
+  and have thioredoxin CXXC motifs..." <a href="https://pubmed.ncbi.nlm.nih.gov/25135935">PMID:25135935</a></li>
+<li>"Mutants that lacked both active site cysteine residues (e.g., MagT1 m1) were not able to<br />
+  fully restore glycosylation of pCatCΔ234-HA, which indicates that the CXXC motif is<br />
+  necessary for MagT1 and TUSC3 activity." <a href="https://pubmed.ncbi.nlm.nih.gov/25135935">PMID:25135935</a></li>
+</ul>
+<p>The redox chemistry: the oxidized CXXC forms a mixed disulfide with a substrate free thiol;<br />
+the reduced form can react with a substrate disulfide — i.e. protein-disulfide<br />
+oxidoreductase / thioredoxin-type activity (GO:0015035 protein-disulfide reductase activity).</p>
+<h2 id="structural-evidence">Structural evidence</h2>
+<p>PMID:24685145 (Mohorko et al. 2014, Structure; abstract via PubMed) crystallized the lumenal<br />
+N33/Tusc3 thioredoxin domain (PDB 4M8G/4M90/4M91/4M92, res 44–194): "N33/Tusc3 possesses a<br />
+membrane-anchored N-terminal thioredoxin domain located in the ER lumen that may form<br />
+transient mixed disulfide complexes with OST substrates ... a defined peptide-binding groove<br />
+adjacent to the active site ... N33/Tusc3 increases glycosylation efficiency for a subset of<br />
+human glycoproteins by slowing glycoprotein folding." (According to PubMed;<br />
+<a href="https://doi.org/10.1016/j.str.2014.02.013">DOI</a>). Cited in UniProt as the source of the<br />
+redox-active 99..102 disulfide and proposed function.</p>
+<h2 id="ost-complex-membership">OST complex membership</h2>
+<ul>
+<li>PMID:31831667 (Ramírez, Kowal, Locher 2019, Science; abstract only): cryo-EM of human OST-A<br />
+  and OST-B. Establishes two distinct complexes; OST-B contains the MAGT1/TUSC3 subunit and<br />
+  is posttranslocational. ComplexPortal used this as the basis for TUSC3 OST-complex IPI/IDA<br />
+  and ER-membrane NAS annotations.</li>
+<li>PMID:15835887 (Shibatani et al. 2005, Biochemistry; abstract only): proteomic analysis of<br />
+  mammalian OST subcomplexes; this is the original HGNC-UCL IDA for OST complex membership<br />
+  (it identified DC2/KCP2; TUSC3 was among OST-associated proteins). Established mammalian OST<br />
+  heterogeneity.</li>
+<li>PMID:12887896 (Kelleher et al. 2003, Mol Cell; abstract only): identified that mammals<br />
+  express two Ost3p homologs (TUSC3/MAGT1) assembled into OST complexes with distinct<br />
+  enzymatic activity. UniProt reference [6] for OST identification + tissue specificity.</li>
+<li>PMID:26864433 (Cherepanova &amp; Gilmore 2016, Sci Rep; full text): CRISPR MagT1/TUSC3 double<br />
+  knockout HEK293 cells. "The absence of both oxidoreductase subunits (MagT1(−/−) TUSC3(−/−)),<br />
+  or elimination of STT3B, causes a dramatic reduction in SHBG glycosylation." Directly tests<br />
+  the requirement of TUSC3+MagT1 for STT3B-dependent glycosylation in vivo. Basis of the IMP<br />
+  protein-N-linked-glycosylation annotation.</li>
+</ul>
+<h2 id="disease-process">Disease / process</h2>
+<ul>
+<li>MRT7 (autosomal recessive intellectual disability): PMID:18455129 (Molinari et al. 2008)<br />
+  and PMID:18452889 (Garshasbi et al. 2008). Biallelic loss-of-function TUSC3 variants cause<br />
+  non-syndromic AR intellectual disability. UniProt DISEASE. Note the "cognition" IMP<br />
+  (GO:0050890) derives from the human-genetics disease phenotype (patients), not a direct<br />
+  molecular assay.</li>
+<li>Molinari abstract: "a 1 bp insertion, c.787_788insC, resulting in a premature stop codon<br />
+    ... leading to mRNA decay ... fine regulation of OTase activity is essential for normal<br />
+    cognitive-function development" <a href="https://pubmed.ncbi.nlm.nih.gov/18455129">PMID:18455129</a>. Note: patient fibroblasts showed normal<br />
+    bulk N-glycosylation — consistent with MAGT1 redundancy.</li>
+</ul>
+<h2 id="magnesium-transport-treat-carefully">Magnesium transport — treat carefully</h2>
+<p>PMID:19717468 (Zhou &amp; Clapham 2009, PNAS; abstract only): yeast complementation screen<br />
+identified MagT1 and TUSC3 as mediators of Mg2+ influx; morpholino knockdown in zebrafish<br />
+causes developmental arrest rescued by excess Mg2+. This is the experimental basis for the<br />
+Mg2+-transport annotations (IMP GO:0015693; plasma-membrane NAS; Reactome TAS).</p>
+<p>However, the field has largely reinterpreted this: the established, mechanistically supported<br />
+function of TUSC3 is the ER OST-B oxidoreductase. PMID:25135935 explicitly notes the<br />
+incompatibility: "Direct roles for MagT1 in both N-linked glycosylation and magnesium uptake<br />
+are incompatible unless one invokes both a dual localization (RER and plasma membrane) and a<br />
+dual activity (oxidoreductase and Mg+2 channel)" and shows MagT1/TUSC3 are ER-resident, not<br />
+plasma-membrane, with low cell-surface biotinylation. The Mg2+ effect is plausibly an<br />
+indirect consequence of hypoglycosylation of Mg2+ transporters/channels. UniProt hedges:<br />
+"Could indirectly play a role in Mg(2+) transport (PubMed:19717468)."</p>
+<p>Curation decisions for Mg2+ annotations: the IMP (experimental, GO:0015693) is retained as<br />
+KEEP_AS_NON_CORE (do not remove experimental). The plasma-membrane locations (NAS/TAS) and<br />
+Mg-transporter-activity (IEA/TAS) are over-annotations of the true ER OST role — marked<br />
+MARK_AS_OVER_ANNOTATED (or REMOVE for the clearly-wrong ARBA IEA MF). IBA Mg2+-transmembrane<br />
+transport comes from a different PANTHER family (PTN000976171, note the WITH/FROM is<br />
+Drosophila FBgn0032015) and is over-annotated.</p>
+<h2 id="isoforms">Isoforms</h2>
+<p>Two isoforms (Q13454-1 displayed; Q13454-2 differs only at C-terminus DLDFE-&gt;FLIK, VSP_003776).<br />
+No isoform-specific function reported; annotations are not isoform-restricted.</p>
+<h2 id="curation-plan-core-functions">Curation plan (core functions)</h2>
+<ul>
+<li>MF: GO:0015035 protein-disulfide reductase activity (thioredoxin-like oxidoreductase;<br />
+  CXXC/mixed-disulfide mechanism) — via PMID:25135935 + UniProt mutagenesis + PMID:24685145.</li>
+<li>MF (contributes_to): GO:0004579 dolichyl-diphosphooligosaccharide-protein glycotransferase<br />
+  activity — TUSC3 is an accessory subunit contributing to the OST-B catalytic reaction.</li>
+<li>CC/in_complex: GO:0160227 oligosaccharyltransferase complex B (OST-B; STT3B-specific).</li>
+<li>BP: GO:0006487 protein N-linked glycosylation.</li>
+<li>Location: GO:0005789 endoplasmic reticulum membrane.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q13454
+gene_symbol: TUSC3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TUSC3 (Tumor suppressor candidate 3; N33) is an endoplasmic-reticulum membrane
+  protein that functions as an accessory oxidoreductase subunit of the
+  STT3B-containing oligosaccharyltransferase (OST-B) complex. It is a multi-pass
+  membrane protein whose lumenal, N-terminal thioredoxin-like domain carries a
+  redox-active CXXC motif (Cys99-Cys102). Within OST-B, TUSC3 promotes N-linked
+  glycosylation of a subset of asparagine acceptor sites that are near cysteine
+  residues or that are otherwise skipped during co-translational glycosylation;
+  in its oxidized form it is thought to form transient mixed disulfides with a
+  free thiol in a glycoprotein substrate, delaying disulfide-bond formation and
+  giving the catalytic STT3B subunit access to the unmodified sequon. TUSC3 is
+  the close paralog of MAGT1, the two being mutually exclusive and functionally
+  largely redundant subunits of OST-B, and is the metazoan orthologue of yeast
+  Ost3/Ost6. Biallelic loss-of-function of TUSC3 causes autosomal-recessive
+  non-syndromic intellectual disability. A role in cellular magnesium uptake has
+  been proposed by analogy to MAGT1, but the established, mechanistically
+  supported function is the ER OST-B oxidoreductase activity.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q13454-1
+- name: &#39;2&#39;
+  id: Q13454-2
+  sequence_note: VSP_003776
+existing_annotations:
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (PANTHER) inference that TUSC3 is involved in protein
+      N-linked glycosylation. This is the core biological process of TUSC3 as an
+      OST-B subunit and is strongly supported by direct experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core BP for this gene. TUSC3 is an accessory subunit of the
+      STT3B/OST-B complex that catalyzes N-linked glycosylation; UniProt states
+      it is &#34;Involved in N-glycosylation of STT3B-dependent substrates.&#34; A
+      redundant IBA of the gene&#39;s own correct core function is retained, not
+      marked over-annotated.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Involved in N-glycosylation of STT3B-dependent
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetic inference that TUSC3 is part of the oligosaccharyltransferase
+      complex. Correct; TUSC3 is an accessory subunit of the STT3B-containing
+      OST complex.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported core CC. A more specific term (GO:0160227
+      oligosaccharyltransferase complex B) exists and is used in core_functions,
+      but the parent term is not wrong.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Accessory component of the STT3B-containing form of the
+- term:
+    id: GO:1903830
+    label: magnesium ion transmembrane transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic inference of magnesium ion transmembrane transport. The
+      WITH/FROM for this IBA is a Drosophila gene (FB:FBgn0032015) in a distinct
+      PANTHER family (PTN000976171), not the OST3/OST6 subfamily that contains
+      TUSC3. The established function of TUSC3 is the ER OST-B oxidoreductase,
+      not Mg2+ transport.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This IBA propagates a magnesium-transport role that is at best an indirect
+      consequence of TUSC3&#39;s glycosylation function. The mechanistic literature
+      shows TUSC3/MAGT1 are ER-resident OST oxidoreductase subunits, not
+      plasma-membrane channels, and that a direct dual role is &#34;incompatible&#34;
+      without invoking dual localization and dual activity. Not a core function.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: FB:FBgn0032015
+        source_label: Drosophila source gene (PANTHER PTN000976171)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The WITH/FROM seed for this IBA is a Drosophila gene in PANTHER family
+          PTN000976171, distinct from the OST3/OST6 (PTN000294174) subfamily that
+          contains TUSC3; a magnesium-transport role does not transfer to the
+          human OST-B oxidoreductase subunit.
+    supported_by:
+    - reference_id: PMID:25135935
+      supporting_text: &gt;-
+        Direct roles for MagT1 in both N-linked glycosylation and magnesium
+        uptake are incompatible unless one invokes both a dual localization (RER
+        and plasma membrane) and a dual activity (oxidoreductase and Mg+2
+        channel)
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProtKB Subcellular Location vocabulary to
+      the ER membrane. This is the correct localization of TUSC3.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core CC. UniProt SUBCELLULAR LOCATION is &#34;Endoplasmic reticulum
+      membrane; Multi-pass membrane protein.&#34; A redundant IEA of the gene&#39;s own
+      correct location is retained.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic annotation to protein N-linked
+      glycosylation, the correct core BP for TUSC3.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant IEA of the gene&#39;s own correct core process; retained per policy.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Involved in N-glycosylation of STT3B-dependent
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ARBA electronic annotation placing TUSC3 in the oligosaccharyltransferase
+      complex. Correct core CC.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant IEA of the gene&#39;s own correct complex membership; retained.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Accessory component of the STT3B-containing form of the
+- term:
+    id: GO:0015095
+    label: magnesium ion transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA electronic annotation assigning magnesium ion transmembrane
+      transporter activity as a molecular function. TUSC3 has no demonstrated
+      channel/transporter activity; its established MF is a thioredoxin-like
+      oxidoreductase activity, and any Mg2+ effect is indirect.
+    action: REMOVE
+    reason: &gt;-
+      This is a clearly-wrong electronic (IEA/ARBA) molecular-function
+      assignment. TUSC3 is an ER OST-B oxidoreductase subunit; the Mg2+
+      transporter-activity MF conflicts with the mechanistic evidence and
+      UniProt only states it &#34;Could indirectly play a role in Mg(2+)
+      transport.&#34; REMOVE is appropriate for an unsupported IEA MF (not applied
+      to the experimental Mg2+ annotation, which is kept below).
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: a role in Mg(2+) transport
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5223345
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome TAS to the generic &#34;transmembrane transport&#34; process, derived
+      from the proposed magnesium-transport role. Uninformative and reflecting a
+      role that is peripheral (at most indirect) to TUSC3&#39;s core OST function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Very general BP tied to the magnesium-transport hypothesis rather than the
+      established OST-B oxidoreductase/glycosylation function. Not core.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: a role in Mg(2+) transport
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:31831667
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ComplexPortal NAS localizing TUSC3 to the ER membrane, consistent with the
+      cryo-EM analysis of human OST-A/OST-B and with UniProt. Correct core CC.
+    action: ACCEPT
+    reason: &gt;-
+      Correct location supported by structural work on the human OST complexes
+      and by UniProt SUBCELLULAR LOCATION.
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        Oligosaccharyltransferase (OST) catalyzes the transfer of a high-mannose
+        glycan onto secretory proteins in the endoplasmic reticulum
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IDA
+  original_reference_id: PMID:31831667
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ComplexPortal IDA (from the human OST-A/OST-B cryo-EM structures) that
+      TUSC3, as an OST-B subunit, is involved in protein N-linked glycosylation.
+      This is the core BP.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported experimental annotation to the gene&#39;s core process.
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        Mammals express two distinct OST complexes that act in a cotranslational
+        (OST-A) or posttranslocational (OST-B) manner
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IPI
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal IPI establishing TUSC3 as part of the
+      oligosaccharyltransferase complex, based on the cryo-EM structure of human
+      OST-B in which the MAGT1/TUSC3 subunit is resolved. Core CC.
+    action: ACCEPT
+    reason: &gt;-
+      Physical-interaction evidence for OST complex membership; a more specific
+      OST-B term is captured in core_functions.
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        structural differences in the catalytic subunits STT3A and STT3B
+        facilitate contacts to distinct OST subunits, DC2 in OST-A and MAGT1 in
+        OST-B
+- term:
+    id: GO:0015693
+    label: magnesium ion transport
+  evidence_type: IMP
+  original_reference_id: PMID:19717468
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      Experimental (IMP) annotation from Zhou &amp; Clapham 2009: knockdown of TUSC3
+      lowers intracellular Mg2+ and morpholino knockdown in zebrafish arrests
+      development, rescuable with excess Mg2+. This supports a role of TUSC3
+      upstream of or within magnesium ion transport, though later work
+      reinterprets this as an indirect consequence of the OST oxidoreductase
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental annotation - not removed. However the acts_upstream_of_or_within
+      qualifier is appropriately weak, and the established core function is the
+      ER OST-B oxidoreductase; any magnesium-transport contribution is at most
+      indirect (UniProt: &#34;a role in Mg(2+) transport&#34;).
+      Retained as a non-core role.
+    supported_by:
+    - reference_id: PMID:19717468
+      supporting_text: &gt;-
+        Knockdown of either MagT1 or TUSC3 protein significantly lowers the
+        total and free intracellular Mg(2+) concentrations in mammalian cell
+        lines
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) transfer of the protein N-linked glycosylation
+      process to TUSC3. Correct core BP.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant ISS of the gene&#39;s own correct core process; retained.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Involved in N-glycosylation of STT3B-dependent
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446209
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS localizing TUSC3 to the ER membrane in the asparagine
+      N-linked glycosylation pathway. Correct core CC.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location, consistent with UniProt and structural data.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9694793
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS (SARS-CoV-2 spike protein N-glycosylation pathway) placing
+      TUSC3 at the ER membrane. Location is correct; the specific viral pathway
+      context reflects OST acting on a viral glycoprotein substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location. The viral-pathway framing is a substrate
+      context, not a change to TUSC3&#39;s localization or function.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918962
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS (viral envelope E protein N-glycosylation) placing TUSC3 at
+      the ER membrane. Correct location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location; viral-substrate pathway context only.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9918988
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS (viral pre-M protein N-glycosylation) placing TUSC3 at the ER
+      membrane. Correct location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location; viral-substrate pathway context only.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9919011
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS (viral pre-NS1 folding and N-glycosylation) placing TUSC3 at
+      the ER membrane. Correct location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location; viral-substrate pathway context only.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9931286
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS (CD274/PD-L1 N-linked glycosylation in ER) placing TUSC3 at
+      the ER membrane. Correct location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ER-membrane location; substrate-pathway context only.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0015095
+    label: magnesium ion transmembrane transporter activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5339528
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome TAS asserting TUSC3 enables magnesium ion transmembrane
+      transporter activity (in a reaction &#34;TUSC3 transports Mg2+ from
+      extracellular region to cytosol&#34;). TUSC3 has no demonstrated intrinsic
+      transporter/channel activity; its established MF is a thioredoxin-like
+      oxidoreductase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Over-annotation of a molecular function that has not been demonstrated for
+      TUSC3. As this is a TAS (not IEA) rooted in the Mg2+ hypothesis, it is
+      marked over-annotated rather than removed. The established MF and the
+      indirect nature of the Mg2+ role argue against a direct transporter
+      activity.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: a role in Mg(2+) transport
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IMP
+  original_reference_id: PMID:26864433
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental IMP from CRISPR MagT1/TUSC3 double-knockout HEK293 cells:
+      loss of both oxidoreductase subunits dramatically reduces glycosylation of
+      STT3B-dependent substrates (e.g. SHBG, pCatC), demonstrating TUSC3
+      involvement in protein N-linked glycosylation. This is the strongest
+      experimental evidence for the core BP.
+    action: ACCEPT
+    reason: &gt;-
+      Direct genetic evidence (double-KO) for the gene&#39;s core process.
+    supported_by:
+    - reference_id: PMID:26864433
+      supporting_text: &gt;-
+        The absence of both oxidoreductase subunits (MagT1(−/−) TUSC3(−/−)), or
+        elimination of STT3B, causes a dramatic reduction in SHBG glycosylation
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5339528
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS placing TUSC3 in the plasma membrane, tied to the proposed
+      Mg2+-transport reaction. This contradicts the established ER-membrane
+      localization; TUSC3 is an ER OST subunit and shows minimal cell-surface
+      exposure.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Plasma-membrane localization is an over-annotation from the
+      magnesium-transport hypothesis. Direct cell-surface biotinylation
+      experiments and colocalization with calreticulin show the paralog MagT1
+      (and by homology TUSC3) is ER-resident, not plasma-membrane.
+    supported_by:
+    - reference_id: PMID:25135935
+      supporting_text: &gt;-
+        Colocalization of MagT1-V5 and calreticulin confirmed that MagT1 is an
+        ER resident protein
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS annotation to mitochondrion, transferred from a mouse ortholog
+      (UniProtKB:Q8BTV1). There is no experimental support for mitochondrial
+      localization of human TUSC3; its established location is the ER membrane.
+    action: REMOVE
+    reason: &gt;-
+      Clearly-wrong electronic/ISS localization. UniProt SUBCELLULAR LOCATION is
+      ER membrane (multi-pass), and TUSC3 is an OST subunit; a mitochondrial
+      location is inconsistent with all functional and structural evidence.
+    supported_by:
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: NAS
+  original_reference_id: PMID:18455129
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS (Molinari et al. 2008) that TUSC3 encodes an OST subunit involved in
+      N-glycosylation. Correct core BP; the paper established TUSC3 as an OTase
+      subunit while showing bulk N-glycosylation was normal in patient
+      fibroblasts (consistent with MAGT1 redundancy).
+    action: ACCEPT
+    reason: &gt;-
+      Supports the core process. Non-experimental (NAS), but consistent with the
+      strong experimental evidence for the same term.
+    supported_by:
+    - reference_id: PMID:18455129
+      supporting_text: &gt;-
+        the gene N33/TUSC3 encoding one subunit of the oligosaccharyltransferase
+        (OTase) complex, which catalyzes the transfer of an oligosaccharide
+        chain on nascent proteins, the key step of N-glycosylation
+- term:
+    id: GO:0050890
+    label: cognition
+  evidence_type: IMP
+  original_reference_id: PMID:18455129
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental IMP (from human genetics) to &#34;cognition&#34;: biallelic
+      loss-of-function TUSC3 variants cause non-syndromic autosomal-recessive
+      intellectual disability (MRT7), indicating TUSC3 is required for normal
+      cognitive development. This is a downstream, tissue-level phenotype rather
+      than a core molecular/cellular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental annotation grounded in disease genetics - not removed. The
+      cognition phenotype is a consequence of impaired OST-B glycosylation in
+      the developing nervous system, not itself a core function of the gene
+      product. Kept as a non-core, pleiotropic/organismal role.
+    supported_by:
+    - reference_id: PMID:18455129
+      supporting_text: &gt;-
+        fine regulation of OTase activity is essential for normal
+        cognitive-function development
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: NAS
+  original_reference_id: PMID:19717468
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      NAS plasma-membrane localization from Zhou &amp; Clapham 2009, based on the
+      proposed role of TUSC3 as a plasma-membrane Mg2+ transporter. Contradicted
+      by the established ER-resident OST localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Over-annotation stemming from the magnesium-transport hypothesis. Direct
+      localization studies place the protein (and its paralog MagT1) in the ER,
+      not the plasma membrane.
+    supported_by:
+    - reference_id: PMID:25135935
+      supporting_text: &gt;-
+        Colocalization of MagT1-V5 and calreticulin confirmed that MagT1 is an
+        ER resident protein
+- term:
+    id: GO:0008250
+    label: oligosaccharyltransferase complex
+  evidence_type: IDA
+  original_reference_id: PMID:15835887
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      HGNC-UCL IDA from the proteomic analysis of mammalian OST subcomplexes
+      (Shibatani et al. 2005) placing TUSC3 in the oligosaccharyltransferase
+      complex. Core CC supported by direct proteomic identification of OST
+      subunits.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental (proteomics) evidence for OST complex membership. Core
+      complex localization for TUSC3.
+    supported_by:
+    - reference_id: PMID:15835887
+      supporting_text: &gt;-
+        Our results identify two potential new subunits of mammalian OST and
+        demonstrate a remarkable heterogeneity in OST composition
+- term:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25135935
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed new molecular-function annotation. TUSC3&#39;s lumenal thioredoxin
+      domain (CXXC motif, Cys99-Cys102) is a redox-active protein-disulfide
+      oxidoreductase: in OST-B it forms transient mixed disulfides with
+      glycoprotein substrates and its CXXC motif is required for activity, as
+      shown by TUSC3 fully complementing MagT1 in a CXXC-dependent manner. This
+      core MF is not currently in GOA and should be added.
+    action: NEW
+    reason: &gt;-
+      Captures the established core molecular function of TUSC3 (thioredoxin-like
+      protein-disulfide oxidoreductase), grounded in the CXXC mutagenesis/
+      complementation experiments and the crystal structure of the thioredoxin
+      domain. Missing from the current GOA annotation set.
+    supported_by:
+    - reference_id: PMID:25135935
+      supporting_text: &gt;-
+        Mutants that lacked both active site cysteine residues (e.g., MagT1 m1)
+        were not able to fully restore glycosylation of pCatCΔ234-HA, which
+        indicates that the CXXC motif is necessary for MagT1 and TUSC3 activity
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: &gt;-
+        In its oxidized form proposed to form
+- term:
+    id: GO:0160227
+    label: oligosaccharyltransferase complex B
+  evidence_type: IPI
+  original_reference_id: PMID:31831667
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Proposed new, more specific complex annotation. TUSC3 is an accessory
+      subunit specifically of the STT3B-containing OST-B complex (mutually
+      exclusive with MAGT1), as resolved in the cryo-EM structure of human
+      OST-B and captured by ComplexPortal CPX-8738 (&#34;Oligosaccharyltransferase
+      complex B, TUSC3 variant&#34;). This is more precise than the generic
+      GO:0008250 already annotated.
+    action: NEW
+    reason: &gt;-
+      Adds the STT3B-specific OST-B complex term, which more precisely reflects
+      TUSC3 membership than the parent GO:0008250. Not currently in GOA.
+    supported_by:
+    - reference_id: PMID:31831667
+      supporting_text: &gt;-
+        structural differences in the catalytic subunits STT3A and STT3B
+        facilitate contacts to distinct OST subunits, DC2 in OST-A and MAGT1 in
+        OST-B
+    - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+      supporting_text: Accessory component of the STT3B-containing form of the
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:15835887
+  title: Proteomic analysis of mammalian oligosaccharyltransferase reveals multiple
+    subcomplexes that contain Sec61, TRAP, and two potential new subunits.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Proteomic identification of mammalian OST subcomplexes and
+      subunit heterogeneity; original HGNC-UCL IDA source for OST complex
+      membership of TUSC3.
+- id: PMID:18455129
+  title: Oligosaccharyltransferase-subunit mutations in nonsyndromic mental retardation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Identified a frameshift TUSC3 mutation causing
+      autosomal-recessive non-syndromic intellectual disability; establishes
+      TUSC3 as an OTase subunit and links OTase activity to cognition. Note bulk
+      N-glycosylation was normal in patient fibroblasts (MAGT1 redundancy).
+- id: PMID:18452889
+  title: A defect in the TUSC3 gene is associated with autosomal recessive mental
+    retardation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Independent family with a homozygous TUSC3 deletion
+      causing non-syndromic AR intellectual disability; UniProt DISEASE
+      co-reference for MRT7. Not directly used in existing_annotations but
+      supports the disease/cognition role.
+- id: PMID:19717468
+  title: Mammalian MagT1 and TUSC3 are required for cellular magnesium uptake and
+    vertebrate embryonic development.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: DISPUTED
+    review_notes: &gt;-
+      PubMed-verified citation. Experimental basis for the magnesium-transport
+      annotations, but the interpretation as a direct plasma-membrane Mg2+
+      transporter is disputed by later work (PMID:25135935, PMID:26864433) that
+      localizes TUSC3/MAGT1 to the ER as OST oxidoreductase subunits; any Mg2+
+      role is likely indirect.
+- id: PMID:24685145
+  title: Structural basis of substrate specificity of human oligosaccharyl transferase
+    subunit N33/Tusc3 and its role in regulating protein N-glycosylation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. X-ray structures (PDB 4M8G/4M90/4M91/4M92) of the lumenal
+      N33/TUSC3 thioredoxin domain with model peptide substrates; source of the
+      redox-active Cys99-Cys102 disulfide and the transient-mixed-disulfide model.
+      Abstract only (no cached full text).
+- id: PMID:25135935
+  title: Oxidoreductase activity is necessary for N-glycosylation of cysteine-proximal
+    acceptor sites in glycoproteins.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text cached. Key mechanistic paper: the STT3B-complex
+      oxidoreductase (MagT1) uses a CXXC/mixed-disulfide mechanism to promote
+      glycosylation of cysteine-proximal sequons, and TUSC3 fully complements
+      MagT1 in a CXXC-dependent manner (functional redundancy). Grounds the core
+      oxidoreductase MF for TUSC3.
+- id: PMID:26864433
+  title: Mammalian cells lacking either the cotranslational or posttranslocational
+    oligosaccharyltransferase complex display substrate-dependent defects in asparagine
+    linked glycosylation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text cached. CRISPR MagT1/TUSC3 double-knockout
+      HEK293 cells show dramatic loss of STT3B-dependent glycosylation, providing
+      direct in vivo evidence for TUSC3 in protein N-linked glycosylation.
+- id: PMID:31831667
+  title: Cryo-electron microscopy structures of human oligosaccharyltransferase complexes
+    OST-A and OST-B.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Cryo-EM structures of human OST-A and OST-B; OST-B
+      contains the MAGT1/TUSC3 subunit. ComplexPortal source for the ER-membrane
+      and OST-complex annotations. Abstract only (no cached full text).
+- id: PMID:12887896
+  title: Oligosaccharyltransferase isoforms that contain different catalytic STT3
+    subunits have distinct enzymatic properties.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Showed mammals express two Ost3p homologs (TUSC3/MAGT1)
+      assembled into OST complexes with distinct enzymatic activity; UniProt
+      reference for OST identification and tissue specificity.
+- id: Reactome:R-HSA-446209
+  title: Transfer of N-glycan to the protein
+  findings: []
+- id: Reactome:R-HSA-5223345
+  title: Miscellaneous transport and binding events
+  findings: []
+- id: Reactome:R-HSA-5339528
+  title: TUSC3 transports Mg2+ from extracellular region to cytosol
+  findings: []
+- id: Reactome:R-HSA-9694793
+  title: Spike protein gets N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9918962
+  title: E is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9918988
+  title: pre-M is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9919011
+  title: Pre-NS1 folds and is N-glycosylated
+  findings: []
+- id: Reactome:R-HSA-9931286
+  title: CD274 N-linked glycosylation in ER
+  findings: []
+core_functions:
+- description: &gt;-
+    Thioredoxin-like protein-disulfide oxidoreductase activity of the lumenal
+    thioredoxin domain (redox-active Cys99-Cys102 CXXC motif) that, within the
+    STT3B/OST-B complex, forms transient mixed disulfides with free thiols in
+    glycoprotein substrates, delaying disulfide-bond formation so that STT3B can
+    glycosylate cysteine-proximal/otherwise-inaccessible acceptor sites.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  in_complex:
+    id: GO:0160227
+    label: oligosaccharyltransferase complex B
+  directly_involved_in:
+  - id: GO:0006487
+    label: protein N-linked glycosylation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:25135935
+    supporting_text: &gt;-
+      Mutants that lacked both active site cysteine residues (e.g., MagT1 m1)
+      were not able to fully restore glycosylation of pCatCΔ234-HA, which
+      indicates that the CXXC motif is necessary for MagT1 and TUSC3 activity
+  - reference_id: PMID:25135935
+    supporting_text: &gt;-
+      transient formation of mixed disulfides between MagT1 and a glycoprotein
+      substrate to facilitate access of STT3B to unmodified acceptor sites
+  - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+    supporting_text: &gt;-
+      In its oxidized form proposed to form
+- description: &gt;-
+    As an accessory subunit of OST-B, TUSC3 contributes to the complex-level
+    dolichyl-diphosphooligosaccharide-protein glycotransferase activity that
+    transfers the high-mannose oligosaccharide onto asparagine acceptor sites,
+    enabling STT3B-dependent protein N-linked glycosylation at the ER membrane.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  contributes_to_molecular_function:
+    id: GO:0004579
+    label: dolichyl-diphosphooligosaccharide-protein glycotransferase activity
+  in_complex:
+    id: GO:0160227
+    label: oligosaccharyltransferase complex B
+  directly_involved_in:
+  - id: GO:0006487
+    label: protein N-linked glycosylation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/TUSC3/TUSC3-uniprot.txt
+    supporting_text: &gt;-
+      Acts as accessory component of the N-oligosaccharyl
+  - reference_id: PMID:26864433
+    supporting_text: &gt;-
+      The absence of both oxidoreductase subunits (MagT1(−/−) TUSC3(−/−)), or
+      elimination of STT3B, causes a dramatic reduction in SHBG glycosylation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

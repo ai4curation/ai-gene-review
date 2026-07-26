@@ -1,0 +1,4703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLVRA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BLVRA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53004" target="_blank" class="term-link">
+                        P53004
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BLVRA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53004" data-a="DESCRIPTION: BLVRA (biliverdin reductase A, BVR-A; EC 1.3.1.24)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BLVRA (biliverdin reductase A, BVR-A; EC 1.3.1.24) is a soluble cytosolic NAD(P)H-dependent oxidoreductase that catalyzes the second and terminal step of heme catabolism: reduction of the gamma-methene bridge of biliverdin IX-alpha to bilirubin IX-alpha, the yellow, lipophilic, potently antioxidant bile pigment. It acts downstream of heme oxygenase (HMOX1/HMOX2), which cleaves heme to biliverdin. BVR-A is unusual among enzymes in having dual cofactor and dual pH specificity: it uses NADH at acidic pH and NADPH at alkaline pH, with NADPH the probable physiological electron donor. The enzyme is specific for the IX-alpha isomer (the IX-beta isomer is handled by the paralog BLVRB) and adopts a Gfo/Idh/MocA-family fold with an N-terminal NAD(P)-binding Rossmann domain. It is broadly expressed, with high activity in liver. Beyond its metabolic role, human BVR-A moonlights as a dual-specificity Ser/Thr/Tyr protein kinase and signaling scaffold that participates in insulin/IGF1, PKC, PI3K and MAPK/ERK signaling, functioning as an ERK activator and nuclear transporter and thereby linking cytoplasmic signaling to gene regulation. Loss-of-function variants cause hyperbiliverdinemia (green jaundice), a green discoloration of skin and body fluids that typically manifests in the setting of obstructive cholestasis or liver failure.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of BLVRA, propagated by phylogenetic inference from the biliverdin reductase family tree (PANTHER PTN008681150). Fully consistent with the direct experimental characterization of the human enzyme.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0000166" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro-derived binding term reflecting the NAD(P)-binding Rossmann domain. True but uninformative on its own; it describes a substructure of the catalytic mechanism rather than a distinct function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KM=3.2 uM for NADPH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of the core MF via InterPro/EC mapping (EC:1.3.1.24). Agrees with the experimental IDA annotations; retained as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less specific than the experimentally supported cytosol annotation. The enzyme is a soluble cytosolic protein; keep as non-core in favor of the more precise GO:0005829 (cytosol).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic subcellular-location annotation consistent with experimental IDA evidence that BVR-A is a cytosolic enzyme. Retained as the functional location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BVR-A purified from human liver contains ~1 Zn per subunit and exogenous Zn inhibits the NADPH-dependent (but not NADH-dependent) activity, so zinc binding is real. However UniProt records the cofactor/binding assignment as an inference (ECO:0000305/ECO:0000303) and the crystal structure (2H63) is NADP-bound without a modeled zinc; its physiological requirement is not fully established. Keep as a non-core cofactor-binding attribute rather than a core MF.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 zinc ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042167" target="_blank" class="term-link">
+                                    GO:0042167
+                                </a>
+                            </span>
+                            <span class="term-label">heme catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0042167" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process: BVR-A performs the terminal reduction step of the heme degradation pathway. Electronic annotation agrees with the experimental IDA annotation to the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Porphyrin-containing compound metabolism; protoheme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106276" target="_blank" class="term-link">
+                                    GO:0106276
+                                </a>
+                            </span>
+                            <span class="term-label">biliberdin reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106276" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADH-specific child of the core biliverdin reductase activity. Electronic (Rhea/ARBA) annotation matching the experimentally demonstrated NADH-dependent activity at acidic pH; retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Uses the reactants NADH or NADPH depending on the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106277" target="_blank" class="term-link">
+                                    GO:0106277
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106277" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADPH-specific child of the core activity (NADPH is the probable physiological cofactor). Electronic Rhea annotation agreeing with experimental EXP/IDA evidence; retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">NADPH, however, is the probable reactant in biological</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18463290" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18463290
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human biliverdin reductase is an ERK activator; hBVR is an E...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005515" data-r="PMID:18463290" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI capturing the BVR-A interaction with MAPK1/ERK2 (UniProtKB:P28482), which underlies the moonlighting ERK-scaffold function. Real and mechanistically meaningful, but the bare &#34;protein binding&#34; term is uninformative; the specific function is better represented by the protein serine/threonine kinase / ERK-scaffold core function. Not removed (experimental IPI); flagged as over-annotation of the generic term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18463290" target="_blank" class="term-link">
+                                        PMID:18463290
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human biliverdin reductase (hBVR) is a recently described Ser/Thr/Tyr kinase in the MAPK insulin/insulin-like growth factor 1 (IGF1)-signaling cascade</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI from a large-scale human interactome map recording an interaction with LNX1 (UniProtKB:Q8TBB1). Bare &#34;protein binding&#34; is uninformative and the biological significance of this high-throughput interaction is unclear. Not removed (experimental IPI); marked as over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29892012
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An interactome perturbation framework prioritizes damaging m...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005515" data-r="PMID:29892012" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI from an interactome-perturbation study, again recording the LNX1 (Q8TBB1) interaction. Uninformative bare protein-binding term; not removed (experimental IPI) but marked as over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI from a large-scale variant-interaction study, LNX1 (Q8TBB1) partner. Bare protein binding; not removed (experimental IPI) but marked as over-annotation of an uninformative generic term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-based (HPA) localization to the cytosol, consistent with the biochemically established cytosolic localization of BVR-A. Accepted as the functional location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106276" target="_blank" class="term-link">
+                                    GO:0106276
+                                </a>
+                            </span>
+                            <span class="term-label">biliberdin reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10858451
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Studies on the specificity of the tetrapyrrole substrate for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106276" data-r="PMID:10858451" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) support for the NADH-dependent biliverdin reductase activity, from kinetic characterization of the human enzyme. Core catalytic function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Uses the reactants NADH or NADPH depending on the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106277" target="_blank" class="term-link">
+                                    GO:0106277
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10858451
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Studies on the specificity of the tetrapyrrole substrate for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106277" data-r="PMID:10858451" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for the NADPH-dependent biliverdin reductase activity. NADPH is the probable physiological cofactor. Core catalytic function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">NADPH, however, is the probable reactant in biological</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106277" target="_blank" class="term-link">
+                                    GO:0106277
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7929092
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biliverdin-IX alpha reductase and biliverdin-IX beta reducta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106277" data-r="PMID:7929092" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support from purification of human liver biliverdin-IX alpha reductase; NADPH assumed to be the physiological electron donor. Core catalytic function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link">
+                                        PMID:7929092
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It was assumed that NADPH rather than NADH was the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106277" target="_blank" class="term-link">
+                                    GO:0106277
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8424666
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of human biliverdin reduct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106277" data-r="PMID:8424666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support from purification/characterization of human biliverdin reductase, showing dual cofactor use with NADPH preferred at alkaline pH. Core catalytic function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link">
+                                        PMID:8424666
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">At pH 6.0-7.0 the NADH was the more effective cofactor, whereas at pH</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106277" target="_blank" class="term-link">
+                                    GO:0106277
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase (NADPH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8631357
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human biliverdin IXalpha reductase is a zinc-metalloprotein....
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106277" data-r="PMID:8631357" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support from characterization of purified and recombinant human BVR-A, demonstrating dual pH/cofactor specificity including NADPH use. Core catalytic function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link">
+                                        PMID:8631357
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BVR is unique among enzymes characterized to date in that it has dual pH/cofactor (NADH, NADPH) specificity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7929092
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biliverdin-IX alpha reductase and biliverdin-IX beta reducta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="PMID:7929092" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of purified human liver biliverdin-IX alpha reductase. This is a primary line of experimental evidence for the core molecular function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link">
+                                        PMID:7929092
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">isozymes III and IV preferred biliverdin-IX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8424666
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of human biliverdin reduct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="PMID:8424666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that the purified human liver enzyme converts biliverdin to bilirubin. Core molecular function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link">
+                                        PMID:8424666
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Conversion of biliverdin to bilirubin is catalyzed by the cytosolic enzyme biliverdin reductase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8631357
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human biliverdin IXalpha reductase is a zinc-metalloprotein....
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="PMID:8631357" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of purified and E. coli-expressed human BVR-A converting biliverdin to bilirubin. Core molecular function; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link">
+                                        PMID:8631357
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Biliverdin IXalpha reductase (BVR) catalyzes the conversion of the heme b degradation product, biliverdin, to bilirubin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7929092
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biliverdin-IX alpha reductase and biliverdin-IX beta reducta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005829" data-r="PMID:7929092" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BVR-A activity was isolated from human liver cytosolic fractions, establishing the cytosol as the site of the catalytic activity (is_active_in). Accepted as the functional location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link">
+                                        PMID:7929092
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">in human liver cytosolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8424666
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of human biliverdin reduct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005829" data-r="PMID:8424666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence that biliverdin-to-bilirubin conversion is catalyzed by the cytosolic enzyme, supporting cytosol as the active-in location. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link">
+                                        PMID:8424666
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzed by the cytosolic enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106276" target="_blank" class="term-link">
+                                    GO:0106276
+                                </a>
+                            </span>
+                            <span class="term-label">biliberdin reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7929092
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biliverdin-IX alpha reductase and biliverdin-IX beta reducta...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106276" data-r="PMID:7929092" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that the purified human enzyme uses NADH as an electron donor for biliverdin reduction. NADH-specific child of the core activity; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link">
+                                        PMID:7929092
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The purified enzymes used NADPH and NADH as electron donors for the reduction of biliverdin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106276" target="_blank" class="term-link">
+                                    GO:0106276
+                                </a>
+                            </span>
+                            <span class="term-label">biliberdin reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8424666
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of human biliverdin reduct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106276" data-r="PMID:8424666" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for NADH-dependent activity (more effective cofactor at acidic pH). NADH-specific child of the core biliverdin reductase activity; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link">
+                                        PMID:8424666
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">At pH 6.0-7.0 the NADH was the more effective cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106276" target="_blank" class="term-link">
+                                    GO:0106276
+                                </a>
+                            </span>
+                            <span class="term-label">biliberdin reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8631357
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human biliverdin IXalpha reductase is a zinc-metalloprotein....
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0106276" data-r="PMID:8631357" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for NADH-dependent activity as part of the demonstrated dual pH/cofactor specificity of human BVR-A. NADH-specific child of core activity; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link">
+                                        PMID:8631357
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the human enzyme may also use NADH as cofactor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042167" target="_blank" class="term-link">
+                                    GO:0042167
+                                </a>
+                            </span>
+                            <span class="term-label">heme catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10858451
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Studies on the specificity of the tetrapyrrole substrate for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0042167" data-r="PMID:10858451" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BVR-A performs the terminal reduction step of heme catabolism, converting biliverdin IX-alpha to bilirubin. Core biological process; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BLVRA/BLVRA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin IXalpha, to bilirubin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of BVR-A in urinary exosomes. BVR-A is a soluble cytosolic enzyme that is a common cargo of secreted vesicles; this does not reflect a functional extracellular location. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0070062" data-r="PMID:20458337" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS detection of BVR-A in B-cell-derived exosomes. As with the urinary-exosome dataset, this reflects vesicular cargo rather than a functional extracellular location. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                                        PMID:20458337
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">highly purified B cell-derived exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-189384
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0005829" data-r="Reactome:R-HSA-189384" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing the BLVRA-catalyzed biliverdin-to-bilirubin reaction in the cytosol. Consistent with experimental localization; accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-189384
+
+                                </span>
+
+                                <div class="support-text">BIL is formed from the reduction of biliverdin (BV) by bilverdin reductases BLVRA and BLVRB</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                                    GO:0004074
+                                </a>
+                            </span>
+                            <span class="term-label">biliverdin reductase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10858451
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Studies on the specificity of the tetrapyrrole substrate for...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53004" data-a="GO:0004074" data-r="PMID:10858451" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct kinetic characterization of the human biliverdin-IX alpha reductase substrate specificity, supporting the core molecular function. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link">
+                                        PMID:10858451
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">at least one &#34;bridging propionate&#34; is necessary for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic NAD(P)H-dependent biliverdin reductase catalyzing the terminal step of heme catabolism: reduction of biliverdin IX-alpha to bilirubin IX-alpha, using NADH at acidic pH and NADPH (the probable physiological cofactor) at alkaline pH. Specific for the IX-alpha isomer.</h3>
+                <span class="vote-buttons" data-g="P53004" data-a="FUNCTION: Cytosolic NAD(P)H-dependent biliverdin reductase c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004074" target="_blank" class="term-link">
+                            biliverdin reductase [NAD(P)H] activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042167" target="_blank" class="term-link">
+                                heme catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/BLVRA/BLVRA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH cofactor</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link">
+                                PMID:8631357
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Biliverdin IXalpha reductase (BVR) catalyzes the conversion of the heme b degradation product, biliverdin, to bilirubin</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10858451" target="_blank" class="term-link">
+                            PMID:10858451
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Studies on the specificity of the tetrapyrrole substrate for human biliverdin-IXalpha reductase and biliverdin-IXbeta reductase. Structure-activity relationships define models for both active sites.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18463290" target="_blank" class="term-link">
+                            PMID:18463290
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human biliverdin reductase is an ERK activator; hBVR is an ERK nuclear transporter and is required for MAPK signaling.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29892012" target="_blank" class="term-link">
+                            PMID:29892012
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An interactome perturbation framework prioritizes damaging missense mutations for developmental disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7929092" target="_blank" class="term-link">
+                            PMID:7929092
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biliverdin-IX alpha reductase and biliverdin-IX beta reductase from human liver. Purification and characterization.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8424666" target="_blank" class="term-link">
+                            PMID:8424666
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and characterization of human biliverdin reductase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8631357" target="_blank" class="term-link">
+                            PMID:8631357
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human biliverdin IXalpha reductase is a zinc-metalloprotein. Characterization of purified and Escherichia coli expressed enzymes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-189384
+
+                    </span>
+                </div>
+
+                <div class="reference-title">BLVRA:Zn2+, BLVRB reduce BV to BIL</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BLVRA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53004" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="blvra-biliverdin-reductase-a-review-notes">BLVRA (Biliverdin reductase A) — review notes</h1>
+<p>UniProt: P53004 (BIEA_HUMAN). Gene: BLVRA (HGNC:1062). Taxon: Homo sapiens (NCBITaxon:9606).<br />
+EC 1.3.1.24. 296 aa; a Precursor (propeptide 1..2 removed, mature chain 3..296).</p>
+<h2 id="canonical-function-primary-biliverdin-reductase-a">Canonical function (primary): biliverdin reductase A</h2>
+<p>BLVRA catalyzes the <strong>second step of heme catabolism</strong>: reduction of the gamma-methene<br />
+bridge of biliverdin IXalpha to bilirubin IXalpha, with concomitant oxidation of NADH or<br />
+NADPH. It follows heme oxygenase (HMOX1/HMOX2), which opens the heme ring to biliverdin.</p>
+<ul>
+<li>"Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin IXalpha, to<br />
+  bilirubin with the concomitant oxidation of a NADH or NADPH cofactor"<br />
+  [file:human/BLVRA/BLVRA-uniprot.txt FUNCTION, ECO:0000269 PubMed:10858451/7929092/8424666/8631357].</li>
+<li>EC=1.3.1.24; Rhea RHEA:15797 (NAD+) and RHEA:15793 (NADP+); PhysiologicalDirection<br />
+  right-to-left (i.e. biliverdin -&gt; bilirubin) [file:human/BLVRA/BLVRA-uniprot.txt CATALYTIC ACTIVITY].</li>
+<li>PATHWAY: "Porphyrin-containing compound metabolism; protoheme degradation"<br />
+  [file:human/BLVRA/BLVRA-uniprot.txt PATHWAY].</li>
+<li>Reactome R-HSA-189384 "BLVRA:Zn2+, BLVRB reduce BV to BIL": "BIL is formed from the<br />
+  reduction of biliverdin (BV) by bilverdin reductases BLVRA and BLVRB"<br />
+  [reactome:R-HSA-189384].</li>
+</ul>
+<h3 id="dual-cofactor-dual-ph-unusual-property">Dual cofactor / dual pH — unusual property</h3>
+<ul>
+<li>"BVR is unique among enzymes characterized to date in that it has dual pH/cofactor<br />
+  (NADH, NADPH) specificity" [PMID:8631357 abstract].</li>
+<li>"At pH 6.0-7.0 the NADH was the more effective cofactor, whereas at pH 8.5-8.75 NADPH<br />
+  was the preferred cofactor" [PMID:8424666 abstract].</li>
+<li>"It was assumed that NADPH rather than NADH was the physiological electron donor in the<br />
+  intracellular reduction of biliverdin" [PMID:7929092 abstract]; UniProt: "NADPH,<br />
+  however, is the probable reactant in biological systems (PubMed:7929092)".</li>
+<li>KM: 3.2 uM for NADPH, 50 uM for NADH [file:human/BLVRA/BLVRA-uniprot.txt BIOPHYSICOCHEMICAL PROPERTIES].</li>
+<li>Alpha-isomer specific: "as previously discussed for the rat and ox enzymes, it appears<br />
+  that at least one 'bridging propionate' is necessary for optimal binding and catalytic<br />
+  activity, whereas two are preferred" (BVR-A prefers IXalpha; BLVRB handles IXbeta)<br />
+  [PMID:10858451 abstract]. "Does not reduce bilirubin IXbeta (PubMed:10858451)"<br />
+  [file:human/BLVRA/BLVRA-uniprot.txt FUNCTION].</li>
+</ul>
+<h3 id="zinc-metalloprotein">Zinc metalloprotein</h3>
+<ul>
+<li>"Atomic absorption spectroscopy indicates that the protein purified from human liver<br />
+  contains Zn at an approximately 1:1 molar ratio" [PMID:8631357 abstract]; UniProt<br />
+  COFACTOR "Binds 1 zinc ion per subunit" (Note is ECO:0000305, an inference)<br />
+  [file:human/BLVRA/BLVRA-uniprot.txt COFACTOR]. FT BINDING residues 280/281/292/293 for Zn2+<br />
+  are annotated with ECO:0000303 (from-statement in the paper), i.e. not a hard structural<br />
+  determination. The physiological necessity of Zn is debated (the 2H63 crystal structure<br />
+  is with NADP, monomer; no Zn in the FUNCTION statement). Treat zinc binding as<br />
+  KEEP_AS_NON_CORE / accept-as-cofactor rather than a core catalytic MF.</li>
+</ul>
+<h3 id="localization">Localization</h3>
+<ul>
+<li>Cytosol: "Conversion of biliverdin to bilirubin is catalyzed by the cytosolic enzyme<br />
+  biliverdin reductase" [PMID:8424666 abstract]; enzyme isolated from "human liver<br />
+  cytosolic fractions" [PMID:7929092 abstract]. UniProt SUBCELLULAR LOCATION "Cytoplasm,<br />
+  cytosol" [file:human/BLVRA/BLVRA-uniprot.txt].</li>
+<li>Tissue: Liver [file:human/BLVRA/BLVRA-uniprot.txt TISSUE SPECIFICITY]; HPA "Low tissue<br />
+  specificity" (broadly expressed).</li>
+<li>Extracellular exosome (HDA) from two large-scale exosome proteomics datasets<br />
+  (PMID:19056867 urinary exosomes; PMID:20458337 B-cell exosomes). These are<br />
+  high-throughput MS detections; the protein is a soluble cytosolic enzyme that is a<br />
+  common exosome cargo — KEEP_AS_NON_CORE (not a functional location).</li>
+</ul>
+<h2 id="moonlighting-function-genuine-second-role-kinase-mapk-scaffold">Moonlighting function (genuine second role): kinase / MAPK scaffold</h2>
+<p>Human BVR-A is a well-documented dual-specificity Ser/Thr/Tyr kinase and signaling<br />
+scaffold in insulin/IGF1/MAPK/PI3K and PKC pathways, and a transcriptional regulator<br />
+(leucine-zipper) for HMOX1.</p>
+<ul>
+<li>"Human biliverdin reductase (hBVR) is a recently described Ser/Thr/Tyr kinase in the<br />
+  MAPK insulin/insulin-like growth factor 1 (IGF1)-signaling cascade" [PMID:18463290<br />
+  abstract]. It forms a ternary MEK/ERK/hBVR complex, activates MEK1 and ERK1/2, is an<br />
+  ERK nuclear transporter required for Elk1 transcriptional activity, and "in the complex,<br />
+  hBVR functions as a scaffold" [PMID:18463290 full text, PMC2383961].</li>
+<li>Also documented (in this paper's discussion) as an activator of PKCbetaII and PKCzeta<br />
+  through protein-protein interaction <a href="https://pubmed.ncbi.nlm.nih.gov/18463290">PMID:18463290</a>.</li>
+</ul>
+<p>This role is not present in the curated GOA TSV (BLVRA-goa.tsv). It appears only as<br />
+electronic IEA:Ensembl projections in the UniProt DR GO section<br />
+(GO:0004674 protein serine/threonine kinase activity; GO:0000978 RNA Pol II CRM<br />
+sequence-specific DNA binding; GO:0005634 nucleus; GO:0009986 cell surface). Because it<br />
+is a genuine, experimentally described function of the human protein, it is captured as a<br />
+<strong>second core function</strong> (protein serine/threonine kinase activity, GO:0004674), grounded<br />
+in PMID:18463290, rather than being ignored. NB the kinase/scaffold role has been assayed<br />
+almost entirely by one group (Maines lab); flag as an expert question.</p>
+<h2 id="protein-interactions-ipi-go0005515-bare-protein-binding">Protein interactions (IPI, GO:0005515) — bare "protein binding"</h2>
+<p>GOA has four IPI "protein binding" annotations. Per policy these are not removed (they are<br />
+experimental IPI); marked MARK_AS_OVER_ANNOTATED because bare protein binding is<br />
+uninformative. The with/from partners:<br />
+- PMID:18463290 -&gt; UniProtKB:P28482 (MAPK1/ERK2) — meaningful (the ERK-scaffold role);<br />
+  UniProt INTERACTION lists P53004–P28482 MAPK1.<br />
+- PMID:25416956 / PMID:29892012 / PMID:31515488 -&gt; UniProtKB:Q8TBB1 (LNX1) — large-scale<br />
+  Y2H/interactome maps; UniProt INTERACTION lists P53004–Q8TBB1 LNX1 (NbExp=5).<br />
+  These interactome papers do not discuss BLVRA specifically in the cached text; they are<br />
+  high-throughput screens. Kept as over-annotated bare protein binding.</p>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Hyperbiliverdinemia (HBLVD, MIM:614156) / "green jaundice": "It is due to increased<br />
+  biliverdin resulting from inefficient conversion to bilirubin. Affected individuals<br />
+  appear to have symptoms only in the context of obstructive cholestasis and/or liver<br />
+  failure" [file:human/BLVRA/BLVRA-uniprot.txt DISEASE, ECO:0000269 PubMed:19580635].</li>
+</ul>
+<h2 id="family">Family</h2>
+<ul>
+<li>Gfo/Idh/MocA family, Biliverdin reductase subfamily; NAD(P)-binding Rossmann-fold + C-terminal<br />
+  cat domain [file:human/BLVRA/BLVRA-uniprot.txt SIMILARITY]. PANTHER PTHR43377 BILIVERDIN REDUCTASE A.</li>
+</ul>
+<h2 id="annotation-review-summary">Annotation-review summary</h2>
+<ul>
+<li>Core MF: GO:0004074 biliverdin reductase [NAD(P)H] activity (ACCEPT experimental IDA;<br />
+  the NADH- and NADPH-specific children GO:0106276/GO:0106277 are also experimentally<br />
+  supported and ACCEPTed as they capture the dual-cofactor specificity).</li>
+<li>Core BP: GO:0042167 heme catabolic process (ACCEPT IDA).</li>
+<li>Second core MF (moonlighting): GO:0004674 protein serine/threonine kinase activity<br />
+  (from PMID:18463290; not in GOA, added as core_function).</li>
+<li>Cytosol IDA (GO:0005829) ACCEPT; cytoplasm IEA / cytosol IEA/TAS ACCEPT or non-core.</li>
+<li>nucleotide binding (GO:0000166), zinc ion binding (GO:0008270): IEA cofactor/ligand-binding,<br />
+  KEEP_AS_NON_CORE (real but sub-functional / part of the catalytic mechanism).</li>
+<li>extracellular exosome (GO:0070062, HDA x2): KEEP_AS_NON_CORE (HTP cargo, not functional site).</li>
+<li>protein binding IPI x4 (GO:0005515): MARK_AS_OVER_ANNOTATED (bare protein binding).</li>
+<li>IEA biliverdin reductase duplicates (IBA/IEA of GO:0004074, GO:0106276, GO:0106277):<br />
+  ACCEPT / KEEP as they agree with the experimental evidence.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53004
+gene_symbol: BLVRA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  BLVRA (biliverdin reductase A, BVR-A; EC 1.3.1.24) is a soluble cytosolic
+  NAD(P)H-dependent oxidoreductase that catalyzes the second and terminal step of
+  heme catabolism: reduction of the gamma-methene bridge of biliverdin IX-alpha to
+  bilirubin IX-alpha, the yellow, lipophilic, potently antioxidant bile pigment.
+  It acts downstream of heme oxygenase (HMOX1/HMOX2), which cleaves heme to
+  biliverdin. BVR-A is unusual among enzymes in having dual cofactor and dual pH
+  specificity: it uses NADH at acidic pH and NADPH at alkaline pH, with NADPH the
+  probable physiological electron donor. The enzyme is specific for the IX-alpha
+  isomer (the IX-beta isomer is handled by the paralog BLVRB) and adopts a
+  Gfo/Idh/MocA-family fold with an N-terminal NAD(P)-binding Rossmann domain. It is
+  broadly expressed, with high activity in liver. Beyond its metabolic role, human
+  BVR-A moonlights as a dual-specificity Ser/Thr/Tyr protein kinase and signaling
+  scaffold that participates in insulin/IGF1, PKC, PI3K and MAPK/ERK signaling,
+  functioning as an ERK activator and nuclear transporter and thereby linking
+  cytoplasmic signaling to gene regulation. Loss-of-function variants cause
+  hyperbiliverdinemia (green jaundice), a green discoloration of skin and body
+  fluids that typically manifests in the setting of obstructive cholestasis or
+  liver failure.
+existing_annotations:
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function of BLVRA, propagated by phylogenetic inference from
+      the biliverdin reductase family tree (PANTHER PTN008681150). Fully consistent
+      with the direct experimental characterization of the human enzyme.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin
+        IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH
+        cofactor
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro-derived binding term reflecting the NAD(P)-binding Rossmann
+      domain. True but uninformative on its own; it describes a substructure of the
+      catalytic mechanism rather than a distinct function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        KM=3.2 uM for NADPH
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation of the core MF via InterPro/EC mapping (EC:1.3.1.24).
+      Agrees with the experimental IDA annotations; retained as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin
+        IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH
+        cofactor
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct but less specific than the experimentally supported cytosol
+      annotation. The enzyme is a soluble cytosolic protein; keep as non-core in
+      favor of the more precise GO:0005829 (cytosol).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Cytoplasm, cytosol
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic subcellular-location annotation consistent with experimental IDA
+      evidence that BVR-A is a cytosolic enzyme. Retained as the functional location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Cytoplasm, cytosol
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      BVR-A purified from human liver contains ~1 Zn per subunit and exogenous Zn
+      inhibits the NADPH-dependent (but not NADH-dependent) activity, so zinc
+      binding is real. However UniProt records the cofactor/binding assignment as an
+      inference (ECO:0000305/ECO:0000303) and the crystal structure (2H63) is
+      NADP-bound without a modeled zinc; its physiological requirement is not fully
+      established. Keep as a non-core cofactor-binding attribute rather than a core MF.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Binds 1 zinc ion per subunit.
+- term:
+    id: GO:0042167
+    label: heme catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process: BVR-A performs the terminal reduction step of the
+      heme degradation pathway. Electronic annotation agrees with the experimental
+      IDA annotation to the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Porphyrin-containing compound metabolism; protoheme
+- term:
+    id: GO:0106276
+    label: biliberdin reductase (NADH) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NADH-specific child of the core biliverdin reductase activity. Electronic
+      (Rhea/ARBA) annotation matching the experimentally demonstrated NADH-dependent
+      activity at acidic pH; retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Uses the reactants NADH or NADPH depending on the
+- term:
+    id: GO:0106277
+    label: biliverdin reductase (NADPH) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NADPH-specific child of the core activity (NADPH is the probable physiological
+      cofactor). Electronic Rhea annotation agreeing with experimental EXP/IDA
+      evidence; retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        NADPH, however, is the probable reactant in biological
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18463290
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI capturing the BVR-A interaction with MAPK1/ERK2 (UniProtKB:P28482), which
+      underlies the moonlighting ERK-scaffold function. Real and mechanistically
+      meaningful, but the bare &#34;protein binding&#34; term is uninformative; the specific
+      function is better represented by the protein serine/threonine kinase /
+      ERK-scaffold core function. Not removed (experimental IPI); flagged as
+      over-annotation of the generic term.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:18463290
+      supporting_text: &gt;-
+        Human biliverdin reductase (hBVR) is a recently described Ser/Thr/Tyr kinase
+        in the MAPK insulin/insulin-like growth factor 1 (IGF1)-signaling cascade
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI from a large-scale human interactome map recording an interaction with
+      LNX1 (UniProtKB:Q8TBB1). Bare &#34;protein binding&#34; is uninformative and the
+      biological significance of this high-throughput interaction is unclear. Not
+      removed (experimental IPI); marked as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29892012
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI from an interactome-perturbation study, again recording the LNX1
+      (Q8TBB1) interaction. Uninformative bare protein-binding term; not removed
+      (experimental IPI) but marked as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI from a large-scale variant-interaction study, LNX1 (Q8TBB1) partner.
+      Bare protein binding; not removed (experimental IPI) but marked as
+      over-annotation of an uninformative generic term.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence-based (HPA) localization to the cytosol, consistent with
+      the biochemically established cytosolic localization of BVR-A. Accepted as the
+      functional location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Cytoplasm, cytosol
+- term:
+    id: GO:0106276
+    label: biliberdin reductase (NADH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:10858451
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) support for the NADH-dependent biliverdin reductase
+      activity, from kinetic characterization of the human enzyme. Core catalytic
+      function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Uses the reactants NADH or NADPH depending on the
+- term:
+    id: GO:0106277
+    label: biliverdin reductase (NADPH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:10858451
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support for the NADPH-dependent biliverdin reductase activity.
+      NADPH is the probable physiological cofactor. Core catalytic function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        NADPH, however, is the probable reactant in biological
+- term:
+    id: GO:0106277
+    label: biliverdin reductase (NADPH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:7929092
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support from purification of human liver biliverdin-IX alpha
+      reductase; NADPH assumed to be the physiological electron donor. Core
+      catalytic function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7929092
+      supporting_text: &gt;-
+        It was assumed that NADPH rather than NADH was the
+- term:
+    id: GO:0106277
+    label: biliverdin reductase (NADPH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:8424666
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support from purification/characterization of human biliverdin
+      reductase, showing dual cofactor use with NADPH preferred at alkaline pH.
+      Core catalytic function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8424666
+      supporting_text: &gt;-
+        At pH 6.0-7.0 the NADH was the more effective cofactor, whereas at pH
+- term:
+    id: GO:0106277
+    label: biliverdin reductase (NADPH) activity
+  evidence_type: EXP
+  original_reference_id: PMID:8631357
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental support from characterization of purified and recombinant human
+      BVR-A, demonstrating dual pH/cofactor specificity including NADPH use. Core
+      catalytic function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8631357
+      supporting_text: &gt;-
+        BVR is unique among enzymes characterized to date in that it has dual
+        pH/cofactor (NADH, NADPH) specificity
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IDA
+  original_reference_id: PMID:7929092
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of purified human liver biliverdin-IX alpha reductase. This is a
+      primary line of experimental evidence for the core molecular function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7929092
+      supporting_text: &gt;-
+        isozymes III and IV preferred biliverdin-IX
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IDA
+  original_reference_id: PMID:8424666
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration that the purified human liver enzyme
+      converts biliverdin to bilirubin. Core molecular function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8424666
+      supporting_text: &gt;-
+        Conversion of biliverdin to bilirubin is catalyzed by the cytosolic enzyme
+        biliverdin reductase
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IDA
+  original_reference_id: PMID:8631357
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of purified and E. coli-expressed human BVR-A converting
+      biliverdin to bilirubin. Core molecular function; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8631357
+      supporting_text: &gt;-
+        Biliverdin IXalpha reductase (BVR) catalyzes the conversion of the heme b
+        degradation product, biliverdin, to bilirubin
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:7929092
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      BVR-A activity was isolated from human liver cytosolic fractions,
+      establishing the cytosol as the site of the catalytic activity
+      (is_active_in). Accepted as the functional location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7929092
+      supporting_text: &gt;-
+        in human liver cytosolic
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:8424666
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Experimental evidence that biliverdin-to-bilirubin conversion is catalyzed by
+      the cytosolic enzyme, supporting cytosol as the active-in location. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8424666
+      supporting_text: &gt;-
+        catalyzed by the cytosolic enzyme
+- term:
+    id: GO:0106276
+    label: biliberdin reductase (NADH) activity
+  evidence_type: IDA
+  original_reference_id: PMID:7929092
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that the purified human enzyme uses NADH as an electron donor
+      for biliverdin reduction. NADH-specific child of the core activity; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7929092
+      supporting_text: &gt;-
+        The purified enzymes used NADPH and NADH as electron donors for the
+        reduction of biliverdin
+- term:
+    id: GO:0106276
+    label: biliberdin reductase (NADH) activity
+  evidence_type: IDA
+  original_reference_id: PMID:8424666
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for NADH-dependent activity (more effective cofactor at acidic
+      pH). NADH-specific child of the core biliverdin reductase activity; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8424666
+      supporting_text: &gt;-
+        At pH 6.0-7.0 the NADH was the more effective cofactor
+- term:
+    id: GO:0106276
+    label: biliberdin reductase (NADH) activity
+  evidence_type: IDA
+  original_reference_id: PMID:8631357
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for NADH-dependent activity as part of the demonstrated dual
+      pH/cofactor specificity of human BVR-A. NADH-specific child of core activity;
+      accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8631357
+      supporting_text: &gt;-
+        the human enzyme may also use NADH as cofactor
+- term:
+    id: GO:0042167
+    label: heme catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:10858451
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      BVR-A performs the terminal reduction step of heme catabolism, converting
+      biliverdin IX-alpha to bilirubin. Core biological process; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+      supporting_text: &gt;-
+        Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin
+        IXalpha, to bilirubin
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection of BVR-A in urinary exosomes. BVR-A is a soluble
+      cytosolic enzyme that is a common cargo of secreted vesicles; this does not
+      reflect a functional extracellular location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &gt;-
+        the analysis identified 1132 proteins unambiguously
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS detection of BVR-A in B-cell-derived exosomes. As with the
+      urinary-exosome dataset, this reflects vesicular cargo rather than a functional
+      extracellular location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:20458337
+      supporting_text: &gt;-
+        highly purified B cell-derived exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-189384
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing the BLVRA-catalyzed
+      biliverdin-to-bilirubin reaction in the cytosol. Consistent with experimental
+      localization; accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-189384
+      supporting_text: &gt;-
+        BIL is formed from the reduction of biliverdin (BV) by bilverdin reductases
+        BLVRA and BLVRB
+- term:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  evidence_type: IDA
+  original_reference_id: PMID:10858451
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct kinetic characterization of the human biliverdin-IX alpha reductase
+      substrate specificity, supporting the core molecular function. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10858451
+      supporting_text: &gt;-
+        at least one &#34;bridging propionate&#34; is necessary for
+core_functions:
+- description: &gt;-
+    Cytosolic NAD(P)H-dependent biliverdin reductase catalyzing the terminal step
+    of heme catabolism: reduction of biliverdin IX-alpha to bilirubin IX-alpha,
+    using NADH at acidic pH and NADPH (the probable physiological cofactor) at
+    alkaline pH. Specific for the IX-alpha isomer.
+  supported_by:
+  - reference_id: file:human/BLVRA/BLVRA-uniprot.txt
+    supporting_text: &gt;-
+      Reduces the gamma-methene bridge of the open tetrapyrrole, biliverdin
+      IXalpha, to bilirubin with the concomitant oxidation of a NADH or NADPH
+      cofactor
+  - reference_id: PMID:8631357
+    supporting_text: &gt;-
+      Biliverdin IXalpha reductase (BVR) catalyzes the conversion of the heme b
+      degradation product, biliverdin, to bilirubin
+  molecular_function:
+    id: GO:0004074
+    label: biliverdin reductase [NAD(P)H] activity
+  directly_involved_in:
+  - id: GO:0042167
+    label: heme catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10858451
+  title: Studies on the specificity of the tetrapyrrole substrate for human biliverdin-IXalpha
+    reductase and biliverdin-IXbeta reductase. Structure-activity relationships define
+    models for both active sites.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; establishes BVR-A IX-alpha isomer specificity (does
+      not reduce IX-beta) and active-site model. Supports the core reductase MF.
+- id: PMID:18463290
+  title: Human biliverdin reductase is an ERK activator; hBVR is an ERK nuclear transporter
+    and is required for MAPK signaling.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available. Primary evidence for the moonlighting kinase/ERK-scaffold
+      function (MEK/ERK/hBVR ternary complex, ERK nuclear transport for Elk1). Also
+      the source of the MAPK1/ERK2 (P28482) IPI. Assays in 293A cells and in vitro.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput urinary-exosome proteome; BVR-A is a bulk cargo detection, not
+      a functional-location study. Supports only the non-core exosome annotation.
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput B-cell exosome proteome; BVR-A is a bulk cargo detection.
+      Supports only the non-core exosome annotation.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome map; source of an LNX1 (Q8TBB1) IPI. Does not discuss
+      BLVRA specifically; supports only the uninformative bare protein-binding
+      annotation.
+- id: PMID:29892012
+  title: An interactome perturbation framework prioritizes damaging missense mutations
+    for developmental disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-perturbation study; source of an LNX1 (Q8TBB1) IPI. High-throughput,
+      supports only the bare protein-binding annotation.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale variant-interaction study; source of an LNX1 (Q8TBB1) IPI.
+      High-throughput; supports only the bare protein-binding annotation.
+- id: PMID:7929092
+  title: Biliverdin-IX alpha reductase and biliverdin-IX beta reductase from human
+    liver. Purification and characterization.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. Purification of human liver BVR-A; dual NADPH/NADH
+      cofactor use, NADPH assumed physiological, cytosolic localization, IX-alpha
+      isomer preference. Supports core reductase MF, cytosol location, and BP.
+- id: PMID:8424666
+  title: Purification and characterization of human biliverdin reductase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. Purified human liver reductase; cytosolic; dual
+      cofactor/dual pH (NADH at acidic pH, NADPH at alkaline pH). Supports core
+      reductase MF and cytosol location.
+- id: PMID:8631357
+  title: Human biliverdin IXalpha reductase is a zinc-metalloprotein. Characterization
+    of purified and Escherichia coli expressed enzymes.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache. cDNA cloning + characterization of human BVR-A; dual
+      pH/cofactor specificity; ~1:1 Zn per subunit (Zn inhibits NADPH- but not
+      NADH-dependent activity). Supports core reductase MF and the zinc-binding
+      annotation.
+- id: Reactome:R-HSA-189384
+  title: BLVRA:Zn2+, BLVRB reduce BV to BIL
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the cytosolic biliverdin-to-bilirubin step catalyzed by
+      BLVRA (and BLVRB). Supports the core reductase MF, BP, and cytosol location.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEDS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PEDS1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A5PLL7" target="_blank" class="term-link">
+                        A5PLL7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PEDS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A5PLL7" data-a="DESCRIPTION: PEDS1 (plasmanylethanolamine desaturase 1; formerl..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PEDS1 (plasmanylethanolamine desaturase 1; formerly TMEM189, also known as KUA) is an endoplasmic reticulum multi-pass membrane enzyme of the fatty acid desaturase CarF family (a non-heme di-iron desaturase). It catalyzes the final, plasmalogen-defining step of ether-phospholipid biosynthesis: introduction of the characteristic 1-O-alk-1&#39;-enyl (vinyl ether) double bond at the sn-1 position of plasmanylethanolamine to form plasmenylethanolamine (ethanolamine plasmalogen), using molecular oxygen and reduced cytochrome b5 as electron donor (EC 1.14.19.77). This reaction is specific to plasmalogen biosynthesis and generates the first plasmalogen in the pathway; downstream plasmenylcholines are derived from plasmenylethanolamine. Catalysis depends on two histidine-box motifs and additional conserved histidine residues that coordinate the di-iron center. Loss of PEDS1 markedly reduces cellular plasmalogens and causes accumulation of the plasmanylethanolamine substrates. Plasmalogens are abundant glycerophospholipids, particularly in brain, cardiac, and immune-cell membranes, with roles in membrane organization, signaling, and antioxidant protection.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050207" target="_blank" class="term-link">
+                                    GO:0050207
+                                </a>
+                            </span>
+                            <span class="term-label">plasmanylethanolamine desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0050207" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the gene&#39;s central, experimentally established molecular function. This is PEDS1&#39;s core catalytic activity (vinyl-ether bond formation in plasmanylethanolamine) and is directly supported by IDA and IMP.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the transmembrane protein 189 gene (TMEM189; Tmem189 for the murine gene) encodes PEDS activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the site of action, consistent with the experimentally determined ER-membrane localization of this multi-pass membrane enzyme. Correct and core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Plasmanylethanolamine desaturase involved in plasmalogen</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0008611" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the biological process. PEDS1 performs the plasmalogen-defining step of ether (plasmalogen) lipid biosynthesis; correct and core. Directly supported by IDA and IMP.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzymatic reaction is specific for plasmalogen biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) transfer of the ER-membrane location from the mouse ortholog (Q99LQ7) and UniProt-SubCell. Redundant with the experimental IDA/EXP/IBA ER-membrane annotations but correct; this is the gene&#39;s own core location, so it is accepted rather than flagged as over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050207" target="_blank" class="term-link">
+                                    GO:0050207
+                                </a>
+                            </span>
+                            <span class="term-label">plasmanylethanolamine desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0050207" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of the core catalytic activity based on the mouse ortholog, RHEA reactions, and EC 1.14.19.77. Redundant with the experimental IDA/IMP annotations but correct; accepted as the gene&#39;s own core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.14.19.77</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale neurodegenerative-disease yeast two-hybrid interactome screen, capturing binary interactions with LAMP2 and SH3GLB1. Uninformative about PEDS1&#39;s molecular function and not tied to any characterized complex or mechanism. Per policy, an IPI protein-binding annotation is not removed but marked as over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">systematic yeast two-hybrid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0008611" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Ensembl Compara, IEA) transfer of the ether/plasmalogen lipid biosynthetic process from the mouse ortholog. Correct and core; redundant with the experimental IDA/IMP annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzymatic reaction is specific for plasmalogen biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0006631" data-r="GO_REF:0000041" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-general IEA from UniPathway (UPA00199, &#34;fatty acid metabolism&#34;) mapping. PEDS1 acts on the sn-1 alkyl chain of an ether glycerophospholipid (plasmanylethanolamine), not on free fatty acids or fatty-acyl metabolism as such. The specific, experimentally supported process is ether lipid / plasmalogen biosynthesis (GO:0008611); fatty acid metabolic process is a distant, uninformative parent-like term. Kept but flagged as over-annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It introduces the alk-1′-enyl ether double bond (vinyl ether bond) into plasmanylethanolamines, yielding plasmenylethanolamines</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (HPA immunofluorescence, IDA) localization to the endoplasmic reticulum. Correct but less specific than the endoplasmic reticulum membrane (GO:0005789) term, which better captures this multi-pass membrane enzyme&#39;s location. Kept as accurate but non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment but subsumed by the more specific ER membrane location that represents the site of catalysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">GO:0005783; C:endoplasmic reticulum; IDA:HPA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11076860" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11076860
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fusion of the human gene for the polyubiquitination coeffect...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005789" data-r="PMID:11076860" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental localization to the ER membrane. This annotation derives from the original Kua (PEDS1/TMEM189) characterization; the cached abstract reports Kua localizing to cytoplasmic structures, while the curator-assigned ER-membrane location rests on the full text (not in cache). The ER-membrane location is independently confirmed by IDA (PMID:31604315), HPA, and UniProt, so the annotation is accepted, deferring to the experimental curation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32209662
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The TMEM189 gene encodes plasmanylethanolamine desaturase wh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0008611" data-r="PMID:32209662" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support for the plasmalogen (ether lipid) biosynthetic process: TMEM189/PEDS1 knockout in human HAP1 cells and Tmem189-KO mice lose PEDS activity and plasmalogens and accumulate plasmanylethanolamine substrates. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">plasmanylethanolamines, the substrates of PEDS, accumulated in TMEM189-deficient HAP1 cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050207" target="_blank" class="term-link">
+                                    GO:0050207
+                                </a>
+                            </span>
+                            <span class="term-label">plasmanylethanolamine desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32209662
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The TMEM189 gene encodes plasmanylethanolamine desaturase wh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0050207" data-r="PMID:32209662" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support for the core catalytic activity: TMEM189 expression confers PEDS activity, knockout/knockdown abolishes it, and every conserved histidine of the di-iron motif is essential. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the transmembrane protein 189 gene (TMEM189; Tmem189 for the murine gene) encodes PEDS activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                        PMID:32209662
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Each of the eight histidines conserved in pfam10250 was absolutely essential for PEDS activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31604315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bacterial light response reveals an orphan desaturase for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0005789" data-r="PMID:31604315" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) localization to the ER membrane, consistent with the TMEM189-GFP ER-Tracker colocalization reported for this multi-pass membrane enzyme. Core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PEDS1/PEDS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                    GO:0008611
+                                </a>
+                            </span>
+                            <span class="term-label">ether lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31604315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bacterial light response reveals an orphan desaturase for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0008611" data-r="PMID:31604315" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) support for the plasmalogen (ether lipid) biosynthetic process. Knockout of TMEM189 in a human cell line eliminated plasmalogens, establishing PEDS1&#39;s requirement for plasmalogen synthesis. Core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link">
+                                        PMID:31604315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">knockout of TMEM189 in a human cell line eliminated plasmalogens</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050207" target="_blank" class="term-link">
+                                    GO:0050207
+                                </a>
+                            </span>
+                            <span class="term-label">plasmanylethanolamine desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31604315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A bacterial light response reveals an orphan desaturase for ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A5PLL7" data-a="GO:0050207" data-r="PMID:31604315" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) identification of PEDS1/TMEM189 as the human plasmanylethanolamine desaturase, the enzyme essential for vinyl-ether bond formation; human TMEM189 functionally replaced the bacterial CarF homolog. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link">
+                                        PMID:31604315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">plasmanylethanolamine desaturase activity that is essential for vinyl ether bond</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link">
+                                        PMID:31604315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">TMEM189 and other animal homologs could functionally replace CarF</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Plasmanylethanolamine desaturase (PEDS): introduces the 1-O-alk-1&#39;-enyl (vinyl ether) double bond into plasmanylethanolamine to form plasmenylethanolamine, the plasmalogen-defining and pathway-committing step of ether-phospholipid biosynthesis, using O2 and reduced cytochrome b5.</h3>
+                <span class="vote-buttons" data-g="A5PLL7" data-a="FUNCTION: Plasmanylethanolamine desaturase (PEDS): introduce..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050207" target="_blank" class="term-link">
+                            plasmanylethanolamine desaturase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008611" target="_blank" class="term-link">
+                                ether lipid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link">
+                                PMID:31604315
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">plasmanylethanolamine desaturase activity that is essential for vinyl ether bond</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                PMID:32209662
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">It introduces the alk-1′-enyl ether double bond (vinyl ether bond) into plasmanylethanolamines, yielding plasmenylethanolamines</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                                PMID:32209662
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This enzymatic reaction is specific for plasmalogen biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PEDS1/PEDS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Plasmanylethanolamine desaturase involved in plasmalogen</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11076860" target="_blank" class="term-link">
+                            PMID:11076860
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Fusion of the human gene for the polyubiquitination coeffector UEV1 with Kua, a newly identified gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31604315" target="_blank" class="term-link">
+                            PMID:31604315
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A bacterial light response reveals an orphan desaturase for human plasmalogen synthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32209662" target="_blank" class="term-link">
+                            PMID:32209662
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The TMEM189 gene encodes plasmanylethanolamine desaturase which introduces the characteristic vinyl ether double bond into plasmalogens.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PEDS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A5PLL7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="peds1-plasmanylethanolamine-desaturase-1-formerly-tmem189-kua-review-notes">PEDS1 (Plasmanylethanolamine desaturase 1; formerly TMEM189 / KUA) — review notes</h1>
+<p>UniProt: A5PLL7 (PEDS1_HUMAN), HGNC:16735, chromosome 20, 270 aa.<br />
+EC 1.14.19.77. Gene synonyms: TMEM189, PEDS, KUA.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>PEDS1 is the long-sought <strong>plasmanylethanolamine desaturase (PEDS)</strong>, the enzyme that<br />
+catalyzes the <strong>final, plasmalogen-defining step</strong> of ether-phospholipid (plasmalogen)<br />
+biosynthesis: it introduces the characteristic <strong>1-O-alk-1'-enyl (vinyl ether) double<br />
+bond</strong> at the sn-1 position of plasmanylethanolamine to yield plasmenylethanolamine<br />
+(ethanolamine plasmalogen), using O2 and reduced cytochrome b5 as the electron donor.</p>
+<ul>
+<li>The reaction and EC are authoritative in UniProt: "EC=1.14.19.77" and the RHEA reaction<br />
+  "a 1-(1,2-saturated alkyl)-2-acyl-sn-glycero-3-phosphoethanolamine + 2 Fe(II)-[cytochrome b5]</li>
+<li>O2 + 2 H(+) = a 1-O-(1Z-alkenyl)-2-acyl-sn-glycero-3-phosphoethanolamine + 2 Fe(III)-[cytochrome b5]</li>
+<li>2 H2O" [file:human/PEDS1/PEDS1-uniprot.txt].</li>
+<li>FUNCTION (UniProt): "Plasmanylethanolamine desaturase involved in plasmalogen biogenesis<br />
+  in the endoplasmic reticulum membrane" [file:human/PEDS1/PEDS1-uniprot.txt].</li>
+</ul>
+<h2 id="gene-identity-peds1-tmem189">Gene identity (PEDS1 = TMEM189)</h2>
+<p>Two independent 2019/2020 papers identified this orphan gene as PEDS:</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/31604315" title="A bacterial light response reveals an orphan desaturase for human plasmalogen synthesis">PMID:31604315</a>:<br />
+  "We discovered the plasmanylethanolamine desaturase activity that is essential for vinyl ether bond<br />
+  formation in a bacterial enzyme, CarF, which is a homolog of the human enzyme TMEM189." Human<br />
+  TMEM189 and other animal homologs functionally replaced the Myxococcus CarF, and<br />
+  "knockout of TMEM189 in a human cell line eliminated plasmalogens." (Science; abstract-only in cache,<br />
+<code>full_text_available: false</code>.)</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32209662" title="The TMEM189 gene encodes plasmanylethanolamine desaturase which introduces the   characteristic vinyl ether double bond into plasmalogens">PMID:32209662</a>: "the transmembrane protein 189 gene<br />
+  (TMEM189 ...) encodes PEDS activity"; PEDS "introduces the alk-1′-enyl ether double bond (vinyl ether<br />
+  bond) into plasmanylethanolamines, yielding plasmenylethanolamines"; TMEM189 knockout HAP1 cells lose<br />
+  PEDS activity and plasmalogens and accumulate the plasmanylethanolamine substrates; Tmem189-KO mice<br />
+  also lack PEDS activity and plasmalogens. (PNAS; <code>full_text_available: true</code>.) Note this paper cites the<br />
+  historic EC as 1.14.99.19; the current UniProt/Rhea EC is 1.14.19.77.</li>
+</ul>
+<h2 id="enzyme-family-mechanism">Enzyme family / mechanism</h2>
+<ul>
+<li>Belongs to the <strong>fatty acid desaturase CarF family</strong> (UniProt SIMILARITY); Pfam PF10520<br />
+  (Lipid_desat), InterPro IPR052601 (Plasmalogen_desaturase).</li>
+<li>Non-heme <strong>di-iron</strong> desaturase type: <a href="https://pubmed.ncbi.nlm.nih.gov/32209662">PMID:32209662</a> "the enzyme has properties similar to<br />
+  non–heme-containing di-iron desaturases", characterized by a motif of eight conserved histidines.</li>
+<li>Two histidine boxes (His box-1 186..190; His box-2 213..217) plus additional His residues are<br />
+  essential for catalysis; UniProt DOMAIN: "Histidine box-1 and -2 together with other histidine<br />
+  residues are essential for catalytic activity" (mutagenesis H95/H120/H121/H130/H186/H190/H214/H217/H218<br />
+  → loss of activity) [file:human/PEDS1/PEDS1-uniprot.txt; PMID:31604315]. In PNAS the equivalent murine<br />
+  eight histidines are "absolutely essential for PEDS activity" <a href="https://pubmed.ncbi.nlm.nih.gov/32209662">PMID:32209662</a>.</li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<ul>
+<li>Endoplasmic reticulum membrane, multi-pass. UniProt SUBCELLULAR LOCATION cites PMID:11076860 and<br />
+  PMID:31604315. A TMEM189-GFP fusion "showed localization in the endoplasmic reticulum by an overlay<br />
+  of the green fluorescence signal with ER Tracker Red" <a href="https://pubmed.ncbi.nlm.nih.gov/32209662">PMID:32209662</a>. PEDS enzymatic activity is<br />
+  "membrane-bound and likely originating from the endoplasmic reticulum" (microsomal) <a href="https://pubmed.ncbi.nlm.nih.gov/32209662">PMID:32209662</a>.</li>
+<li>HPA IDA (GO_REF:0000052) localizes to endoplasmic reticulum [file:human/PEDS1/PEDS1-goa.tsv].</li>
+</ul>
+<h2 id="kua-kua-uev1-peds1-ube2v1-historical">Kua / KUA-UEV1 (PEDS1-UBE2V1) — historical</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/11076860" title="Fusion of the human gene for the polyubiquitination coeffector UEV1 with Kua">PMID:11076860</a>:<br />
+  named the "Kua" gene (=PEDS1/TMEM189), a "novel class of conserved proteins with juxtamembrane<br />
+  histidine-rich motifs"; PEDS1 and UBE2V1 are adjacent genes that can form a fused Kua-UEV protein.<br />
+  The abstract reports "both Kua and Kua-UEV localize to cytoplasmic structures" (not resolved to ER<br />
+  in the abstract; ER-membrane EXP annotation from this paper rests on full text not in cache). This<br />
+  is the origin of the EXP ER-membrane annotation and of the PEDS1-UBE2V1 fusion note in UniProt.</li>
+</ul>
+<h2 id="interactions">Interactions</h2>
+<ul>
+<li>IntAct/IPI protein binding (GO:0005515) to LAMP2 (P13473-2) and SH3GLB1 (Q9Y371), from<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32814053">PMID:32814053</a>, a large-scale neurodegenerative-disease <strong>yeast two-hybrid</strong> interactome<br />
+  ("systematic yeast two-hybrid interaction screening"). No functional interpretation for PEDS1;<br />
+  these are high-throughput binary interactions, uninformative about molecular function.</li>
+</ul>
+<h2 id="curation-decisions-high-level">Curation decisions (high level)</h2>
+<ul>
+<li>Core MF: <strong>GO:0050207 plasmanylethanolamine desaturase activity</strong> (OLS-verified id; oxidoreductase<br />
+  branch; matches GOA + UniProt DR). Supported by IDA (PMID:31604315), IMP (PMID:32209662).</li>
+<li>Core BP: <strong>GO:0008611 ether lipid biosynthetic process</strong> (OLS-verified). Supported by IDA/IMP.</li>
+<li>Core CC: <strong>GO:0005789 endoplasmic reticulum membrane</strong> (IDA PMID:31604315; EXP PMID:11076860; IBA).</li>
+<li>ACCEPT the experimental MF/BP/CC and the well-supported IBA/IEA of the gene's own core functions.</li>
+<li>GO:0006631 fatty acid metabolic process (IEA UniPathway) — over-general parent of the real BP;<br />
+  MARK_AS_OVER_ANNOTATED (keep, but not core; PEDS1 does not act on free fatty acids).</li>
+<li>GO:0005515 protein binding (IPI, PMID:32814053) — bare "protein binding", HT-Y2H; MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0005783 endoplasmic reticulum (IDA HPA) — correct but less specific than ER membrane; KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A5PLL7
+gene_symbol: PEDS1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PEDS1 (plasmanylethanolamine desaturase 1; formerly TMEM189, also known as KUA)
+  is an endoplasmic reticulum multi-pass membrane enzyme of the fatty acid desaturase
+  CarF family (a non-heme di-iron desaturase). It catalyzes the final, plasmalogen-defining
+  step of ether-phospholipid biosynthesis: introduction of the characteristic 1-O-alk-1&#39;-enyl
+  (vinyl ether) double bond at the sn-1 position of plasmanylethanolamine to form
+  plasmenylethanolamine (ethanolamine plasmalogen), using molecular oxygen and reduced
+  cytochrome b5 as electron donor (EC 1.14.19.77). This reaction is specific to plasmalogen
+  biosynthesis and generates the first plasmalogen in the pathway; downstream plasmenylcholines
+  are derived from plasmenylethanolamine. Catalysis depends on two histidine-box motifs and
+  additional conserved histidine residues that coordinate the di-iron center. Loss of PEDS1
+  markedly reduces cellular plasmalogens and causes accumulation of the plasmanylethanolamine
+  substrates. Plasmalogens are abundant glycerophospholipids, particularly in brain, cardiac,
+  and immune-cell membranes, with roles in membrane organization, signaling, and antioxidant
+  protection.
+alternative_products:
+- name: &#39;1&#39;
+  id: A5PLL7-1
+- name: &#39;2&#39;
+  id: A5PLL7-2
+  sequence_note: VSP_054091
+existing_annotations:
+- term:
+    id: GO:0050207
+    label: plasmanylethanolamine desaturase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the gene&#39;s central, experimentally established
+      molecular function. This is PEDS1&#39;s core catalytic activity (vinyl-ether bond
+      formation in plasmanylethanolamine) and is directly supported by IDA and IMP.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        the transmembrane protein 189 gene (TMEM189; Tmem189 for the murine gene) encodes PEDS activity
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the site of action, consistent with the
+      experimentally determined ER-membrane localization of this multi-pass membrane
+      enzyme. Correct and core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: &gt;-
+        Plasmanylethanolamine desaturase involved in plasmalogen
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the biological process. PEDS1 performs the
+      plasmalogen-defining step of ether (plasmalogen) lipid biosynthesis; correct
+      and core. Directly supported by IDA and IMP.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        This enzymatic reaction is specific for plasmalogen biosynthesis
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) transfer of the ER-membrane location from the mouse ortholog
+      (Q99LQ7) and UniProt-SubCell. Redundant with the experimental IDA/EXP/IBA
+      ER-membrane annotations but correct; this is the gene&#39;s own core location, so
+      it is accepted rather than flagged as over-annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0050207
+    label: plasmanylethanolamine desaturase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of the core catalytic activity based on the mouse
+      ortholog, RHEA reactions, and EC 1.14.19.77. Redundant with the experimental
+      IDA/IMP annotations but correct; accepted as the gene&#39;s own core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: EC=1.14.19.77
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale neurodegenerative-disease yeast
+      two-hybrid interactome screen, capturing binary interactions with LAMP2 and
+      SH3GLB1. Uninformative about PEDS1&#39;s molecular function and not tied to any
+      characterized complex or mechanism. Per policy, an IPI protein-binding
+      annotation is not removed but marked as over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: &gt;-
+        systematic yeast two-hybrid
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (Ensembl Compara, IEA) transfer of the ether/plasmalogen lipid
+      biosynthetic process from the mouse ortholog. Correct and core; redundant with
+      the experimental IDA/IMP annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        This enzymatic reaction is specific for plasmalogen biosynthesis
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Over-general IEA from UniPathway (UPA00199, &#34;fatty acid metabolism&#34;) mapping.
+      PEDS1 acts on the sn-1 alkyl chain of an ether glycerophospholipid
+      (plasmanylethanolamine), not on free fatty acids or fatty-acyl metabolism as
+      such. The specific, experimentally supported process is ether lipid /
+      plasmalogen biosynthesis (GO:0008611); fatty acid metabolic process is a
+      distant, uninformative parent-like term. Kept but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        It introduces the alk-1′-enyl ether double bond (vinyl ether bond) into plasmanylethanolamines, yielding plasmenylethanolamines
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (HPA immunofluorescence, IDA) localization to the endoplasmic
+      reticulum. Correct but less specific than the endoplasmic reticulum membrane
+      (GO:0005789) term, which better captures this multi-pass membrane enzyme&#39;s
+      location. Kept as accurate but non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct compartment but subsumed by the more specific ER membrane location that
+      represents the site of catalysis.
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: &#39;GO:0005783; C:endoplasmic reticulum; IDA:HPA&#39;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:11076860
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental localization to the ER membrane. This annotation derives from the
+      original Kua (PEDS1/TMEM189) characterization; the cached abstract reports Kua
+      localizing to cytoplasmic structures, while the curator-assigned ER-membrane
+      location rests on the full text (not in cache). The ER-membrane location is
+      independently confirmed by IDA (PMID:31604315), HPA, and UniProt, so the
+      annotation is accepted, deferring to the experimental curation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:32209662
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) support for the plasmalogen (ether lipid) biosynthetic
+      process: TMEM189/PEDS1 knockout in human HAP1 cells and Tmem189-KO mice lose
+      PEDS activity and plasmalogens and accumulate plasmanylethanolamine substrates.
+      Core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        plasmanylethanolamines, the substrates of PEDS, accumulated in TMEM189-deficient HAP1 cells
+- term:
+    id: GO:0050207
+    label: plasmanylethanolamine desaturase activity
+  evidence_type: IMP
+  original_reference_id: PMID:32209662
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IMP) support for the core catalytic activity: TMEM189 expression
+      confers PEDS activity, knockout/knockdown abolishes it, and every conserved
+      histidine of the di-iron motif is essential. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        the transmembrane protein 189 gene (TMEM189; Tmem189 for the murine gene) encodes PEDS activity
+    - reference_id: PMID:32209662
+      supporting_text: &gt;-
+        Each of the eight histidines conserved in pfam10250 was absolutely essential for PEDS activity
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:31604315
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) localization to the ER membrane, consistent with the
+      TMEM189-GFP ER-Tracker colocalization reported for this multi-pass membrane
+      enzyme. Core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0008611
+    label: ether lipid biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:31604315
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) support for the plasmalogen (ether lipid) biosynthetic
+      process. Knockout of TMEM189 in a human cell line eliminated plasmalogens,
+      establishing PEDS1&#39;s requirement for plasmalogen synthesis. Core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31604315
+      supporting_text: &gt;-
+        knockout of TMEM189 in a human cell line eliminated plasmalogens
+- term:
+    id: GO:0050207
+    label: plasmanylethanolamine desaturase activity
+  evidence_type: IDA
+  original_reference_id: PMID:31604315
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) identification of PEDS1/TMEM189 as the human
+      plasmanylethanolamine desaturase, the enzyme essential for vinyl-ether bond
+      formation; human TMEM189 functionally replaced the bacterial CarF homolog.
+      Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31604315
+      supporting_text: &gt;-
+        plasmanylethanolamine desaturase activity that is essential for vinyl ether bond
+    - reference_id: PMID:31604315
+      supporting_text: &gt;-
+        TMEM189 and other animal homologs could functionally replace CarF
+core_functions:
+- description: &gt;-
+    Plasmanylethanolamine desaturase (PEDS): introduces the 1-O-alk-1&#39;-enyl (vinyl
+    ether) double bond into plasmanylethanolamine to form plasmenylethanolamine, the
+    plasmalogen-defining and pathway-committing step of ether-phospholipid biosynthesis,
+    using O2 and reduced cytochrome b5.
+  molecular_function:
+    id: GO:0050207
+    label: plasmanylethanolamine desaturase activity
+  directly_involved_in:
+  - id: GO:0008611
+    label: ether lipid biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:31604315
+    supporting_text: &gt;-
+      plasmanylethanolamine desaturase activity that is essential for vinyl ether bond
+  - reference_id: PMID:32209662
+    supporting_text: &gt;-
+      It introduces the alk-1′-enyl ether double bond (vinyl ether bond) into plasmanylethanolamines, yielding plasmenylethanolamines
+  - reference_id: PMID:32209662
+    supporting_text: &gt;-
+      This enzymatic reaction is specific for plasmalogen biosynthesis
+  - reference_id: file:human/PEDS1/PEDS1-uniprot.txt
+    supporting_text: &gt;-
+      Plasmanylethanolamine desaturase involved in plasmalogen
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11076860
+  title: Fusion of the human gene for the polyubiquitination coeffector UEV1 with
+    Kua, a newly identified gene.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original description of the Kua gene (= PEDS1/TMEM189) and the Kua-UEV (PEDS1-UBE2V1)
+      fusion. Abstract reports cytoplasmic localization of Kua; the ER-membrane EXP
+      annotation and UniProt SUBCELLULAR LOCATION citation rest on the full text (not in
+      cache). Predates identification of the desaturase function.
+- id: PMID:31604315
+  title: A bacterial light response reveals an orphan desaturase for human plasmalogen
+    synthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identified the orphan human plasmanylethanolamine desaturase via the bacterial CarF
+      homolog; TMEM189 knockout eliminated cellular plasmalogens and human TMEM189 rescued
+      CarF function. Cached record is abstract-only (full_text_available: false), but the
+      abstract directly supports the MF and BP claims.
+- id: PMID:32209662
+  title: The TMEM189 gene encodes plasmanylethanolamine desaturase which introduces
+    the characteristic vinyl ether double bond into plasmalogens.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Independent identification of TMEM189 as PEDS; knockout/knockdown, mouse KO, substrate
+      accumulation, and essentiality of the eight conserved histidines. Full text available.
+      Cites historic EC 1.14.99.19; current UniProt/Rhea EC is 1.14.19.77.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of the IntAct protein-binding IPI (LAMP2, SH3GLB1) from a large-scale yeast
+      two-hybrid neurodegeneration interactome. Binary high-throughput interactions only;
+      no functional interpretation for PEDS1.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
