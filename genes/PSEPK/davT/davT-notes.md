@@ -11,3 +11,8 @@
   defects between 5AVA and l-lysine (davT, davD, and lghO)"].
 - The InterPro-derived GABA transaminase annotation remains undecided because
   the available study does not test GABA as a substrate.
+- UniProt also carries the corresponding InterPro transfer to GABA metabolic
+  process, but it is absent from the fetched GOA and is not added as a new
+  annotation for the same reason: no available experiment tests DavT in GABA
+  metabolism [file:PSEPK/davT/davT-uniprot.txt,
+  "GO; GO:0009448; P:gamma-aminobutyric acid metabolic process; IEA:InterPro."].
