@@ -171,9 +171,18 @@ All 5 rows of `AADACL4-goa.tsv`, in file order.
 | 5 | GO:0052689 carboxylic ester hydrolase activity (enables) | IEA | GO_REF:0000002 | InterPro:IPR017157 (Arylacetamide_deacetylase) | ACCEPT |
 
 Both `MODIFY`s are granularity calls, not corrections: `GO:0052689` is a descendant of
-`GO:0016787` via `GO:0016788`, the specific term is already on the protein from the
-subfamily-level signature, and nothing about the general rows is biologically wrong.
-Recorded as `root_cause: TERM_SCOPING_PROBLEM`, `failure_modes: [GRANULARITY_MISMATCH]`.
+`GO:0016787` via `GO:0016788` (confirmed from the QuickGO `is_a` ancestor list), the specific
+term is already on the protein from the subfamily-level signature, and nothing about the
+general rows is biologically wrong. Recorded as `root_cause: TERM_SCOPING_PROBLEM`,
+`failure_modes: [GRANULARITY_MISMATCH]`.
+
+Two things checked so the MODIFYs are not overstated. Neither `GO:0016787` nor `GO:0016020`
+is in `gocheck_do_not_annotate` - QuickGO reports `usage: Unrestricted` for both - so no
+annotation rule is being violated and the case is purely one of redundancy and
+informativeness. And the replacement term is a claim about what AADACL4's annotation set
+should contain, not a claim that node PTN009058710 could support `GO:0052689`: it could not,
+which is exactly why the IBA landed on the general parent. The specific term has to come
+from the subfamily signature (or from a deeper PANTHER node, if PAINT chose to annotate one).
 
 Nothing was removed. No new term is proposed: `GO:0052689` already says exactly what the
 evidence supports, and a substrate-level child would not be licensed by homology alone.
