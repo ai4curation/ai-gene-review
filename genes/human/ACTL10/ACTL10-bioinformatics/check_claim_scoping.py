@@ -77,10 +77,15 @@ def violations(raw_by_path: dict[Path, str]) -> list[str]:
         norm = normalise(raw)
         for m in CLAIM.finditer(norm):
             total += 1
-            window = norm[max(0, m.start() - WINDOW): m.end() + WINDOW]
+            lo = max(0, m.start() - WINDOW)
+            window = norm[lo: m.end() + WINDOW]
             if not SCOPE.search(window):
-                out.append(f"{path.name}:{line_of(raw, m.start())} unscoped claim: "
-                           f"...{window[max(0, m.start() - max(0, m.start() - WINDOW)) - 60:][:170]}...")
+                # Offset of the claim inside `window`, clamped: for a claim in the first 60
+                # characters of a file an unclamped `rel - 60` is negative and Python slices from
+                # the END, garbling the message exactly when a violation exists.
+                rel = m.start() - lo
+                excerpt = window[max(0, rel - 60):][:170]
+                out.append(f"{path.name}:{line_of(raw, m.start())} unscoped claim: ...{excerpt}...")
     if total == 0:
         raise RuntimeError(
             "found zero P-loop-1 claims across the review and notes; either the wording changed "

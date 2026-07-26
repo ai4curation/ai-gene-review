@@ -190,10 +190,10 @@ def orthologue_lengths() -> dict:
     # downstream count. Reported by the PR reviewer; the query returns far fewer than one page
     # today, but a silent truncation is exactly the class of bug this script asserts against
     # everywhere else.
-    r = SESSION.get(url, params=params, timeout=180)
-    r.raise_for_status()
-    d = r.json()
-    declared = r.headers.get("x-total-results")
+    resp = SESSION.get(url, params=params, timeout=180)
+    resp.raise_for_status()
+    d = resp.json()
+    declared = resp.headers.get("x-total-results")
     if declared is None:
         raise RuntimeError("UniProt did not return x-total-results; cannot verify page coverage")
     declared = int(declared)

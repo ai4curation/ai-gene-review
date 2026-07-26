@@ -332,8 +332,10 @@ reason — plus one in these notes. All four now name the sequence.
 Because this is one claim asserted at a dozen sites, the invariant is now **mechanical rather than
 hand-checked**: `ACTL10-bioinformatics/check_claim_scoping.py` requires every P-loop-1 mention in
 the review and the notes to sit within 300 characters of a phrase naming which sequence is meant.
-It inspects 12 claims and fails loudly if it finds zero (a lint that inspects nothing passes
-vacuously).
+It fails loudly if it finds zero claims, since a lint that inspects nothing passes vacuously. The
+count is deliberately not quoted here: an earlier draft of this paragraph said "12" and the
+reviewer counted 13, because a number in prose that has to track a script's output drifts the
+moment the text changes. Run the lint for the current figure.
 
 Two bugs in that lint, both found by running it rather than reading it, and both worth recording:
 
