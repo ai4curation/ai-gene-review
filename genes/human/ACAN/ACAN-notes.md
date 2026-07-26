@@ -139,3 +139,71 @@ pure paralog transfer. The problems that remain are term-scoping, not donor choi
 - Two affinage findings rest on bioRxiv preprints with no PMID. One of them (the G1-HA cocrystal /
   PNN integration study) has since been published as PMID:40273987 and is used here in its published
   form; the other (Amigo2-Acan CA2 conditional knockout) has not been, and is not used.
+
+## Follow-up checks prompted by PR review
+
+**The GO:0072534 ancestor claim, re-verified in both directions** (the reviewer could not run this
+without network access, and the synapse MODIFY rests entirely on it).
+
+`GET /ontology/go/terms/GO:0072534/ancestors?relations=is_a,part_of` returns exactly:
+
+```
+GO:0099535  synapse-associated extracellular matrix
+GO:0140047  specialized extracellular matrix
+GO:0072534  perineuronal net
+GO:0098966  perisynaptic extracellular matrix
+GO:0031012  extracellular matrix
+GO:0110165  cellular anatomical structure
+GO:0030312  external encapsulating structure
+GO:0005576  extracellular region
+GO:0005575  cellular_component
+```
+
+`GO:0045202` is absent. The reciprocal query confirms it:
+`GET /ontology/go/terms/GO:0045202/descendants?relations=is_a,part_of` returns 143 descendants, and
+`GO:0072534`, `GO:0098966` and `GO:0099535` are all absent from that set. So the exclusion is
+symmetric and deliberate, not an artifact of one traversal direction.
+
+**GO:0085029 usage precedent.** QuickGO annotation search (`goId=GO:0085029&taxonId=9606`) returns 94
+annotations over 40 gene products. Matrix *structural constituents* are well represented, not just
+remodelling enzymes and signalling proteins: ELN (elastin), FBLN5, EFEMP2, EMILIN1, MFAP4, COL8A1,
+COL8A2, TNXB. Elastic-fibre assembly by elastin and the fibulins is the direct analogue of
+proteoglycan-aggregate assembly by aggrecan, so the proposed NEW annotation is consistent with
+established usage. Enzymes and regulators (HAS1/2/3, LOX, PXDN, QSOX1/2, TGFB1, SMAD3/4, TGFBR1/3)
+are also present, but the term is clearly not reserved for them.
+
+**The proteolysis harm is concrete, not hypothetical.** All four of the following carry the identical
+term with the identical qualifier, so in any process-based query the substrate is indistinguishable
+from the three enzymes that destroy it:
+
+| gene | accession | GO:0006508 evidence |
+|---|---|---|
+| ACAN | P16112 | NAS (PMID:1569188) — the substrate |
+| ADAMTS4 | O75173 | IEA, IBA, TAS (PMID:10751421) |
+| ADAMTS5 | Q9UNA0 | IEA, IBA, TAS (PMID:10438522) |
+| HTRA1 | Q92743 | ISS, IBA, IEA |
+
+**Anticipated objection to the proposed cartilage-matrix component term.** GO:0062023
+"collagen-containing extracellular matrix" was obsoleted, which might look like a precedent against
+tissue-scoped ECM components. It is not: the obsoletion comment reads "This term was obsoleted
+because it was not clearly defined and usage has been inconsistent." That term was
+*composition*-scoped and unbounded. GO:0140047 continues to carry many *tissue- or structure*-scoped
+children — perineuronal net, interphotoreceptor matrix, hyaline layer, cuticular extracellular
+matrix, egg coat, pollen coat, middle lamella, chitin-based extracellular matrix, organomineral
+extracellular matrix. Cartilage matrix is anatomically bounded in the way "collagen-containing" never
+was.
+
+**Domain architecture verified against the UniProt feature table** rather than against the affinage
+narrative, since the provider is unreliable on domain assignment:
+
+```
+SIGNAL 1..16 ; no TRANSMEM ; no LIPID/GPI anchor
+G1 = Ig-like V-type 34..147 + Link 1 153..248 + Link 2 254..350
+G2 = Link 3 478..573 + Link 4 579..675
+KS 677..849 ; CS-1 852..1612 ; CS-2 1613..2277
+G3 = EGF-like 2279..2314 + C-type lectin 2327..2441 + Sushi 2445..2505
+```
+
+The absence of a transmembrane segment and of any GPI anchor is what underpins the cell-adhesion
+REMOVE. The Glu373-Ala374 aggrecanase site falls between Link 2 (ends 350) and Link 3 (starts 478),
+confirming it is genuinely interglobular as PMID:1569188 states.
