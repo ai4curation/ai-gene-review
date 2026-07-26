@@ -27,6 +27,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 from Bio import Align
@@ -36,6 +37,8 @@ HERE = Path(__file__).parent
 UNIPROT = "https://rest.uniprot.org/uniprotkb"
 INTERPRO = "https://www.ebi.ac.uk/interpro/api"
 PROSITE_SER_PATTERN = "https://prosite.expasy.org/PS01174.txt"
+ALLIANCE = "https://www.alliancegenome.org/api"
+GOA_TSV = HERE.parent / "AADACL3-goa.tsv"
 
 QUERY = "Q5VUY0"
 
@@ -51,6 +54,7 @@ PANEL: dict[str, str] = {
     "P22760": "AADAC (human; characterised deacetylase/TG lipase, ER membrane)",
     "Q6PIU2": "NCEH1/AADACL1 (human; characterised ester hydrolase)",
     "Q8BLF1": "Nceh1 (mouse; source of AADACL3's ECO:0000250 active sites)",
+    "A2A7Z8": "Aadacl3 (mouse; ortholog of the query, curated multi-pass membrane)",
     "Q5NUF3": "HIDH (soybean; source of AADACL3's ECO:0000250 oxyanion motif)",
 }
 
@@ -296,6 +300,132 @@ def align_pair(query: Entry, target: Entry) -> tuple[float, dict[int, int | None
     return round(pct, 1), mapping
 
 
+def read_iba_sources(term: str, evidence: str) -> list[str]:
+    """Read the WITH/FROM tokens for one row of the gene's own GOA table.
+
+    Reading them from the GOA file rather than restating them means the source
+    list cannot drift from the record under review.
+    """
+    if not GOA_TSV.exists():
+        raise RuntimeError(
+            f"{GOA_TSV} not found; run `just fetch-gene human AADACL3` before this script"
+        )
+    rows = [ln.split("\t") for ln in GOA_TSV.read_text().splitlines() if ln.strip()]
+    header, body = rows[0], rows[1:]
+    i_term, i_ev, i_with = (
+        header.index("GO TERM"),
+        header.index("GO EVIDENCE CODE"),
+        header.index("WITH/FROM"),
+    )
+    hits = [r[i_with] for r in body if r[i_term] == term and r[i_ev] == evidence]
+    if len(hits) != 1:
+        raise RuntimeError(
+            f"Expected exactly one {evidence} row for {term} in {GOA_TSV.name}, found {len(hits)}"
+        )
+    return [t for t in hits[0].split("|") if t]
+
+
+def reviewed_only(accessions: list[str]) -> list[str]:
+    """Keep the Swiss-Prot entries among a set of accessions, sorted for determinism."""
+    keep = []
+    for acc in sorted(set(accessions)):
+        d = get_json(f"{UNIPROT}/{acc}.json?fields=accession")
+        if d.get("entryType", "").startswith("UniProtKB reviewed"):
+            keep.append(acc)
+    return keep
+
+
+def resolve_source(token: str) -> dict:
+    """Map one GOA WITH/FROM token to a UniProt accession, live and without guessing."""
+    out: dict = {"token": token, "accession": None, "note": None}
+    if token.startswith("UniProtKB:"):
+        out["accession"] = token.split(":", 1)[1]
+        out["note"] = "UniProt accession given directly"
+        return out
+    if token.startswith("PANTHER:"):
+        out["note"] = "PANTHER ancestral node, not a protein; no nucleophile to read"
+        return out
+    if token.startswith("AGI_LocusCode:"):
+        locus = token.split(":", 1)[1]
+        q = f"(gene:{locus}) AND (taxonomy_id:3702) AND (reviewed:true)"
+        d = get_json(f"{UNIPROT}/search?query={quote(q)}&fields=accession&size=10")
+        accs = sorted({r["primaryAccession"] for r in d.get("results", [])})
+        if len(accs) == 1:
+            out["accession"] = accs[0]
+            out["note"] = "resolved via UniProt gene-name search restricted to A. thaliana, reviewed"
+        else:
+            out["note"] = f"UniProt gene-name search returned {len(accs)} reviewed entries: {accs}"
+        return out
+    # MGI / RGD / SGD: use the Alliance gene record's UniProt cross-references.
+    curie = token[4:] if token.startswith("MGI:MGI:") else token
+    d = get_json(f"{ALLIANCE}/gene/{curie}")
+    gene = d.get("gene", {})
+    xrefs = [
+        x["referencedCurie"].split(":", 1)[1]
+        for x in (gene.get("crossReferences") or [])
+        if x.get("referencedCurie", "").startswith("UniProtKB:")
+    ]
+    symbol = (gene.get("geneSymbol") or {}).get("displayText")
+    out["symbol"] = symbol
+    if not xrefs:
+        out["note"] = "Alliance record carries no UniProtKB cross-reference"
+        return out
+    reviewed = reviewed_only(xrefs)
+    if len(reviewed) == 1:
+        out["accession"] = reviewed[0]
+        out["note"] = f"resolved via Alliance ({symbol}); one reviewed entry of {len(set(xrefs))}"
+    else:
+        out["note"] = (
+            f"Alliance ({symbol}) gives {len(set(xrefs))} cross-references, "
+            f"{len(reviewed)} of them reviewed: {reviewed}"
+        )
+    return out
+
+
+def nucleophile_audit() -> dict:
+    """Read the nucleophile residue of every source cited for the hydrolase IBA.
+
+    GO:0017171 serine hydrolase activity is defined by mechanism - a serine
+    nucleophile in a triad with an acidic and a basic residue - so it can only be
+    placed at a node whose members all have a serine nucleophile. This checks that
+    directly instead of assuming it from the family name.
+    """
+    tokens = read_iba_sources("GO:0016787", "IBA")
+    rows = []
+    for token in tokens:
+        row = resolve_source(token)
+        acc = row["accession"]
+        if acc:
+            d = get_json(f"{UNIPROT}/{acc}.json")
+            seq = d["sequence"]["value"]
+            sites = sorted(
+                f["location"]["start"]["value"]
+                for f in d.get("features", [])
+                if f["type"] == "Active site"
+            )
+            row["uniprot_id"] = d["uniProtkbId"]
+            row["organism"] = d["organism"]["scientificName"]
+            row["n_active_sites"] = len(sites)
+            row["nucleophile_position"] = sites[0] if sites else None
+            row["nucleophile_residue"] = seq[sites[0] - 1] if sites else None
+            row["serine_nucleophile"] = (seq[sites[0] - 1] == "S") if sites else None
+        rows.append(row)
+    with_sites = [r for r in rows if r.get("nucleophile_residue")]
+    return {
+        "term_audited": "GO:0016787 (IBA, GO_REF:0000033)",
+        "tokens_in_goa": len(tokens),
+        "resolved_to_protein": sum(1 for r in rows if r["accession"]),
+        "nucleophile_readable": len(with_sites),
+        "serine_nucleophile": sum(1 for r in with_sites if r["serine_nucleophile"]),
+        "non_serine_nucleophile": [
+            f"{r['uniprot_id']} {r['nucleophile_residue']}{r['nucleophile_position']}"
+            for r in with_sites
+            if not r["serine_nucleophile"]
+        ],
+        "sources": rows,
+    }
+
+
 def main() -> None:
     entries: dict[str, Entry] = {}
     for acc, label in PANEL.items():
@@ -431,6 +561,7 @@ def main() -> None:
             "descriptions": TRACKED_SIGNATURES,
             "per_protein": {acc: e.signatures for acc, e in entries.items()},
         },
+        "nucleophile_audit_of_iba_sources": nucleophile_audit(),
     }
     if QUERY not in results["tracked_signatures"]["per_protein"]:
         raise RuntimeError("query missing from tracked-signature table")
@@ -585,6 +716,47 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
                 )
             )
         L.append(f"| {entries[acc].uniprot_id} ({acc}) | " + " | ".join(cells) + " |")
+    L.append("")
+
+    L.append("## 7. Is the nucleophile a serine in every source cited for the hydrolase IBA?")
+    L.append("")
+    na = r["nucleophile_audit_of_iba_sources"]
+    L.append(
+        "GO:0017171 serine hydrolase activity is defined by *mechanism* - a serine "
+        "nucleophile activated by a proton relay through an acidic and a basic residue - "
+        "so it can only be placed at a phylogenetic node whose members all have a serine "
+        "nucleophile. This reads the residue at each source's first annotated active site. "
+        "WITH/FROM tokens are taken from the gene's own `AADACL3-goa.tsv` so they cannot "
+        "drift from the record under review; model-organism identifiers are resolved through "
+        "the Alliance API and Arabidopsis loci through UniProt, and anything that cannot be "
+        "resolved to a single reviewed entry is reported as unresolved rather than dropped."
+    )
+    L.append("")
+    L.append(
+        f"Audited: {na['term_audited']}. {na['tokens_in_goa']} WITH/FROM tokens, "
+        f"{na['resolved_to_protein']} resolved to a protein, "
+        f"{na['nucleophile_readable']} with a readable nucleophile, of which "
+        f"**{na['serine_nucleophile']} are serine**. "
+        + (
+            "Non-serine: " + ", ".join(na["non_serine_nucleophile"]) + "."
+            if na["non_serine_nucleophile"]
+            else "No non-serine nucleophile found."
+        )
+    )
+    L.append("")
+    L.append("| WITH/FROM token | resolved | nucleophile | serine? | resolution note |")
+    L.append("|---|---|---|---|---|")
+    for s in na["sources"]:
+        nuc = (
+            f"{s['nucleophile_residue']}{s['nucleophile_position']}"
+            if s.get("nucleophile_residue")
+            else "-"
+        )
+        ser = {True: "yes", False: "**no**", None: "-"}[s.get("serine_nucleophile")]
+        L.append(
+            f"| `{s['token']}` | {s.get('uniprot_id') or '-'} | {nuc} | {ser} | "
+            f"{s.get('note') or '-'} |"
+        )
     L.append("")
 
     L.append("## Interpretation")

@@ -25,6 +25,7 @@ Global pairwise alignment (BLOSUM62, gap -11/-1). "triad on annotated site" coun
 | AAAD_HUMAN (P22760) | 33.3 | S193→S189/D347→D343/H377→H373 | 3/3 | `HGG` |
 | NCEH1_HUMAN (Q6PIU2) | 33.4 | S193→S191/D347→D348/H377→H378 | 3/3 | `HGG` |
 | NCEH1_MOUSE (Q8BLF1) | 32.8 | S193→S191/D347→D348/H377→H378 | 3/3 | `HGG` |
+| ADCL3_MOUSE (A2A7Z8) | 61.9 | S193→S194/D347→D348/H377→H378 | 3/3 | `HGG` |
 | HIDH_SOYBN (Q5NUF3) | 23.6 | S193→T164/D347→D263/H377→Q282 | 2/3 | `HGG` |
 
 ## 3. PROSITE PS01174 (GDXG-family nucleophile serine site)
@@ -39,6 +40,7 @@ Pattern (fetched from PROSITE): `[LIVM]-x-[LIVMF]-[SA]-G-D-S-[CAS]-G-[GA]-x-[LI]
 | AAAD_HUMAN (P22760) | yes | [(183, 195)] | - |
 | NCEH1_HUMAN (Q6PIU2) | yes | [(185, 197)] | - |
 | NCEH1_MOUSE (Q8BLF1) | yes | [(185, 197)] | - |
+| ADCL3_MOUSE (A2A7Z8) | no | - | pos 3 wants [LIVMF], has T190, pos 4 wants [SA], has C191, pos 8 wants [CAS], has V195, pos 12 wants [LI], has A199 |
 | HIDH_SOYBN (Q5NUF3) | no | - | pos 4 wants [SA], has G161, pos 6 wants D, has E163, pos 7 wants S, has T164 |
 
 ## 4. Membrane topology: predicted, and what UniProt records
@@ -51,6 +53,7 @@ Pattern (fetched from PROSITE): `[LIVM]-x-[LIVMF]-[SA]-G-D-S-[CAS]-G-[GA]-x-[LI]
 | AAAD_HUMAN (P22760) | [(6, 23)] | - | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | [(6, 23), (106, 125)] | - | [(5, 24)] | - |
 | NCEH1_HUMAN (Q6PIU2) | [(5, 25)] | - | Cell membrane; Single-pass type II membrane protein; Microsome | - | [(1, 15)] | [(5, 27)] | - |
 | NCEH1_MOUSE (Q8BLF1) | [(5, 25)] | - | Cell membrane; Single-pass type II membrane protein; Microsome | - | [(1, 28)] | [(5, 27)] | - |
+| ADCL3_MOUSE (A2A7Z8) | [(2, 22), (46, 66), (109, 129)] | - | Membrane; Multi-pass membrane protein | [(42, 61), (111, 129)] | [(1, 26)] | [(2, 24)] | - |
 | HIDH_SOYBN (Q5NUF3) | - | - | - | - | - | - | - |
 
 ## 5. Pfam PF07859 (Abhydrolase_3) match segmentation
@@ -63,6 +66,7 @@ Pattern (fetched from PROSITE): `[LIVM]-x-[LIVMF]-[SA]-G-D-S-[CAS]-G-[GA]-x-[LI]
 | AAAD_HUMAN (P22760) | [(107, 265), (315, 376)] |
 | NCEH1_HUMAN (Q6PIU2) | [(109, 262), (320, 381)] |
 | NCEH1_MOUSE (Q8BLF1) | [(109, 261), (318, 381)] |
+| ADCL3_MOUSE (A2A7Z8) | [(116, 246), (317, 381)] |
 | HIDH_SOYBN (Q5NUF3) | [(74, 298)] |
 
 ## 6. Subfamily-level versus fold-level signature assignment
@@ -82,7 +86,34 @@ Which signature carries an activity inference matters more than whether one matc
 | AAAD_HUMAN (P22760) | 4-399 | 4-399 (0.0) [representative] | 107-265; 315-376 | 71-397 |
 | NCEH1_HUMAN (Q6PIU2) | 1-408 | 1-408 (0.0) [representative] | 109-262; 320-381 | 77-406 |
 | NCEH1_MOUSE (Q8BLF1) | 1-408 | 1-408 (0.0) [representative] | 109-261; 318-381 | 66-406 |
+| ADCL3_MOUSE (A2A7Z8) | 33-407 | 33-407 (5.4e-81) [representative] | 116-246; 317-381 | 83-407 |
 | HIDH_SOYBN (Q5NUF3) | - | - | 74-298 | - |
+
+## 7. Is the nucleophile a serine in every source cited for the hydrolase IBA?
+
+GO:0017171 serine hydrolase activity is defined by *mechanism* - a serine nucleophile activated by a proton relay through an acidic and a basic residue - so it can only be placed at a phylogenetic node whose members all have a serine nucleophile. This reads the residue at each source's first annotated active site. WITH/FROM tokens are taken from the gene's own `AADACL3-goa.tsv` so they cannot drift from the record under review; model-organism identifiers are resolved through the Alliance API and Arabidopsis loci through UniProt, and anything that cannot be resolved to a single reviewed entry is reported as unresolved rather than dropped.
+
+Audited: GO:0016787 (IBA, GO_REF:0000033). 17 WITH/FROM tokens, 14 resolved to a protein, 14 with a readable nucleophile, of which **13 are serine**. Non-serine: HIDH_SOYBN T164.
+
+| WITH/FROM token | resolved | nucleophile | serine? | resolution note |
+|---|---|---|---|---|
+| `AGI_LocusCode:AT1G49660` | CXE5_ARATH | S163 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
+| `AGI_LocusCode:AT3G48690` | CXE12_ARATH | S162 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
+| `AGI_LocusCode:AT5G15860` | ICME_ARATH | S235 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
+| `AGI_LocusCode:AT5G23530` | CXE18_ARATH | S173 | yes | resolved via UniProt gene-name search restricted to A. thaliana, reviewed |
+| `MGI:MGI:1915008` | AAAD_MOUSE | S188 | yes | resolved via Alliance (Aadac); one reviewed entry of 1 |
+| `MGI:MGI:2443191` | NCEH1_MOUSE | S191 | yes | resolved via Alliance (Nceh1); one reviewed entry of 4 |
+| `MGI:MGI:2448704` | KFA_MOUSE | S162 | yes | resolved via Alliance (Afmid); one reviewed entry of 2 |
+| `PANTHER:PTN009058710` | - | - | - | PANTHER ancestral node, not a protein; no nucleophile to read |
+| `RGD:631440` | - | - | - | Alliance (Aadac) gives 4 cross-references, 0 of them reviewed: [] |
+| `SGD:S000002836` | - | - | - | Alliance record carries no UniProtKB cross-reference |
+| `UniProtKB:P22760` | AAAD_HUMAN | S189 | yes | UniProt accession given directly |
+| `UniProtKB:P23872` | AES_ECOLI | S165 | yes | UniProt accession given directly |
+| `UniProtKB:P71668` | LIPI_MYCTU | S165 | yes | UniProt accession given directly |
+| `UniProtKB:P95125` | LIPN_MYCTU | S216 | yes | UniProt accession given directly |
+| `UniProtKB:P9WK87` | NLHH_MYCTU | S162 | yes | UniProt accession given directly |
+| `UniProtKB:Q5NUF3` | HIDH_SOYBN | T164 | **no** | UniProt accession given directly |
+| `UniProtKB:Q9HTI0` | Q9HTI0_PSEAE | S160 | yes | UniProt accession given directly |
 
 ## Interpretation
 

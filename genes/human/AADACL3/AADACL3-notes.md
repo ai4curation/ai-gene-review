@@ -236,14 +236,109 @@ so IPR017157 → GO:0052689 is a subfamily-to-activity mapping. Both land on a
 defensible answer here, but only the second one is a well-grounded inference in
 its own right.
 
+## Reconciling with the parallel AADACL2 and AADACL4 reviews
+
+The AADACL2 review (PR #2266) reported that PAINT's node placement for this family
+is inverted: `GO:0017171 serine hydrolase activity` sits only at ortholog-level
+nodes, while the shared family node `PTN009058713` carries `GO:0016020 membrane` —
+yet it is the catalytic triad that transfers family-wide and the membrane anchor
+that does not. I checked both halves of that against AADACL3's own record rather
+than importing it, and it holds, with two differences worth stating.
+
+**The mechanism half is confirmed, and quantified.** Section 7 of the
+bioinformatics report reads the residue at the first annotated active site of every
+WITH/FROM source on AADACL3's own hydrolase-activity IBA:
+
+- [file:human/AADACL3/AADACL3-bioinformatics/RESULTS.md "Audited: GO:0016787 (IBA, GO_REF:0000033). 17 WITH/FROM tokens, 14 resolved to a protein, 14 with a readable nucleophile, of which **13 are serine**. Non-serine: HIDH_SOYBN T164."]
+
+The amidohydrolase members are no obstacle to a mechanism term: mouse Afmid, a
+formamidase, is itself a serine hydrolase with `S162`. (Yeast BNA7 and rat Aadac
+could not be resolved to a single reviewed UniProt entry through the Alliance
+record and are reported unresolved rather than counted either way, so the 13-of-14
+figure is a count of what was readable.) The single obstacle at `PTN009058710` is
+soybean HIDH, whose nucleophile is **Thr164** — so `GO:0017171` could be placed at
+that node only if HIDH is excluded, whereas at the tighter `PTN009058713` there is
+no obstacle at all. That is a sharper version of the recommendation: the term is
+blocked by exactly one member, and it is nameable.
+
+**Where AADACL3 differs from AADACL2 (1): it does inherit a molecular-function
+term.** AADACL2/4 inherit no mechanism term, but AADACL3's GOA carries
+`GO:0016787 hydrolase activity` IBA from `PTN009058710` — a *different* node from
+the membrane row's `PTN009058713`. So for AADACL3 the defect is not absence but
+granularity, which is why this review uses MODIFY with two replacements rather
+than proposing a new annotation. `GO:0017171` and `GO:0052689` are independent
+children of `GO:0016787` (verified against QuickGO: neither is an ancestor of the
+other), so the generic term sits exactly at their join and both are needed.
+
+**Where AADACL3 differs from AADACL2 (2): there is no topology contradiction to
+adjudicate, so ACCEPT is correct rather than UNDECIDED.** AADACL2's location rows
+were left UNDECIDED because a curated "Secreted" call collides with the family's
+type-II anchor and measurement declined to break the tie. AADACL3 has no curated
+subcellular location at all, no SignalP call, and concordant Phobius and TMHMM
+helices — there is nothing in conflict. I did not use a topology argument to
+remove anything, and the membrane rows are accepted on positive prediction plus
+AADACL2 serving as the negative control that makes the absent SignalP call
+informative.
+
+**The mouse ortholog independently confirms the multi-pass point.** The AADACL2
+review noted that mouse Aadacl3 has three plain helices rather than a type-II
+anchor. Adding it to the panel confirms this from the curated record, and it
+sharpens the UniProt-gap finding considerably:
+
+- [file:human/AADACL3/AADACL3-bioinformatics/RESULTS.md "| ADCL3_MOUSE (A2A7Z8) | [(2, 22), (46, 66), (109, 129)] | - | Membrane; Multi-pass membrane protein | [(42, 61), (111, 129)] | [(1, 26)] | [(2, 24)] | - |"]
+
+UniProt curates the *mouse* ortholog of this very gene as `Membrane; Multi-pass
+membrane protein` with three transmembrane helices, at 61.9% identity and with the
+same triad (`S193→S194/D347→D348/H377→H378`, 3/3 on annotated sites), while the
+human entry carries no transmembrane feature whatsoever. So the human gap is not
+only inconsistent with the tandem paralog AADACL4, it is inconsistent with the
+same gene in mouse. It also means "single-pass type II" is the wrong descriptor
+for this branch, and `GO:0016020 membrane` is the right generic level for reasons
+beyond not knowing which membrane.
+
+**Family-wide claims audited.** The AADACL2 review had to retract several
+overstatements. Checking mine: no family-wide specificity claim is made — the
+review states explicitly that substrate must not be inferred from membership, and
+cites the Say1Δ non-rescue result as the reason; the expression statements are
+per-gene HPA records with the gene named (AADACL3 placenta/skin-enhanced, AADACL2
+skin-enriched, AADACL4 choroid-enhanced) rather than a branch-level claim; and the
+two formamidases in the WITH/FROM column are named as amidohydrolases in the
+review rather than folded into an esterase generalisation.
+
+**AADACL4 (PR #2263, already merged).** I queried its GOA directly rather than
+taking the paralog framing on trust, and it is **row-for-row identical to
+AADACL3's**: the same five annotations, the same terms, and the same WITH/FROM
+sets, including `GO:0016787` IBA from `PTN009058710` with all seventeen sources and
+`GO:0016020` IBA from `PTN009058713`. So the node-placement recommendation applies
+to AADACL4 unchanged.
+
+That also corrects one premise in the cross-gene framing: AADACL3 and AADACL4 do
+**not** inherit "no mechanism term at all". They inherit `GO:0016787 hydrolase
+activity` at a second node, `PTN009058710` — it is simply the uninformative parent
+of the term that should be there, which is why MODIFY rather than a new annotation
+is the right action for both.
+
+One asymmetry in the two records is worth recording because it corroborates the
+UniProt-gap finding from a different direction: AADACL4's `GO:0016020` IEA carries
+`UniProtKB-SubCell:SL-0162` in its WITH/FROM alongside the ARBA rule and
+IPR017157, and AADACL3's does not. The SubCell mapping can only fire for an entry
+that has a curated subcellular location — which AADACL4 has and AADACL3 lacks. The
+gap is visible in the GOA evidence, not just in the UniProt feature table.
+
+AADACL4 has one peculiarity this analysis turned up that AADACL3 does not share:
+its nucleophile elbow reads `GESVGG`, with glutamate where the family has the
+structural aspartate of `GDSxGG`, so it fails PROSITE PS01174 at four positions
+(4, 6, 8 and 12) against AADACL3's two. Whether that affects its catalytic
+competence is a question for an amendment to that review, not this one.
+
 ## Actions taken
 
 | # | term | evidence | action | why |
 |---|---|---|---|---|
-| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0052689 | correct but subsumed by a term GOA already carries; clade heterogeneity explains the generic level |
+| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0017171 + GO:0052689 | correct but subsumed; the term sits at the join of a mechanism axis (triad, 13/14 sources serine) and a reaction axis (subfamily signature, EC 3.1.1.-) |
 | 2 | GO:0016020 membrane | IBA `is_active_in` | ACCEPT | tight, topologically coherent source set; corroborated by concordant Phobius + TMHMM |
 | 3 | GO:0016020 membrane | IEA `located_in` | ACCEPT | same conclusion from an independent pipeline; supported despite UniProt having no TRANSMEM feature |
-| 4 | GO:0016787 hydrolase activity | IEA (IPR013094) | MODIFY → GO:0052689 | fold-derived and subsumed; the specific term comes from the subfamily signature instead |
+| 4 | GO:0016787 hydrolase activity | IEA (IPR013094) | MODIFY → GO:0017171 + GO:0052689 | fold-derived and subsumed; the fold signature reaches outside the subfamily whose chemistry it asserts |
 | 5 | GO:0052689 carboxylic ester hydrolase activity | IEA (IPR017157) | ACCEPT | best-supported statement about the gene: subfamily signature + intact triad + UniProt EC 3.1.1.- |
 
 No REMOVE and no MARK_AS_OVER_ANNOTATED. Nothing in the record over-reaches:
