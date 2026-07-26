@@ -203,6 +203,9 @@ molecular function available to it, and it is the wrong one. That is the gap rec
 - **Antiviral/interferon report** [PMID:38384000] is a single preliminary in vitro study
   ("A Preliminary Study In Vitro" in its own title) in one human fibroblast line, with no
   mechanism linking a secreted ECM protein to TBK1/IRF3. Not annotated.
+- **Neuronal / dendritic-refinement role** [PMID:19302145] was originally listed here as
+  "not annotated". That was wrong, and it is now annotated as `GO:0050774` following PR review —
+  see §8 for why the original reasoning did not hold.
 - **Thrombin cleavage / BBB protection** [PMID:41839242] is 2026, single-group, and the
   therapeutic arm uses supraphysiological recombinant protein. The cleavage site is
   independently plausible (§2) but the BBB function is not annotated here.
@@ -218,19 +221,44 @@ molecular function available to it, and it is the wrong one. That is the gap rec
   contribution has never been *excluded* — it has never been *tested*. That distinction is what
   separates over-annotation from error.
 
-**Six NEW rows proposed**, all coded `ISS` with `supporting_entities: MGI:MGI:2444583` (mouse
+**Eight NEW rows proposed**, all coded `ISS` with `supporting_entities: MGI:MGI:2444583` (mouse
 Abi3bp, MGI id taken from the UniProt cross-reference on F7B3T6, not from memory), because every
 perturbation experiment behind them is mouse:
 
 | Term | Ref | Why |
 |---|---|---|
-| GO:0005178 integrin binding (MF) | PMID:23666637 | Co-IP with tagged *and* endogenous protein; β1-specific blocking-antibody panel; growth-factor mode explicitly excluded |
-| GO:0033625 positive regulation of integrin activation | PMID:23666637 | Ligand changes receptor state, measured as phospho-paxillin/paxillin ratio |
+| GO:0005178 integrin binding (MF) | PMID:23666637 | Co-IP with tagged *and* endogenous protein; β1-specific blocking-antibody panel |
+| GO:0033625 positive regulation of integrin activation | PMID:23666637 | Ligand changes receptor state, measured as phospho-paxillin/paxillin ratio (see outside-in caveat below) |
 | GO:1902461 negative regulation of mesenchymal stem cell proliferation | PMID:23666637 | Germline KO with in vivo phenotype in three organs + independent shRNA lines |
 | GO:0070373 negative regulation of ERK1 and ERK2 cascade | PMID:23666637 | Perturbed at three points in the chain; vinculin knockdown is the specificity control |
 | GO:0045669 positive regulation of osteoblast differentiation | PMID:23666637 | Osteogenesis fails in KO cells across all three isolations |
 | GO:0045600 positive regulation of fat cell differentiation | PMID:23666637 | Adipogenesis fails in the same KO cells |
 | GO:2000727 positive regulation of cardiac muscle cell differentiation | PMID:25296984 | In vivo ablation + marker analysis + antibody demonstration that it runs through integrin β1 |
+| GO:0050774 negative regulation of dendrite morphogenesis | PMID:19302145 | Conditioned medium, purified protein at 500 ng/ml, and a cell-autonomous overexpression arm; expression time course matches the process |
+
+The `GO:0050774` row was **added during PR review** (#2250). My first draft described the olfactory
+dendritic-refinement role in the top-level `description` but proposed no annotation, on the grounds
+that the work was single-laboratory and mouse-only and was "described in the gene description and
+questions". The reviewer correctly pointed out that both halves of that fail: the same evidence
+grade underpins the five rows drawn from PMID:23666637, PMID:25296984 is from the *same* laboratory
+as PMID:23666637, and there was in fact no question about the nervous system anywhere in the file.
+Withholding ISS from one body of mouse work while applying it to another of identical grade was
+just inconsistent. Added, with two new questions (neuronal receptor; diffusible vs tethered).
+
+It is kept out of `core_functions` for a stated reason rather than by omission: no receptor is known
+for the neuronal effect, so there is no molecular function to attach the process to without assuming
+that integrin β1 is involved, and it has not been reproduced outside the originating lab.
+
+### The outside-in caveat on `GO:0033625`
+
+`GO:0033622 integrin activation` is defined as *"The aggregation, arrangement and bonding together
+of an integrin… that lead to the increased affinity of the integrin for its extracellular ligands"*,
+and that branch is conventionally used for **inside-out** affinity modulation by talin and kindlin.
+ABI3BP works from the opposite side — it *is* the extracellular ligand. The definition does not
+restrict the term to inside-out signalling, and the paper's own wording ("the integrin-β1 is
+maintained in a non-active state" without Abi3bp) supports the claim, but an outside-in ligand is
+not the canonical filler and a curator may prefer to carry the point on `GO:0005178` alone. Recorded
+in `review.reason` on that row.
 
 ### Two term-choice traps I fell into and had to back out of
 
@@ -262,18 +290,46 @@ signalling, not adhesion of the cell to the matrix. Plain `GO:0005178` is the ho
 **Also:**
 
 - One new MF term proposed for the matricellular class (§6), parented under GO:0048018 receptor
-  ligand activity alongside growth factor / cytokine / hormone / morphogen activity.
+  ligand activity alongside growth factor / cytokine / hormone / morphogen activity. **The
+  distinguishing criterion was narrowed during PR review.** An earlier draft argued the term was
+  distinguished from its siblings "by matrix residence rather than diffusion", claiming this was
+  experimentally grounded because the growth-factor mode had been excluded. That overstated the
+  evidence, and evidence in this very file contradicts it: concentrated medium from ABI3BP-expressing
+  cells inhibits MSC proliferation [PMID:23666637, "Concentrated media prepared from HEK293 cells
+  expressing the myc-tagged Abi3bp inhibited proliferation of both MSC and MSC-GFP-Akt1 cells when
+  compared to control concentrated media (Supplementary Figure 3E) further validating the
+  anti-proliferative effect of Abi3bp."], and purified secreted TARSH acts on neurons in dissociated
+  culture — the protein demonstrably works at a distance. What the growth-factor control actually
+  shows is only that Abi3bp is not a growth-factor-like ERK *agonist*. The proposal now rests on the
+  ontology gap alone, which is where its weight always was, with the tethering question moved to
+  `suggested_questions`.
 - Senescence, antiviral and blood-brain-barrier roles left unannotated and moved into
   `suggested_questions` / `suggested_experiments`. The senescence literature contradicts itself
-  (§4) and no term should be asserted until that is resolved.
+  (§4) and no term should be asserted until that is resolved. Note the contrast with the neuronal
+  role, which *is* now annotated: the difference is not the number of laboratories but the kind of
+  evidence. Dendritic refinement has three concordant gain-of-function arms plus a matching
+  expression time course and an activity-independence control; the senescence claims contradict each
+  other in sign, the antiviral report is self-described as preliminary in its own title, and the BBB
+  arm depends on supraphysiological recombinant protein.
 - The affinage record is cited once, on the `GO:1902461` row, and only for its high-level summary
   sentence, which is independently carried on the same row by two verbatim quotes from
   PMID:23666637 and one from PMID:18559958. No mechanistic claim in this review rests on it —
   every domain boundary, binding partner and mechanistic step is quoted from UniProt's own feature
   table or from the primary paper.
 
-**Verification run before pushing:** `checkquotes.py` — 93 quotes, 0 problems (it checks `file:`
+**Verification run before pushing:** `checkquotes.py` — 100 quotes, 0 problems (it checks `file:`
 quotes as well as PMIDs, so the UniProt lines are verified too); `just validate human ABI3BP` —
-`✓ Valid`, zero warnings; `cache/go/terms.csv` — 4 insertions, 0 deletions (a `just validate` run
-dropped unrelated terms twice, so the file was restored from `origin/main` and re-appended in sorted
-position each time).
+`✓ Valid`, zero warnings; `cache/go/terms.csv` — 4 insertions, 0 deletions.
+
+Two `cache/go/terms.csv` traps hit along the way, both worth remembering. First, a `just validate`
+run silently drops unrelated cached terms (18 the first time, 1 each on two later runs), so the file
+has to be restored from `origin/main` and the new terms re-added after every validation. Second,
+**do not globally sort the file to re-insert them** — `origin/main` currently has at least one
+out-of-order entry (`GO:0140312`), so a global sort relocates it and shows up as a spurious deletion.
+Insert each new line in position without touching the rest.
+
+A validator quirk also worth noting: for PMID:19302145 the locally cached record has
+`full_text_available: true` and does contain the full text, but the reference validator's own record
+holds only the abstract, so full-text-only passages are rejected as supporting_text even though
+`checkquotes.py` accepts them. All quotations from that reference are therefore taken from the
+abstract.
