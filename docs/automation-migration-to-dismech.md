@@ -42,12 +42,14 @@ nothing in `.git/config`.
 Verification, all of which should stay empty/green:
 
 ```bash
-grep -rn "secrets.PAT_FOR_PR" .github/                                      # -> empty
-# (per-CHECKOUT, and covering composite actions — a per-file grep misses both)
-uv run pytest tests/test_agent_config.py -k non_persisting
+grep -rn "secrets.PAT_FOR_PR" .                # -> empty (repo-wide, not just .github/)
+
+# Model pins, action-manifest expressions, per-CHECKOUT credential persistence
+# (a per-file grep passes a file with two checkouts where only one is flagged,
+# and misses composite actions entirely), and cron-profile drift.
 uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
-  tests/test_apply_cron_profile.py    # model pins, manifests, checkouts, cron drift
-just test-js                                                                # trust gate
+  tests/test_apply_cron_profile.py
+just test-js                                  # trust gate
 ```
 
 ---
@@ -77,10 +79,18 @@ lost that way. The order that works is merge → retarget the next PR to `main`
 Asked six times in review, so it belongs in the record. The sequencing was not
 arbitrary:
 
-1. **Reviewer split before anything else.** Every subsequent PR was reviewed by
-   an identity distinct from the one writing it. Landing it first is what made
-   the rest of the stack worth reviewing at all — and the reviewer went on to
-   find a 🔴 and several 🟡s that the author's own tests did not.
+1. **Reviewer split as early as the stack allows — which was not first, and
+   that cost something.** The intent was to land it before anything else, so
+   every later PR would be reviewed by an identity distinct from the one writing
+   it. It did not work out: the reviewer-split PR was *stacked on* the
+   pr-shepherd PR, so pr-shepherd had to merge first. #2259 (02:31Z) and #2246
+   (04:35Z) therefore merged before the split (04:52Z), and both were
+   self-reviewed — `gh pr view 2246 --json reviews` returns three reviews, all by
+   `ai4c-agent`, the authoring App. Everything after was independently reviewed,
+   and that reviewer went on to find a 🔴 and several 🟡s the author's own tests
+   did not. **The lesson is to make the reviewer split the base of the stack,
+   not the second entry** — otherwise you silently choose which PRs get
+   self-reviewed, and they will be the foundational ones.
 2. **Injection controls before the scanners.** `close-fork-prs` and the
    untrusted-comment guard reduce what can reach an agent's context; they should
    be in place before more agents get write-capable tokens, not after.
@@ -195,8 +205,9 @@ values, `strategy.matrix` entries, an `env:` indirection
 allowlist entry as a failure so the list can only shrink.
 
 **A manifest is not just YAML.** `agent-run-summary` shipped broken and took
-the summary step down in seven workflows, because its `description:` contained
-an illustrative `${{ steps... }}` expression — the prose explaining the bug was
+the summary step down in seven workflows, because a manifest-level field — in
+this case `description:`, but the same holds for `name:` and any input/output
+`description`/`default` — contained an illustrative GitHub expression — the prose explaining the bug was
 the bug. GitHub template-evaluates `description:` when an action manifest loads,
 `steps` is not a valid manifest context, and the action failed to load outright.
 CI's YAML parse passed the whole time: the file *is* valid YAML, and the
@@ -258,7 +269,7 @@ routine event in the repo into a red X.
   account is not a removed collaborator.
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it. It
   should be deleted. Note it is already non-functional — a checkout using it
-  fails outright, which is how `pr-shepherd` came to fail 24 runs in a row — so
+  fails outright, which is how `pr-shepherd` came to fail 121 runs in a row — so
   deleting it is bookkeeping rather than a cutover.
 - **Five workflows run with `--dangerously-skip-permissions`**:
   `arba-issue-monitor`, `curation-scanner`, `go-annotation-scanner`,
