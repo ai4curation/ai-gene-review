@@ -64,8 +64,36 @@ def http_json(url: str, tries: int = 4) -> dict:
     raise RuntimeError(f"GET failed after {tries} tries: {url}") from last
 
 
+def assert_not_truncated(payload: dict, url: str, limit: int = 100) -> None:
+    """Fail if QuickGO reported more hits than one page returned.
+
+    A `limit=100` query that silently drops page 2 is the same class of defect as a
+    denominator that silently shrinks: the result still looks complete.
+    """
+    hits = payload.get("numberOfHits")
+    got = len(payload.get("results", []))
+    if hits is not None and hits > got:
+        raise SystemExit(
+            f"truncated result: QuickGO reports {hits} hits but only {got} were returned "
+            f"for {url} - raise the limit or paginate before trusting the counts."
+        )
+
+
 def entry_name(acc: str) -> str:
-    return http_json(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields=id")["uniProtkbId"]
+    """Entry name for `acc`, rejecting a dead or merged accession."""
+    d = http_json(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields=id")
+    returned = d.get("primaryAccession")
+    entry_type = d.get("entryType", "")
+    if returned != acc or "Inactive" in entry_type:
+        # A merged accession makes UniProt return the merge target's record, so the reply
+        # looks healthy while describing a different protein. See the long note in
+        # subunit_granule_survey.entry_name: primaryAccession is the only reliable check.
+        raise SystemExit(
+            f"bad input: UniProt accession {acc} is not a live entry - returned "
+            f"primaryAccession={returned!r}, entryType={entry_type!r}. Replace it in this "
+            "module's panel with the current accession."
+        )
+    return d["uniProtkbId"]
 
 
 def nucleotide_annotations(acc: str) -> list[tuple[str, str]]:
@@ -79,7 +107,9 @@ def nucleotide_annotations(acc: str) -> list[tuple[str, str]]:
             "limit": 100,
         }
     )
-    return sorted({(r["goId"], r["goEvidence"]) for r in http_json(url).get("results", [])})
+    payload = http_json(url)
+    assert_not_truncated(payload, url)
+    return sorted({(r["goId"], r["goEvidence"]) for r in payload.get("results", [])})
 
 
 def main() -> str:

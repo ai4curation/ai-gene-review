@@ -130,8 +130,21 @@ FIELDS = "id,protein_name,gene_names,organism_name"
 
 
 def uniprot_by_accession(acc: str) -> list[Candidate]:
+    """Resolve one accession, flagging a redirect rather than aborting.
+
+    A merged accession makes UniProt return the merge target's record, so the reply looks
+    healthy while describing a different protein. Here the accession comes from the GOA
+    WITH/FROM field rather than from a hand-written list, so a redirect is informative data
+    about a stale GOA reference, not a code defect - it is reported, not raised.
+    """
     entry = http_json(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields={FIELDS}")
-    return [parse_entry(entry)]
+    cand = parse_entry(entry)
+    if cand.accession != acc:
+        cand.name = (
+            f"{cand.name} [WARNING: requested {acc}, UniProt returned {cand.accession} - "
+            "accession has been merged or demerged]"
+        )
+    return [cand]
 
 
 def uniprot_search(query: str) -> list[Candidate]:
@@ -190,7 +203,14 @@ def quickgo_evidence(accession: str, go_id: str) -> list[str]:
             }
         )
     )
-    return sorted({r["goEvidence"] for r in http_json(url).get("results", [])})
+    payload = http_json(url)
+    hits, got = payload.get("numberOfHits"), len(payload.get("results", []))
+    if hits is not None and hits > got:
+        raise SystemExit(
+            f"truncated result: QuickGO reports {hits} hits but only {got} were returned "
+            f"for {url} - raise the limit or paginate before trusting the evidence set."
+        )
+    return sorted({r["goEvidence"] for r in payload.get("results", [])})
 
 
 @dataclass

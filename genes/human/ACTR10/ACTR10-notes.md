@@ -205,20 +205,29 @@ Reasons this is not credible for ACTR10:
    table lists only CHAIN, sequence CONFLICTs and secondary structure), and UniProt
    gives one location: `Cytoplasm, cytoskeleton`. A subunit buried in a 1.2 MDa
    cytosolic complex has no route to a secretory granule *lumen*.
-2. Not a complex-level property (checked per subunit via QuickGO). The canonical
-   roster is the 11 in UniProt's own SUBUNIT line — DCTN1/DCTN2/DCTN3 (shoulder),
+2. Not a complex-level property — **computed**, not hand-checked, by
+   `ACTR10-bioinformatics/subunit_granule_survey.py` (RESULTS.md §F), which resolves each
+   reaction's pathway from Reactome rather than guessing it from the reaction id. The
+   canonical roster is the 11 in UniProt's own SUBUNIT line: DCTN1/DCTN2/DCTN3 (shoulder),
    ACTR1A/ACTB (filament), CAPZA1/CAPZB (barbed end), ACTR10/DCTN4/DCTN5/DCTN6 (pointed
-   end). **ACTR10 is the only one of those 11 annotated to azurophil granule lumen at
-   all**, and only **two of the 11** (ACTR10 and CAPZA1) carry any Reactome TAS granule
-   or extracellular term; DCTN1, DCTN2, DCTN3, DCTN4, DCTN5, DCTN6, ACTR1A, ACTB and
-   CAPZB carry none. ACTR1B — the β-centractin paralog that substitutes for ACTR1A in a
-   fraction of dynactin, so a *twelfth* protein rather than one of the 11 — was checked
-   alongside and also carries one. The two proteins sharing ACTR10's pattern are exactly
-   those with large non-dynactin pools (CAPZA1 is a bona fide F-actin capping protein,
-   ACTR1B a centractin paralog), so this is per-protein detection in granule fractions,
-   not secretion of the complex. If dynactin were genuinely packaged into azurophil
-   granules, all 11 would be there. ACTB does carry `GO:0005576` but by **HDA**, i.e.
-   mass spectrometry, not this Reactome route.
+   end).
+
+   - **1/11** carries any annotation from Reactome's Neutrophil degranulation route —
+     **ACTR10 alone**.
+   - **1/11** is annotated to azurophil granule lumen — **ACTR10 alone**.
+   - 3/11 carry any of the three terms by *any* evidence code: ACTR10, plus two that do
+     **not** share its route — **ACTB** only by `HDA` mass spectrometry (a different
+     artefact class), and **CAPZA1** only from `R-HSA-879377`, an S100B/AGER binding
+     reaction that is not under Neutrophil degranulation at all.
+   - The one protein that genuinely shares the route is **ACTR1B**, the β-centractin
+     paralog substituting for ACTR1A in a fraction of dynactin — a *twelfth* protein, not
+     one of the 11, and like CAPZA1 one with a large non-dynactin pool.
+
+   So the pattern is per-protein detection in granule fractions, not secretion of the
+   complex: if dynactin were genuinely packaged into azurophil granules, all 11 would be
+   there and exactly one is. (Earlier drafts of this paragraph said CAPZA1 shared the
+   pattern and that ACTB carried nothing. Both were wrong; §11 records how the module
+   found it.)
 3. It has already misled a downstream paper. A 2024 HCC study describes ACTR10 as
    [PMID:39697424 "ACTR10 is predicted to involve in the retrograde axonal transport of mitochondria and is suggested to be present in the cytosol, extracellular region and secretory granules."]
    — reading the GO annotations back out as ACTR10 biology. That is the concrete cost
@@ -296,6 +305,11 @@ subunit-specific activity) and
 ## 10. Round-2 review response (PR #2274)
 
 Six items from `ai4c-agent`; none changed a GO term, evidence code or action.
+
+> **Dated log — kept as written.** Item 1 below records the round-2 outcome, which round 3
+> then falsified: `subunit_granule_survey.py` showed CAPZA1 does **not** share ACTR10's
+> Reactome route, so the "two of the 11" figure stated there is superseded by the 1/11 in
+> §7 item 2 and §11. Left unedited because it is the history of how the claim moved.
 
 1. **Cross-subunit arithmetic, second pass.** The reviewer was right that ACTR1B is a
    *twelfth* protein, not one of the 11 canonical subunits, so "only three of the 11" was
@@ -398,3 +412,78 @@ Also noted from the reviewer, not acted on: ACTB appears under the HPA "excluded
 denominators" line although as `conventional actin` it was never in either clade denominator
 — the parenthetical clade label makes it readable, and the reviewer agreed it was not worth
 a commit on its own.
+
+## 12. Round-4 review response (PR #2274)
+
+One 🟡 and four 🔵 from `ai4c-reviewer`. No GO term, evidence code, qualifier or action
+changed.
+
+### 🟡 The notes' standing argument still carried the claim round 3 falsified
+
+Correct and the most important item of the round. Round 3 fixed the two YAML sites and added
+§11, but left §7 item 2 — the *undated, standing* argument, which is where the next reader
+looks — still saying CAPZA1 and ACTR1B share ACTR10's pattern, and still listing ACTB as
+carrying nothing while the same paragraph's last sentence said it carries `GO:0005576` by
+HDA. So one file contradicted itself in three places. Rewritten from the module's numbers
+(1/11 on the route, 1/11 azurophil, 3/11 by any code) with the two non-sharers named and why.
+The dated round-2 log in §10 is kept as written per the reviewer, but now carries a
+*superseded* marker pointing forward, since a log stating a falsified outcome without a
+pointer misleads exactly as effectively as a stale argument.
+
+This is the failure the brief warns about in its own words — *a changed line is not a changed
+claim*. Appending a correction note is not the same as propagating the correction. The
+generalisable fix is what was done here: after any correction, **grep the whole gene folder
+for the falsified claim**, not just the sites the reviewer cited.
+
+### 🔵 3 — the dead-accession guard, and a worse trap than I described
+
+Round 3's claim that "the module prints the entry name so a dead accession cannot recur
+silently" was **wrong**, and testing the guard proved it. What `O15507` actually does:
+
+- It is `entryType: Inactive`, `inactiveReason: {MERGED, mergeDemergeTo: [P56159]}` — merged
+  into **GFRA1**, an unrelated protein.
+- UniProt **follows the merge**, so the request returns `GFRA1_HUMAN`. Printing the entry
+  name therefore displays a *different protein's identity* and reads as a healthy answer.
+- `entryType` does not discriminate reliably: repeated identical requests for this accession
+  returned `Inactive` on some and `UniProtKB reviewed (Swiss-Prot)` on others. A guard on
+  that field passes or fails by luck. My first guard was written on `entryType` and did not
+  fire.
+- What holds in every observed response: the returned **`primaryAccession` is the merge
+  target, never the accession requested**. That is the reliable check, and the guard now
+  asserts it (verified: `O15507` rejected, `O75935` accepted).
+
+This is the `size=1` lesson in a new guise — an identifier lookup converting a bad input into
+a confident wrong answer — and worth a campaign line of its own: **a merged UniProt accession
+silently substitutes another protein; check `primaryAccession`, never the name or the
+entryType.** The same guard is now in `nucleotide_gap_survey.py` and
+`nuclear_arp_control.py`, which also resolve hand-written panels. `paint_sources.py` gets a
+*reported* flag instead of an abort, because its accessions come from the GOA WITH/FROM field
+— there a redirect is informative data about a stale GOA reference, not a code defect.
+
+### 🔵 4 — no silent truncation
+
+`limit=100` with no check is the same class of defect as a denominator that silently shrinks.
+All three QuickGO callers now compare `numberOfHits` against the returned page and abort
+naming the URL. (Largest real count in this panel is 9, so nothing was truncated.)
+
+### 🔵 2 — scope of the three-term screen, stated only as far as it is supported
+
+The reviewer suggested documenting that the filter is complete because every degranulation
+exocytosis reaction also emits `GO:0005576`. That is plausible but I could **not verify it** —
+Reactome's `containedEvents` endpoint was returning HTTP 521 — so it is not asserted. The
+docstring states what is supported (within this panel every route-derived set does include
+`GO:0005576`) and names the limitation (a route reaction emitting a granule term *without*
+`GO:0005576` would be missed).
+
+The outage also exposed a design point worth recording: route classification is a hard
+dependency on Reactome, and the module **aborts** rather than degrading to "route unknown".
+Degrading would emit a different, weaker report that still looked complete — the ABRA failure
+mode. So the committed `RESULTS.md` cannot be regenerated while Reactome is down, and that is
+the intended trade. `RESULTS.md` is byte-identical to the round-3 commit, and the three
+network-independent modules were each re-run and confirmed to emit output already present in
+it, so this round's code changes are output-neutral.
+
+### 🔵 5 — the ficolin row's "like CAPZA1" comparison
+
+Fixed: it now says ACTR1B and CAPZA1 are alike in having large non-dynactin pools but only
+ACTR1B is on this Reactome route.

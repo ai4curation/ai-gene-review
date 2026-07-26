@@ -81,9 +81,25 @@ def http_text(url: str, tries: int = 4) -> str:
 
 
 def uniprot_name(acc: str) -> tuple[str, str]:
+    """(gene symbols, recommended name), rejecting a dead or merged accession."""
     d = json.loads(
-        http_text(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields=protein_name,gene_names")
+        http_text(
+            f"https://rest.uniprot.org/uniprotkb/{acc}.json"
+            "?fields=protein_name,gene_names,accession"
+        )
     )
+    returned = d.get("primaryAccession")
+    entry_type = d.get("entryType", "")
+    if returned != acc or "Inactive" in entry_type:
+        # A merged accession makes UniProt return the merge target's record, so the reply
+        # looks healthy while describing a different protein. See the long note in
+        # subunit_granule_survey.entry_name: primaryAccession is the only reliable check.
+        raise SystemExit(
+            f"bad input: UniProt accession {acc} is not a live entry - returned "
+            f"primaryAccession={returned!r}, entryType={entry_type!r}. Replace it in this "
+            "module's panel with the current accession."
+        )
+
     name = (
         d.get("proteinDescription", {})
         .get("recommendedName", {})

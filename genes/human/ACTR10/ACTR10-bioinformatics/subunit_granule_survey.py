@@ -18,6 +18,23 @@ Evidence codes are reported per annotation, because the distinction between a Re
 term and an `HDA` mass-spectrometry term matters to the argument: ACTB carries an
 extracellular term by HDA, which is a different artefact class from the Reactome
 granule-set route under review here.
+
+Scope of the screen, stated because it bounds what the counts mean. The three terms queried
+are exactly the ones removed from ACTR10, so the question answered is "do the other subunits
+carry *these* annotations", and route classification is then applied to whatever they return.
+Within this panel every route-derived annotation set also contains `GO:0005576`, so the
+screen caught the route for every protein here. It is *not* established that this holds in
+general: a Neutrophil-degranulation reaction that emitted a granule-lumen term without
+`GO:0005576` would be missed by this screen, and Reactome's `containedEvents` endpoint was
+returning HTTP 521 when this was checked, so the claim was left unverified rather than
+asserted.
+
+Route classification is a hard dependency on Reactome's ContentService, which returned
+HTTP 521 for several minutes while this module was being written. The failure is deliberately
+left loud: degrading to "route unknown" would emit a *different, weaker* report that still
+looked complete, which is the failure this campaign has been bitten by before. So the module
+aborts and the committed RESULTS.md simply cannot be regenerated while Reactome is down -
+that is the intended trade.
 """
 
 from __future__ import annotations
@@ -81,8 +98,57 @@ def http_json(url: str, tries: int = 4) -> dict:
     raise RuntimeError(f"GET failed after {tries} tries: {url}") from last
 
 
+def assert_not_truncated(payload: dict, url: str, limit: int = 100) -> None:
+    """Fail if QuickGO reported more hits than one page returned.
+
+    A `limit=100` query that silently drops page 2 is the same class of defect as a
+    denominator that silently shrinks: the result still looks complete.
+    """
+    hits = payload.get("numberOfHits")
+    got = len(payload.get("results", []))
+    if hits is not None and hits > got:
+        raise SystemExit(
+            f"truncated result: QuickGO reports {hits} hits but only {got} were returned "
+            f"for {url} - raise the limit or paginate before trusting the counts."
+        )
+
+
 def entry_name(acc: str) -> str:
-    return http_json(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields=id")["uniProtkbId"]
+    """Entry name for `acc`, failing loudly unless UniProt returns that exact accession.
+
+    This is the guard that O15507 defeated. O15507 is a dead accession, MERGED into
+    P56159 (GFRA1), and it stood in for DCTN3 here for three rounds: it returns no gene
+    name and no GO annotations, so it is indistinguishable from a subunit that genuinely
+    carries nothing - the quietest possible false negative.
+
+    Two weaker checks do not work, both tested against the live API:
+
+    * Printing `uniProtkbId` does not expose it. UniProt *follows the merge*, so the
+      request returns `GFRA1_HUMAN` - a different protein's identity - which reads as a
+      perfectly healthy answer.
+    * `entryType` does not discriminate reliably either. Repeated identical requests for
+      this accession returned `entryType: "Inactive"` on some and
+      `entryType: "UniProtKB reviewed (Swiss-Prot)"` with `uniProtkbId: "GFRA1_HUMAN"` on
+      others, so a check on that field passes or fails by luck.
+
+    What does hold in every observed response is that the returned `primaryAccession` is
+    the *merge target* (P56159), never the accession asked for. So identity is asserted on
+    `primaryAccession`, with the `entryType`/`inactiveReason` stub case caught as well. A
+    wrong accession in this hand-written roster is a code defect rather than ambiguous
+    data, so it stops the run and names the lookup that fixes it.
+    """
+    d = http_json(f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields=id")
+    returned = d.get("primaryAccession")
+    entry_type = d.get("entryType", "")
+    if returned != acc or "Inactive" in entry_type:
+        raise SystemExit(
+            f"bad input: UniProt accession {acc} is not a live entry - the request returned "
+            f"primaryAccession={returned!r}, entryType={entry_type!r}, "
+            f"inactiveReason={d.get('inactiveReason')}. It has most likely been merged or "
+            "demerged. Replace it in SUBUNITS with the current accession, found via "
+            "https://rest.uniprot.org/uniprotkb/search?query=gene_exact:<SYMBOL>+AND+organism_id:9606+AND+reviewed:true"
+        )
+    return d["uniProtkbId"]
 
 
 def annotations(acc: str) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
@@ -98,9 +164,11 @@ def annotations(acc: str) -> tuple[list[tuple[str, str, str]], list[tuple[str, s
     url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search?" + urllib.parse.urlencode(
         {"geneProductId": f"UniProtKB:{acc}", "goId": ",".join(TERMS), "limit": 100}
     )
+    payload = http_json(url)
+    assert_not_truncated(payload, url)
     got = {
         (r["goId"], r["goEvidence"], r.get("reference") or "-")
-        for r in http_json(url).get("results", [])
+        for r in payload.get("results", [])
     }
     wanted = sorted(a for a in got if a[0] in TERMS)
     other = sorted(a for a in got if a[0] not in TERMS)
