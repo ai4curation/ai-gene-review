@@ -47,13 +47,21 @@ just test-js                                                                # tr
 
 | PR | What |
 |---|---|
+| [#2259](https://github.com/ai4curation/ai-gene-review/pull/2259) | prerequisite: three tests were already failing on `main` (see "a green main is not a green suite" below) |
 | [#2246](https://github.com/ai4curation/ai-gene-review/pull/2246) | `pr-shepherd` → App token; `.github/agent-config.yaml` + `resolve-agent-config`; model-pin guard test |
-| [#2247](https://github.com/ai4curation/ai-gene-review/pull/2247) | reviewer split: `claude-code-review` runs as `ai4c-reviewer` |
+| [#2276](https://github.com/ai4curation/ai-gene-review/pull/2276) | reviewer split: `claude-code-review` runs as `ai4c-reviewer` (review history on the superseded [#2247](https://github.com/ai4curation/ai-gene-review/pull/2247)) |
 | [#2249](https://github.com/ai4curation/ai-gene-review/pull/2249) | `close-fork-prs`, `untrusted-comment-guard` + trust gate, `@claude` author gating |
-| [#2253](https://github.com/ai4curation/ai-gene-review/pull/2253) | the four scanners → App token |
+| [#2253](https://github.com/ai4curation/ai-gene-review/pull/2253) | the four scanners → App token; run summaries read `execution_file` |
 | [#2255](https://github.com/ai4curation/ai-gene-review/pull/2255) | retire the duplicated dragon-ai mention workflows |
 | [#2260](https://github.com/ai4curation/ai-gene-review/pull/2260) | pages / warm-cache / weekly-compliance → App token; last `persist-credentials` gaps |
 | [#2261](https://github.com/ai4curation/ai-gene-review/pull/2261) | cron profiles |
+
+Landing a stack this deep has one trap worth naming: **do not merge with
+`--delete-branch` while a downstream PR still points at the branch.** GitHub
+auto-closes that PR, and refuses to reopen it if its head has been force-pushed
+since — which it will have been, if you rebase between review rounds. #2247 was
+lost that way. The order that works is merge → retarget the next PR to `main`
+→ *then* delete the branch.
 
 ## The token pattern
 
@@ -102,6 +110,17 @@ then 401 on every push.
 
 ---
 
+## A green `main` is not a green suite
+
+Worth knowing before you start, because it will look like your fault: `main.yaml`
+only runs `just test` when the `src` paths-filter matches (`src/**`, `tests/**`,
+`pyproject.toml`, `uv.lock`). A long run of gene-review-only commits never
+executes the suite, so breakage accumulates behind a green `main` and lands
+whole on the next PR that happens to touch `tests/`. Three failures were waiting
+this way (two stale derived artifacts, one off-vocabulary project tag) and had to
+be cleared in #2259 before any of this could go green. Reproduce on a pristine
+`origin/main` checkout before assuming a red `test (3.12)` is yours.
+
 ## Things that were specific to this repo
 
 Anyone porting this to a third repo should look for these shapes, not just copy
@@ -111,6 +130,13 @@ the token block.
 Both matched `@dragon-ai-agent please`, so every qualifying event ran the agent
 **twice** — visible as paired runs with identical timestamps. They are now one
 workflow keyed on `@ai4c-agent please`, with the old keyword as an alias.
+
+**The credential was already dead, and nobody knew.** `pr-shepherd` failed 24
+runs in a row before this migration — every one at `Checkout repository`, the
+step that used `token: ${{ secrets.PAT_FOR_PR }}`. The first run on the App token
+passed every step. The same applies to every other workflow that held the PAT.
+If an agentic workflow has quietly stopped producing output, check whether it is
+failing at checkout before looking at the agent.
 
 **Two workflows could not have worked.** `arba-issue-monitor` was still calling
 `claude-code-action` with the v0 inputs `mode:`, `direct_prompt:` and
