@@ -1,0 +1,4523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UGCG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UGCG</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q16739" target="_blank" class="term-link">
+                        Q16739
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UGCG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q16739" data-a="DESCRIPTION: UGCG (ceramide glucosyltransferase; glucosylcerami..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UGCG (ceramide glucosyltransferase; glucosylceramide synthase, GCS; EC 2.4.1.80) is a Golgi-membrane glycosyltransferase (family GT2/CAZy GT21) that catalyzes the first and committed step of glucosphingolipid biosynthesis. It transfers glucose from UDP-glucose to ceramide to produce glucosylceramide (GlcCer) plus UDP. The active site lies on the cytosolic face of the Golgi, where newly made GlcCer is the core precursor of hundreds of glycosphingolipids: GlcCer is elongated to lactosylceramide and thence to the ganglio-, globo- and (neo)lacto-series glycosphingolipids. As glycosphingolipids are essential constituents of membrane microdomains, UGCG activity underlies diverse downstream processes, including epidermal permeability-barrier formation, nervous-system development, and membrane signaling. The enzyme is a multi-pass membrane protein whose catalytic D1/D2/D3 aspartate and (Q/R)XXRW motifs bind the UDP-sugar donor. UGCG is the molecular target of the substrate-reduction drugs miglustat, eliglustat and venglustat, and its overexpression is associated with cancer multidrug resistance.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006679" target="_blank" class="term-link">
+                                    GO:0006679
+                                </a>
+                            </span>
+                            <span class="term-label">glucosylceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006679" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that UGCG participates in glucosylceramide biosynthesis. This is the core biological process of the gene and is supported experimentally in the same gene (IDA, PMID:8643456). Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                        PMID:8643456
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008120" target="_blank" class="term-link">
+                                    GO:0008120
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide glucosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0008120" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the core molecular function, ceramide glucosyltransferase activity (EC 2.4.1.80). Directly supported experimentally in this gene (IDA, PMID:8643456) and matches the UniProt catalytic activity. Accept as a core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.4.1.80</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA membrane localization. Correct but far less informative than the specific Golgi membrane annotation (GO:0000139) also present with IDA support. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0000139" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of Golgi membrane localization, consistent with the experimental IDA annotation (PMID:12873973) and UniProt. This is the correct core cellular location. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008120" target="_blank" class="term-link">
+                                    GO:0008120
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide glucosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0008120" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core molecular function via multiple sources (ARBA, EC:2.4.1.80, RHEA:12088, mouse ortholog). Redundant with the experimental IDA (PMID:8643456) but correct. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.4.1.80</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0016757" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR025993) parent-level molecular function. Correct as the general parent of the specific ceramide glucosyltransferase activity (GO:0008120), but too general to be a core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the glycosyltransferase 2 family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006679" target="_blank" class="term-link">
+                                    GO:0006679
+                                </a>
+                            </span>
+                            <span class="term-label">glucosylceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006679" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara orthology transfer (from mouse O88693) of the core biological process. Redundant with the experimental IDA (PMID:8643456) but correct. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                        PMID:8643456
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009966" target="_blank" class="term-link">
+                                    GO:0009966
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0009966" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of a very general process. The link is indirect: glycosphingolipids made by UGCG are components of membrane microdomains that influence signaling, but UGCG does not itself regulate signal transduction. This high-level term over-annotates the gene&#39;s function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">essential components of membrane microdomains that mediate membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0016020" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of generic membrane localization. Correct but subsumed by the specific Golgi membrane annotation. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0030154" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer of a broad differentiation term, the parent of the more specific keratinocyte differentiation. Downstream/pleiotropic consequence of glycosphingolipid production, not the core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">including growth, differentiation, migration,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030216" target="_blank" class="term-link">
+                                    GO:0030216
+                                </a>
+                            </span>
+                            <span class="term-label">keratinocyte differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0030216" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of keratinocyte differentiation. Consistent with human data showing GCS up-regulation during keratinocyte differentiation (PMID:9545298) and with the enzyme&#39;s role in skin-barrier lipid synthesis. This is a genuine downstream role but not the core molecular function; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                                        PMID:9545298
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcCer synthase (GCS) activity increases during keratinocyte differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033210" target="_blank" class="term-link">
+                                    GO:0033210
+                                </a>
+                            </span>
+                            <span class="term-label">leptin-mediated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0033210" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of a specific downstream signaling role, reflecting that glycosphingolipids regulate the leptin receptor LEPR. This is a distal, context-dependent consequence of UGCG activity, not its core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">in the leptin-mediated signaling pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048666" target="_blank" class="term-link">
+                                    GO:0048666
+                                </a>
+                            </span>
+                            <span class="term-label">neuron development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0048666" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of neuron development, reflecting the requirement of glycosphingolipids for proper development and function of the nervous system (neural Ugcg knockout is neurodegenerative/lethal in mouse). Genuine downstream role; not the core molecular function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">functioning of the nervous system</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061436" target="_blank" class="term-link">
+                                    GO:0061436
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of skin barrier</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0061436" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693). Supported by the role of GlcCer as the precursor of the ceramides forming the epidermal permeability barrier. A genuine downstream role but not the core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                                        PMID:9545298
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide, a major component of the epidermal permeability barrier</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098856" target="_blank" class="term-link">
+                                    GO:0098856
+                                </a>
+                            </span>
+                            <span class="term-label">intestinal lipid absorption</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0098856" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of a specific downstream physiological role; glycosphingolipid biosynthesis is required for intestinal endocytic uptake of nutritional lipids. Distal consequence of UGCG activity, not its core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">required for the proper intestinal endocytic uptake of nutritional</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903575" target="_blank" class="term-link">
+                                    GO:1903575
+                                </a>
+                            </span>
+                            <span class="term-label">cornified envelope assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:1903575" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology transfer (mouse O88693) of a specific epidermal process; part of the same skin-barrier biology (GlcCer/ceramide supply for cornified envelope). Downstream role, not the core function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">an important role in the establishment of the skin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006688" target="_blank" class="term-link">
+                                    GO:0006688
+                                </a>
+                            </span>
+                            <span class="term-label">glycosphingolipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9840309
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006688" data-r="Reactome:R-HSA-9840309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) that UGCG is involved in glycosphingolipid biosynthesis. UGCG catalyzes the committed first step (GlcCer synthesis) of this pathway, so the broader biosynthetic-process annotation is a correct core process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                        PMID:8643456
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006665" target="_blank" class="term-link">
+                                    GO:0006665
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006665" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-derived (UPA00222) sphingolipid metabolism. Correct as a broad parent process (UniProt PATHWAY line lists sphingolipid metabolism) but too general relative to the specific glucosylceramide/glycosphingolipid biosynthetic terms. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Lipid metabolism; sphingolipid metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008120" target="_blank" class="term-link">
+                                    GO:0008120
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide glucosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1638104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0008120" data-r="Reactome:R-HSA-1638104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) of the core molecular function. Matches the experimental IDA (PMID:8643456), UniProt EC 2.4.1.80 and the Reactome reaction &#34;UGCG transfers glucose to ceramide&#34;. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.4.1.80</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009966" target="_blank" class="term-link">
+                                    GO:0009966
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0009966" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of a very general regulatory process. As with the matching IEA, this is an indirect, high-level consequence of glycosphingolipid production rather than a direct function of UGCG. Over-annotated.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">essential components of membrane microdomains that mediate membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0030154" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of a broad differentiation term (parent of keratinocyte differentiation). Downstream/pleiotropic consequence; correct but general. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">including growth, differentiation, migration,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033210" target="_blank" class="term-link">
+                                    GO:0033210
+                                </a>
+                            </span>
+                            <span class="term-label">leptin-mediated signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0033210" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693. Same specific downstream signaling role as the matching IEA (glycosphingolipids regulating LEPR). Distal consequence of UGCG activity; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">in the leptin-mediated signaling pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006497" target="_blank" class="term-link">
+                                    GO:0006497
+                                </a>
+                            </span>
+                            <span class="term-label">protein lipidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006497" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693. This annotation is biologically questionable: UGCG glucosylates the lipid ceramide to make the glycolipid glucosylceramide; it does not covalently attach a lipid to a protein, which is what protein lipidation denotes. There is no protein substrate. This appears to be an erroneous orthology transfer and over-annotates the gene. Retained (ISS, not experimental) but flagged.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">of glucose from UDP-glucose to ceramide to produce</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030216" target="_blank" class="term-link">
+                                    GO:0030216
+                                </a>
+                            </span>
+                            <span class="term-label">keratinocyte differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0030216" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of keratinocyte differentiation. Consistent with human GCS up-regulation during keratinocyte differentiation (PMID:9545298). Genuine downstream role; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                                        PMID:9545298
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcCer synthase (GCS) activity increases during keratinocyte differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048666" target="_blank" class="term-link">
+                                    GO:0048666
+                                </a>
+                            </span>
+                            <span class="term-label">neuron development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0048666" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of neuron development, reflecting the requirement of glycosphingolipids for nervous-system development. Genuine downstream role; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">functioning of the nervous system</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061436" target="_blank" class="term-link">
+                                    GO:0061436
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of skin barrier</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0061436" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693. GlcCer is the precursor of the ceramides forming the epidermal permeability barrier. Downstream role; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                                        PMID:9545298
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ceramide, a major component of the epidermal permeability barrier</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098856" target="_blank" class="term-link">
+                                    GO:0098856
+                                </a>
+                            </span>
+                            <span class="term-label">intestinal lipid absorption</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0098856" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of a specific downstream physiological role (glycosphingolipid biosynthesis needed for intestinal lipid uptake). Distal consequence; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">required for the proper intestinal endocytic uptake of nutritional</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903575" target="_blank" class="term-link">
+                                    GO:1903575
+                                </a>
+                            </span>
+                            <span class="term-label">cornified envelope assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:1903575" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from mouse O88693 of cornified envelope assembly, part of the same skin-barrier biology. Downstream role; keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">an important role in the establishment of the skin</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12873973
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glucosylceramide synthase and its functional interaction wit...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0000139" data-r="PMID:12873973" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) Golgi membrane localization from the RTN1-interaction study, which reports UGCG subcellular location at the Golgi/ER interface. Matches UniProt (Golgi apparatus membrane) and is the correct core cellular location. Accept. (Cache is abstract-only; the curator assessed full text.)
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" target="_blank" class="term-link">
+                                        PMID:12873973
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RTN-1C not only interacts with GCS at Golgi/ER interface</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12873973
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glucosylceramide synthase and its functional interaction wit...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0005515" data-r="PMID:12873973" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI protein binding, with UniProtKB:Q16799 (RTN1). The interaction is real and functionally meaningful (RTN-1C modulates UGCG catalytic activity), but bare protein binding is uninformative about UGCG&#39;s own molecular function. Per policy the experimental IPI is retained, not removed; flagged as over-annotated. A more informative capture would be a regulatory partnership with RTN1 that modulates GCS activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" target="_blank" class="term-link">
+                                        PMID:12873973
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we have identified a member of the reticulon (RTN) family (RTN-1C) as the major GCS-protein partner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006679" target="_blank" class="term-link">
+                                    GO:0006679
+                                </a>
+                            </span>
+                            <span class="term-label">glucosylceramide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8643456
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression cloning of a cDNA for human ceramide glucosyltran...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0006679" data-r="PMID:8643456" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence that UGCG carries out glucosylceramide biosynthesis, from the expression-cloning study that isolated the human cDNA and demonstrated a catalytically active enzyme producing GlcCer. This is the core biological process. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                        PMID:8643456
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis and the product, glucosylceramide, serves as the core of more than 300 glycosphingolipids.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008120" target="_blank" class="term-link">
+                                    GO:0008120
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide glucosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8643456
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression cloning of a cDNA for human ceramide glucosyltran...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0008120" data-r="PMID:8643456" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) evidence for the core molecular function, ceramide glucosyltransferase (EC 2.4.1.80): a catalytically active enzyme was produced from the cloned cDNA in E. coli. This is the defining function of UGCG. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                        PMID:8643456
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A catalytically active enzyme was produced from Escherichia coli transfected with the cDNA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1638104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0000139" data-r="Reactome:R-HSA-1638104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (Reactome) Golgi membrane localization, consistent with the experimental IDA (PMID:12873973) and UniProt. Reactome notes UGCG acts on the cytosolic face of the cis-Golgi. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UGCG/UGCG-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008544" target="_blank" class="term-link">
+                                    GO:0008544
+                                </a>
+                            </span>
+                            <span class="term-label">epidermis development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9545298
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Up-regulation of glucosylceramide synthase expression and ac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16739" data-a="GO:0008544" data-r="PMID:9545298" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS from the human keratinocyte-differentiation study showing GCS expression and activity rise ~5-fold during differentiation, supplying GlcCer/ceramide for the epidermal permeability barrier. A genuine downstream role in epidermis development, not the core molecular function. Keep as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                                        PMID:9545298
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcCer synthesis assayed in situ using a fluorescent ceramide analog increased approximately 5-fold during keratinocyte differentiation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the committed first step of glucosphingolipid biosynthesis: UDP-glucose:ceramide glucosyltransferase (glucosylceramide synthase, EC 2.4.1.80), transferring glucose from UDP-glucose to ceramide to produce glucosylceramide (GlcCer), acting on the cytosolic face of the Golgi membrane.</h3>
+                <span class="vote-buttons" data-g="Q16739" data-a="FUNCTION: Catalyzes the committed first step of glucosphingo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008120" target="_blank" class="term-link">
+                            ceramide glucosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006679" target="_blank" class="term-link">
+                                glucosylceramide biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006688" target="_blank" class="term-link">
+                                glycosphingolipid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                                PMID:8643456
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis and the product, glucosylceramide, serves as the core of more than 300 glycosphingolipids.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/UGCG/UGCG-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=2.4.1.80</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/UGCG/UGCG-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" target="_blank" class="term-link">
+                            PMID:12873973
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glucosylceramide synthase and its functional interaction with RTN-1C regulate chemotherapeutic-induced apoptosis in neuroepithelioma cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" target="_blank" class="term-link">
+                            PMID:8643456
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression cloning of a cDNA for human ceramide glucosyltransferase that catalyzes the first glycosylation step of glycosphingolipid synthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9545298" target="_blank" class="term-link">
+                            PMID:9545298
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Up-regulation of glucosylceramide synthase expression and activity during human keratinocyte differentiation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1638104
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UGCG transfers glucose to ceramide</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9840309
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycosphingolipid biosynthesis</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UGCG-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16739" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ugcg-q16739-ceramide-glucosyltransferase-glucosylceramide-synthase-gcs">UGCG (Q16739) — Ceramide glucosyltransferase / Glucosylceramide synthase (GCS)</h1>
+<h2 id="identity-and-core-enzymology">Identity and core enzymology</h2>
+<ul>
+<li>HGNC symbol UGCG; UniProt Q16739 (CEGT_HUMAN); EC 2.4.1.80. RecName "Ceramide glucosyltransferase"; AltNames GLCT-1, Glucosylceramide synthase (GCS), UDP-glucose ceramide glucosyltransferase, UDP-glucose:N-acylsphingosine D-glucosyltransferase [file:human/UGCG/UGCG-uniprot.txt "RecName: Full=Ceramide glucosyltransferase"; "EC=2.4.1.80"].</li>
+<li>394 aa, ~44.9 kDa; glycosyltransferase family 2 (CAZy GT21) [file:human/UGCG/UGCG-uniprot.txt "Belongs to the glycosyltransferase 2 family"].</li>
+<li>Catalyzes the <strong>first and committed glycosylation step of glycosphingolipid biosynthesis</strong>: transfer of glucose from UDP-glucose to ceramide, producing glucosylceramide (GlcCer) + UDP + H+ [file:human/UGCG/UGCG-uniprot.txt "an N-acylsphing-4-enine + UDP-alpha-D-glucose = a beta-D-glucosyl-(1&lt;-&gt;1')-N-acylsphing-4-enine + UDP + H(+)"; "EC=2.4.1.80"].</li>
+<li>Cloned by expression cloning; original functional/enzymatic characterization: <a href="https://pubmed.ncbi.nlm.nih.gov/8643456" title="The enzyme catalyzes the first glycosylation step of glycosphingolipid synthesis and the product, glucosylceramide, serves as the core of more than 300 glycosphingolipids">PMID:8643456</a>. This paper is the IDA source for both the MF (GO:0008120) and the BP (GO:0006679). Cache is abstract-only (full_text_available: false) but the abstract itself states the catalytic activity and pathway role directly.</li>
+<li>GlcCer is the precursor of lactosylceramide and hence of the ganglio-, globo- and (neo)lacto-series glycosphingolipids [file:human/UGCG/UGCG-uniprot.txt "GlcCer is the core component of glycosphingolipids/GSLs"].</li>
+<li>A secondary in vitro activity has been reported: UGCG can also transfer xylose from UDP-Xyl to ceramide, producing xylosylceramide (XylCer) [PMID:33361282; file:human/UGCG/UGCG-uniprot.txt "Catalyzes the synthesis of xylosylceramide/XylCer ... using UDP-Xyl as xylose donor"]. This is not in GOA and is a minor/side activity; not proposed as a core function.</li>
+</ul>
+<h2 id="localization-and-topology">Localization and topology</h2>
+<ul>
+<li>Golgi apparatus membrane; multi-pass membrane protein [file:human/UGCG/UGCG-uniprot.txt "SUBCELLULAR LOCATION: Golgi apparatus membrane"; "Multi-pass membrane protein"].</li>
+<li>IDA Golgi-membrane localization from <a href="https://pubmed.ncbi.nlm.nih.gov/12873973">PMID:12873973</a> (the RTN1 interaction paper), which reports subcellular location. Cache is abstract-only; abstract states GCS acts at the "Golgi/ER interface" <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" title="RTN-1C not only interacts with GCS at Golgi/ER interface">PMID:12873973</a>.</li>
+<li>The catalytic (active) site is on the <strong>cytosolic face</strong> of the Golgi: GlcCer is synthesized at the cytosolic surface of Golgi subfractions [PMID:1532799 (UniProt ref [7]); file:human/UGCG/UGCG-uniprot.txt "Participates in the initial step of the glucosylceramide-based glycosphingolipid/GSL synthetic pathway at the cytosolic surface of the Golgi (PubMed:1532799, PubMed:8643456)"]. Note PMID:1532799 is cited by UniProt but is not among the GOA annotations.</li>
+<li>Topology in UniProt: 5 TRANSMEM helices; the large N-terminal catalytic domain (residues 33–195) is cytoplasmic, consistent with cytosolic-face catalysis [file:human/UGCG/UGCG-uniprot.txt "TOPO_DOM 33..195 /note=Cytoplasmic"].</li>
+<li>Active-site chemistry: D1/D2/D3 aspartates and the (Q/R)XXRW motif form the GCS active site (UDP-sugar binding + catalysis); ACT_SITE 236 proton acceptor [file:human/UGCG/UGCG-uniprot.txt "The D1, D2, D3, (Q/R)XXRW motif is a critical part of the GCS active site, involved in catalysis and UDP-sugar binding"].</li>
+</ul>
+<h2 id="interaction">Interaction</h2>
+<ul>
+<li>Interacts with RTN1 (reticulon-1, isoform RTN-1C), which modulates UGCG catalytic activity [PMID:12873973 "we have identified a member of the reticulon (RTN) family (RTN-1C) as the major GCS-protein partner"; "modulates its catalytic activity in situ"; file:human/UGCG/UGCG-uniprot.txt "Interacts with RTN1; regulates the ceramide glucosyltransferase activity of UGCG"]. The GOA IPI (GO:0005515 protein binding, with UniProtKB:Q16799 = RTN1) is this interaction. "protein binding" is uninformative; the informative functional description is a regulatory partner that modulates GCS activity. Bare GO:0005515 IPI is retained (never removed per policy) as non-core.</li>
+</ul>
+<h2 id="downstream-pleiotropic-roles-mostly-issiea-from-mouse-ortholog-o88693">Downstream / pleiotropic roles (mostly ISS/IEA from mouse ortholog O88693)</h2>
+<p>The single molecular function (making GlcCer) underlies a broad range of downstream processes. In GOA these are largely ISS (GO_REF:0000024, from mouse O88693) and mirrored IEA (GO_REF:0000107, Ensembl Compara from O88693). They are biologically defensible as consequences of loss of glycosphingolipids but are not the core function; they are downstream/context-dependent:</p>
+<ul>
+<li>Keratinocyte differentiation / epidermis development / establishment of skin barrier / cornified envelope assembly: GlcCer is the precursor of the ceramides forming the epidermal permeability barrier; GCS is up-regulated ~5-fold during keratinocyte differentiation [PMID:9545298 "GlcCer synthesis ... increased approximately 5-fold during keratinocyte differentiation"; "glucosylceramide (GlcCer), is thought to be synthesized, stored in intracellular lamellar granules and eventually extruded into the intercellular space where GlcCer is hydrolyzed to ceramide, a major component of the epidermal permeability barrier"]. The TAS "epidermis development" (GO:0008544) from PMID:9545298 is well supported. GO:0030216, GO:0061436, GO:1903575 are ISS/IEA orthology transfers of the same biology; keep as non-core.</li>
+<li>Neuron development / proper development of the nervous system: GSLs required for nervous-system development [file:human/UGCG/UGCG-uniprot.txt "required for instance in the proper development and functioning of the nervous system"]. ISS/IEA from mouse (neural-specific Ugcg KO is embryonic lethal / neurodegenerative). Keep as non-core.</li>
+<li>Leptin-mediated signaling pathway (GO:0033210): GSLs regulate the leptin receptor LEPR [file:human/UGCG/UGCG-uniprot.txt "they regulate the leptin receptor/LEPR in the leptin-mediated signaling pathway"]. Very specific downstream signaling role, ISS/IEA from mouse. Keep as non-core.</li>
+<li>Intestinal lipid absorption (GO:0098856): GSL biosynthesis needed for intestinal endocytic uptake of nutritional lipids [file:human/UGCG/UGCG-uniprot.txt "The biosynthesis of GSLs is also required for the proper intestinal endocytic uptake of nutritional lipids"]. ISS/IEA from mouse. Keep as non-core.</li>
+<li>Regulation of signal transduction (GO:0009966): GSLs are components of membrane microdomains mediating signal transduction [file:human/UGCG/UGCG-uniprot.txt "Glycosphingolipids are essential components of membrane microdomains that mediate membrane trafficking and signal transduction"]. Broad/indirect; ISS + IEA from mouse. Keep as non-core (or over-annotated given how general it is).</li>
+<li>Cell differentiation (GO:0030154): parent of keratinocyte differentiation; general ISS/IEA. Redundant with the more specific differentiation terms; keep as non-core.</li>
+<li>Protein lipidation (GO:0006497): ISS from mouse O88693 (GO_REF:0000024). UGCG glucosylates the <strong>lipid</strong> ceramide, not a protein; glucosylceramide is a glycolipid, not a lipidated protein. GO:0006497 "protein lipidation" = covalent attachment of a lipid to a protein. This looks like an incorrect ortholog transfer / mis-assignment (no protein substrate). Only an ISS (GO_REF:0000024, one paper's judgment), not experimental — flag as over-annotated. Retained (not removed) because it is an ISS with a curator's judgment; but biologically UGCG is not a protein-lipidating enzyme. Marked MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="pharmacology-disease-context-background-not-for-go">Pharmacology / disease context (background, not for GO)</h2>
+<ul>
+<li>UGCG is the target of substrate-reduction therapies: miglustat, eliglustat, venglustat [file:human/UGCG/UGCG-uniprot.txt "DrugBank; DB09039; Eliglustat"; "DrugBank; DB00419; Miglustat"; "DrugBank; DB14966; Venglustat"]. Used in Gaucher disease and other glycosphingolipidoses.</li>
+<li>GCS overexpression is associated with multidrug resistance in cancer <a href="https://pubmed.ncbi.nlm.nih.gov/12873973" title="Glucosylceramide synthase (GCS), the key enzyme in the biosynthesis of glycosphingolipids, has been implicated in many biological phenomena, including multidrug resistance">PMID:12873973</a>.</li>
+</ul>
+<h2 id="annotation-review-summary-actions">Annotation-review summary (actions)</h2>
+<p>Core (ACCEPT):<br />
+- GO:0008120 ceramide glucosyltransferase activity — MF, IDA (PMID:8643456) core; IBA/IEA/TAS duplicates accepted.<br />
+- GO:0006679 glucosylceramide biosynthetic process — BP, IDA (PMID:8643456) core; IBA/IEA duplicates accepted.<br />
+- GO:0006688 glycosphingolipid biosynthetic process — BP, TAS Reactome; core (broader biosynthetic outcome).<br />
+- GO:0000139 Golgi membrane — CC, IDA (PMID:12873973) core; IEA/TAS duplicates accepted.</p>
+<p>Non-core / over-annotation / other:<br />
+- GO:0016020 membrane (IBA, IEA) — accurate but less informative than Golgi membrane; KEEP_AS_NON_CORE.<br />
+- GO:0016757 glycosyltransferase activity (IEA, InterPro) — correct parent of GO:0008120 but too general; KEEP_AS_NON_CORE.<br />
+- GO:0006665 sphingolipid metabolic process (IEA, UniPathway) — correct parent; KEEP_AS_NON_CORE.<br />
+- GO:0008544 epidermis development (TAS, PMID:9545298) — supported downstream; KEEP_AS_NON_CORE.<br />
+- GO:0030216, GO:0061436, GO:1903575, GO:0030154, GO:0048666, GO:0033210, GO:0098856 (ISS + IEA) — downstream pleiotropic; KEEP_AS_NON_CORE.<br />
+- GO:0009966 regulation of signal transduction (ISS + IEA) — very general downstream; MARK_AS_OVER_ANNOTATED.<br />
+- GO:0006497 protein lipidation (ISS) — UGCG makes a glycolipid, not a lipidated protein; MARK_AS_OVER_ANNOTATED.<br />
+- GO:0005515 protein binding (IPI, PMID:12873973, RTN1) — bare protein binding, uninformative; MARK_AS_OVER_ANNOTATED (per policy, never REMOVE an IPI protein-binding).<br />
+</content><br />
+</invoke></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q16739
+gene_symbol: UGCG
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UGCG (ceramide glucosyltransferase; glucosylceramide synthase, GCS; EC 2.4.1.80)
+  is a Golgi-membrane glycosyltransferase (family GT2/CAZy GT21) that catalyzes the
+  first and committed step of glucosphingolipid biosynthesis. It transfers glucose
+  from UDP-glucose to ceramide to produce glucosylceramide (GlcCer) plus UDP. The
+  active site lies on the cytosolic face of the Golgi, where newly made GlcCer is
+  the core precursor of hundreds of glycosphingolipids: GlcCer is elongated to
+  lactosylceramide and thence to the ganglio-, globo- and (neo)lacto-series
+  glycosphingolipids. As glycosphingolipids are essential constituents of membrane
+  microdomains, UGCG activity underlies diverse downstream processes, including
+  epidermal permeability-barrier formation, nervous-system development, and
+  membrane signaling. The enzyme is a multi-pass membrane protein whose catalytic
+  D1/D2/D3 aspartate and (Q/R)XXRW motifs bind the UDP-sugar donor. UGCG is the
+  molecular target of the substrate-reduction drugs miglustat, eliglustat and
+  venglustat, and its overexpression is associated with cancer multidrug resistance.
+existing_annotations:
+- term:
+    id: GO:0006679
+    label: glucosylceramide biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that UGCG participates in glucosylceramide
+      biosynthesis. This is the core biological process of the gene and is
+      supported experimentally in the same gene (IDA, PMID:8643456). Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8643456
+      supporting_text: &gt;-
+        The enzyme catalyzes the first glycosylation step of glycosphingolipid
+        synthesis
+- term:
+    id: GO:0008120
+    label: ceramide glucosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the core molecular function, ceramide
+      glucosyltransferase activity (EC 2.4.1.80). Directly supported experimentally
+      in this gene (IDA, PMID:8643456) and matches the UniProt catalytic activity.
+      Accept as a core function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: EC=2.4.1.80
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IBA membrane localization. Correct but far less informative than the specific
+      Golgi membrane annotation (GO:0000139) also present with IDA support. Keep as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of Golgi membrane localization, consistent with
+      the experimental IDA annotation (PMID:12873973) and UniProt. This is the
+      correct core cellular location. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0008120
+    label: ceramide glucosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core molecular function via multiple sources
+      (ARBA, EC:2.4.1.80, RHEA:12088, mouse ortholog). Redundant with the
+      experimental IDA (PMID:8643456) but correct. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: EC=2.4.1.80
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO (IPR025993) parent-level molecular function. Correct as the
+      general parent of the specific ceramide glucosyltransferase activity
+      (GO:0008120), but too general to be a core function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: Belongs to the glycosyltransferase 2 family.
+- term:
+    id: GO:0006679
+    label: glucosylceramide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl Compara orthology transfer (from mouse O88693) of the core biological
+      process. Redundant with the experimental IDA (PMID:8643456) but correct.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8643456
+      supporting_text: &gt;-
+        The enzyme catalyzes the first glycosylation step of glycosphingolipid
+        synthesis
+- term:
+    id: GO:0009966
+    label: regulation of signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of a very general process. The link is
+      indirect: glycosphingolipids made by UGCG are components of membrane
+      microdomains that influence signaling, but UGCG does not itself regulate
+      signal transduction. This high-level term over-annotates the gene&#39;s function.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: essential components of membrane microdomains that mediate
+        membrane
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of generic membrane localization. Correct
+      but subsumed by the specific Golgi membrane annotation. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer of a broad differentiation term, the parent of the more
+      specific keratinocyte differentiation. Downstream/pleiotropic consequence of
+      glycosphingolipid production, not the core function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: including growth, differentiation, migration,
+- term:
+    id: GO:0030216
+    label: keratinocyte differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of keratinocyte differentiation. Consistent
+      with human data showing GCS up-regulation during keratinocyte differentiation
+      (PMID:9545298) and with the enzyme&#39;s role in skin-barrier lipid synthesis.
+      This is a genuine downstream role but not the core molecular function; keep as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9545298
+      supporting_text: &gt;-
+        GlcCer synthase (GCS) activity increases during keratinocyte
+        differentiation
+- term:
+    id: GO:0033210
+    label: leptin-mediated signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of a specific downstream signaling role,
+      reflecting that glycosphingolipids regulate the leptin receptor LEPR. This is
+      a distal, context-dependent consequence of UGCG activity, not its core
+      function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: in the leptin-mediated signaling pathway
+- term:
+    id: GO:0048666
+    label: neuron development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of neuron development, reflecting the
+      requirement of glycosphingolipids for proper development and function of the
+      nervous system (neural Ugcg knockout is neurodegenerative/lethal in mouse).
+      Genuine downstream role; not the core molecular function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: functioning of the nervous system
+- term:
+    id: GO:0061436
+    label: establishment of skin barrier
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693). Supported by the role of GlcCer as the
+      precursor of the ceramides forming the epidermal permeability barrier. A
+      genuine downstream role but not the core function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9545298
+      supporting_text: &gt;-
+        ceramide, a major component of the epidermal permeability barrier
+- term:
+    id: GO:0098856
+    label: intestinal lipid absorption
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of a specific downstream physiological role;
+      glycosphingolipid biosynthesis is required for intestinal endocytic uptake of
+      nutritional lipids. Distal consequence of UGCG activity, not its core
+      function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: required for the proper intestinal endocytic uptake of
+        nutritional
+- term:
+    id: GO:1903575
+    label: cornified envelope assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology transfer (mouse O88693) of a specific epidermal process; part of the
+      same skin-barrier biology (GlcCer/ceramide supply for cornified envelope).
+      Downstream role, not the core function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: an important role in the establishment of the skin
+- term:
+    id: GO:0006688
+    label: glycosphingolipid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9840309
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) that UGCG is involved in glycosphingolipid biosynthesis. UGCG
+      catalyzes the committed first step (GlcCer synthesis) of this pathway, so the
+      broader biosynthetic-process annotation is a correct core process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8643456
+      supporting_text: &gt;-
+        The enzyme catalyzes the first glycosylation step of glycosphingolipid
+        synthesis
+- term:
+    id: GO:0006665
+    label: sphingolipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway-derived (UPA00222) sphingolipid metabolism. Correct as a broad
+      parent process (UniProt PATHWAY line lists sphingolipid metabolism) but too
+      general relative to the specific glucosylceramide/glycosphingolipid
+      biosynthetic terms. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: &#39;PATHWAY: Lipid metabolism; sphingolipid metabolism.&#39;
+- term:
+    id: GO:0008120
+    label: ceramide glucosyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1638104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS (Reactome) of the core molecular function. Matches the experimental IDA
+      (PMID:8643456), UniProt EC 2.4.1.80 and the Reactome reaction &#34;UGCG transfers
+      glucose to ceramide&#34;. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: EC=2.4.1.80
+- term:
+    id: GO:0009966
+    label: regulation of signal transduction
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of a very general regulatory process. As with the
+      matching IEA, this is an indirect, high-level consequence of glycosphingolipid
+      production rather than a direct function of UGCG. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: essential components of membrane microdomains that mediate
+        membrane
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of a broad differentiation term (parent of keratinocyte
+      differentiation). Downstream/pleiotropic consequence; correct but general.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: including growth, differentiation, migration,
+- term:
+    id: GO:0033210
+    label: leptin-mediated signaling pathway
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693. Same specific downstream signaling role as the matching
+      IEA (glycosphingolipids regulating LEPR). Distal consequence of UGCG activity;
+      keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: in the leptin-mediated signaling pathway
+- term:
+    id: GO:0006497
+    label: protein lipidation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693. This annotation is biologically questionable: UGCG
+      glucosylates the lipid ceramide to make the glycolipid glucosylceramide; it
+      does not covalently attach a lipid to a protein, which is what protein
+      lipidation denotes. There is no protein substrate. This appears to be an
+      erroneous orthology transfer and over-annotates the gene. Retained (ISS, not
+      experimental) but flagged.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: of glucose from UDP-glucose to ceramide to produce
+- term:
+    id: GO:0030216
+    label: keratinocyte differentiation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of keratinocyte differentiation. Consistent with human
+      GCS up-regulation during keratinocyte differentiation (PMID:9545298). Genuine
+      downstream role; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9545298
+      supporting_text: &gt;-
+        GlcCer synthase (GCS) activity increases during keratinocyte
+        differentiation
+- term:
+    id: GO:0048666
+    label: neuron development
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of neuron development, reflecting the requirement of
+      glycosphingolipids for nervous-system development. Genuine downstream role;
+      keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: functioning of the nervous system
+- term:
+    id: GO:0061436
+    label: establishment of skin barrier
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693. GlcCer is the precursor of the ceramides forming the
+      epidermal permeability barrier. Downstream role; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9545298
+      supporting_text: &gt;-
+        ceramide, a major component of the epidermal permeability barrier
+- term:
+    id: GO:0098856
+    label: intestinal lipid absorption
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of a specific downstream physiological role
+      (glycosphingolipid biosynthesis needed for intestinal lipid uptake). Distal
+      consequence; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: required for the proper intestinal endocytic uptake of
+        nutritional
+- term:
+    id: GO:1903575
+    label: cornified envelope assembly
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from mouse O88693 of cornified envelope assembly, part of the same
+      skin-barrier biology. Downstream role; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: an important role in the establishment of the skin
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IDA
+  original_reference_id: PMID:12873973
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) Golgi membrane localization from the RTN1-interaction
+      study, which reports UGCG subcellular location at the Golgi/ER interface.
+      Matches UniProt (Golgi apparatus membrane) and is the correct core cellular
+      location. Accept. (Cache is abstract-only; the curator assessed full text.)
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12873973
+      supporting_text: RTN-1C not only interacts with GCS at Golgi/ER interface
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12873973
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI protein binding, with UniProtKB:Q16799 (RTN1). The interaction is real and
+      functionally meaningful (RTN-1C modulates UGCG catalytic activity), but bare
+      protein binding is uninformative about UGCG&#39;s own molecular function. Per
+      policy the experimental IPI is retained, not removed; flagged as
+      over-annotated. A more informative capture would be a regulatory partnership
+      with RTN1 that modulates GCS activity.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:12873973
+      supporting_text: &gt;-
+        we have identified a member of the reticulon (RTN) family (RTN-1C) as the
+        major GCS-protein partner
+- term:
+    id: GO:0006679
+    label: glucosylceramide biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:8643456
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence that UGCG carries out glucosylceramide
+      biosynthesis, from the expression-cloning study that isolated the human cDNA
+      and demonstrated a catalytically active enzyme producing GlcCer. This is the
+      core biological process. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8643456
+      supporting_text: &gt;-
+        The enzyme catalyzes the first glycosylation step of glycosphingolipid
+        synthesis and the product, glucosylceramide, serves as the core of more
+        than 300 glycosphingolipids.
+- term:
+    id: GO:0008120
+    label: ceramide glucosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8643456
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) evidence for the core molecular function, ceramide
+      glucosyltransferase (EC 2.4.1.80): a catalytically active enzyme was produced
+      from the cloned cDNA in E. coli. This is the defining function of UGCG. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8643456
+      supporting_text: &gt;-
+        A catalytically active enzyme was produced from Escherichia coli
+        transfected with the cDNA.
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1638104
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS (Reactome) Golgi membrane localization, consistent with the experimental
+      IDA (PMID:12873973) and UniProt. Reactome notes UGCG acts on the cytosolic
+      face of the cis-Golgi. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UGCG/UGCG-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0008544
+    label: epidermis development
+  evidence_type: TAS
+  original_reference_id: PMID:9545298
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS from the human keratinocyte-differentiation study showing GCS expression
+      and activity rise ~5-fold during differentiation, supplying GlcCer/ceramide
+      for the epidermal permeability barrier. A genuine downstream role in epidermis
+      development, not the core molecular function. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:9545298
+      supporting_text: &gt;-
+        GlcCer synthesis assayed in situ using a fluorescent ceramide analog
+        increased approximately 5-fold during keratinocyte differentiation
+core_functions:
+- description: &gt;-
+    Catalyzes the committed first step of glucosphingolipid biosynthesis:
+    UDP-glucose:ceramide glucosyltransferase (glucosylceramide synthase, EC
+    2.4.1.80), transferring glucose from UDP-glucose to ceramide to produce
+    glucosylceramide (GlcCer), acting on the cytosolic face of the Golgi membrane.
+  molecular_function:
+    id: GO:0008120
+    label: ceramide glucosyltransferase activity
+  directly_involved_in:
+  - id: GO:0006679
+    label: glucosylceramide biosynthetic process
+  - id: GO:0006688
+    label: glycosphingolipid biosynthetic process
+  locations:
+  - id: GO:0000139
+    label: Golgi membrane
+  supported_by:
+  - reference_id: PMID:8643456
+    supporting_text: &gt;-
+      The enzyme catalyzes the first glycosylation step of glycosphingolipid
+      synthesis and the product, glucosylceramide, serves as the core of more than
+      300 glycosphingolipids.
+  - reference_id: file:human/UGCG/UGCG-uniprot.txt
+    supporting_text: EC=2.4.1.80
+  - reference_id: file:human/UGCG/UGCG-uniprot.txt
+    supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12873973
+  title: Glucosylceramide synthase and its functional interaction with RTN-1C regulate
+    chemotherapeutic-induced apoptosis in neuroepithelioma cells.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Source of the IDA Golgi-membrane localization and the IPI
+      interaction with RTN1 (RTN-1C), which modulates UGCG catalytic activity.
+      Cache is abstract-only; the abstract supports both the interaction and the
+      Golgi/ER-interface localization.
+- id: PMID:8643456
+  title: Expression cloning of a cDNA for human ceramide glucosyltransferase that
+    catalyzes the first glycosylation step of glycosphingolipid synthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. The defining functional paper: expression cloning of human
+      UGCG and demonstration of ceramide glucosyltransferase activity (EC 2.4.1.80)
+      producing glucosylceramide. Source of the core MF and BP IDA annotations.
+- id: PMID:9545298
+  title: Up-regulation of glucosylceramide synthase expression and activity during
+    human keratinocyte differentiation.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Human keratinocyte study showing ~5-fold up-regulation of GCS
+      during differentiation; supports the epidermis-development/skin-barrier
+      downstream annotations. Informs but does not establish the core enzymatic
+      function.
+- id: Reactome:R-HSA-1638104
+  title: UGCG transfers glucose to ceramide
+  findings: []
+- id: Reactome:R-HSA-9840309
+  title: Glycosphingolipid biosynthesis
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

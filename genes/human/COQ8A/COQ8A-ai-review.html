@@ -1,0 +1,4889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COQ8A - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COQ8A</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8NI60" target="_blank" class="term-link">
+                        Q8NI60
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COQ8A";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8NI60" data-a="DESCRIPTION: COQ8A (also known as ADCK3, CABC1, COQ8) is a mito..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COQ8A (also known as ADCK3, CABC1, COQ8) is a mitochondrial member of the ancient UbiB family of atypical protein-kinase-like (PKL) enzymes, and is one of two human co-orthologs (with COQ8B/ADCK4) of yeast Coq8p. It is required for the biosynthesis of coenzyme Q (ubiquinone/CoQ10), a lipid-soluble electron carrier of the respiratory chain and a membrane antioxidant. The 647-residue precursor is imported into mitochondria (an N-terminal transit peptide of ~162 residues is removed) and anchors to the inner mitochondrial membrane as a single-pass membrane protein, with its catalytic domain facing the matrix, where CoQ is produced. Although COQ8A adopts a protein-kinase-like fold, several UbiB-specific features suppress canonical protein-kinase activity: an N-terminal KxGQ domain occludes the substrate-binding cleft, and an alanine-rich (AAAS) loop replaces the canonical glycine-rich nucleotide-binding loop, conferring an unusual selectivity for binding ADP over ATP. Biochemically, the protein binds and hydrolyzes ATP (ATPase activity that is enhanced by the KxGQ motif and by coenzyme-Q head-group intermediates and cardiolipin), and it interacts with lipid CoQ intermediates, rather than exhibiting canonical protein-kinase phosphotransfer in trans. Functionally, COQ8A stabilizes and helps assemble the multi-subunit CoQ biosynthetic complex (the &#34;COQ synthome&#34;/complex Q; COQ3-COQ7, COQ9), thereby streamlining CoQ production. Biallelic loss-of-function variants cause primary coenzyme Q10 deficiency-4 (COQ10D4), presenting as autosomal-recessive cerebellar ataxia (ARCA2/SCAR9) with cerebellar atrophy, exercise intolerance, and variable seizures.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>coenzyme Q biosynthetic complex (COQ synthome)</h3>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="coenzyme Q biosynthetic complex (COQ synthome)" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A protein-containing complex, located at the matrix face of the mitochondrial inner membrane, that carries out head-group modification steps of ubiquinone (coenzyme Q) biosynthesis. In humans it comprises COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9, and is stabilized by the atypical UbiB-family kinase COQ8A (and its paralog COQ8B).</p>
+
+
+
+            <p><strong>Justification:</strong> COQ8A&#39;s core cellular role is membership in and stabilization of this complex (&#34;complex Q&#34;), but there is no specific protein-complex GO term to record it; only the generic GO:0032991 protein-containing complex is currently available for the in_complex slot.</p>
+
+
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference of the core, well-established role of COQ8A/Coq8p orthologs in ubiquinone (coenzyme Q) biosynthesis. This is consistent with abundant experimental evidence and is the central function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Atypical kinase involved in the biosynthesis of coenzyme Q</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0031966" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt Subcellular Location keyword (mitochondrion membrane). Correct and corroborated by experimental localization; mitochondrial (inner) membrane association is well established. Kept as non-core relative to the more specific matrix/inner membrane localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:16189514" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; (GO:0005515) from a large-scale human protein-protein interaction network study (IntAct partner Q9UI14/RABAC1). The generic term conveys no specific molecular function and the partner is not part of the CoQ biosynthetic machinery. Over-annotation of a high-throughput binary interaction; not a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale human interactome map (Rolland et al.). Multiple binary partners captured (e.g. AGTRAP, TMEM239, LDAF1, REEP6, TFIP11, RABAC1); none are CoQ-biosynthesis proteins and the term is uninformative. High-throughput over-annotation; not a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a study of macromolecular interaction perturbations in genetic disorders (Sahni et al.). Binary partners (DTX2, SH3GLB1, REEP6, TFIP11, etc.) are not CoQ pathway components; the generic term is uninformative. High-throughput over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499296
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial Protein Interaction Mapping Identifies Regulat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:27499296" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from mitochondrial protein interaction mapping (Floyd et al.); the IntAct partner here is COQ9 (O75208), a genuine member of the CoQ biosynthetic complex (&#34;complex Q&#34;). The interaction is biologically real and central to COQ8A function, but the generic GO:0005515 term does not capture it. Marked as over-annotated at the term level; the underlying complex membership is represented via in_complex in core_functions.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a systematic study of interaction disruption by genetic variants (Fragoza et al.). Partners (AGTRAP, REEP6, TFIP11) are not CoQ-pathway proteins; term is uninformative. High-throughput over-annotation; not a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI human binary interactome reference map (Luck et al.). Many low-specificity Y2H partners captured; none are CoQ-biosynthesis components and the generic term is uninformative. High-throughput over-annotation; not a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from an interactome map of neurodegenerative-disease proteins. Partners (MAOB, LITAF, SPRY4, ATG10, etc.) are not CoQ-pathway components; the generic term is uninformative. High-throughput over-annotation; not a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006744" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from UniPathway vocabulary mapping (ubiquinone biosynthesis, UPA00232). Correct and consistent with the core function, though redundant with the experimental IMP/IDA annotations to the same term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cofactor biosynthesis; ubiquinone biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization from HPA immunofluorescence curation. Correct; COQ8A is a well-established mitochondrial protein. Kept as non-core relative to the more specific inner-membrane/matrix-facing localization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11888884" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11888884
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation of a novel gene, CABC1, encoding a mitochondrial p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0031966" data-r="PMID:11888884" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental mitochondrial membrane localization from the original CABC1/COQ8A isolation study (Iiizumi et al.), which identified CABC1 as a mitochondrial, p53-inducible protein. Consistent with the well-established inner-mitochondrial-membrane localization. Accepted as the core localization; the mature protein is a single-pass inner-membrane protein with a matrix-facing catalytic domain.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Single-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0031966" data-r="PMID:25498144" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental mitochondrial-membrane localization from the structural/biochemical study (Stefely et al. 2015), which mapped the mature form and confirmed matrix-facing residence at the inner membrane. Accepted; corroborates the core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ADCK3 is known to reside in the mitochondrial matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33988507" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33988507
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A subcellular map of the human kinome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0031966" data-r="PMID:33988507" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial-membrane localization from the subcellular kinome map (Zhang et al. 2021), a systematic assignment of kinome members to compartments. Consistent with the established mitochondrial localization; corroborating, non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0004672" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> &#34;Protein kinase activity&#34; transferred by sequence similarity from COQ8B (Q96D53). Although COQ8A adopts a protein-kinase-like fold, direct biochemical study demonstrated that it lacks canonical protein kinase activity in trans (the same PMID:27499294 result underpins an explicit NOT protein-kinase-activity annotation on this gene). The demonstrated activity is instead ATP binding/hydrolysis (ATPase). This ISS annotation therefore over-asserts a canonical protein-kinase function; recommend replacing with ATP binding and ATP hydrolysis (ATPase) activity, which the evidence supports.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    ATP binding
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    ATP hydrolysis activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">interacts with lipid CoQ intermediates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38425362
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vitro construction of the COQ metabolon unveils the molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006744" data-r="PMID:38425362" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that COQ8 promotes coenzyme Q biosynthesis, from in-vitro reconstruction of the animal COQ metabolon (Nicoll et al. 2024), which shows COQ8 increases and streamlines CoQ production. (The experimentally characterized paralog in that study was ancestral COQ8B, since recombinant COQ8A gave very low yields, but COQ8A and COQ8B are chordate co-orthologs of the same COQ8 clade and the CoQ-biosynthesis role is shared.) Accepts the gene&#39;s core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                                        PMID:38425362
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">increases and streamlines coenzyme Q production</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrion localization from a high-throughput high-confidence mitochondrial proteome study. Consistent with the established localization; corroborating, non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33988507" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33988507
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A subcellular map of the human kinome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005739" data-r="PMID:33988507" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrion localization (IDA) from the subcellular kinome map (Zhang et al. 2021). Correct and consistent with the well-established mitochondrial localization; corroborating.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0004672" data-r="PMID:27499294" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT protein kinase activity. Stefely et al. 2016 directly demonstrated that COQ8, despite its protein-kinase-like fold, lacks canonical protein kinase activity in trans. This negated annotation is correct and important — it explicitly counters the naive &#34;protein kinase&#34; assignment implied by the family name (ADCK, aarF domain-containing kinase). Accept as-is.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Instead, COQ8 has ATPase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006468" target="_blank" class="term-link">
+                                    GO:0006468
+                                </a>
+                            </span>
+                            <span class="term-label">protein phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006468" data-r="PMID:27499294" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT involved_in protein phosphorylation. Consistent with the finding that COQ8 does not perform canonical protein-kinase phosphotransfer in trans; the protein instead functions via ATPase / small-molecule (possibly lipid) activity and complex-Q stabilization. Correct negated annotation; accept as-is.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">interacts with lipid CoQ intermediates</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006744" data-r="PMID:27499294" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence that COQ8A is required for ubiquinone biosynthesis: Coq8a-knockout mice develop cerebellar ataxia recapitulating ARCA2 with disruption of complex Q and CoQ deficiency, and active-site mutations abolish CoQ production. This is the core biological process of the gene. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the K134H mutation eliminates CoQ production in vivo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0016301" data-r="PMID:27499294" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#34;kinase activity&#34; IDA. The activity actually measured in this paper is ATP hydrolysis (ATPase), which the authors describe as small-molecule &#34;water kinase&#34; activity and which is enhanced by the UbiB-specific KxGQ motif. The broad &#34;kinase activity&#34; term is imprecise and, given the explicit NOT protein kinase annotation, risks implying phosphotransfer to a macromolecular substrate that was not demonstrated. Recommend the more precise ATP hydrolysis (ATPase) activity term.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    ATP hydrolysis activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coq8p ATPase activity is enhanced by the UbiB-specific KxGQ motif</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0016310" data-r="PMID:27499294" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic BP &#34;phosphorylation&#34; paired with the &#34;kinase activity&#34; MF. The only phosphotransfer demonstrated for COQ8 is autophosphorylation, and that is seen only when the native A-rich loop is mutated (A-to-G); native COQ8 does not carry out canonical protein phosphorylation (NOT-annotated). The measured wild-type activity is ATP hydrolysis. &#34;Phosphorylation&#34; as a biological process is an over-annotation here and is not the gene&#39;s endogenous role (ubiquinone biosynthesis).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005739" data-r="PMID:25498144" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrion localization (IDA) from Stefely et al. 2015, which characterized endogenous ADCK3/COQ8A as residing in the mitochondrial matrix at the inner membrane. Correct; corroborating the core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ADCK3 is known to reside in the mitochondrial matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                    GO:0006744
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquinone biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0006744" data-r="PMID:25498144" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP evidence for the ubiquinone-biosynthesis role: structure-guided mutations of conserved nucleotide-pocket, A-rich loop and QKE-triad residues in Coq8p/ADCK3 eliminate respiratory growth and reduce CoQ abundance in vivo. Core biological process; accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A single alanine-to-glycine mutation of this loop flips</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0016301" data-r="PMID:25498144" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#34;kinase activity&#34; IDA. The demonstrable ATP-utilizing activity in this study is autophosphorylation enabled only by the engineered A339G mutation of the A-rich loop; wild-type ADCK3 shows an unusual ADP-over-ATP selectivity and does not display canonical kinase activity. The umbrella &#34;kinase activity&#34; term over-asserts the native biochemistry; the better-supported activities are ATP binding and (per PMID:27499294) ATP hydrolysis.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    ATP hydrolysis activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">unusual selectivity for binding ADP over ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0016310" data-r="PMID:25498144" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic BP &#34;phosphorylation&#34;, paired with the &#34;kinase activity&#34; MF above. Based on autophosphorylation that is only unmasked by the artificial A339G mutation and that inhibits CoQ biosynthesis in vivo — i.e. not the gene&#39;s native process. Over-annotation; the endogenous process is ubiquinone biosynthesis.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043531" target="_blank" class="term-link">
+                                    GO:0043531
+                                </a>
+                            </span>
+                            <span class="term-label">ADP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25498144
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial ADCK3 employs an atypical protein kinase-like ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0043531" data-r="PMID:25498144" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ADP binding (IDA). A distinctive and well-supported molecular feature of COQ8A: thermal-shift assays show adenine nucleotides stabilize the protein, with an unusual selectivity for ADP over ATP driven by the A-rich (AAAS) loop. This nucleotide-binding activity is central to the atypical UbiB mechanism. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                        PMID:25498144
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">unusual selectivity for binding ADP over ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0005759" data-r="PMID:27499294" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed refinement of the existing mitochondrion / mitochondrial-membrane localization: COQ8A (and yeast Coq8p) localize to the matrix face of the inner mitochondrial membrane, the site of CoQ production. Added to make the core-function localization explicit.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">localize to the matrix face of the inner mitochondrial membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                                    GO:0032991
+                                </a>
+                            </span>
+                            <span class="term-label">protein-containing complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27499294
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NI60" data-a="GO:0032991" data-r="PMID:27499294" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed annotation capturing COQ8A&#39;s membership in the multi-subunit CoQ biosynthetic complex (COQ synthome / complex Q; COQ3-COQ7, COQ9), which it stabilizes. Recorded via the generic protein-containing complex term as no specific COQ synthome term currently exists.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COQ8A/COQ8A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                        PMID:27499294
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coq8p and COQ8A specifically maintain complex Q</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-binding activity: COQ8A binds adenine nucleotides via its atypical protein-kinase-like fold, with an unusual selectivity for ADP over ATP conferred by the alanine-rich (AAAS) nucleotide-binding loop. This nucleotide binding is required to relieve autoinhibition and is essential for the protein&#39;s role in coenzyme Q biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="FUNCTION: ATP-binding activity: COQ8A binds adenine nucleoti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                                PMID:25498144
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">unusual selectivity for binding ADP over ATP</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ8A/COQ8A-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Shows an unusual selectivity for binding ADP over ATP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP hydrolysis (ATPase) activity: rather than canonical protein-kinase phosphotransfer, the demonstrated catalytic activity of COQ8/COQ8A is ATP hydrolysis (a small-molecule &#34;water kinase&#34; activity) that is enhanced by the UbiB-specific KxGQ motif and by coenzyme-Q head-group intermediates. Mutations that abolish this activity eliminate CoQ production in vivo, linking the ATPase to the endogenous function; canonical protein-kinase activity in trans is not exhibited.</h3>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="FUNCTION: ATP hydrolysis (ATPase) activity: rather than cano..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                PMID:27499294
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Instead, COQ8 has ATPase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                PMID:27499294
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Coq8p ATPase activity is enhanced by the UbiB-specific KxGQ motif</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Coenzyme Q (ubiquinone) biosynthesis: COQ8A is essential for CoQ10 biosynthesis, acting as a member and stabilizer of the multi-subunit CoQ biosynthetic complex (the COQ synthome / complex Q; COQ3-COQ7, COQ9) at the matrix face of the inner mitochondrial membrane. Loss of COQ8A destabilizes complex Q and causes CoQ deficiency (ARCA2/COQ10D4).</h3>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="FUNCTION: Coenzyme Q (ubiquinone) biosynthesis: COQ8A is ess..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006744" target="_blank" class="term-link">
+                                ubiquinone biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                            protein-containing complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ8A/COQ8A-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Atypical kinase involved in the biosynthesis of coenzyme Q</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COQ8A/COQ8A-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                                PMID:27499294
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Coq8p and COQ8A specifically maintain complex Q</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11888884" target="_blank" class="term-link">
+                            PMID:11888884
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation of a novel gene, CABC1, encoding a mitochondrial protein that is highly homologous to yeast activity of bc1 complex.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" target="_blank" class="term-link">
+                            PMID:25498144
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial ADCK3 employs an atypical protein kinase-like fold to enable coenzyme Q biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" target="_blank" class="term-link">
+                            PMID:27499294
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase Activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27499296" target="_blank" class="term-link">
+                            PMID:27499296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory Chain Function.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33988507" target="_blank" class="term-link">
+                            PMID:33988507
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A subcellular map of the human kinome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38425362" target="_blank" class="term-link">
+                            PMID:38425362
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vitro construction of the COQ metabolon unveils the molecular determinants of coenzyme Q biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/COQ8A/COQ8A-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q8NI60 (COQ8A_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological small-molecule substrate of COQ8A&#39;s ATPase / atypical kinase activity in vivo - is it truly a &#34;water kinase&#34; (ATPase), a lipid/prenyl-quinone kinase, or does ATP hydrolysis primarily power conformational cycling that assembles complex Q?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="Q: What is the physiological small-molecule substrate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does COQ8A phosphorylate any endogenous target (protein or lipid) under native conditions, given that canonical protein-kinase activity in trans is absent and autophosphorylation is only seen with engineered A-rich-loop mutants?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="Q: Does COQ8A phosphorylate any endogenous target (pr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute human complex Q with recombinant COQ8A (not only ancestral/COQ8B) and measure CoQ-intermediate-stimulated ATPase activity and its dependence on the KxGQ motif and cardiolipin.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="EXPERIMENT: Reconstitute human complex Q with recombinant COQ8..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use activity-based or metabolomic profiling in COQ8A-null cells rescued with catalytically dead (D507N) vs KxGQ-mutant vs wild-type COQ8A to distinguish the roles of nucleotide binding, ATP hydrolysis, and complex-Q stabilization in CoQ production.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8NI60" data-a="EXPERIMENT: Use activity-based or metabolomic profiling in COQ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COQ8A-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8NI60" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coq8a-adck3-cabc1-gene-review-notes">COQ8A (ADCK3 / CABC1) — gene review notes</h1>
+<p>UniProt: Q8NI60 (COQ8A_HUMAN). HGNC:16812. Synonyms: ADCK3, CABC1, COQ8, ORFNames PP265.<br />
+647 aa precursor; mitochondrial transit peptide 1–162; mature chain 163–647.</p>
+<h2 id="summary-of-biology">Summary of biology</h2>
+<p>COQ8A is a mitochondrial member of the <strong>ancient UbiB atypical protein-kinase-like (PKL)<br />
+family</strong> required for biosynthesis of <strong>coenzyme Q (ubiquinone, CoQ10)</strong>. It is the human<br />
+co-ortholog (with COQ8B/ADCK4) of yeast Coq8p. It localizes to the <strong>matrix face of the<br />
+inner mitochondrial membrane</strong> as a single-pass membrane protein, and its mature form is<br />
+N-terminally truncated by ~162 residues.</p>
+<h3 id="the-atypical-kinase-vs-atpase-question-central-nuance">The atypical-kinase vs ATPase question (central nuance)</h3>
+<ul>
+<li>COQ8A <strong>adopts a protein-kinase-like fold</strong> but carries UbiB-specific features that<br />
+<strong>suppress canonical protein-kinase activity</strong>: a KxGQ-domain / N-terminal extension that<br />
+  occludes the substrate-binding cleft, and an alanine-rich (A-rich, AAAS) loop replacing<br />
+  the canonical glycine-rich loop, which limits ATP binding and gives an unusual selectivity<br />
+  for <strong>ADP over ATP</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/25498144" title="unusual selectivity for binding ADP over ATP">PMID:25498144</a>.</li>
+<li>The Stefely 2016 paper explicitly demonstrated that COQ8 <strong>lacks canonical protein kinase<br />
+  activity in trans</strong>; instead it <strong>has ATPase activity and interacts with lipid CoQ<br />
+  intermediates</strong> [PMID:27499294 abstract "Instead, COQ8 has ATPase activity" / "interacts<br />
+  with lipid CoQ intermediates"]. The ATPase activity is enhanced by the KxGQ motif<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27499294" title="Coq8p ATPase activity is enhanced by the UbiB-specific KxGQ motif">PMID:27499294</a> and the<br />
+  K134H (KxGQ) mutation that abolishes ATPase eliminates CoQ production in vivo<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27499294" title="the K134H mutation eliminates CoQ production in vivo">PMID:27499294</a>, tying the ATPase/<br />
+  small-molecule-kinase activity (not autophosphorylation) to the endogenous function.</li>
+<li>Only an engineered A-to-G (A339G) mutation of the A-rich loop flips coenzyme selectivity<br />
+  toward ATP and enables <strong>autophosphorylation in vitro</strong>, and that same mutation <strong>inhibits<br />
+  CoQ biosynthesis in vivo</strong> [PMID:25498144 "A single alanine-to-glycine mutation of this loop<br />
+  flips" ... "inhibits coenzyme Q biosynthesis in vivo"]. So canonical kinase-type<br />
+  phosphotransfer is antithetical to the native CoQ role.</li>
+<li>GOA carries an explicit <strong>NOT</strong> annotation for GO:0004672 protein kinase activity and NOT<br />
+  for GO:0006468 protein phosphorylation (both IDA, PMID:27499294) — consistent with the<br />
+  "lacks canonical protein kinase activity in trans" finding.</li>
+</ul>
+<p>Consequence for MF curation: the best-supported molecular functions are <strong>ATP binding<br />
+(GO:0005524)</strong>, <strong>ADP binding (GO:0043531, IDA)</strong>, and an <strong>ATPase / ATP hydrolysis activity<br />
+(GO:0016887)</strong> — not canonical protein-serine/threonine-kinase activity. The generic<br />
+"kinase activity" (GO:0016301) IDA annotations reflect the measured ATPase ("water kinase")<br />
+and are defensible but non-core / general.</p>
+<h3 id="role-in-coq-biosynthesis-complex-q-coq-synthome">Role in CoQ biosynthesis / complex Q (COQ synthome)</h3>
+<p>COQ8A stabilizes the multi-subunit <strong>COQ enzyme complex ("complex Q" / COQ synthome)</strong> that<br />
+carries out CoQ head-group modification steps. UniProt: "Interacts with the multi-subunit COQ<br />
+enzyme complex, composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9"<br />
+[file:human/COQ8A/COQ8A-uniprot.txt]. Loss of COQ8A/Coq8p causes specific deficiency of complex<br />
+Q subunits <a href="https://pubmed.ncbi.nlm.nih.gov/27499294" title="Coq8p and COQ8A specifically maintain complex Q">PMID:27499294</a>, and its<br />
+active-site mutations remodel the complex. The in-vitro reconstituted metabolon paper shows<br />
+COQ8 "increases and streamlines coenzyme Q production" <a href="https://pubmed.ncbi.nlm.nih.gov/38425362">PMID:38425362</a>.</p>
+<p>Direct experimental interactors captured in GOA include COQ9 (O75208) and the COQ metabolon<br />
+(via PMID:27499294 / PMID:27499296 mito-interactome mapping). Many other GOA "protein binding"<br />
+IPI entries come from high-throughput binary/Y2H interactome screens (HuRI, BioPlex-type,<br />
+Luck 2020, Vo 2016, Sahni 2015, Huttlin) and are non-core.</p>
+<h3 id="disease">Disease</h3>
+<p>Biallelic COQ8A variants cause <strong>primary coenzyme Q10 deficiency-4 (COQ10D4, MIM:612016)</strong>,<br />
+i.e. <strong>autosomal-recessive cerebellar ataxia (ARCA2 / SCAR9)</strong> with cerebellar atrophy,<br />
+exercise intolerance, and variable seizures [file:human/COQ8A/COQ8A-uniprot.txt DISEASE block;<br />
+PMID:18319072; PMID:18319074; PMID:27499294 mouse Coq8a−/− recapitulates ARCA2].</p>
+<h3 id="localization-topology">Localization / topology</h3>
+<ul>
+<li>Mitochondrion membrane (inner), single-pass; matrix-facing catalytic domain<br />
+  [file:human/COQ8A/COQ8A-uniprot.txt "Mitochondrion membrane" / "Single-pass membrane protein";<br />
+  PMID:27499294 "localize to the matrix face of the inner mitochondrial membrane"].</li>
+<li>Homodimerizes via its transmembrane region (Gly-zipper) [PMID:25216398, via UniProt SUBUNIT].</li>
+<li>Induced by p53/TP53 [file:human/COQ8A/COQ8A-uniprot.txt "By p53/TP53."].</li>
+</ul>
+<h2 id="annotation-review-disposition-summary">Annotation-review disposition (summary)</h2>
+<ul>
+<li>Core BP: <strong>ubiquinone biosynthetic process (GO:0006744)</strong> — supported by multiple IMP/IDA<br />
+  (PMID:25498144, PMID:27499294, PMID:38425362) + IBA. ACCEPT the experimental ones; keep IBA;<br />
+  IEA (UniPathway) redundant but acceptable.</li>
+<li>Core MF: <strong>ATP binding</strong> (from ATP-binding structural/biochemical data) and <strong>ADP binding<br />
+  (GO:0043531 IDA)</strong>; the demonstrated catalytic activity is <strong>ATPase</strong>. Canonical protein<br />
+  kinase activity is explicitly negated (NOT annotations kept as-is).</li>
+<li>CC: mitochondrion / mitochondrial membrane (inner, matrix face). Multiple EXP/IDA/HTP —<br />
+  accept; keep one as core, others non-core/redundant.</li>
+<li>GO:0004672 protein kinase activity <strong>ISS</strong> (GO_REF:0000024, from Q96D53=COQ8B) — MODIFY:<br />
+  the ISS-transferred "protein kinase activity" is contradicted by the experimental NOT<br />
+  annotation and the "lacks canonical protein kinase activity in trans" finding; recommend<br />
+  replacing with ATP binding / ATP hydrolysis activity.</li>
+<li>The ~65 bare "protein binding" (GO:0005515) IPI rows collapse to 8 GOA annotations (one per<br />
+  PMID). COQ9 (PMID:27499296) and complex-Q interactions are biologically meaningful but the<br />
+  bare term is uninformative → MARK_AS_OVER_ANNOTATED (never REMOVE an IPI per policy);<br />
+  high-throughput interactome ones likewise over-annotated / non-core.</li>
+</ul>
+<h2 id="key-references">Key references</h2>
+<ul>
+<li>PMID:11888884 Iiizumi 2002 — isolation of CABC1; mitochondrial; p53-inducible (abstract-only cache).</li>
+<li>PMID:25498144 Stefely 2015 Mol Cell — crystal structure; atypical PKL fold; ADP&gt;ATP selectivity;<br />
+  A-rich loop; CoQ-biosynthesis structure-function. FULL TEXT.</li>
+<li>PMID:27499294 Stefely 2016 Mol Cell — COQ8A lacks canonical PK activity in trans; has ATPase;<br />
+  binds lipid CoQ intermediates; stabilizes complex Q; Coq8a−/− mouse = ARCA2. FULL TEXT.</li>
+<li>PMID:27499296 Floyd 2016 Mol Cell — mito protein interaction mapping; complex Q. FULL TEXT.</li>
+<li>PMID:38425362 Nicoll 2024 Nat Catal — in-vitro COQ metabolon; COQ8 streamlines CoQ production. FULL TEXT.</li>
+<li>PMID:33988507 Zhang 2021 eLife — subcellular kinome map (COQ8A not named in cached body text).</li>
+<li>PMID:34800366 — high-confidence mitochondrial proteome (HTP mitochondrion localization).</li>
+<li>Interactome screens (16189514, 25416956, 25910212, 31515488, 32296183, 32814053) — bare protein binding.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8NI60
+gene_symbol: COQ8A
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  COQ8A (also known as ADCK3, CABC1, COQ8) is a mitochondrial member of the ancient UbiB
+  family of atypical protein-kinase-like (PKL) enzymes, and is one of two human co-orthologs
+  (with COQ8B/ADCK4) of yeast Coq8p. It is required for the biosynthesis of coenzyme Q
+  (ubiquinone/CoQ10), a lipid-soluble electron carrier of the respiratory chain and a
+  membrane antioxidant. The 647-residue precursor is imported into mitochondria (an
+  N-terminal transit peptide of ~162 residues is removed) and anchors to the inner
+  mitochondrial membrane as a single-pass membrane protein, with its catalytic domain facing
+  the matrix, where CoQ is produced. Although COQ8A adopts a protein-kinase-like fold, several
+  UbiB-specific features suppress canonical protein-kinase activity: an N-terminal KxGQ domain
+  occludes the substrate-binding cleft, and an alanine-rich (AAAS) loop replaces the canonical
+  glycine-rich nucleotide-binding loop, conferring an unusual selectivity for binding ADP over
+  ATP. Biochemically, the protein binds and hydrolyzes ATP (ATPase activity that is enhanced by
+  the KxGQ motif and by coenzyme-Q head-group intermediates and cardiolipin), and it interacts
+  with lipid CoQ intermediates, rather than exhibiting canonical protein-kinase phosphotransfer
+  in trans. Functionally, COQ8A stabilizes and helps assemble the multi-subunit CoQ biosynthetic
+  complex (the &#34;COQ synthome&#34;/complex Q; COQ3-COQ7, COQ9), thereby streamlining CoQ production.
+  Biallelic loss-of-function variants cause primary coenzyme Q10 deficiency-4 (COQ10D4),
+  presenting as autosomal-recessive cerebellar ataxia (ARCA2/SCAR9) with cerebellar atrophy,
+  exercise intolerance, and variable seizures.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8NI60-1
+- name: &#39;2&#39;
+  id: Q8NI60-2
+  sequence_note: VSP_022351
+- name: &#39;3&#39;
+  id: Q8NI60-3
+  sequence_note: VSP_022353
+- name: &#39;4&#39;
+  id: Q8NI60-4
+  sequence_note: VSP_022352
+existing_annotations:
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (PAN-GO) inference of the core, well-established role of COQ8A/Coq8p
+      orthologs in ubiquinone (coenzyme Q) biosynthesis. This is consistent with abundant
+      experimental evidence and is the central function of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: Atypical kinase involved in the biosynthesis of coenzyme Q
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt Subcellular Location keyword (mitochondrion membrane).
+      Correct and corroborated by experimental localization; mitochondrial (inner) membrane
+      association is well established. Kept as non-core relative to the more specific matrix/inner
+      membrane localization.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: Mitochondrion membrane
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; (GO:0005515) from a large-scale human protein-protein interaction
+      network study (IntAct partner Q9UI14/RABAC1). The generic term conveys no specific molecular
+      function and the partner is not part of the CoQ biosynthetic machinery. Over-annotation of a
+      high-throughput binary interaction; not a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale human interactome map (Rolland et al.).
+      Multiple binary partners captured (e.g. AGTRAP, TMEM239, LDAF1, REEP6, TFIP11, RABAC1);
+      none are CoQ-biosynthesis proteins and the term is uninformative. High-throughput
+      over-annotation; not a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a study of macromolecular interaction perturbations in genetic
+      disorders (Sahni et al.). Binary partners (DTX2, SH3GLB1, REEP6, TFIP11, etc.) are not CoQ
+      pathway components; the generic term is uninformative. High-throughput over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27499296
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from mitochondrial protein interaction mapping (Floyd et al.); the
+      IntAct partner here is COQ9 (O75208), a genuine member of the CoQ biosynthetic complex
+      (&#34;complex Q&#34;). The interaction is biologically real and central to COQ8A function, but the
+      generic GO:0005515 term does not capture it. Marked as over-annotated at the term level;
+      the underlying complex membership is represented via in_complex in core_functions.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a systematic study of interaction disruption by genetic variants
+      (Fragoza et al.). Partners (AGTRAP, REEP6, TFIP11) are not CoQ-pathway proteins; term is
+      uninformative. High-throughput over-annotation; not a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI human binary interactome reference map (Luck et al.).
+      Many low-specificity Y2H partners captured; none are CoQ-biosynthesis components and the
+      generic term is uninformative. High-throughput over-annotation; not a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from an interactome map of neurodegenerative-disease proteins.
+      Partners (MAOB, LITAF, SPRY4, ATG10, etc.) are not CoQ-pathway components; the generic
+      term is uninformative. High-throughput over-annotation; not a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation from UniPathway vocabulary mapping (ubiquinone biosynthesis,
+      UPA00232). Correct and consistent with the core function, though redundant with the
+      experimental IMP/IDA annotations to the same term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: Cofactor biosynthesis; ubiquinone biosynthesis.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization from HPA immunofluorescence curation. Correct; COQ8A is a
+      well-established mitochondrial protein. Kept as non-core relative to the more specific
+      inner-membrane/matrix-facing localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: EXP
+  original_reference_id: PMID:11888884
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental mitochondrial membrane localization from the original CABC1/COQ8A isolation
+      study (Iiizumi et al.), which identified CABC1 as a mitochondrial, p53-inducible protein.
+      Consistent with the well-established inner-mitochondrial-membrane localization. Accepted as
+      the core localization; the mature protein is a single-pass inner-membrane protein with a
+      matrix-facing catalytic domain.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: Single-pass membrane protein
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: EXP
+  original_reference_id: PMID:25498144
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental mitochondrial-membrane localization from the structural/biochemical study
+      (Stefely et al. 2015), which mapped the mature form and confirmed matrix-facing residence
+      at the inner membrane. Accepted; corroborates the core localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: ADCK3 is known to reside in the mitochondrial matrix
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: EXP
+  original_reference_id: PMID:33988507
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial-membrane localization from the subcellular kinome map (Zhang et al. 2021),
+      a systematic assignment of kinome members to compartments. Consistent with the established
+      mitochondrial localization; corroborating, non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      &#34;Protein kinase activity&#34; transferred by sequence similarity from COQ8B (Q96D53). Although
+      COQ8A adopts a protein-kinase-like fold, direct biochemical study demonstrated that it
+      lacks canonical protein kinase activity in trans (the same PMID:27499294 result underpins
+      an explicit NOT protein-kinase-activity annotation on this gene). The demonstrated activity
+      is instead ATP binding/hydrolysis (ATPase). This ISS annotation therefore over-asserts a
+      canonical protein-kinase function; recommend replacing with ATP binding and ATP hydrolysis
+      (ATPase) activity, which the evidence supports.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0005524
+      label: ATP binding
+    - id: GO:0016887
+      label: ATP hydrolysis activity
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: interacts with lipid CoQ intermediates
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:38425362
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence that COQ8 promotes coenzyme Q biosynthesis, from in-vitro reconstruction of
+      the animal COQ metabolon (Nicoll et al. 2024), which shows COQ8 increases and streamlines CoQ
+      production. (The experimentally characterized paralog in that study was ancestral COQ8B, since
+      recombinant COQ8A gave very low yields, but COQ8A and COQ8B are chordate co-orthologs of the
+      same COQ8 clade and the CoQ-biosynthesis role is shared.) Accepts the gene&#39;s core biological
+      process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:38425362
+      supporting_text: increases and streamlines coenzyme Q production
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrion localization from a high-throughput high-confidence mitochondrial proteome
+      study. Consistent with the established localization; corroborating, non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:33988507
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrion localization (IDA) from the subcellular kinome map (Zhang et al. 2021).
+      Correct and consistent with the well-established mitochondrial localization; corroborating.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:27499294
+  qualifier: enables
+  negated: true
+  review:
+    summary: &gt;-
+      NOT protein kinase activity. Stefely et al. 2016 directly demonstrated that COQ8, despite
+      its protein-kinase-like fold, lacks canonical protein kinase activity in trans. This negated
+      annotation is correct and important — it explicitly counters the naive &#34;protein kinase&#34;
+      assignment implied by the family name (ADCK, aarF domain-containing kinase). Accept as-is.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: &#39;Instead, COQ8 has ATPase activity&#39;
+- term:
+    id: GO:0006468
+    label: protein phosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:27499294
+  qualifier: involved_in
+  negated: true
+  review:
+    summary: &gt;-
+      NOT involved_in protein phosphorylation. Consistent with the finding that COQ8 does not
+      perform canonical protein-kinase phosphotransfer in trans; the protein instead functions via
+      ATPase / small-molecule (possibly lipid) activity and complex-Q stabilization. Correct
+      negated annotation; accept as-is.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: interacts with lipid CoQ intermediates
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:27499294
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP evidence that COQ8A is required for ubiquinone biosynthesis: Coq8a-knockout mice develop
+      cerebellar ataxia recapitulating ARCA2 with disruption of complex Q and CoQ deficiency, and
+      active-site mutations abolish CoQ production. This is the core biological process of the gene.
+      Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: the K134H mutation eliminates CoQ production in vivo
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:27499294
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic &#34;kinase activity&#34; IDA. The activity actually measured in this paper is ATP hydrolysis
+      (ATPase), which the authors describe as small-molecule &#34;water kinase&#34; activity and which is
+      enhanced by the UbiB-specific KxGQ motif. The broad &#34;kinase activity&#34; term is imprecise and,
+      given the explicit NOT protein kinase annotation, risks implying phosphotransfer to a
+      macromolecular substrate that was not demonstrated. Recommend the more precise ATP hydrolysis
+      (ATPase) activity term.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0016887
+      label: ATP hydrolysis activity
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: Coq8p ATPase activity is enhanced by the UbiB-specific KxGQ motif
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:27499294
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic BP &#34;phosphorylation&#34; paired with the &#34;kinase activity&#34; MF. The only phosphotransfer
+      demonstrated for COQ8 is autophosphorylation, and that is seen only when the native A-rich
+      loop is mutated (A-to-G); native COQ8 does not carry out canonical protein phosphorylation
+      (NOT-annotated). The measured wild-type activity is ATP hydrolysis. &#34;Phosphorylation&#34; as a
+      biological process is an over-annotation here and is not the gene&#39;s endogenous role
+      (ubiquinone biosynthesis).
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:25498144
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrion localization (IDA) from Stefely et al. 2015, which characterized endogenous
+      ADCK3/COQ8A as residing in the mitochondrial matrix at the inner membrane. Correct;
+      corroborating the core localization.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: ADCK3 is known to reside in the mitochondrial matrix
+- term:
+    id: GO:0006744
+    label: ubiquinone biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:25498144
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMP evidence for the ubiquinone-biosynthesis role: structure-guided mutations of conserved
+      nucleotide-pocket, A-rich loop and QKE-triad residues in Coq8p/ADCK3 eliminate respiratory
+      growth and reduce CoQ abundance in vivo. Core biological process; accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: A single alanine-to-glycine mutation of this loop flips
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25498144
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic &#34;kinase activity&#34; IDA. The demonstrable ATP-utilizing activity in this study is
+      autophosphorylation enabled only by the engineered A339G mutation of the A-rich loop; wild-type
+      ADCK3 shows an unusual ADP-over-ATP selectivity and does not display canonical kinase activity.
+      The umbrella &#34;kinase activity&#34; term over-asserts the native biochemistry; the better-supported
+      activities are ATP binding and (per PMID:27499294) ATP hydrolysis.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0016887
+      label: ATP hydrolysis activity
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: unusual selectivity for binding ADP over ATP
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:25498144
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic BP &#34;phosphorylation&#34;, paired with the &#34;kinase activity&#34; MF above. Based on
+      autophosphorylation that is only unmasked by the artificial A339G mutation and that inhibits
+      CoQ biosynthesis in vivo — i.e. not the gene&#39;s native process. Over-annotation; the endogenous
+      process is ubiquinone biosynthesis.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0043531
+    label: ADP binding
+  evidence_type: IDA
+  original_reference_id: PMID:25498144
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ADP binding (IDA). A distinctive and well-supported molecular feature of COQ8A: thermal-shift
+      assays show adenine nucleotides stabilize the protein, with an unusual selectivity for ADP
+      over ATP driven by the A-rich (AAAS) loop. This nucleotide-binding activity is central to the
+      atypical UbiB mechanism. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:25498144
+      supporting_text: unusual selectivity for binding ADP over ATP
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:27499294
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed refinement of the existing mitochondrion / mitochondrial-membrane localization:
+      COQ8A (and yeast Coq8p) localize to the matrix face of the inner mitochondrial membrane, the
+      site of CoQ production. Added to make the core-function localization explicit.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:27499294
+      supporting_text: localize to the matrix face of the inner mitochondrial membrane
+- term:
+    id: GO:0032991
+    label: protein-containing complex
+  evidence_type: IPI
+  original_reference_id: PMID:27499294
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Proposed annotation capturing COQ8A&#39;s membership in the multi-subunit CoQ biosynthetic complex
+      (COQ synthome / complex Q; COQ3-COQ7, COQ9), which it stabilizes. Recorded via the generic
+      protein-containing complex term as no specific COQ synthome term currently exists.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+      supporting_text: composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9
+    - reference_id: PMID:27499294
+      supporting_text: Coq8p and COQ8A specifically maintain complex Q
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:11888884
+  title: Isolation of a novel gene, CABC1, encoding a mitochondrial protein that is
+    highly homologous to yeast activity of bc1 complex.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original isolation of CABC1/COQ8A; establishes mitochondrial localization and p53
+      inducibility. Cached entry is abstract-only (full_text_available: false), but the localization
+      and p53-induction claims are corroborated by the UniProt record.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome screen; source of a bare protein-binding IPI. Abstract-only; does not
+      inform specific COQ8A molecular function.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome map (source of bare protein-binding IPI entries). Not specific to
+      COQ8A function.
+- id: PMID:25498144
+  title: Mitochondrial ADCK3 employs an atypical protein kinase-like fold to enable
+    coenzyme Q biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure of ADCK3/COQ8A; defines the atypical PKL fold, the KxGQ domain and A-rich
+      (AAAS) loop, the unusual ADP-over-ATP selectivity, and structure-function links to CoQ
+      biosynthesis. Full text verified; supporting quotes are verbatim from the cached full text.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-perturbation study; source of bare protein-binding IPI entries not specific to
+      COQ8A function.
+- id: PMID:27499294
+  title: Cerebellar Ataxia and Coenzyme Q Deficiency through Loss of Unorthodox Kinase
+    Activity.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Key functional paper: Coq8a-/- mouse recapitulates ARCA2; demonstrates COQ8 lacks canonical
+      protein kinase activity in trans and instead has ATPase activity, binds lipid CoQ
+      intermediates, and stabilizes complex Q. Basis for the NOT protein-kinase / NOT
+      protein-phosphorylation annotations and the ATPase MF. Full text verified.
+- id: PMID:27499296
+  title: Mitochondrial Protein Interaction Mapping Identifies Regulators of Respiratory
+    Chain Function.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mitochondrial interaction mapping defining complex Q; the COQ8A IPI partner here is COQ9, a
+      bona fide complex-Q member. Supports COQ synthome membership. Full text verified.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Variant-interaction disruption screen; source of bare protein-binding IPI entries not
+      specific to COQ8A function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome reference map; source of many low-specificity bare protein-binding IPI
+      entries not specific to COQ8A function.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Neurodegenerative-disease interactome map; source of bare protein-binding IPI entries.
+      Abstract-only cache; not specific to COQ8A molecular function.
+- id: PMID:33988507
+  title: A subcellular map of the human kinome.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Systematic subcellular kinome mapping; assigns COQ8A/ADCK3 to mitochondria. The cached full
+      text does not name COQ8A/ADCK3 in prose (large dataset paper), so no verbatim gene-level quote
+      is provided; localization is consistent with all other evidence.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence mitochondrial proteome; supports mitochondrial localization (HTP).
+- id: PMID:38425362
+  title: In vitro construction of the COQ metabolon unveils the molecular determinants
+    of coenzyme Q biosynthesis.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      In-vitro reconstitution of the animal COQ metabolon; shows COQ8 increases and streamlines CoQ
+      production. Note the experimentally characterized paralog was ancestral COQ8B (recombinant
+      COQ8A gave low yields), but the CoQ-biosynthesis role is shared across the COQ8 clade, so the
+      GOA IDA attributed to COQ8A is appropriate at the process level. Full text verified.
+- id: file:human/COQ8A/COQ8A-uniprot.txt
+  title: UniProt entry Q8NI60 (COQ8A_HUMAN)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative UniProt record; source of function, activity-regulation, subunit (complex Q),
+      localization, disease (COQ10D4), and domain/motif statements quoted verbatim in this review.
+core_functions:
+- description: &gt;-
+    ATP-binding activity: COQ8A binds adenine nucleotides via its atypical protein-kinase-like
+    fold, with an unusual selectivity for ADP over ATP conferred by the alanine-rich (AAAS)
+    nucleotide-binding loop. This nucleotide binding is required to relieve autoinhibition and is
+    essential for the protein&#39;s role in coenzyme Q biosynthesis.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:25498144
+    supporting_text: unusual selectivity for binding ADP over ATP
+  - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+    supporting_text: Shows an unusual selectivity for binding ADP over ATP
+- description: &gt;-
+    ATP hydrolysis (ATPase) activity: rather than canonical protein-kinase phosphotransfer, the
+    demonstrated catalytic activity of COQ8/COQ8A is ATP hydrolysis (a small-molecule &#34;water
+    kinase&#34; activity) that is enhanced by the UbiB-specific KxGQ motif and by coenzyme-Q head-group
+    intermediates. Mutations that abolish this activity eliminate CoQ production in vivo, linking
+    the ATPase to the endogenous function; canonical protein-kinase activity in trans is not
+    exhibited.
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:27499294
+    supporting_text: &#39;Instead, COQ8 has ATPase activity&#39;
+  - reference_id: PMID:27499294
+    supporting_text: Coq8p ATPase activity is enhanced by the UbiB-specific KxGQ motif
+- description: &gt;-
+    Coenzyme Q (ubiquinone) biosynthesis: COQ8A is essential for CoQ10 biosynthesis, acting as a
+    member and stabilizer of the multi-subunit CoQ biosynthetic complex (the COQ synthome / complex
+    Q; COQ3-COQ7, COQ9) at the matrix face of the inner mitochondrial membrane. Loss of COQ8A
+    destabilizes complex Q and causes CoQ deficiency (ARCA2/COQ10D4).
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  directly_involved_in:
+  - id: GO:0006744
+    label: ubiquinone biosynthetic process
+  in_complex:
+    id: GO:0032991
+    label: protein-containing complex
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+    supporting_text: Atypical kinase involved in the biosynthesis of coenzyme Q
+  - reference_id: file:human/COQ8A/COQ8A-uniprot.txt
+    supporting_text: composed of at least COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9
+  - reference_id: PMID:27499294
+    supporting_text: Coq8p and COQ8A specifically maintain complex Q
+proposed_new_terms:
+- proposed_name: coenzyme Q biosynthetic complex (COQ synthome)
+  proposed_definition: &gt;-
+    A protein-containing complex, located at the matrix face of the mitochondrial inner membrane,
+    that carries out head-group modification steps of ubiquinone (coenzyme Q) biosynthesis. In
+    humans it comprises COQ3, COQ4, COQ5, COQ6, COQ7 and COQ9, and is stabilized by the atypical
+    UbiB-family kinase COQ8A (and its paralog COQ8B).
+  justification: &gt;-
+    COQ8A&#39;s core cellular role is membership in and stabilization of this complex (&#34;complex Q&#34;),
+    but there is no specific protein-complex GO term to record it; only the generic GO:0032991
+    protein-containing complex is currently available for the in_complex slot.
+suggested_questions:
+- question: &gt;-
+    What is the physiological small-molecule substrate of COQ8A&#39;s ATPase / atypical kinase activity
+    in vivo - is it truly a &#34;water kinase&#34; (ATPase), a lipid/prenyl-quinone kinase, or does ATP
+    hydrolysis primarily power conformational cycling that assembles complex Q?
+- question: &gt;-
+    Does COQ8A phosphorylate any endogenous target (protein or lipid) under native conditions, given
+    that canonical protein-kinase activity in trans is absent and autophosphorylation is only seen
+    with engineered A-rich-loop mutants?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute human complex Q with recombinant COQ8A (not only ancestral/COQ8B) and measure
+    CoQ-intermediate-stimulated ATPase activity and its dependence on the KxGQ motif and cardiolipin.
+- description: &gt;-
+    Use activity-based or metabolomic profiling in COQ8A-null cells rescued with catalytically dead
+    (D507N) vs KxGQ-mutant vs wild-type COQ8A to distinguish the roles of nucleotide binding,
+    ATP hydrolysis, and complex-Q stabilization in CoQ production.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

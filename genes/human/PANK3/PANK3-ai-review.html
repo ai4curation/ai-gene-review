@@ -1,0 +1,4872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PANK3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PANK3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H999" target="_blank" class="term-link">
+                        Q9H999
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PANK3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H999" data-a="DESCRIPTION: PANK3 (pantothenate kinase 3, hPanK3) is one of fo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PANK3 (pantothenate kinase 3, hPanK3) is one of four catalytically active human pantothenate kinase isoforms encoded by three genes (PANK1-3). It catalyzes the ATP-dependent phosphorylation of (R)-pantothenate (vitamin B5) to (R)-4&#39;-phosphopantothenate (EC 2.7.1.33), the first and rate-determining step of coenzyme A (CoA) biosynthesis. PANK3 is a cytosolic, soluble enzyme that functions as a homodimer with two equivalent active sites formed by head-to-tail juxtaposition of the monomers; each protomer adopts an actin/HSP70-like ASKHA (acetate/sugar kinase, HSP70, actin) nucleotide-binding fold. It is a master metabolic regulator of CoA levels: activity is under stringent allosteric feedback inhibition by acetyl-CoA and other acyl-CoA thioesters, which bind in the pantothenate/substrate tunnel and compete with the ATP-binding site, stabilizing a catalytically incompetent (open) conformation; ATP binding stabilizes the catalytically competent (closed) conformation. PANK3 is expressed in all cell types examined and is highly expressed in liver, supplying phosphopantothenate for downstream cytosolic CoA biosynthetic enzymes and thereby supporting oxidative metabolism, the TCA cycle, fatty acid oxidation, and lipid metabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO/IBA) propagation of a nuclear location. This is contradicted by direct experimental evidence: live-cell imaging shows human PanK3 is cytosolic, not nuclear. Nuclear localization in the PanK family is a property of the PanK1alpha isoform (which carries an N-terminal NLS), not of PanK3, which consists essentially of the catalytic core with a short N-terminal extension. This is an over-annotation for PANK3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly contradicted by experimental subcellular localization (PMID:23152917: human PanK3 is cytosolic/soluble). Nuclear location applies to PanK1alpha, not PanK3; the IBA propagates a family-level location that is isoform-inappropriate.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                                        PMID:23152917
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of cytosolic location. This is the correct, core subcellular location for PANK3 and is directly confirmed by experimental imaging showing human PanK3 is cytosolic and soluble. The downstream CoA-biosynthetic enzymes are cytosolic, consistent with PANK3 supplying phosphopantothenate there.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the experimentally validated location of PANK3 (PMID:23152917) and where its catalytic function is exercised.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                                        PMID:23152917
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0015937" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of involvement in CoA biosynthesis. This is a core biological process for PANK3, which catalyzes the first and rate-determining step of CoA biosynthesis. Well supported experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PANK3 catalyzes the committed first step of CoA biosynthesis; consistent with UniProt PATHWAY (CoA from (R)-pantothenate, step 1/5) and experimental data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                                        PMID:30927326
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the diagnostic catalytic activity of PANK3. This is the core molecular function and is directly demonstrated experimentally for human PanK3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; matches the EC 2.7.1.33 activity established biochemically for hPanK3 (PMID:30927326, PMID:20797618, PMID:27555321).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                                        PMID:30927326
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (ARBA/EC 2.7.1.33/RHEA:16373) of pantothenate kinase activity. Redundant with the experimentally supported IDA/IMP annotations but correct; represents the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core catalytic activity, independently supported by direct experimental annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR004567, Type II PanK) electronic assignment of ATP binding. Correct: PANK3 is an ATP-dependent kinase whose closed, catalytically competent conformation is stabilized by ATP binding. Supported experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is the phosphate donor for the kinase reaction; ATP binding is experimentally demonstrated and required for catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/UniProt-SubCell SL-0086) cytoplasm assignment. Consistent with the experimentally validated cytosolic location, though &#39;cytosol&#39; (GO:0005829) is the more precise term supported by direct imaging. Keep as a correct but less specific parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less precise than the experimentally supported cytosol annotation; cytosol is the informative core-location term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro/UniPathway UPA00241) assignment of CoA biosynthesis. Correct core biological process, redundant with the experimental IDA annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; PANK3 catalyzes the committed first step of CoA biosynthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005634" data-r="PMID:17631502" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear location assigned by ComplexPortal (IPI). PMID:17631502 is a crystal structure paper on the PanK3 catalytic core in complex with acetyl-CoA and does not localize PANK3 to the nucleus. Direct live-cell imaging (PMID:23152917) shows human PanK3 is cytosolic. Nuclear location is a property of PanK1alpha, not PanK3, so this is an over-annotation. Per policy this experimental (IPI) annotation is flagged as over-annotated rather than removed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited structural paper does not support a nuclear location, and direct imaging shows PANK3 is cytosolic (PMID:23152917). Nuclear localization belongs to the PanK1alpha isoform, not PANK3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                                        PMID:23152917
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0015937" data-r="PMID:17631502" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assignment of involvement in CoA biosynthesis, from the structural/ biochemical characterization of the PanK3 catalytic core. Core biological process for PANK3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PANK3 catalyzes the first step of CoA biosynthesis; well supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                                        PMID:17631502
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase (PanK) catalyzes the first step in CoA biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23152917
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartmentalization of mammalian pantothenate kinases.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005737" data-r="PMID:23152917" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) cytoplasmic location from the compartmentalization study. Correct; the same study more precisely places PanK3 in the cytosol (GO:0005829), which is the informative core-location annotation. Keep this as a valid but less specific parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less precise than the cytosol annotation from the same paper.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                                        PMID:23152917
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30927326
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human pantothenate kinase 4 is a pseudo-pantothenate kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="PMID:30927326" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of PANK3 pantothenate kinase activity (the paper uses active hPanK3 as reference kinase; E138V abolishes it). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated catalytic activity (EC 2.7.1.33); core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                                        PMID:30927326
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30927326
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human pantothenate kinase 4 is a pseudo-pantothenate kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005524" data-r="PMID:30927326" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 binds ATP, the phosphate donor for the kinase reaction. Supporting molecular function. (The cached text of this paper does not contain a verbatim ATP-binding sentence; the same activity is quoted from PMID:20797618 and PMID:27555321.)
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is required for and consistent with the catalytic mechanism, and is directly demonstrated in the companion structural studies.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30927326
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human pantothenate kinase 4 is a pseudo-pantothenate kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0015937" data-r="PMID:30927326" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for involvement in CoA biosynthesis. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PANK3 catalyzes the committed first step of CoA biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                                        PMID:30927326
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905502" target="_blank" class="term-link">
+                                    GO:1905502
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30927326
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human pantothenate kinase 4 is a pseudo-pantothenate kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:1905502" data-r="PMID:30927326" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 binds acetyl-CoA. Acetyl-CoA is the physiological allosteric feedback inhibitor; binding in the substrate tunnel stabilizes the inactive (open) conformation. This is a real, functionally important binding activity of PANK3 (allosteric regulatory ligand), so it is kept, though it represents a regulatory input rather than the primary catalytic function. Verbatim quotes for acetyl-CoA binding are provided from PMID:17631502, PMID:20797618, and PMID:27555321.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine, structurally confirmed acetyl-CoA binding underlying feedback inhibition; supports the allosteric-regulation mechanism but is ancillary to the core kinase catalytic function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20797618
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Modulation of pantothenate kinase 3 activity by small molecu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005524" data-r="PMID:20797618" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for ATP binding from the structural/enzymatic study of PanK3 (KM=311 uM for ATP). Supporting molecular function required for catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is experimentally established and required for the kinase reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                        PMID:20797618
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which is the primary mechanism that controls kinase activity and the intracellular level of CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20797618
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Modulation of pantothenate kinase 3 activity by small molecu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0016310" data-r="PMID:20797618" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;phosphorylation&#39; biological-process annotation. PANK3 does phosphorylate pantothenate, but this parent term is far less informative than the specific pantothenate kinase activity (MF) and CoA biosynthetic process (BP) annotations. Retained as a non-core, uninformative parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level term; the substrate-specific kinase activity and CoA biosynthesis annotations capture the biology precisely.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                        PMID:20797618
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PanK3 phosphorylates hopantenate, a pantothenate analog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="PMID:17631502" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support for pantothenate kinase activity: mutants of the PanK3 catalytic core (modeling PKAN mutations) show compromised activity. Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mutagenesis confirms the pantothenate kinase catalytic activity of PANK3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                                        PMID:17631502
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Biochemical and thermodynamic analyses of the PanK3 mutant proteins corresponding to PanK2 mutations show that mutant proteins with compromised activities</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20797618
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Modulation of pantothenate kinase 3 activity by small molecu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="PMID:20797618" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct enzymatic demonstration of PANK3 pantothenate kinase activity, including kinetic parameters (KM=14 uM pantothenate). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly measured catalytic activity; core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                        PMID:20797618
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PanK3 phosphorylates hopantenate, a pantothenate analog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                                    GO:0004594
+                                </a>
+                            </span>
+                            <span class="term-label">pantothenate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0004594" data-r="PMID:27555321" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support for pantothenate kinase activity (e.g. active-site Glu138 and Gly19 mutants). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mutagenesis of catalytic/nucleotide-binding residues confirms PANK3 kinase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PANK3(G19V) cannot bind ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005524" data-r="PMID:27555321" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence that PANK3 binds ATP (AMPPNP.Mg2+ co-complexes; G19V abolishes ATP binding). Supporting molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is structurally established and required for the catalytic cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PANK3(G19V) cannot bind ATP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23152917
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compartmentalization of mammalian pantothenate kinases.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0005829" data-r="PMID:23152917" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging evidence that human PanK3 is cytosolic and soluble. This is the precise, core subcellular location for PANK3, where it supplies phosphopantothenate to the downstream cytosolic CoA-biosynthetic enzymes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally validated core location; most informative localization term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                                        PMID:23152917
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20797618
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Modulation of pantothenate kinase 3 activity by small molecu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0015937" data-r="PMID:20797618" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (IMP) support for involvement in CoA biosynthesis. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PANK3 catalyzes the first step of CoA biosynthesis; supported by mutagenesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                        PMID:20797618
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinases (PanK) are the regulatory enzymes that control the rate of CoA biosynthesis and the concentration of intracellular CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0016310" data-r="PMID:17631502" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;phosphorylation&#39; process annotation, from mutational analysis of the catalytic core. Less informative than the specific pantothenate kinase activity and CoA biosynthesis annotations; retained as a non-core, uninformative parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level term superseded by the substrate-specific MF/BP annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                                        PMID:17631502
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase (PanK) catalyzes the first step in CoA biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016310" target="_blank" class="term-link">
+                                    GO:0016310
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0016310" data-r="PMID:27555321" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#39;phosphorylation&#39; process annotation. Uninformative relative to the specific pantothenate kinase activity and CoA biosynthetic process annotations. Retained as a non-core parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level term superseded by substrate-specific MF/BP annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pantothenate kinase is the master regulator of CoA biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019842" target="_blank" class="term-link">
+                                    GO:0019842
+                                </a>
+                            </span>
+                            <span class="term-label">vitamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0019842" data-r="PMID:27555321" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 binds pantothenate (vitamin B5), its substrate, captured in the AMPPNP.Mg2+.pantothenate co-crystal structure. This is a real substrate-binding activity but a generic parent term (&#39;vitamin binding&#39;); it reflects binding of the pantothenate substrate, which is captured functionally by the pantothenate kinase activity annotation. Retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine binding of the pantothenate (vitamin B5) substrate, but &#39;vitamin binding&#39; is a generic term subsumed by the specific pantothenate kinase catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AMPPNP·Mg2+·pantothenate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0042803" data-r="PMID:17631502" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence that PANK3 is a homodimer, with two equivalent active sites formed by head-to-tail juxtaposition of the monomers. Homodimerization is integral to the enzyme&#39;s quaternary structure and to the cooperative allosteric switching between active and inactive conformations, so this is a genuine and functionally meaningful activity, though ancillary to the catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Structurally confirmed obligate homodimer; homodimerization underlies the cooperative allosteric mechanism but is a structural/quaternary feature rather than the primary catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                                        PMID:17631502
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we report the homodimeric structures of the catalytic cores of PanK1alpha and PanK3 in complex with acetyl-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:0042803" data-r="PMID:27555321" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 acts as a dimer whose two protomers are functionally coupled and switch cooperatively between conformations. Confirms homodimerization; kept as non-core structural feature underlying the allosteric mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Confirms the obligate homodimer; functionally coupled protomers underlie cooperative allostery but this is a structural feature, not the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">biochemical analyses of an engineered PANK3/PANK3(G19V) heterodimer confirmed that the two active sites are functionally coupled</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905502" target="_blank" class="term-link">
+                                    GO:1905502
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17631502
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human pantothenate kinases. Insights i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:1905502" data-r="PMID:17631502" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence that PANK3 binds acetyl-CoA (co-crystallized with acetyl-CoA as a feedback inhibitor). Represents the allosteric feedback-inhibitor binding activity; genuine and functionally important but ancillary to catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Structurally confirmed acetyl-CoA (feedback inhibitor) binding; regulatory rather than core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                                        PMID:17631502
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we report the homodimeric structures of the catalytic cores of PanK1alpha and PanK3 in complex with acetyl-CoA, a feedback inhibitor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905502" target="_blank" class="term-link">
+                                    GO:1905502
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20797618
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Modulation of pantothenate kinase 3 activity by small molecu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:1905502" data-r="PMID:20797618" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 binds acetyl-CoA. Acetyl-CoA and its thioesters are allosteric feedback inhibitors that compete with the ATP-binding site. Genuine regulatory-ligand binding; kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Confirmed acetyl-CoA binding underlying feedback inhibition; regulatory rather than core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                        PMID:20797618
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PanKs bind acetyl-CoA with high affinity and the ligand remains bound to the enzymes through purification</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905502" target="_blank" class="term-link">
+                                    GO:1905502
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27555321
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Allosteric Regulation of Mammalian Pantothenate Kinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H999" data-a="GO:1905502" data-r="PMID:27555321" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that PANK3 binds acetyl-CoA, whose binding stabilizes the inactive (open) conformation. Genuine allosteric feedback-inhibitor binding; kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Confirmed acetyl-CoA binding underlying the allosteric feedback-inhibition mechanism; regulatory rather than core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                        PMID:27555321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">feedback-inhibited by acetyl-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pantothenate kinase: ATP-dependent phosphorylation of (R)-pantothenate (vitamin B5) to (R)-4&#39;-phosphopantothenate, the first and rate-determining step of coenzyme A biosynthesis (EC 2.7.1.33).</h3>
+                <span class="vote-buttons" data-g="Q9H999" data-a="FUNCTION: Pantothenate kinase: ATP-dependent phosphorylation..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004594" target="_blank" class="term-link">
+                            pantothenate kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                                PMID:30927326
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                                PMID:20797618
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">PanK3 phosphorylates hopantenate, a pantothenate analog</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Uses ATP as the phosphate donor; ATP binding stabilizes the catalytically competent (closed) conformation of the homodimeric enzyme, and acetyl-CoA/acyl-CoA feedback inhibitors compete with the ATP-binding site.</h3>
+                <span class="vote-buttons" data-g="Q9H999" data-a="FUNCTION: Uses ATP as the phosphate donor; ATP binding stabi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                                PMID:27555321
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">PANK3(G19V) cannot bind ATP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17631502" target="_blank" class="term-link">
+                            PMID:17631502
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structures of human pantothenate kinases. Insights into allosteric regulation and mutations linked to a neurodegeneration disorder.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reports the homodimeric crystal structures of the catalytic cores of PanK1alpha and PanK3 in complex with acetyl-CoA, a feedback inhibitor; each monomer adopts an actin kinase superfamily fold and the inhibitor-bound structures explain the basis for allosteric regulation by CoA thioesters.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20797618" target="_blank" class="term-link">
+                            PMID:20797618
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Modulation of pantothenate kinase 3 activity by small molecules that interact with the substrate/allosteric regulatory domain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PanKs function as homodimers with two equivalent active sites formed by a head-to-tail juxtaposition of the monomers; PanK3 phosphorylates pantothenate and its analog hopantenate, and its activity is modulated by small molecules (sulfonylureas, thiazolidinediones, acyl-carnitines) acting at the substrate/allosteric regulatory domain.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23152917" target="_blank" class="term-link">
+                            PMID:23152917
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Compartmentalization of mammalian pantothenate kinases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell; PanK1alpha isoforms were nuclear and hPanK2 localized to mitochondria/nucleus.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27555321" target="_blank" class="term-link">
+                            PMID:27555321
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Allosteric Regulation of Mammalian Pantothenate Kinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Structures of human PANK3 in five catalytically relevant states (acetyl-CoA; AMPPNP.Mg2+; AMPPNP.Mg2+.pantothenate; ADP.Mg2+.phosphopantothenate; AMPPN.Mg2+) reveal a large conformational change; the enzyme switches cooperatively between an inactive open (acyl-CoA-bound) and active closed (ATP-bound) conformation, with the two protomer active sites functionally coupled (PANK3(G19V) cannot bind ATP).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30927326" target="_blank" class="term-link">
+                            PMID:30927326
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human pantothenate kinase 4 is a pseudo-pantothenate kinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis; introducing the Glu138Val substitution to the catalytically active HsPANK3 abolished its robust pantothenate kinase activity, confirming Glu138 as an essential catalytic residue in PANK3.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the distinct physiological, tissue-specific, and metabolic roles of PANK3 versus the other active human isoforms (PANK1alpha, PANK1beta, PANK2), given their shared catalytic core but different regulatory properties and subcellular localizations?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H999" data-a="Q: What are the distinct physiological, tissue-specif..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PANK3 have any non-catalytic or moonlighting role, or is its biological function fully accounted for by pantothenate kinase activity and CoA-level regulation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H999" data-a="Q: Does PANK3 have any non-catalytic or moonlighting ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Isoform-specific knockout/knockdown of PANK3 in liver and other tissues with metabolomic profiling of CoA and acyl-CoA pools to define its non-redundant contribution to CoA homeostasis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H999" data-a="EXPERIMENT: Isoform-specific knockout/knockdown of PANK3 in li..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis distinguishing acetyl-CoA feedback inhibition from catalysis (e.g. S195V, R207W) in a cellular context to test how PANK3 allosteric regulation sets intracellular CoA set-points.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H999" data-a="EXPERIMENT: Structure-guided mutagenesis distinguishing acetyl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PANK3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H999" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pank3-pantothenate-kinase-3-review-notes">PANK3 (Pantothenate kinase 3) — review notes</h1>
+<p>UniProt: Q9H999 (PANK3_HUMAN); HGNC:19365; Gene ID 79646; MANE NM_024594.4 / NP_078870.1;<br />
+370 aa; chromosome 5. EC 2.7.1.33. Type II pantothenate kinase family.</p>
+<h2 id="core-biology-grounded-in-uniprot-q9h999-and-cited-primary-papers">Core biology (grounded in UniProt Q9H999 and cited primary papers)</h2>
+<ul>
+<li><strong>Molecular function / reaction.</strong> PANK3 catalyzes the phosphorylation of<br />
+  (R)-pantothenate + ATP → (R)-4'-phosphopantothenate + ADP + H+ (Rhea:16373; EC 2.7.1.33),<br />
+  the first and rate-determining step of coenzyme A (CoA) biosynthesis.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "Catalyzes the phosphorylation of pantothenate to generate 4'-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) synthesis"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/30927326" title="Pantothenate kinase generates 4'-phosphopantothenate in the first and rate-determining step of coenzyme A (CoA) biosynthesis">PMID:30927326</a></li>
+<li><strong>Pathway.</strong> Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-pantothenate: step 1/5<br />
+  (UniPathway UPA00241, UER00352; Reactome R-HSA-196783 Coenzyme A biosynthesis).<br />
+  [file:human/PANK3/PANK3-uniprot.txt "Cofactor biosynthesis; coenzyme A biosynthesis; CoA from (R)-"]</li>
+<li><strong>Kinetics.</strong> KM = 14–17 uM pantothenate; KM = 175–311 uM ATP.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "KM=14 uM for pantothenate"]<br />
+  [file:human/PANK3/PANK3-uniprot.txt "KM=311 uM for ATP"]</li>
+<li><strong>Quaternary structure.</strong> Homodimer with two equivalent active sites formed by head-to-tail<br />
+  juxtaposition of the monomers; each protomer adopts an actin kinase / ASKHA fold.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "SUBUNIT: Homodimer"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20797618" title="two equivalent active sites formed by a head-to-tail juxtaposition of the monomers">PMID:20797618</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17631502" title="we report the homodimeric structures of the catalytic cores of PanK1alpha and PanK3 in complex with acetyl-CoA">PMID:17631502</a></li>
+<li><strong>Allosteric regulation (feedback inhibition).</strong> Two conformations — a catalytically<br />
+  incompetent (open) state stabilized by acetyl(acyl)-CoA binding, and a catalytically<br />
+  competent (closed) state stabilized by ATP binding. Inhibited by acetyl-CoA and its<br />
+  thioesters (compete with the ATP-binding site); also inhibited by sulfonylureas and<br />
+  thiazolidinediones; activated by oleoylethanolamide and acyl-carnitines.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "Inhibited by acetyl-CoA and its thioesters"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27555321" title="feedback-inhibited by acetyl-CoA">PMID:27555321</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27555321" title="master regulator of CoA biosynthesis">PMID:27555321</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/30927326" title="A fundamental characteristic of mammalian PANKs is their stringent feedback regulation by acetyl‐CoA and other CoA thioesters">PMID:30927326</a></li>
+<li><strong>Active site / mutagenesis.</strong> Glu138 = proton acceptor (catalytic base); Arg207 binds<br />
+  pantothenate; Gly19 in the P-loop is required for ATP binding. E138A/E138V and R207A abolish<br />
+  activity; G19V abolishes ATP binding; S195V is refractory to acetyl-CoA inhibition and raises<br />
+  the pantothenate KM ~10-fold.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "E-&gt;A: Loss of catalytic activity"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27555321" title="PANK3(G19V) cannot bind ATP">PMID:27555321</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/30927326" title="Glu138 functions as the catalytic base essential for the kinase reaction, and Arg207 binds the pantothenate substrate">PMID:30927326</a></li>
+<li><strong>Two protomers are functionally coupled</strong> (cooperative allosteric switching), demonstrated<br />
+  with an engineered PANK3/PANK3(G19V) heterodimer.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27555321" title="biochemical analyses of an engineered PANK3/PANK3(G19V) heterodimer confirmed that the two active sites are functionally coupled">PMID:27555321</a></li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<ul>
+<li>PANK3 is <strong>cytosolic</strong> and soluble (live-cell imaging of ZsGreen1-tagged isoforms). The<br />
+  downstream CoA enzymes are cytosolic, consistent with PANK3 supplying phosphopantothenate there.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23152917" title="Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that these proteins were soluble and not associated with structural components of the cell">PMID:23152917</a><br />
+  [file:human/PANK3/PANK3-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"]</li>
+<li>The nuclear location seen in the PanK family belongs to the <strong>PanK1alpha</strong> isoform (N-terminal<br />
+  NLS), not PanK3. PanK1beta and PanK3 are essentially the catalytic core with a short N-terminal<br />
+  extension.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23152917" title="Both human and mouse PanK1beta localized to the cytosol">PMID:23152917</a></li>
+</ul>
+<h2 id="tissue-expression">Tissue expression</h2>
+<ul>
+<li>Highly expressed in liver; PanK3 is found in all cell types examined.<br />
+  [file:human/PANK3/PANK3-uniprot.txt "TISSUE SPECIFICITY: Highly expressed in the liver"]<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23152917" title="PanK3 is found in all cell types examined thus far">PMID:23152917</a></li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation-review decisions (summary)</h2>
+<ul>
+<li><strong>Core MF:</strong> GO:0004594 pantothenate kinase activity (IDA/IMP/IBA/IEA — all ACCEPT). Also<br />
+  GO:0005524 ATP binding (phosphate donor; ACCEPT). Core BP: GO:0015937 coenzyme A biosynthetic<br />
+  process (ACCEPT). Core location: GO:0005829 cytosol (ACCEPT).</li>
+<li><strong>KEEP_AS_NON_CORE:</strong> GO:0005737 cytoplasm (less precise parent of cytosol); GO:1905502<br />
+  acetyl-CoA binding (allosteric feedback-inhibitor ligand — real, but regulatory not catalytic);<br />
+  GO:0019842 vitamin binding (generic; = pantothenate substrate binding, subsumed by the kinase<br />
+  MF); GO:0042803 protein homodimerization activity (structural feature underlying cooperative<br />
+  allostery).</li>
+<li><strong>MARK_AS_OVER_ANNOTATED:</strong> GO:0005634 nucleus (IBA and IPI) — contradicted by the direct<br />
+  cytosolic-imaging result; nuclear location belongs to PanK1alpha. Also GO:0016310 phosphorylation<br />
+  (IDA/IMP x3) — an uninformative high-level parent superseded by the substrate-specific<br />
+  pantothenate kinase activity (MF) and CoA biosynthetic process (BP) terms.</li>
+<li>No REMOVE calls: per policy, experimental (IDA/IMP/IPI/EXP) annotations and the generic<br />
+  regulatory-binding terms are flagged as over-annotated or kept-as-non-core rather than removed.</li>
+</ul>
+<h2 id="reference-verbatim-quote-gotchas-for-future-editors">Reference verbatim-quote gotchas (for future editors)</h2>
+<ul>
+<li>PMID:30927326 cached text contains <strong>no ASCII "ATP" string</strong> and uses Unicode non-breaking<br />
+  hyphens for "acetyl‐CoA" in the full-text section. The plain "Pantothenate kinase generates<br />
+  4'-phosphopantothenate ..." sentence is available in ASCII in the Abstract section (line ~41)<br />
+  and is the safe quote. Do not quote acetyl-CoA / ATP verbatim from this paper.</li>
+<li>PMID:17631502 and PMID:27555321 are <strong>abstract-only</strong> in the cache (full_text_available: false);<br />
+  quotes were taken from the abstract. PMID:27555321 uses a middle-dot "·" in<br />
+  "AMPPNP·Mg2+·pantothenate" — quote it with the middle dot.</li>
+<li>PMID:20797618 and PMID:23152917 have full text cached.</li>
+</ul>
+<h2 id="provenance-files-used">Provenance / files used</h2>
+<ul>
+<li>genes/human/PANK3/PANK3-uniprot.txt (authoritative UniProt Q9H999)</li>
+<li>genes/human/PANK3/PANK3-goa.tsv (GOA source for existing_annotations)</li>
+<li>publications/PMID_17631502.md, PMID_20797618.md, PMID_23152917.md, PMID_27555321.md,<br />
+  PMID_30927326.md</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H999
+gene_symbol: PANK3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PANK3 (pantothenate kinase 3, hPanK3) is one of four catalytically active human
+  pantothenate kinase isoforms encoded by three genes (PANK1-3). It catalyzes the
+  ATP-dependent phosphorylation of (R)-pantothenate (vitamin B5) to
+  (R)-4&#39;-phosphopantothenate (EC 2.7.1.33), the first and rate-determining step of
+  coenzyme A (CoA) biosynthesis. PANK3 is a cytosolic, soluble enzyme that functions
+  as a homodimer with two equivalent active sites formed by head-to-tail juxtaposition
+  of the monomers; each protomer adopts an actin/HSP70-like ASKHA (acetate/sugar
+  kinase, HSP70, actin) nucleotide-binding fold. It is a master metabolic regulator
+  of CoA levels: activity is under stringent allosteric feedback inhibition by
+  acetyl-CoA and other acyl-CoA thioesters, which bind in the pantothenate/substrate
+  tunnel and compete with the ATP-binding site, stabilizing a catalytically
+  incompetent (open) conformation; ATP binding stabilizes the catalytically competent
+  (closed) conformation. PANK3 is expressed in all cell types examined and is highly
+  expressed in liver, supplying phosphopantothenate for downstream cytosolic CoA
+  biosynthetic enzymes and thereby supporting oxidative metabolism, the TCA cycle,
+  fatty acid oxidation, and lipid metabolism.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17631502
+  title: Crystal structures of human pantothenate kinases. Insights into allosteric
+    regulation and mutations linked to a neurodegeneration disorder.
+  findings:
+    - statement: &gt;-
+        Reports the homodimeric crystal structures of the catalytic cores of PanK1alpha
+        and PanK3 in complex with acetyl-CoA, a feedback inhibitor; each monomer adopts
+        an actin kinase superfamily fold and the inhibitor-bound structures explain the
+        basis for allosteric regulation by CoA thioesters.
+      reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified structural/biochemical paper on human PanK3 (and PanK1alpha).
+      Establishes homodimer, acetyl-CoA feedback inhibition, and catalytic core.
+      Cited by UniProt for FUNCTION, CATALYTIC ACTIVITY, SUBUNIT, and ACTIVITY
+      REGULATION. Only the abstract is cached (full_text_available: false).
+- id: PMID:20797618
+  title: Modulation of pantothenate kinase 3 activity by small molecules that interact
+    with the substrate/allosteric regulatory domain.
+  findings:
+    - statement: &gt;-
+        PanKs function as homodimers with two equivalent active sites formed by a
+        head-to-tail juxtaposition of the monomers; PanK3 phosphorylates pantothenate
+        and its analog hopantenate, and its activity is modulated by small molecules
+        (sulfonylureas, thiazolidinediones, acyl-carnitines) acting at the
+        substrate/allosteric regulatory domain.
+      reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; crystallography plus enzymology of hPanK3, including
+      pantothenate/ATP kinetics (KM=14 uM pantothenate, KM=311 uM ATP) and
+      S195V/R207A/A267F/A269F mutagenesis abolishing or altering catalysis. Full text
+      cached.
+- id: PMID:23152917
+  title: Compartmentalization of mammalian pantothenate kinases.
+  findings:
+    - statement: &gt;-
+        Human and mouse PanK3 were cytosolic with a diffuse pattern, indicating that
+        these proteins were soluble and not associated with structural components of
+        the cell; PanK1alpha isoforms were nuclear and hPanK2 localized to
+        mitochondria/nucleus.
+      reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; live-cell imaging of ZsGreen1-tagged isoforms. Directly
+      establishes PanK3 as cytosolic (not nuclear). Full text cached.
+- id: PMID:27555321
+  title: Allosteric Regulation of Mammalian Pantothenate Kinase.
+  findings:
+    - statement: &gt;-
+        Structures of human PANK3 in five catalytically relevant states (acetyl-CoA;
+        AMPPNP.Mg2+; AMPPNP.Mg2+.pantothenate; ADP.Mg2+.phosphopantothenate; AMPPN.Mg2+)
+        reveal a large conformational change; the enzyme switches cooperatively between
+        an inactive open (acyl-CoA-bound) and active closed (ATP-bound) conformation,
+        with the two protomer active sites functionally coupled (PANK3(G19V) cannot bind
+        ATP).
+      reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; defines the catalytic cycle and allosteric mechanism of hPanK3,
+      identifies active site (Glu138), and demonstrates pantothenate (vitamin B5)
+      binding via co-crystal structure. Only the abstract is cached
+      (full_text_available: false).
+- id: PMID:30927326
+  title: Human pantothenate kinase 4 is a pseudo-pantothenate kinase.
+  findings:
+    - statement: &gt;-
+        Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+        rate-determining step of coenzyme A (CoA) biosynthesis; introducing the
+        Glu138Val substitution to the catalytically active HsPANK3 abolished its robust
+        pantothenate kinase activity, confirming Glu138 as an essential catalytic
+        residue in PANK3.
+      reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; primarily characterizes PANK4 as a pseudoenzyme, but uses
+      catalytically active HsPANK3 as the reference kinase and directly assays PANK3
+      pantothenate kinase, ATP-binding, acetyl-CoA-binding, and CoA-biosynthesis
+      activities (E138V abolishes PANK3 activity). Full text cached. Basis for the
+      UniProt EC 2.7.1.33 assignment.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (PAN-GO/IBA) propagation of a nuclear location. This is contradicted
+      by direct experimental evidence: live-cell imaging shows human PanK3 is cytosolic,
+      not nuclear. Nuclear localization in the PanK family is a property of the
+      PanK1alpha isoform (which carries an N-terminal NLS), not of PanK3, which consists
+      essentially of the catalytic core with a short N-terminal extension. This is an
+      over-annotation for PANK3.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Directly contradicted by experimental subcellular localization (PMID:23152917:
+      human PanK3 is cytosolic/soluble). Nuclear location applies to PanK1alpha, not
+      PanK3; the IBA propagates a family-level location that is isoform-inappropriate.
+    supported_by:
+    - reference_id: PMID:23152917
+      supporting_text: &gt;-
+        Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse
+        pattern, indicating that these proteins were soluble and not associated with
+        structural components of the cell
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+        - COMPARTMENT_OR_COMPLEX_MISMATCH
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of cytosolic location. This is the correct, core
+      subcellular location for PANK3 and is directly confirmed by experimental imaging
+      showing human PanK3 is cytosolic and soluble. The downstream CoA-biosynthetic
+      enzymes are cytosolic, consistent with PANK3 supplying phosphopantothenate there.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol is the experimentally validated location of PANK3 (PMID:23152917) and
+      where its catalytic function is exercised.
+    supported_by:
+    - reference_id: PMID:23152917
+      supporting_text: &gt;-
+        Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse
+        pattern, indicating that these proteins were soluble and not associated with
+        structural components of the cell
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of involvement in CoA biosynthesis. This is a core
+      biological process for PANK3, which catalyzes the first and rate-determining step
+      of CoA biosynthesis. Well supported experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      PANK3 catalyzes the committed first step of CoA biosynthesis; consistent with
+      UniProt PATHWAY (CoA from (R)-pantothenate, step 1/5) and experimental data.
+    supported_by:
+    - reference_id: PMID:30927326
+      supporting_text: &gt;-
+        Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+        rate-determining step of coenzyme A (CoA) biosynthesis
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the diagnostic catalytic activity of PANK3.
+      This is the core molecular function and is directly demonstrated experimentally
+      for human PanK3.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function; matches the EC 2.7.1.33 activity established
+      biochemically for hPanK3 (PMID:30927326, PMID:20797618, PMID:27555321).
+    supported_by:
+    - reference_id: PMID:30927326
+      supporting_text: &gt;-
+        Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+        rate-determining step of coenzyme A (CoA) biosynthesis
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment (ARBA/EC 2.7.1.33/RHEA:16373) of pantothenate kinase
+      activity. Redundant with the experimentally supported IDA/IMP annotations but
+      correct; represents the core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core catalytic activity, independently supported by direct experimental
+      annotations.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO (IPR004567, Type II PanK) electronic assignment of ATP binding.
+      Correct: PANK3 is an ATP-dependent kinase whose closed, catalytically competent
+      conformation is stabilized by ATP binding. Supported experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      ATP is the phosphate donor for the kinase reaction; ATP binding is experimentally
+      demonstrated and required for catalysis.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA/UniProt-SubCell SL-0086) cytoplasm assignment. Consistent with
+      the experimentally validated cytosolic location, though &#39;cytosol&#39; (GO:0005829) is
+      the more precise term supported by direct imaging. Keep as a correct but less
+      specific parent.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but less precise than the experimentally supported cytosol annotation;
+      cytosol is the informative core-location term.
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro/UniPathway UPA00241) assignment of CoA biosynthesis.
+      Correct core biological process, redundant with the experimental IDA annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process; PANK3 catalyzes the committed first step of CoA
+      biosynthesis.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IPI
+  original_reference_id: PMID:17631502
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear location assigned by ComplexPortal (IPI). PMID:17631502 is a crystal
+      structure paper on the PanK3 catalytic core in complex with acetyl-CoA and does
+      not localize PANK3 to the nucleus. Direct live-cell imaging (PMID:23152917)
+      shows human PanK3 is cytosolic. Nuclear location is a property of PanK1alpha, not
+      PanK3, so this is an over-annotation. Per policy this experimental (IPI)
+      annotation is flagged as over-annotated rather than removed.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cited structural paper does not support a nuclear location, and direct
+      imaging shows PANK3 is cytosolic (PMID:23152917). Nuclear localization belongs to
+      the PanK1alpha isoform, not PANK3.
+    supported_by:
+    - reference_id: PMID:23152917
+      supporting_text: &gt;-
+        Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse
+        pattern, indicating that these proteins were soluble and not associated with
+        structural components of the cell
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:17631502
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct assignment of involvement in CoA biosynthesis, from the structural/
+      biochemical characterization of the PanK3 catalytic core. Core biological process
+      for PANK3.
+    action: ACCEPT
+    reason: &gt;-
+      PANK3 catalyzes the first step of CoA biosynthesis; well supported.
+    supported_by:
+    - reference_id: PMID:17631502
+      supporting_text: &gt;-
+        Pantothenate kinase (PanK) catalyzes the first step in CoA biosynthesis
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:23152917
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (EXP) cytoplasmic location from the compartmentalization study.
+      Correct; the same study more precisely places PanK3 in the cytosol (GO:0005829),
+      which is the informative core-location annotation. Keep this as a valid but less
+      specific parent.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but less precise than the cytosol annotation from the same paper.
+    supported_by:
+    - reference_id: PMID:23152917
+      supporting_text: &gt;-
+        Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse
+        pattern, indicating that these proteins were soluble and not associated with
+        structural components of the cell
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:30927326
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of PANK3 pantothenate kinase activity (the paper uses active hPanK3
+      as reference kinase; E138V abolishes it). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Directly demonstrated catalytic activity (EC 2.7.1.33); core function.
+    supported_by:
+    - reference_id: PMID:30927326
+      supporting_text: &gt;-
+        Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+        rate-determining step of coenzyme A (CoA) biosynthesis
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:30927326
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 binds ATP, the phosphate donor for the kinase
+      reaction. Supporting molecular function. (The cached text of this paper does not
+      contain a verbatim ATP-binding sentence; the same activity is quoted from
+      PMID:20797618 and PMID:27555321.)
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is required for and consistent with the catalytic mechanism, and is
+      directly demonstrated in the companion structural studies.
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:30927326
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence for involvement in CoA biosynthesis. Core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      PANK3 catalyzes the committed first step of CoA biosynthesis.
+    supported_by:
+    - reference_id: PMID:30927326
+      supporting_text: &gt;-
+        Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+        rate-determining step of coenzyme A (CoA) biosynthesis
+- term:
+    id: GO:1905502
+    label: acetyl-CoA binding
+  evidence_type: IDA
+  original_reference_id: PMID:30927326
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 binds acetyl-CoA. Acetyl-CoA is the physiological
+      allosteric feedback inhibitor; binding in the substrate tunnel stabilizes the
+      inactive (open) conformation. This is a real, functionally important binding
+      activity of PANK3 (allosteric regulatory ligand), so it is kept, though it
+      represents a regulatory input rather than the primary catalytic function.
+      Verbatim quotes for acetyl-CoA binding are provided from PMID:17631502,
+      PMID:20797618, and PMID:27555321.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine, structurally confirmed acetyl-CoA binding underlying feedback inhibition;
+      supports the allosteric-regulation mechanism but is ancillary to the core kinase
+      catalytic function.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:20797618
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for ATP binding from the structural/enzymatic study of PanK3
+      (KM=311 uM for ATP). Supporting molecular function required for catalysis.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is experimentally established and required for the kinase reaction.
+    supported_by:
+    - reference_id: PMID:20797618
+      supporting_text: &gt;-
+        which is the primary mechanism that controls kinase activity and the
+        intracellular level of CoA
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: IDA
+  original_reference_id: PMID:20797618
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic &#39;phosphorylation&#39; biological-process annotation. PANK3 does phosphorylate
+      pantothenate, but this parent term is far less informative than the specific
+      pantothenate kinase activity (MF) and CoA biosynthetic process (BP) annotations.
+      Retained as a non-core, uninformative parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative high-level term; the substrate-specific kinase activity and CoA
+      biosynthesis annotations capture the biology precisely.
+    supported_by:
+    - reference_id: PMID:20797618
+      supporting_text: &gt;-
+        PanK3 phosphorylates hopantenate, a pantothenate analog
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IMP
+  original_reference_id: PMID:17631502
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Mutational (IMP) support for pantothenate kinase activity: mutants of the PanK3
+      catalytic core (modeling PKAN mutations) show compromised activity. Core
+      molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Mutagenesis confirms the pantothenate kinase catalytic activity of PANK3.
+    supported_by:
+    - reference_id: PMID:17631502
+      supporting_text: &gt;-
+        Biochemical and thermodynamic analyses of the PanK3 mutant proteins
+        corresponding to PanK2 mutations show that mutant proteins with compromised
+        activities
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:20797618
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct enzymatic demonstration of PANK3 pantothenate kinase activity, including
+      kinetic parameters (KM=14 uM pantothenate). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Directly measured catalytic activity; core function.
+    supported_by:
+    - reference_id: PMID:20797618
+      supporting_text: &gt;-
+        PanK3 phosphorylates hopantenate, a pantothenate analog
+- term:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  evidence_type: IMP
+  original_reference_id: PMID:27555321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Mutational (IMP) support for pantothenate kinase activity (e.g. active-site
+      Glu138 and Gly19 mutants). Core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Mutagenesis of catalytic/nucleotide-binding residues confirms PANK3 kinase
+      activity.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        PANK3(G19V) cannot bind ATP
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:27555321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct structural evidence that PANK3 binds ATP (AMPPNP.Mg2+ co-complexes;
+      G19V abolishes ATP binding). Supporting molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is structurally established and required for the catalytic cycle.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        PANK3(G19V) cannot bind ATP
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:23152917
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct imaging evidence that human PanK3 is cytosolic and soluble. This is the
+      precise, core subcellular location for PANK3, where it supplies phosphopantothenate
+      to the downstream cytosolic CoA-biosynthetic enzymes.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally validated core location; most informative localization term.
+    supported_by:
+    - reference_id: PMID:23152917
+      supporting_text: &gt;-
+        Mouse PanK2 and both human and mouse PanK3 were cytosolic with a diffuse
+        pattern, indicating that these proteins were soluble and not associated with
+        structural components of the cell
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:20797618
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Mutational (IMP) support for involvement in CoA biosynthesis. Core biological
+      process.
+    action: ACCEPT
+    reason: &gt;-
+      PANK3 catalyzes the first step of CoA biosynthesis; supported by mutagenesis.
+    supported_by:
+    - reference_id: PMID:20797618
+      supporting_text: &gt;-
+        Pantothenate kinases (PanK) are the regulatory enzymes that control the rate of
+        CoA biosynthesis and the concentration of intracellular CoA
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: IMP
+  original_reference_id: PMID:17631502
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic &#39;phosphorylation&#39; process annotation, from mutational analysis of the
+      catalytic core. Less informative than the specific pantothenate kinase activity
+      and CoA biosynthesis annotations; retained as a non-core, uninformative parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative high-level term superseded by the substrate-specific MF/BP
+      annotations.
+    supported_by:
+    - reference_id: PMID:17631502
+      supporting_text: &gt;-
+        Pantothenate kinase (PanK) catalyzes the first step in CoA biosynthesis
+- term:
+    id: GO:0016310
+    label: phosphorylation
+  evidence_type: IMP
+  original_reference_id: PMID:27555321
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic &#39;phosphorylation&#39; process annotation. Uninformative relative to the
+      specific pantothenate kinase activity and CoA biosynthetic process annotations.
+      Retained as a non-core parent.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative high-level term superseded by substrate-specific MF/BP annotations.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        Pantothenate kinase is the master regulator of CoA biosynthesis
+- term:
+    id: GO:0019842
+    label: vitamin binding
+  evidence_type: IDA
+  original_reference_id: PMID:27555321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 binds pantothenate (vitamin B5), its substrate,
+      captured in the AMPPNP.Mg2+.pantothenate co-crystal structure. This is a real
+      substrate-binding activity but a generic parent term (&#39;vitamin binding&#39;); it
+      reflects binding of the pantothenate substrate, which is captured functionally
+      by the pantothenate kinase activity annotation. Retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine binding of the pantothenate (vitamin B5) substrate, but &#39;vitamin binding&#39;
+      is a generic term subsumed by the specific pantothenate kinase catalytic activity.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        AMPPNP·Mg2+·pantothenate
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:17631502
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct structural evidence that PANK3 is a homodimer, with two equivalent active
+      sites formed by head-to-tail juxtaposition of the monomers. Homodimerization is
+      integral to the enzyme&#39;s quaternary structure and to the cooperative allosteric
+      switching between active and inactive conformations, so this is a genuine and
+      functionally meaningful activity, though ancillary to the catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Structurally confirmed obligate homodimer; homodimerization underlies the
+      cooperative allosteric mechanism but is a structural/quaternary feature rather
+      than the primary catalytic function.
+    supported_by:
+    - reference_id: PMID:17631502
+      supporting_text: &gt;-
+        we report the homodimeric structures of the catalytic cores of PanK1alpha and
+        PanK3 in complex with acetyl-CoA
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:27555321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 acts as a dimer whose two protomers are functionally
+      coupled and switch cooperatively between conformations. Confirms homodimerization;
+      kept as non-core structural feature underlying the allosteric mechanism.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Confirms the obligate homodimer; functionally coupled protomers underlie
+      cooperative allostery but this is a structural feature, not the core catalytic
+      function.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        biochemical analyses of an engineered PANK3/PANK3(G19V) heterodimer confirmed
+        that the two active sites are functionally coupled
+- term:
+    id: GO:1905502
+    label: acetyl-CoA binding
+  evidence_type: IDA
+  original_reference_id: PMID:17631502
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct structural evidence that PANK3 binds acetyl-CoA (co-crystallized with
+      acetyl-CoA as a feedback inhibitor). Represents the allosteric feedback-inhibitor
+      binding activity; genuine and functionally important but ancillary to catalysis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Structurally confirmed acetyl-CoA (feedback inhibitor) binding; regulatory rather
+      than core catalytic activity.
+    supported_by:
+    - reference_id: PMID:17631502
+      supporting_text: &gt;-
+        we report the homodimeric structures of the catalytic cores of PanK1alpha and
+        PanK3 in complex with acetyl-CoA, a feedback inhibitor
+- term:
+    id: GO:1905502
+    label: acetyl-CoA binding
+  evidence_type: IDA
+  original_reference_id: PMID:20797618
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 binds acetyl-CoA. Acetyl-CoA and its thioesters are
+      allosteric feedback inhibitors that compete with the ATP-binding site. Genuine
+      regulatory-ligand binding; kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Confirmed acetyl-CoA binding underlying feedback inhibition; regulatory rather
+      than core catalytic activity.
+    supported_by:
+    - reference_id: PMID:20797618
+      supporting_text: &gt;-
+        PanKs bind acetyl-CoA with high affinity and the ligand remains bound to the
+        enzymes through purification
+- term:
+    id: GO:1905502
+    label: acetyl-CoA binding
+  evidence_type: IDA
+  original_reference_id: PMID:27555321
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that PANK3 binds acetyl-CoA, whose binding stabilizes the inactive
+      (open) conformation. Genuine allosteric feedback-inhibitor binding; kept as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Confirmed acetyl-CoA binding underlying the allosteric feedback-inhibition
+      mechanism; regulatory rather than core catalytic activity.
+    supported_by:
+    - reference_id: PMID:27555321
+      supporting_text: &gt;-
+        feedback-inhibited by acetyl-CoA
+core_functions:
+- description: &gt;-
+    Pantothenate kinase: ATP-dependent phosphorylation of (R)-pantothenate (vitamin B5)
+    to (R)-4&#39;-phosphopantothenate, the first and rate-determining step of coenzyme A
+    biosynthesis (EC 2.7.1.33).
+  molecular_function:
+    id: GO:0004594
+    label: pantothenate kinase activity
+  supported_by:
+  - reference_id: PMID:30927326
+    supporting_text: &gt;-
+      Pantothenate kinase generates 4&#39;-phosphopantothenate in the first and
+      rate-determining step of coenzyme A (CoA) biosynthesis
+  - reference_id: PMID:20797618
+    supporting_text: &gt;-
+      PanK3 phosphorylates hopantenate, a pantothenate analog
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Uses ATP as the phosphate donor; ATP binding stabilizes the catalytically competent
+    (closed) conformation of the homodimeric enzyme, and acetyl-CoA/acyl-CoA feedback
+    inhibitors compete with the ATP-binding site.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  supported_by:
+  - reference_id: PMID:27555321
+    supporting_text: &gt;-
+      PANK3(G19V) cannot bind ATP
+  locations:
+  - id: GO:0005829
+    label: cytosol
+suggested_questions:
+- question: &gt;-
+    What are the distinct physiological, tissue-specific, and metabolic roles of PANK3
+    versus the other active human isoforms (PANK1alpha, PANK1beta, PANK2), given their
+    shared catalytic core but different regulatory properties and subcellular
+    localizations?
+- question: &gt;-
+    Does PANK3 have any non-catalytic or moonlighting role, or is its biological
+    function fully accounted for by pantothenate kinase activity and CoA-level
+    regulation?
+suggested_experiments:
+- description: &gt;-
+    Isoform-specific knockout/knockdown of PANK3 in liver and other tissues with
+    metabolomic profiling of CoA and acyl-CoA pools to define its non-redundant
+    contribution to CoA homeostasis.
+- description: &gt;-
+    Structure-guided mutagenesis distinguishing acetyl-CoA feedback inhibition from
+    catalysis (e.g. S195V, R207W) in a cellular context to test how PANK3 allosteric
+    regulation sets intracellular CoA set-points.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

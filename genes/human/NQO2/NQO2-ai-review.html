@@ -1,0 +1,4457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NQO2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NQO2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P16083" target="_blank" class="term-link">
+                        P16083
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NQO2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P16083" data-a="DESCRIPTION: NQO2 (NRH:quinone oxidoreductase 2 / quinone reduc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NQO2 (NRH:quinone oxidoreductase 2 / quinone reductase 2, QR2; UniProt recommended name ribosyldihydronicotinamide dehydrogenase [quinone], EC 1.10.5.1) is a cytosolic FAD-dependent flavoprotein of the NAD(P)H:quinone oxidoreductase family and a paralog of NQO1. It functions as a homodimer, with each subunit binding one FAD and one structural zinc ion. NQO2 catalyzes the two-electron reduction of quinones to hydroquinones (quinols), a reaction linked to quinone detoxification and to the metabolism/bioactivation of quinone-derived and nitroaromatic compounds (e.g. the prodrug CB1954). Its defining biochemical feature, distinguishing it from NQO1, is that it does not use NAD(P)H efficiently; instead it requires dihydronicotinamide riboside (NRH) or other reduced N-ribosyl/N-alkyl dihydronicotinamides as the electron donor. NQO2 is also the cytosolic &#34;MT3&#34; melatonin binding site: melatonin and the polyphenol resveratrol are high-affinity active-site inhibitors, making QR2 a notable pharmacological target.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003955" target="_blank" class="term-link">
+                                    GO:0003955
+                                </a>
+                            </span>
+                            <span class="term-label">NAD(P)H dehydrogenase (quinone) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0003955" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the family NAD(P)H:quinone oxidoreductase activity. This term (EC 1.6.5.2) specifies NAD(P)H as the electron donor, but NQO2 characteristically does not use NAD(P)H efficiently - it uses dihydronicotinamide riboside (NRH). The experimentally supported, cofactor-correct term is GO:0001512.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NQO2 diverged from the NAD(P)H-using family archetype (NQO1) in electron-donor specificity. Replace the NAD(P)H term with the NRH-specific GO:0001512 (EC 1.10.5.1), which is already supported here by IDA and matches UniProt&#39;s EC and the RHEA:12364 reaction.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001512" target="_blank" class="term-link">
+                                    dihydronicotinamide riboside quinone reductase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link">
+                                        PMID:10945627
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide riboside (reduced)] is required for enzymatic activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NQO2/NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md
+
+                                </span>
+
+                                <div class="support-text">recommend REMOVAL of the IBA GO:0003955</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation of cytosolic localization, consistent with UniProt (SUBCELLULAR LOCATION: Cytoplasm) and with direct experimental evidence for QR2 as a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization. NQO2/QR2 is a well-established cytosolic enzyme; the IBA agrees with the IDA and TAS cytosol annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001512" target="_blank" class="term-link">
+                                    GO:0001512
+                                </a>
+                            </span>
+                            <span class="term-label">dihydronicotinamide riboside quinone reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0001512" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (IEA) annotation of the NRH:quinone reductase activity. This is the correct, cofactor-specific molecular function for NQO2 (EC 1.10.5.1; RHEA:12364), corroborated by IDA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core catalytic function. Matches UniProt EC 1.10.5.1 and the demonstrated NRH-dependent quinone reduction; agrees with the IDA annotation of the same term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (IEA) cytoplasm annotation from UniProt subcellular-location mapping. Correct but a general parent of the more precise cytosol annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent general localization; cytosol (GO:0005829) is the more informative core term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005515" data-r="PMID:16189514" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding from a large-scale (Y2H) human interactome mapping effort. Records a physical interaction but conveys no specific functional information.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 is uninformative (project guideline: avoid protein binding) and derives from a high-throughput interactome screen; it does not inform NQO2&#39;s core enzymatic function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24606901
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cochaperone binding to LYR motifs confers specificity of iro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005515" data-r="PMID:24606901" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding reported in a study of HSC20/HSCB cochaperone recognition of LYR motifs in iron-sulfur cluster delivery. Documents an interaction but is annotated only as generic protein binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative as a molecular-function term; the interaction does not establish a core function for NQO2 and is not corroborated as a stable functional partnership.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005515" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding from a proteome-scale human interactome network map (systematic Y2H).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome hit; GO:0005515 is uninformative and non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005515" data-r="PMID:31515488" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding from an interactome-perturbation study of genetic variants.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome hit; uninformative and non-core for NQO2 function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic protein binding from the HuRI reference map of the human binary protein interactome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome hit; GO:0005515 is uninformative and non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (immunofluorescence-based) evidence for cytosolic localization of NQO2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization, directly supported and consistent with all other cytosol annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901662" target="_blank" class="term-link">
+                                    GO:1901662
+                                </a>
+                            </span>
+                            <span class="term-label">quinone catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:1901662" data-r="PMID:18254726" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biological-process annotation for quinone catabolism/reduction. NQO2 reduces quinones to hydroquinones, feeding conjugation/detoxification, although QR2 can in some cases yield more reactive products than the parent quinone.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the principal biological role (quinone reduction/detoxification metabolism), the process context of the core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link">
+                                        PMID:18254726
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it was believed that QR2 might also serve as a detoxification enzyme that can produce hydroquinones which are less toxic to cells compared with the parent quinones</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016661" target="_blank" class="term-link">
+                                    GO:0016661
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on other nitrogenous compounds as donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10945627
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0016661" data-r="PMID:10945627" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General oxidoreductase term used for the NRH-dependent reductase activity. This term maps to EC 1.7.-.- (nitrogenous compounds as donors), a different EC branch than NQO2&#39;s EC 1.10.5.1; it mis-classifies the activity relative to the specific NRH:quinone reductase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace with the specific, correctly-branched GO:0001512 (EC 1.10.5.1), which describes the demonstrated NRH:quinone reductase reaction and is already annotated here by IDA.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001512" target="_blank" class="term-link">
+                                    dihydronicotinamide riboside quinone reductase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10945627
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005829" data-r="PMID:10945627" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for cytosolic localization from the CB1954 bioactivation study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core localization, directly supported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10945627
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0009055" data-r="PMID:10945627" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electron transfer activity annotation. GO:0009055 denotes electron-carrier proteins operating within electron transport chains (cytochromes, ferredoxins, flavodoxins). NQO2 is a soluble cytosolic two-electron quinone reductase, not an electron-transport-chain carrier; its electron flow from NRH to quinone is already captured by its quinone reductase MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term implies an electron-carrier/ETC role that NQO2 does not have; the catalytic activity is better and fully represented by GO:0001512.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0009055" data-r="PMID:18254726" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second electron transfer activity annotation (from the structural/kinetic paper). Same assessment as the PMID:10945627 annotation: GO:0009055 denotes electron-carrier proteins in electron transport chains, whereas NQO2 is a soluble cytosolic two-electron quinone reductase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NQO2 is not an electron-transport-chain carrier; its NRH-to-quinone electron flow is fully captured by the quinone reductase MF (GO:0001512).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10945627
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0016491" data-r="PMID:10945627" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level oxidoreductase activity. Correct but uninformatively general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate parent term; the specific core MF is GO:0001512.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001512" target="_blank" class="term-link">
+                                    GO:0001512
+                                </a>
+                            </span>
+                            <span class="term-label">dihydronicotinamide riboside quinone reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0001512" data-r="PMID:18254726" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental annotation of the NRH:quinone reductase activity, the core catalytic function of NQO2 (EC 1.10.5.1; RHEA:12364). Structural/kinetic work characterized the QR2 active site and its dihydronicotinamide donor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, directly supported and matching UniProt EC and the Rhea reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link">
+                                        PMID:10945627
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide riboside (reduced)] is required for enzymatic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0008270" data-r="PMID:18254726" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for zinc binding. QR2 binds one structural Zn2+ per subunit (UniProt COFACTOR), resolved in the crystal structures.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bona fide structural cofactor of NQO2 (1 Zn2+/subunit), integral to the folded enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031404" target="_blank" class="term-link">
+                                    GO:0031404
+                                </a>
+                            </span>
+                            <span class="term-label">chloride ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0031404" data-r="PMID:18254726" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chloride ion binding observed in a QR2 crystal structure. Chloride is not listed among NQO2&#39;s functional cofactors (UniProt COFACTOR gives only FAD and Zn2+) and most likely reflects a crystallographic/buffer ion rather than a functional interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real crystallographic observation but not a recognized functional cofactor; not part of the core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0042803" data-r="PMID:18254726" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NQO2 is an obligate homodimer, with the active sites formed at the dimer interface; this is a specific, structurally-supported interaction (unlike generic protein binding).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine, informative homodimerization supported by crystal structures and confirmed as the biological unit (UniProt SUBUNIT: Homodimer). Non-core relative to catalysis but valid.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0071949" data-r="PMID:18254726" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for FAD binding. NQO2 is a flavoprotein; each subunit binds FAD, the redox cofactor essential for the two-electron quinone reduction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core cofactor binding; FAD is obligatory for catalysis and resolved in the QR2 structures.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904408" target="_blank" class="term-link">
+                                    GO:1904408
+                                </a>
+                            </span>
+                            <span class="term-label">melatonin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:1904408" data-r="PMID:18254726" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that NQO2/QR2 binds melatonin - QR2 is the cytosolic &#34;MT3&#34; melatonin binding site. Melatonin is a competitive active-site inhibitor (vs the dihydronicotinamide donor), seen crystallographically in multiple active-site orientations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-evidenced and biologically notable (defining pharmacology of QR2/MT3), but it is inhibitor/ligand binding at the active site rather than the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link">
+                                        PMID:18254726
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">MT3 was purified to homogeneity and identified as QR2 (quinone reductase 2)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link">
+                                        PMID:18254726
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">melatonin binds in multiple orientations within the active sites of the QR2 dimer as opposed to an allosteric site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905594" target="_blank" class="term-link">
+                                    GO:1905594
+                                </a>
+                            </span>
+                            <span class="term-label">resveratrol binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18254726
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinetic, thermodynamic and X-ray structural insights into th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:1905594" data-r="PMID:18254726" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for resveratrol binding. In the annotated paper the evidence is a biophysical binding assay - isothermal titration calorimetry (ITC) gave a Kd of ~39 nM - together with IC50 inhibition assays; resveratrol was used there as a positive-control active-site ligand. The QR2:resveratrol crystal structure itself is from an earlier study (Buryanovskyy et al. 2004, PDB 1SG0), which this paper reuses for molecular replacement and docking. Note the contrast with cao-1, where resveratrol is a substrate rather than an inhibitor. GO is obsoleting GO:1905594 resveratrol binding (go-ontology issues #32321/#32333, Jul 2026); NQO2 (P16083) is one of the two EXP-annotated proteins that triggered the obsoletion, the other being cao-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Robustly evidenced inhibitor/ligand binding (ITC Kd ~39 nM), pharmacologically important, but not the core physiological catalytic function. The IDA to PMID:18254726 is supported by that paper&#39;s own ITC measurement; the primary structural evidence (PDB 1SG0) resides in Buryanovskyy et al. 2004 (Biochemistry; PMID:15350128), added to the references here. IMPORTANT distinction for the pending obsoletion: the obsoletion issue recommends reannotating both proteins &#34;to enzyme activity with chebi id&#34;, but that fits only cao-1, where resveratrol is the catalytic SUBSTRATE (-&gt; the new GO:7770086 resveratrol dioxygenase activity, go-ontology PR #32332 merged 2026-07-17). For NQO2 resveratrol is a competitive ACTIVE-SITE INHIBITOR, not a substrate or product, so there is no molecular-function replacement; on obsoletion this annotation should simply be dropped, not reannotated to a catalytic term. This is exactly the substrate-versus-inhibitor ambiguity that made GO:1905594 ill-defined.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link">
+                                        PMID:18254726
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Resveratrol was found to interact strongly with QR2 with a Kd of 39 nM</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8936519
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0005829" data-r="Reactome:R-HSA-8936519" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable-author-statement cytosol annotation from Reactome (NQO2:FAD dimer reduces quinones to hydroquinones).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent core localization; corroborates the IDA/IBA cytosol annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of NQO2 in exosomes (prostatic-secretion/urine exosome proteomics). Common for abundant cytosolic proteins; not evidence of a functional extracellular localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mass-spectrometry detection in an exosome preparation; NQO2 is fundamentally a cytosolic enzyme, so this is not a functionally informative localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16083" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of NQO2 in urinary exosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteomics detection in exosomes; not a functional localization for this cytosolic enzyme.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent cytosolic quinone reductase that uses dihydronicotinamide riboside (NRH), not NAD(P)H, as the electron donor to catalyze two-electron reduction of quinones to hydroquinones (EC 1.10.5.1; RHEA:12364). Requires FAD and a structural Zn2+; functions as a homodimer.</h3>
+                <span class="vote-buttons" data-g="P16083" data-a="FUNCTION: FAD-dependent cytosolic quinone reductase that use..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001512" target="_blank" class="term-link">
+                            dihydronicotinamide riboside quinone reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901662" target="_blank" class="term-link">
+                                quinone catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link">
+                                PMID:10945627
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide riboside (reduced)] is required for enzymatic activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10945627" target="_blank" class="term-link">
+                            PMID:10945627
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB 1954) by human NAD(P)H quinone oxidoreductase 2: a novel co-substrate-mediated antitumor prodrug therapy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NQO2 activity is latent unless supplied with a reduced dihydronicotinamide co-substrate such as NRH; NAD(P)H is not the physiological electron donor.</div>
+
+                        <div class="finding-text">"its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide riboside (reduced)] is required for enzymatic activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/NQO2/NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist blinded function-assignment report for NQO2 (NAD(P)H dehydrogenase (quinone) activity, GO:0003955)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An independent, blinded OpenScientist run neutrally tested whether NQO2 has NAD(P)H dehydrogenase (quinone) activity and concluded the term is over-annotated/substrate-incorrect because NQO2 uses NRH rather than NAD(P)H (NAD(P)H/EC 1.6.5.2 is the NQO1 activity), pointing to the already-annotated GO:0001512 - concurring with this review&#39;s MODIFY.</div>
+
+                        <div class="finding-text">"recommend REMOVAL of the IBA GO:0003955"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15350128" target="_blank" class="term-link">
+                            PMID:15350128
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of quinone reductase 2 in complex with resveratrol.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Resveratrol is a potent (Kd ~35 nM) inhibitor of QR2 that binds in the active-site cleft, with all three of its hydroxyl groups hydrogen-bonding to QR2 residues.</div>
+
+                        <div class="finding-text">"resveratrol is a potent inhibitor of quinone reductase 2 (QR2) activity in vitro with a dissociation constant of 35 nM"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The resveratrol molecule is anchored in the QR2 active site via hydrogen bonds from all three of its hydroxyl groups.</div>
+
+                        <div class="finding-text">"All three resveratrol hydroxyl groups form hydrogen bonds with amino acids from QR2"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" target="_blank" class="term-link">
+                            PMID:18254726
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kinetic, thermodynamic and X-ray structural insights into the interaction of melatonin and analogues with quinone reductase 2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QR2 is the cytosolic MT3 melatonin binding site; melatonin is a competitive active-site inhibitor seen in multiple orientations in the QR2 dimer.</div>
+
+                        <div class="finding-text">"melatonin binds in multiple orientations within the active sites of the QR2 dimer as opposed to an allosteric site"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">QR2 is a high-affinity (nanomolar) target of resveratrol, with a determined QR2:resveratrol crystal structure.</div>
+
+                        <div class="finding-text">"It is one of the most potently inhibited (nanomolar) molecular targets of resveratrol, a natural polyphenol found in wine and peanuts, and the X-ray structure of QR2 in complex with resveratrol has been determined"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24606901" target="_blank" class="term-link">
+                            PMID:24606901
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster delivery.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8936519
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NQO2:FAD dimer reduces quinones to hydroquinones</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous physiological quinone substrates and the true in vivo source of the NRH co-substrate for NQO2, and does NQO2 predominantly detoxify quinones or, for certain substrates, generate more reactive/cytotoxic products?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P16083" data-a="Q: What are the endogenous physiological quinone subs..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided separation-of-function mutants (active-site vs Zn/FAD sites) assayed for NRH: quinone reductase activity and for melatonin/resveratrol inhibition, to dissect the catalytic versus ligand-binding (MT3) roles of the active site.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P16083" data-a="EXPERIMENT: Structure-guided separation-of-function mutants (a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolomic comparison of NQO2-proficient vs NQO2-null human cells challenged with model quinones, to determine which quinones are detoxified versus bioactivated and to test the NRH dependence in a cellular context.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P16083" data-a="EXPERIMENT: Metabolomic comparison of NQO2-proficient vs NQO2-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P16083" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">NQO2 (P16083) — Function-Assignment Hypothesis Review</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+                    <span class="report-badge">4 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-18T13:51:02.026673</span>
+
+
+
+                    <a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md.citations.md" class="term-link">citations file</a>
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/provenance_NQO2_GO_decision_table.json" class="term-link">OpenScientist NQO2 GO decision table</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/provenance_NQO2_GO_decision_table.png" class="term-link">OpenScientist NQO2 GO decision table</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="nqo2-p16083-function-assignment-hypothesis-review">NQO2 (P16083) — Function-Assignment Hypothesis Review</h1>
+<p><strong>Hypothesis:</strong> NQO2 has NAD(P)H dehydrogenase (quinone) activity (GO:0003955).<br />
+<strong>Focus:</strong> function_assignment · existing IBA annotation (GO_REF:0000033) · slug <code>function-hypothesis-go-0003955</code><br />
+<strong>Gene:</strong> human NQO2 / UniProt P16083</p>
+<hr />
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: Over-annotated → recommend REMOVAL of the IBA GO:0003955 (activity real, but this specific term is substrate-incorrect and redundant).</strong></p>
+<p>NQO2 is unequivocally a flavin-dependent, two-electron <strong>quinone reductase</strong>, so the <em>quinone-reductase</em> concept is correct. But the specific term <strong>GO:0003955 "NAD(P)H dehydrogenase (quinone) activity"</strong> (reaction: NAD(P)H + quinone → NAD(P)⁺ + quinol) makes a <strong>cofactor/substrate claim that NQO2 does not satisfy</strong>. The definitive enzymology (Wu et al., 1997, PMID:9367528) shows NQO2 "uses dihydronicotinamide riboside (NRH) <strong>rather than</strong> NAD(P)H as an electron donor." UniProt (P16083) codifies this as <strong>EC 1.10.5.1</strong>; the NAD(P)H reaction (EC 1.6.5.2) belongs to the paralog <strong>NQO1</strong> (P15559).</p>
+<p>Two ontology facts (verified via QuickGO this iteration) make the recommendation <strong>removal rather than generalization</strong>:<br />
+1. The biochemically exact term <strong>GO:0001512 "dihydronicotinamide riboside quinone reductase activity"</strong> (NRH + quinone → nicotinamide riboside + hydroquinone) is <strong>already annotated to NQO2 with experimental evidence — IDA, PMID:18254726</strong> (plus IEA GO_REF:0000120).<br />
+2. <strong>GO:0003955 is NOT an is_a ancestor of GO:0001512.</strong> They are siblings in different oxidoreductase subtrees, so GO:0003955 cannot be defended as a merely-less-specific but still-true parent. It is a distinct, incorrect molecular function.</p>
+<p>The IBA is therefore a <strong>paralog over-annotation</strong> (GO:0003955 native to NQO1, propagated across the shared PANTHER family via GO_REF:0000033), and it is both wrong on substrate and redundant with the correct experimental term.</p>
+<p><strong>Most important caveat:</strong> Do not delete NQO2's reductase function from the model — it is captured accurately by GO:0001512. The action is limited to the mis-specified IBA row.</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Citation</th>
+<th>Evidence type</th>
+<th>Stance</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PMID:9367528 (Wu et al., 1997)</td>
+<td>Direct assay (purified enzyme)</td>
+<td><strong>Refutes cofactor</strong></td>
+<td>Does NQO2 use NAD(P)H?</td>
+<td>"NQO2 uses dihydronicotinamide riboside (NRH) <strong>rather than</strong> NAD(P)H as an electron donor"; FAD dimer; 2-e⁻ quinone reduction; dicoumarol-resistant</td>
+<td>Recombinant human NQO2</td>
+<td>High; definitive; in vitro</td>
+</tr>
+<tr>
+<td>PMID:18254726 (Calamini et al., 2008)</td>
+<td>Direct assay + X-ray structure</td>
+<td><strong>Supports correct term</strong></td>
+<td>NQO2 activity/structure &amp; ligands</td>
+<td>Kinetic/thermodynamic/X-ray characterization of QR2; source of NQO2 <strong>IDA GO:0001512</strong>, FAD binding, Zn²⁺ binding, melatonin binding</td>
+<td>Human QR2 crystal</td>
+<td>High</td>
+</tr>
+<tr>
+<td>PMID:10945627 (Knox et al., 2000; context ref)</td>
+<td>Direct assay</td>
+<td><strong>Qualifies (co-substrate)</strong></td>
+<td>NQO2 oxidoreductase mechanism</td>
+<td>CB1954 bioactivation by NQO2 is <strong>co-substrate (NRH-analog)-mediated</strong>; IDA source for GO:0016491/0016661/0009055</td>
+<td>Human NQO2</td>
+<td>High; confirms NRH-type co-substrate, not NAD(P)H</td>
+</tr>
+<tr>
+<td>UniProt P16083 (curated)</td>
+<td>Database</td>
+<td><strong>Qualifies</strong></td>
+<td>Correct EC &amp; reaction</td>
+<td><strong>EC 1.10.5.1</strong>; reaction NRH + quinone → nicotinamide riboside + quinol; cofactors FAD, Zn²⁺; 231 aa</td>
+<td>Human</td>
+<td>High</td>
+</tr>
+<tr>
+<td>UniProt P15559 (NQO1)</td>
+<td>Database (paralog)</td>
+<td><strong>Competing/explanatory</strong></td>
+<td>Which enzyme owns GO:0003955?</td>
+<td>NQO1 = <strong>EC 1.6.5.2</strong>, NADH/NADPH reactions, 274 aa</td>
+<td>Human</td>
+<td>High; source of IBA carry-over</td>
+</tr>
+<tr>
+<td>QuickGO ontology (this run)</td>
+<td>Computational (ontology)</td>
+<td><strong>Qualifies</strong></td>
+<td>Is GO:0003955 a valid parent of the true term?</td>
+<td>GO:0001512 is_a ancestors = GO:0016679→GO:0016491; <strong>GO:0003955 not an ancestor</strong> (sibling, not parent)</td>
+<td>GO release</td>
+<td>High; direct API result</td>
+</tr>
+<tr>
+<td>QuickGO annotation (this run)</td>
+<td>Database</td>
+<td><strong>Supports removal</strong></td>
+<td>Is the correct term already present?</td>
+<td>NQO2 already has <strong>GO:0001512 (IDA, PMID:18254726; IEA)</strong>; GO:0003955 present only as <strong>IBA (GO_REF:0000033)</strong></td>
+<td>UniProtKB:P16083</td>
+<td>High</td>
+</tr>
+<tr>
+<td>PMID:18996184 (Gaikwad et al., 2009)</td>
+<td>Direct assay</td>
+<td><strong>Supports reductase core</strong></td>
+<td>Does NQO2 reduce quinones?</td>
+<td>NQO2 reduces estrogen o-quinones using an NRH-type cofactor (BNAH); faster than NQO1</td>
+<td>Human recombinant</td>
+<td>Med-high</td>
+</tr>
+<tr>
+<td>PMID:21506232 (Dufour et al., 2011)</td>
+<td>Structural/inhibitor</td>
+<td><strong>Qualifies (flavoprotein)</strong></td>
+<td>Mechanism &amp; FAD</td>
+<td>FAD flavoprotein; inhibitors alkylate flavin; NQO1-distinct selectivity</td>
+<td>X-ray + MS</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<p><strong>Lead (requires curator verification):</strong></p>
+<ul>
+<li><strong>Molecular Function — REMOVE the IBA GO:0003955 from NQO2</strong> (or mark NOT / do-not-propagate). It asserts NAD(P)H substrate that NQO2 cannot use and is a paralog carry-over from NQO1.</li>
+<li><strong>Retain the already-present GO:0001512</strong> "dihydronicotinamide riboside quinone reductase activity" (IDA, PMID:18254726) as the accurate leaf MF term. No new term needs to be created.</li>
+<li>Because GO:0003955 is a <strong>sibling (not ancestor)</strong> of GO:0001512, keeping it is not a harmless generalization — it introduces a false substrate assertion into the model.</li>
+<li>Broader true ancestors already annotated (GO:0016491 oxidoreductase activity; GO:0016661 acting on other nitrogenous donors; GO:0009055 electron transfer activity; GO:0048038 quinone binding; GO:0071949 FAD binding; GO:0008270 zinc ion binding) remain valid. Avoid defaulting to generic "protein binding."</li>
+</ul>
+<p><strong>GO decision table</strong></p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Current on NQO2</th>
+<th>Recommended action</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0003955 NAD(P)H dehydrogenase (quinone) activity</td>
+<td><strong>IBA</strong> (GO_REF:0000033)</td>
+<td><strong>Remove / NOT</strong> — substrate-incorrect, paralog carry-over, non-ancestral to true term</td>
+<td>PMID:9367528; UniProt EC 1.10.5.1; QuickGO ancestry</td>
+</tr>
+<tr>
+<td>GO:0001512 dihydronicotinamide riboside quinone reductase activity</td>
+<td><strong>IDA</strong> (PMID:18254726) + IEA</td>
+<td><strong>Retain</strong> as accurate MF leaf term</td>
+<td>PMID:9367528, 18254726; EC 1.10.5.1</td>
+</tr>
+</tbody>
+</table>
+<p>{{figure:NQO2_GO_decision_table.png|caption=GO molecular-function decision table for NQO2 (P16083). GO:0003955 "NAD(P)H dehydrogenase (quinone) activity" (IBA, GO_REF:0000033) is substrate-incorrect (NQO2 uses NRH, not NAD(P)H; PMID:9367528) and redundant with the already-annotated, experimentally-supported GO:0001512 "dihydronicotinamide riboside quinone reductase activity" (IDA, PMID:18254726). Recommended action: remove GO:0003955; retain GO:0001512.}}</p>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<ul>
+<li><strong>Immediate molecular function tested:</strong> FAD-mediated <strong>two-electron reduction of quinones to hydroquinones</strong>, electrons supplied by a <strong>dihydronicotinamide riboside (NRH)</strong> donor in a ping-pong mechanism; Zn²⁺ is structural.</li>
+<li><strong>Correctly in scope:</strong> quinone reduction (menadione and other quinones, estrogen o-quinones, vitamin K quinones), NRH-dependent nitroreduction (CB1954). Captured by GO:0001512.</li>
+<li><strong>Out of scope for this MF term (BP/CC or ligand-binding):</strong> neuronal "memory constraint"/metabolic-buffer role (Rosenblum lab), Alzheimer's phenotype modulation, melatonin MT3 binding-site identity (GO:1904408) and resveratrol binding (GO:1905594). These are downstream physiology or ligand properties, not the electron-donor chemistry adjudicated here.</li>
+</ul>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Paralog confusion (primary):</strong> GO:0003955 is correct for <strong>NQO1</strong> (EC 1.6.5.2, NADH/NADPH). Its presence on NQO2 is explained by IBA propagation, not NQO2 biochemistry. Structural basis: NQO2 (231 aa) lacks the ~43-residue C-terminal region present in NQO1 (274 aa) that helps form the adenosine/2′-phosphate NAD(P)H-binding site, so NQO2 uses the smaller NRH.</li>
+<li><strong>In-vitro cofactor surrogates:</strong> NQO2 assays use synthetic donors (BNAH; EP-0152R) because free NRH is not a standard bulk metabolite; consistent with EC 1.10.5.1, not with NAD(P)H use.</li>
+<li><strong>No credible primary report</strong> shows efficient NAD(P)H-driven catalysis by NQO2.</li>
+<li><strong>Self-correction:</strong> Iteration 1 tentatively named the replacement term GO:0033856; that ID is actually <em>pyridoxine 5′-phosphate synthase activity</em>. The correct term is <strong>GO:0001512</strong>, confirmed via QuickGO.</li>
+</ul>
+<hr />
+<h2 id="knowledge-gaps">Knowledge Gaps</h2>
+<ol>
+<li><strong>Physiological NRH source in vivo.</strong> Checked: literature uses in-vitro NRH/BNAH surrogates. Matters for BP context, not the MF term. Resolve via tissue metabolomics for NRH and NRH-generating enzymes.</li>
+<li><strong>Whether the review pipeline treats a non-ancestral IBA as "generalize" vs "remove."</strong> Checked ancestry (GO:0003955 not ancestor of GO:0001512), which argues for removal. Curator should confirm project policy.</li>
+<li><strong>Quantitative NAD(P)H vs NRH kinetics.</strong> Existing data are qualitative (NRH-preference). A kcat/Km ratio would formally bound the error; confirmatory only.</li>
+</ol>
+<hr />
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ul>
+<li><strong>Side-by-side kinetics:</strong> NQO2 quinone reduction with NRH/BNAH vs NADH vs NADPH → expect robust NRH activity, negligible NAD(P)H (discriminates GO:0001512 from GO:0003955).</li>
+<li><strong>Structure/domain check:</strong> confirm absence of the NQO1 C-terminal NAD(P)H subdomain in NQO2 (PDB 1QR2 vs NQO1 structures; sequence alignment).</li>
+<li><strong>Chimera/mutagenesis:</strong> graft the NQO1 C-terminal extension onto NQO2 to test gain of NAD(P)H use — causal test of the domain–cofactor link.</li>
+</ul>
+<hr />
+<h2 id="curation-leads-require-curator-verification">Curation Leads (require curator verification)</h2>
+<ul>
+<li><strong>Candidate action:</strong> Remove/NOT the IBA <strong>GO:0003955</strong> on NQO2; retain existing IDA <strong>GO:0001512</strong>.</li>
+<li><strong>Candidate reference to verify (donor specificity):</strong> PMID:9367528 — <em>"NQO2 uses dihydronicotinamide riboside (NRH) rather than NAD(P)H as an electron donor. It catalyzes a two-electron reduction of quinones and oxidation-reduction dyes."</em></li>
+<li><strong>Candidate reference supporting the correct term (already the IDA source):</strong> PMID:18254726 (Calamini et al., 2008, QR2 kinetics + X-ray) — verify it is the IDA basis for GO:0001512.</li>
+<li><strong>Context reference:</strong> PMID:10945627 (CB1954 co-substrate-mediated bioactivation) confirms NRH-type co-substrate, not NAD(P)H.</li>
+<li><strong>Database support:</strong> UniProt P16083 (EC 1.10.5.1, NRH→quinol reaction, FAD+Zn²⁺); QuickGO ancestry showing GO:0003955 is not an ancestor of GO:0001512.</li>
+<li><strong>Suggested curator question:</strong> Does project policy remove a substrate-incorrect, non-ancestral IBA term when the correct experimental term is already present, or retain it flagged?</li>
+<li><strong>Suggested experiment:</strong> NRH-vs-NAD(P)H kinetic comparison to document cofactor discrimination quantitatively.</li>
+</ul>
+<hr />
+<h3 id="provenance-executed-this-review">Provenance (executed this review)</h3>
+<ul>
+<li>UniProt REST: NQO2 P16083 = 231 aa, EC 1.10.5.1, NRH→quinol, FAD+Zn²⁺; NQO1 P15559 = 274 aa, EC 1.6.5.2, NAD(H)/NADP(H). Confirms paralog cofactor divergence + 43-aa length difference.</li>
+<li>QuickGO ontology: GO:0001512 is_a ancestors = {GO:0016679, GO:0016491, GO:0003824, GO:0003674}; GO:0003955 NOT among them (sibling relationship).</li>
+<li>QuickGO annotation (UniProtKB:P16083, MF): GO:0001512 = IDA (PMID:18254726) + IEA; GO:0003955 = IBA only (GO_REF:0000033).</li>
+<li>NCBI eSummary: PMID:18254726 = QR2 melatonin kinetics/X-ray; PMID:10945627 = CB1954 co-substrate bioactivation.</li>
+<li>Sequence comparison (UniProt FASTA, computed): NQO2 231 aa vs NQO1 274 aa; NQO1 carries exactly <strong>43 extra C-terminal residues</strong> (…NFQAGFLMKKEVQDEEKNKKFGLSVGHHLGKSIPTDNQIKARK) absent in NQO2 — the C-terminal segment forming part of the NAD(P)H adenosine-binding site, i.e. the structural reason NQO2 cannot use NAD(P)H.</li>
+<li>Literature: PMID:9367528 (definitive), 18996184, 21506232, plus review 18374191.</li>
+</ul>
+<h3 id="artifacts-generated">Artifacts generated</h3>
+<ul>
+<li><code>NQO2_GO_decision_table.png</code> — rendered GO MF decision table (remove IBA GO:0003955; retain GO:0001512), auto-saved during execution.</li>
+<li>Evidence matrix and GO decision table are embedded above as artifact-friendly Markdown tables (the code executor sandbox could not write CSVs to the job directory; the executed code and its printed outputs above are the provenance).</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/provenance_NQO2_GO_decision_table.json">OpenScientist NQO2 GO decision table</a><br />
+<img alt="OpenScientist NQO2 GO decision table" src="NQO2-hypotheses/function-hypothesis-go-0003955/openscientist_artifacts/provenance_NQO2_GO_decision_table.png" /></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NQO2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P16083" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nqo2-p16083-nqo2_human-review-notes">NQO2 (P16083, NQO2_HUMAN) — review notes</h1>
+<h2 id="gene-identity-and-core-function">Gene identity and core function</h2>
+<p>NQO2 = <strong>NRH:quinone oxidoreductase 2 / quinone reductase 2 (QR2)</strong>; UniProt recommended name<br />
+<em>Ribosyldihydronicotinamide dehydrogenase [quinone]</em>, <strong>EC 1.10.5.1</strong>. A 231-aa cytosolic FAD<br />
+flavoprotein, homodimer, member of the NAD(P)H:quinone oxidoreductase family (paralog of NQO1).</p>
+<p><strong>Defining biochemical distinction from NQO1:</strong> NQO2 does <strong>not</strong> use NAD(P)H efficiently as the<br />
+electron donor. Instead it uses <strong>dihydronicotinamide riboside (NRH)</strong> (and other reduced<br />
+N-ribosyl/N-alkyl dihydronicotinamides) as the reducing co-substrate.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10945627" title="its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide riboside (reduced)] is required for enzymatic activity">PMID:10945627</a><br />
+UniProt MISCELLANEOUS: "Uses dihydronicotinamide riboside (NRH) rather than NAD(P)H as an electron donor."</p>
+<ul>
+<li><strong>Catalysis:</strong> two-electron reduction of quinones to hydroquinones (quinols), NRH + quinone + H+ →<br />
+  N-ribosylnicotinamide + quinol (RHEA:12364; EC 1.10.5.1; GO:0001512). FAD-dependent.</li>
+<li><strong>Cofactors:</strong> FAD (flavin) and one structural Zn2+ per subunit (UniProt COFACTOR).</li>
+<li><strong>Biological role:</strong> quinone reduction/detoxification (produces less-toxic hydroquinones for<br />
+  conjugation), though notably QR2 can in some cases generate <strong>more</strong> reactive species than the<br />
+  parent quinone <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="it was believed that QR2 might also serve as a detoxification enzyme that can produce hydroquinones which are less toxic to cells compared with the parent quinones">PMID:18254726</a>. Also implicated in prodrug bioactivation (CB1954, mitomycin C).</li>
+</ul>
+<h2 id="pharmacology-the-mt3-melatonin-site-and-resveratrol">Pharmacology — the MT3 melatonin site and resveratrol</h2>
+<p>QR2 is the long-sought <strong>cytosolic "MT3" melatonin binding site</strong>.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="MT3 was purified to homogeneity and identified as QR2 (quinone reductase 2)">PMID:18254726</a><br />
+Melatonin is a <strong>competitive inhibitor</strong> of QR2 (vs the dihydronicotinamide donor), binding in the<br />
+<strong>active site</strong> (not allosteric): <a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="melatonin is a competitive inhibitor against N-methyldihydronicotinamide">PMID:18254726</a> and X-ray structures show<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="melatonin binds in multiple orientations within the active sites of the QR2 dimer as opposed to an allosteric site">PMID:18254726</a>.</p>
+<p>QR2 is also one of the highest-affinity molecular targets of <strong>resveratrol</strong> (an inhibitor here,<br />
+in contrast to cao-1 where resveratrol is a substrate):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="It is one of the most potently inhibited (nanomolar) molecular targets of resveratrol, a natural polyphenol found in wine and peanuts, and the X-ray structure of QR2 in complex with resveratrol has been determined">PMID:18254726</a>.</p>
+<p>So the <code>melatonin binding</code> and <code>resveratrol binding</code> IDA annotations reflect <strong>inhibitor/ligand<br />
+binding at the active site</strong>, well-evidenced (co-crystals, ITC/kinetics) but pharmacological rather<br />
+than the core catalytic function → KEEP_AS_NON_CORE.</p>
+<p><strong>Provenance of the <code>resveratrol binding</code> IDA (GO:1905594 → PMID:18254726):</strong> In the annotated<br />
+paper the direct evidence is a <strong>binding assay, not a structure</strong> — ITC gave a Kd of ~39 nM<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18254726" title="Resveratrol was found to interact strongly with QR2 with a Kd of 39 nM">PMID:18254726</a>, plus IC50<br />
+inhibition assays; resveratrol served as a positive control there. The <strong>crystal structure</strong> of the<br />
+QR2:resveratrol complex is from an earlier paper — <strong>Buryanovskyy et al. 2004 (PDB 1SG0; PMID:15350128)</strong>,<br />
+who also first measured the Kd (~35 nM) by intrinsic tryptophan fluorescence — which Calamini et al.<br />
+reuse for molecular replacement/docking. Buryanovskyy 2004 is a candidate reference to add (it is the<br />
+primary structural + first-binding source but is absent from NQO2's GOA reference set).</p>
+<h2 id="annotation-review-decisions-26-goa-annotations">Annotation review decisions (26 GOA annotations)</h2>
+<h3 id="molecular-function-catalytic">Molecular function — catalytic</h3>
+<ul>
+<li><strong>GO:0001512</strong> dihydronicotinamide riboside quinone reductase activity (IDA PMID:18254726; IEA) →<br />
+<strong>ACCEPT (core)</strong>. Exactly matches EC 1.10.5.1 / RHEA:12364.</li>
+<li><strong>GO:0003955</strong> NAD(P)H dehydrogenase (quinone) activity (IBA) → <strong>MODIFY → GO:0001512</strong>. This term<br />
+  maps to EC 1.6.5.2 (NAD(P)H donor); NQO2 uses NRH, not NAD(P)H. Family IBA propagated the<br />
+  NQO1-type activity. Replace with the NRH-specific term.</li>
+<li><strong>GO:0016661</strong> oxidoreductase activity, acting on other nitrogenous compounds as donors (IDA<br />
+  PMID:10945627) → <strong>MODIFY → GO:0001512</strong>. Maps to EC 1.7.-.- (nitrogenous donors), a different<br />
+  branch than NQO2's EC 1.10.5.1; the specific NRH:quinone reductase term is the correct classification.</li>
+<li><strong>GO:0016491</strong> oxidoreductase activity (IDA PMID:10945627) → <strong>KEEP_AS_NON_CORE</strong>. Correct root<br />
+  term but uninformatively general.</li>
+<li><strong>GO:0009055</strong> electron transfer activity (IDA PMID:10945627, PMID:18254726) → <strong>MARK_AS_OVER_ANNOTATED</strong>.<br />
+  This term denotes electron-carrier proteins in electron transport chains; QR2 is a soluble<br />
+  two-electron quinone reductase, and its electron flow is already captured by the quinone reductase MF.</li>
+</ul>
+<h3 id="molecular-function-cofactorligand-binding">Molecular function — cofactor/ligand binding</h3>
+<ul>
+<li><strong>GO:0071949</strong> FAD binding (IDA) → <strong>ACCEPT</strong> (core cofactor; flavoprotein).</li>
+<li><strong>GO:0008270</strong> zinc ion binding (IDA) → <strong>ACCEPT</strong> (structural Zn2+, 1/subunit per UniProt).</li>
+<li><strong>GO:0031404</strong> chloride ion binding (IDA) → <strong>KEEP_AS_NON_CORE</strong>. Not a recognized functional<br />
+  cofactor (absent from UniProt COFACTOR); likely a crystallographic ion.</li>
+<li><strong>GO:1904408</strong> melatonin binding (IDA) → <strong>KEEP_AS_NON_CORE</strong> (MT3 site; active-site competitive inhibitor).</li>
+<li><strong>GO:1905594</strong> resveratrol binding (IDA) → <strong>KEEP_AS_NON_CORE</strong> (nanomolar inhibitor binding).</li>
+<li><strong>GO:0042803</strong> protein homodimerization activity (IPI PMID:18254726) → <strong>ACCEPT</strong> (genuine homodimer;<br />
+  informative, unlike bare protein binding). Non-core.</li>
+</ul>
+<h3 id="molecular-function-protein-binding-5-ipi-go0005515">Molecular function — protein binding (5× IPI, GO:0005515)</h3>
+<ul>
+<li>PMID:16189514, 25416956, 31515488, 32296183 = large-scale interactome (Y2H) screens;<br />
+  PMID:24606901 = HSCB/HSC20 LYR-motif cochaperone study. All → <strong>KEEP_AS_NON_CORE</strong>. <code>protein binding</code><br />
+  is uninformative (project guideline: avoid); none identifies a functional partnership that revises<br />
+  the core-function picture.</li>
+</ul>
+<h3 id="biological-process">Biological process</h3>
+<ul>
+<li><strong>GO:1901662</strong> quinone catabolic process (IDA PMID:18254726) → <strong>ACCEPT</strong>. Captures the quinone<br />
+  reduction/detoxification role (main BP).</li>
+</ul>
+<h3 id="cellular-component">Cellular component</h3>
+<ul>
+<li><strong>GO:0005829</strong> cytosol (IDA GO_REF:0000052; also TAS Reactome, IBA, IDA PMID:10945627) → <strong>ACCEPT (core)</strong>.<br />
+  QR2 is cytosolic.</li>
+<li><strong>GO:0005737</strong> cytoplasm (IEA) → <strong>ACCEPT</strong> (general parent).</li>
+<li><strong>GO:0070062</strong> extracellular exosome (HDA PMID:23533145, PMID:19056867) → <strong>KEEP_AS_NON_CORE</strong>.<br />
+  High-throughput exosome proteomics detection; not a functionally informative localization for a<br />
+  cytosolic enzyme.</li>
+</ul>
+<h2 id="enzyme-function-rhea-comparison">Enzyme-function / Rhea comparison</h2>
+<ul>
+<li>Core MF <strong>GO:0001512</strong> carries EC=1.10.5.1, RHEA:12364, MetaCyc 1.10.99.2-RXN, Reactome R-HSA-8936519 —<br />
+  a fully-resolved, reaction-specific term (unlike cao-1, where no reaction-level term existed).</li>
+<li>The IBA <strong>GO:0003955</strong> carries EC=1.6.5.2 (NAD(P)H) — the wrong cofactor branch for NQO2; this is the<br />
+  crux of the MODIFY.</li>
+<li>Contrast with cao-1: there resveratrol is the <strong>substrate</strong> of a stilbenoid dioxygenase; here<br />
+  resveratrol is a <strong>high-affinity inhibitor</strong> of a quinone reductase — same molecule, opposite role,<br />
+  and a good illustration of why <code>resveratrol binding</code> alone (causal-role, ligand-agnostic) underspecifies biology.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P16083
+gene_symbol: NQO2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NQO2 (NRH:quinone oxidoreductase 2 / quinone reductase 2, QR2; UniProt recommended name
+  ribosyldihydronicotinamide dehydrogenase [quinone], EC 1.10.5.1) is a cytosolic FAD-dependent
+  flavoprotein of the NAD(P)H:quinone oxidoreductase family and a paralog of NQO1. It functions
+  as a homodimer, with each subunit binding one FAD and one structural zinc ion. NQO2 catalyzes
+  the two-electron reduction of quinones to hydroquinones (quinols), a reaction linked to quinone
+  detoxification and to the metabolism/bioactivation of quinone-derived and nitroaromatic
+  compounds (e.g. the prodrug CB1954). Its defining biochemical feature, distinguishing it from
+  NQO1, is that it does not use NAD(P)H efficiently; instead it requires dihydronicotinamide
+  riboside (NRH) or other reduced N-ribosyl/N-alkyl dihydronicotinamides as the electron donor.
+  NQO2 is also the cytosolic &#34;MT3&#34; melatonin binding site: melatonin and the polyphenol resveratrol
+  are high-affinity active-site inhibitors, making QR2 a notable pharmacological target.
+existing_annotations:
+- term:
+    id: GO:0003955
+    label: NAD(P)H dehydrogenase (quinone) activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the family NAD(P)H:quinone oxidoreductase activity. This
+      term (EC 1.6.5.2) specifies NAD(P)H as the electron donor, but NQO2 characteristically does
+      not use NAD(P)H efficiently - it uses dihydronicotinamide riboside (NRH). The
+      experimentally supported, cofactor-correct term is GO:0001512.
+    action: MODIFY
+    reason: &gt;-
+      NQO2 diverged from the NAD(P)H-using family archetype (NQO1) in electron-donor specificity.
+      Replace the NAD(P)H term with the NRH-specific GO:0001512 (EC 1.10.5.1), which is already
+      supported here by IDA and matches UniProt&#39;s EC and the RHEA:12364 reaction.
+    proposed_replacement_terms:
+      - id: GO:0001512
+        label: dihydronicotinamide riboside quinone reductase activity
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+        - FUNCTIONAL_DIVERGENCE
+    supported_by:
+      - reference_id: PMID:10945627
+        supporting_text: &gt;-
+          its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide
+          riboside (reduced)] is required for enzymatic activity
+      - reference_id: file:human/NQO2/NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md
+        supporting_text: &gt;-
+          recommend REMOVAL of the IBA GO:0003955
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation of cytosolic localization, consistent with UniProt
+      (SUBCELLULAR LOCATION: Cytoplasm) and with direct experimental evidence for QR2 as a soluble
+      cytosolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization. NQO2/QR2 is a well-established cytosolic enzyme; the IBA agrees with the
+      IDA and TAS cytosol annotations.
+- term:
+    id: GO:0001512
+    label: dihydronicotinamide riboside quinone reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (IEA) annotation of the NRH:quinone reductase activity. This is the correct,
+      cofactor-specific molecular function for NQO2 (EC 1.10.5.1; RHEA:12364), corroborated by IDA.
+    action: ACCEPT
+    reason: &gt;-
+      Core catalytic function. Matches UniProt EC 1.10.5.1 and the demonstrated NRH-dependent
+      quinone reduction; agrees with the IDA annotation of the same term.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated (IEA) cytoplasm annotation from UniProt subcellular-location mapping. Correct but
+      a general parent of the more precise cytosol annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent general localization; cytosol (GO:0005829) is the more informative core term.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic protein binding from a large-scale (Y2H) human interactome mapping effort. Records a
+      physical interaction but conveys no specific functional information.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GO:0005515 is uninformative (project guideline: avoid protein binding) and derives from a
+      high-throughput interactome screen; it does not inform NQO2&#39;s core enzymatic function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24606901
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Protein binding reported in a study of HSC20/HSCB cochaperone recognition of LYR motifs in
+      iron-sulfur cluster delivery. Documents an interaction but is annotated only as generic
+      protein binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Uninformative as a molecular-function term; the interaction does not establish a core
+      function for NQO2 and is not corroborated as a stable functional partnership.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic protein binding from a proteome-scale human interactome network map (systematic Y2H).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome hit; GO:0005515 is uninformative and non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic protein binding from an interactome-perturbation study of genetic variants.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome hit; uninformative and non-core for NQO2 function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic protein binding from the HuRI reference map of the human binary protein interactome.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome hit; GO:0005515 is uninformative and non-core.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct (immunofluorescence-based) evidence for cytosolic localization of NQO2.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization, directly supported and consistent with all other cytosol annotations.
+- term:
+    id: GO:1901662
+    label: quinone catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Biological-process annotation for quinone catabolism/reduction. NQO2 reduces quinones to
+      hydroquinones, feeding conjugation/detoxification, although QR2 can in some cases yield more
+      reactive products than the parent quinone.
+    action: ACCEPT
+    reason: &gt;-
+      Captures the principal biological role (quinone reduction/detoxification metabolism), the
+      process context of the core catalytic activity.
+    supported_by:
+      - reference_id: PMID:18254726
+        supporting_text: &gt;-
+          it was believed that QR2 might also serve as a detoxification enzyme that can produce
+          hydroquinones which are less toxic to cells compared with the parent quinones
+- term:
+    id: GO:0016661
+    label: oxidoreductase activity, acting on other nitrogenous compounds as donors
+  evidence_type: IDA
+  original_reference_id: PMID:10945627
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General oxidoreductase term used for the NRH-dependent reductase activity. This term maps to
+      EC 1.7.-.- (nitrogenous compounds as donors), a different EC branch than NQO2&#39;s EC 1.10.5.1;
+      it mis-classifies the activity relative to the specific NRH:quinone reductase term.
+    action: MODIFY
+    reason: &gt;-
+      Replace with the specific, correctly-branched GO:0001512 (EC 1.10.5.1), which describes the
+      demonstrated NRH:quinone reductase reaction and is already annotated here by IDA.
+    proposed_replacement_terms:
+      - id: GO:0001512
+        label: dihydronicotinamide riboside quinone reductase activity
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:10945627
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence for cytosolic localization from the CB1954 bioactivation study.
+    action: ACCEPT
+    reason: &gt;-
+      Core localization, directly supported.
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IDA
+  original_reference_id: PMID:10945627
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electron transfer activity annotation. GO:0009055 denotes electron-carrier proteins operating
+      within electron transport chains (cytochromes, ferredoxins, flavodoxins). NQO2 is a soluble
+      cytosolic two-electron quinone reductase, not an electron-transport-chain carrier; its
+      electron flow from NRH to quinone is already captured by its quinone reductase MF.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term implies an electron-carrier/ETC role that NQO2 does not have; the catalytic activity
+      is better and fully represented by GO:0001512.
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second electron transfer activity annotation (from the structural/kinetic paper). Same
+      assessment as the PMID:10945627 annotation: GO:0009055 denotes electron-carrier proteins in
+      electron transport chains, whereas NQO2 is a soluble cytosolic two-electron quinone reductase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      NQO2 is not an electron-transport-chain carrier; its NRH-to-quinone electron flow is fully
+      captured by the quinone reductase MF (GO:0001512).
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10945627
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level oxidoreductase activity. Correct but uninformatively general.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate parent term; the specific core MF is GO:0001512.
+- term:
+    id: GO:0001512
+    label: dihydronicotinamide riboside quinone reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental annotation of the NRH:quinone reductase activity, the core catalytic
+      function of NQO2 (EC 1.10.5.1; RHEA:12364). Structural/kinetic work characterized the QR2
+      active site and its dihydronicotinamide donor.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, directly supported and matching UniProt EC and the Rhea reaction.
+    supported_by:
+      - reference_id: PMID:10945627
+        supporting_text: &gt;-
+          its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide
+          riboside (reduced)] is required for enzymatic activity
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for zinc binding. QR2 binds one structural Zn2+ per subunit (UniProt COFACTOR),
+      resolved in the crystal structures.
+    action: ACCEPT
+    reason: &gt;-
+      Bona fide structural cofactor of NQO2 (1 Zn2+/subunit), integral to the folded enzyme.
+- term:
+    id: GO:0031404
+    label: chloride ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Chloride ion binding observed in a QR2 crystal structure. Chloride is not listed among NQO2&#39;s
+      functional cofactors (UniProt COFACTOR gives only FAD and Zn2+) and most likely reflects a
+      crystallographic/buffer ion rather than a functional interaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real crystallographic observation but not a recognized functional cofactor; not part of the
+      core function.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IPI
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NQO2 is an obligate homodimer, with the active sites formed at the dimer interface; this is a
+      specific, structurally-supported interaction (unlike generic protein binding).
+    action: ACCEPT
+    reason: &gt;-
+      Genuine, informative homodimerization supported by crystal structures and confirmed as the
+      biological unit (UniProt SUBUNIT: Homodimer). Non-core relative to catalysis but valid.
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for FAD binding. NQO2 is a flavoprotein; each subunit binds FAD, the redox
+      cofactor essential for the two-electron quinone reduction.
+    action: ACCEPT
+    reason: &gt;-
+      Core cofactor binding; FAD is obligatory for catalysis and resolved in the QR2 structures.
+- term:
+    id: GO:1904408
+    label: melatonin binding
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that NQO2/QR2 binds melatonin - QR2 is the cytosolic &#34;MT3&#34; melatonin binding
+      site. Melatonin is a competitive active-site inhibitor (vs the dihydronicotinamide donor),
+      seen crystallographically in multiple active-site orientations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Well-evidenced and biologically notable (defining pharmacology of QR2/MT3), but it is
+      inhibitor/ligand binding at the active site rather than the core catalytic function.
+    supported_by:
+      - reference_id: PMID:18254726
+        supporting_text: &gt;-
+          MT3 was purified to homogeneity and identified as QR2 (quinone reductase 2)
+      - reference_id: PMID:18254726
+        supporting_text: &gt;-
+          melatonin binds in multiple orientations within the active sites of the QR2 dimer as
+          opposed to an allosteric site
+- term:
+    id: GO:1905594
+    label: resveratrol binding
+  evidence_type: IDA
+  original_reference_id: PMID:18254726
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence for resveratrol binding. In the annotated paper the evidence is a biophysical
+      binding assay - isothermal titration calorimetry (ITC) gave a Kd of ~39 nM - together with
+      IC50 inhibition assays; resveratrol was used there as a positive-control active-site ligand.
+      The QR2:resveratrol crystal structure itself is from an earlier study (Buryanovskyy et al.
+      2004, PDB 1SG0), which this paper reuses for molecular replacement and docking. Note the
+      contrast with cao-1, where resveratrol is a substrate rather than an inhibitor. GO is obsoleting
+      GO:1905594 resveratrol binding (go-ontology issues #32321/#32333, Jul 2026); NQO2 (P16083) is
+      one of the two EXP-annotated proteins that triggered the obsoletion, the other being cao-1.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Robustly evidenced inhibitor/ligand binding (ITC Kd ~39 nM), pharmacologically important, but
+      not the core physiological catalytic function. The IDA to PMID:18254726 is supported by that
+      paper&#39;s own ITC measurement; the primary structural evidence (PDB 1SG0) resides in Buryanovskyy
+      et al. 2004 (Biochemistry; PMID:15350128), added to the references here. IMPORTANT distinction
+      for the pending obsoletion: the obsoletion issue recommends reannotating both proteins &#34;to enzyme
+      activity with chebi id&#34;, but that fits only cao-1, where resveratrol is the catalytic SUBSTRATE
+      (-&gt; the new GO:7770086 resveratrol dioxygenase activity, go-ontology PR #32332 merged
+      2026-07-17). For NQO2 resveratrol is a competitive
+      ACTIVE-SITE INHIBITOR, not a substrate or product, so there is no molecular-function replacement;
+      on obsoletion this annotation should simply be dropped, not reannotated to a catalytic term. This
+      is exactly the substrate-versus-inhibitor ambiguity that made GO:1905594 ill-defined.
+    supported_by:
+      - reference_id: PMID:18254726
+        supporting_text: &gt;-
+          Resveratrol was found to interact strongly with QR2 with a Kd of 39 nM
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8936519
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable-author-statement cytosol annotation from Reactome (NQO2:FAD dimer reduces quinones
+      to hydroquinones).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent core localization; corroborates the IDA/IBA cytosol annotations.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of NQO2 in exosomes (prostatic-secretion/urine exosome
+      proteomics). Common for abundant cytosolic proteins; not evidence of a functional
+      extracellular localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mass-spectrometry detection in an exosome preparation; NQO2 is fundamentally a cytosolic
+      enzyme, so this is not a functionally informative localization.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of NQO2 in urinary exosomes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Proteomics detection in exosomes; not a functional localization for this cytosolic enzyme.
+core_functions:
+- description: &gt;-
+    FAD-dependent cytosolic quinone reductase that uses dihydronicotinamide riboside (NRH), not
+    NAD(P)H, as the electron donor to catalyze two-electron reduction of quinones to hydroquinones
+    (EC 1.10.5.1; RHEA:12364). Requires FAD and a structural Zn2+; functions as a homodimer.
+  molecular_function:
+    id: GO:0001512
+    label: dihydronicotinamide riboside quinone reductase activity
+  directly_involved_in:
+    - id: GO:1901662
+      label: quinone catabolic process
+  locations:
+    - id: GO:0005829
+      label: cytosol
+  supported_by:
+    - reference_id: PMID:10945627
+      supporting_text: &gt;-
+        its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide
+        riboside (reduced)] is required for enzymatic activity
+suggested_questions:
+- question: &gt;-
+    What are the endogenous physiological quinone substrates and the true in vivo source of the NRH
+    co-substrate for NQO2, and does NQO2 predominantly detoxify quinones or, for certain substrates,
+    generate more reactive/cytotoxic products?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided separation-of-function mutants (active-site vs Zn/FAD sites) assayed for NRH:
+    quinone reductase activity and for melatonin/resveratrol inhibition, to dissect the catalytic
+    versus ligand-binding (MT3) roles of the active site.
+- description: &gt;-
+    Metabolomic comparison of NQO2-proficient vs NQO2-null human cells challenged with model
+    quinones, to determine which quinones are detoxified versus bioactivated and to test the NRH
+    dependence in a cellular context.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      The IBA propagated GO:0003955 (NAD(P)H dehydrogenase (quinone) activity, EC 1.6.5.2) to NQO2,
+      but NQO2 uses NRH rather than NAD(P)H; the phylogenetic inference over-generalizes the family
+      cofactor. The IBA cytosol annotation is correct.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10945627
+  title: &#39;Bioactivation of 5-(aziridin-1-yl)-2,4-dinitrobenzamide (CB 1954) by human
+    NAD(P)H quinone oxidoreductase 2: a novel co-substrate-mediated antitumor prodrug
+    therapy.&#39;
+  findings:
+  - statement: &gt;-
+      NQO2 activity is latent unless supplied with a reduced dihydronicotinamide co-substrate such
+      as NRH; NAD(P)H is not the physiological electron donor.
+    supporting_text: &gt;-
+      its activity is normally latent, and a nonbiogenic co-substrate such as NRH [nicotinamide
+      riboside (reduced)] is required for enzymatic activity
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the NRH co-substrate requirement (the key distinction from NQO1) and the
+      quinone/nitroaromatic (CB1954) reductase activity. Abstract-level cache; the NRH-dependence
+      claim is anchored to the GOA IDA evidence.
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome screen; source of a generic protein binding annotation, non-core.
+- id: file:human/NQO2/NQO2-hypotheses/function-hypothesis-go-0003955/openscientist.md
+  title: OpenScientist blinded function-assignment report for NQO2 (NAD(P)H dehydrogenase
+    (quinone) activity, GO:0003955)
+  findings:
+  - statement: &gt;-
+      An independent, blinded OpenScientist run neutrally tested whether NQO2 has NAD(P)H
+      dehydrogenase (quinone) activity and concluded the term is over-annotated/substrate-incorrect
+      because NQO2 uses NRH rather than NAD(P)H (NAD(P)H/EC 1.6.5.2 is the NQO1 activity), pointing to
+      the already-annotated GO:0001512 - concurring with this review&#39;s MODIFY.
+    supporting_text: &gt;-
+      recommend REMOVAL of the IBA GO:0003955
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Blinded computational hypothesis assessment (3-iteration run) used as independent corroboration
+      of the manual MODIFY (GO:0003955 -&gt; GO:0001512), not as primary evidence. Its key claim rests on
+      cached/curated primary data (NRH dependence); it additionally cites Wu et al. 1997 (PMID:9367528)
+      as the definitive enzymology - a valid lead not currently in this review&#39;s reference set.
+- id: PMID:15350128
+  title: Crystal structure of quinone reductase 2 in complex with resveratrol.
+  findings:
+  - statement: &gt;-
+      Resveratrol is a potent (Kd ~35 nM) inhibitor of QR2 that binds in the active-site cleft,
+      with all three of its hydroxyl groups hydrogen-bonding to QR2 residues.
+    supporting_text: &gt;-
+      resveratrol is a potent inhibitor of quinone reductase 2 (QR2) activity in vitro with a
+      dissociation constant of 35 nM
+  - statement: &gt;-
+      The resveratrol molecule is anchored in the QR2 active site via hydrogen bonds from all
+      three of its hydroxyl groups.
+    supporting_text: &gt;-
+      All three resveratrol hydroxyl groups form hydrogen bonds with amino acids from QR2
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary structural + binding paper for the QR2-resveratrol interaction (crystal structure
+      PDB 1SG0; Kd ~35 nM by tryptophan-fluorescence titration). This is the definitive
+      experimental basis for resveratrol binding (GO:1905594) and is evidence-grade for a GO IDA -
+      arguably the better primary reference than PMID:18254726 (which used resveratrol as an ITC
+      control) - but it is not currently cited by GOA as the annotation&#39;s evidence. Added here for
+      provenance/completeness, not to assert a new annotation.
+- id: PMID:18254726
+  title: Kinetic, thermodynamic and X-ray structural insights into the interaction
+    of melatonin and analogues with quinone reductase 2.
+  findings:
+  - statement: &gt;-
+      QR2 is the cytosolic MT3 melatonin binding site; melatonin is a competitive active-site
+      inhibitor seen in multiple orientations in the QR2 dimer.
+    supporting_text: &gt;-
+      melatonin binds in multiple orientations within the active sites of the QR2 dimer as opposed
+      to an allosteric site
+  - statement: &gt;-
+      QR2 is a high-affinity (nanomolar) target of resveratrol, with a determined QR2:resveratrol
+      crystal structure.
+    supporting_text: &gt;-
+      It is one of the most potently inhibited (nanomolar) molecular targets of resveratrol, a
+      natural polyphenol found in wine and peanuts, and the X-ray structure of QR2 in complex with
+      resveratrol has been determined
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary structural/kinetic paper; source of the FAD/Zn/chloride/melatonin/resveratrol binding,
+      homodimerization, and quinone-reduction IDA annotations. PMC full text verified.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput exosome proteomics; source of an extracellular-exosome HDA annotation, non-core.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput exosome proteomics; source of an extracellular-exosome HDA annotation, non-core.
+- id: PMID:24606901
+  title: Cochaperone binding to LYR motifs confers specificity of iron sulfur cluster
+    delivery.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of a generic protein binding annotation (HSC20/HSCB context); non-core for NQO2.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome screen; source of a generic protein binding annotation, non-core.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-perturbation screen; source of a generic protein binding annotation, non-core.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI interactome map; source of a generic protein binding annotation, non-core.
+- id: Reactome:R-HSA-8936519
+  title: NQO2:FAD dimer reduces quinones to hydroquinones
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
