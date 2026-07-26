@@ -65,9 +65,12 @@ The generic OpenScientist review confirmed the invariant two-reaction boundary
 and identified bifunctional GshAB/GshF proteins as a fused implementation of
 the same ordered roles. The reusable module now grounds both activities with
 reviewed *Pasteurella multocida* GshAB (UniProtKB:Q9CM00) while retaining
-separate reaction parts. The report did not provide organism-specific evidence
-that `PP_3253` performs the first reaction in vivo, so it remains outside the
-module.
+separate reaction parts; PMID:16339152 supplies direct primary evidence for
+that fusion. Human GCLC (P48506) and GSS (P48637), together with their exact
+PANTHER subfamilies, retain the module's eukaryotic scope. GCLM is documented
+as a lineage-specific modifier rather than a third reaction. The report did not
+provide organism-specific evidence that `PP_3253` performs the first reaction
+in vivo, so it remains outside the module with no asserted core function.
 
 The three gene-level requests and the species-aware module request were each
 allowed the full configured 7,200 seconds with three iterations and returned
