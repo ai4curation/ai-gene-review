@@ -9,7 +9,9 @@ absence of MutH in KT2440; it was not propagated into the biological summary.
 Mismatch-specific binding and ATP-dependent DNA damage sensor activity were
 removed because MutS performs recognition. A new double-stranded DNA
 endonuclease annotation is proposed by ISS from P. aeruginosa MutL Q9HUL8:
-Q9HUL8 and Q88DD1 are 83.1% identical across 627 aligned residues, and Q9HUL8
-directly nicks circular duplex DNA [PMID:23969026 "PaMutL was able to nick
-covalently closed circular plasmids"]. The transfer remains an inference until
-Q88DD1 is assayed.
+a reproducible global alignment contains 521 identical residues among 627
+aligned residue pairs (83.0941%)
+[file:PSEPK/mutL/mutL-bioinformatics/RESULTS.md "of which 521 are identical
+(83.0941%)."], and Q9HUL8 directly nicks circular duplex DNA
+[PMID:23969026 "PaMutL was able to nick covalently closed circular plasmids"].
+The transfer remains an inference until Q88DD1 is assayed.

@@ -27,8 +27,9 @@ treated as pathway-specific gene-review targets.
 - `xseA` (PP_1027; Q88P26) and `xseB` (PP_0529; Q88QG5):
   candidate bidirectional Exonuclease VII route.
 
-The module also represents DnaE-mediated gap filling and LigA-mediated nick
-sealing. These are shared replication/repair functions and remain outside this
+The module also represents DnaN beta-clamp context, SSB-coated excision
+intermediates, DnaE-mediated gap filling, and LigA-mediated nick sealing. These
+are shared replication/repair functions and remain outside this focused
 gene-review batch.
 
 ## Curation Decisions
@@ -42,6 +43,11 @@ gene-review batch.
 - Use the directly characterized *Pseudomonas aeruginosa* MutL as the
   endonuclease exemplar for the close PSEPK ortholog; do not portray the
   inferred activity as direct KT2440 biochemistry.
+- Constrain broad MutL and UvrD PANTHER families with their required molecular
+  functions, and use the Exonuclease I-specific `PTHR11046:SF11` selector
+  rather than the RNA-exonuclease-containing parent family.
+- Refine the RecJ directional parent to GO:0045145, which explicitly captures
+  single-stranded DNA and 5'-to-3' exonuclease activity.
 
 ## Evidence
 
@@ -51,6 +57,9 @@ gene-review batch.
   contribution in KT2440.
 - PMID:23969026 directly characterizes duplex-DNA nicking by the close
   *P. aeruginosa* MutL exemplar.
+- The reproducible local Q88DD1-Q9HUL8 global alignment retains input FASTA
+  records, checksums, scoring parameters, scripts, and output; it contains 521
+  identical residues among 627 aligned residue pairs (83.0941%).
 
 ## Workflow
 
@@ -67,7 +76,10 @@ gene-review batch.
   `xseB`, `sbcB`, and `recJ` returned reports, while the corrected `mutS` and
   `mutL` requests each exhausted the 7,200-second provider timeout.
 - [x] Open one PR for this module/pathway.
-- [ ] Shepherd PR through review and CI; both are in progress.
+- [x] Address the first automated review, including family selectors,
+  reproducible MutL sequence provenance, RecJ term specificity, and UvrD
+  positive evidence.
+- [ ] Shepherd the updated PR through re-review and CI.
 
 ## Notes
 
@@ -94,6 +106,11 @@ complex assignments and the conserved directional nuclease activities. Their
 mismatch-repair claims remain orthology-based, so these proteins are retained
 as alternative candidate excision routes rather than promoted to
 organism-specific mismatch-repair annotations.
+
+The reusable module now includes DnaN and SSB because they are mechanistically
+central shared roles: beta-clamp context can orient or stimulate MutL incision,
+and SSB stabilizes exposed ssDNA while coordinating processing proteins. They
+are not promoted to dedicated PSEPK mismatch-repair gene targets in this batch.
 
 Two genomic-context claims in the provider output were rejected against the
 exact KT2440 records. The XseB report incorrectly identifies `PP_0528` as XseA
