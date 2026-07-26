@@ -55,11 +55,25 @@ jobs:
           # Via env, not `${{ }}` interpolated into the shell.
           MAX_ISSUES: ${{ inputs.max_issues || '50' }}
         run: |
+          # The script exits 1 to mean "no ARBA IDs found", which is a normal
+          # empty scan, not a failure — letting that redden the weekly run just
+          # teaches people to ignore red. Anything else is a real error.
+          set +e
           uv run scripts/scan_arba_issues.py --max-issues "$MAX_ISSUES" --output github
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; then
+            exit "$rc"
+          fi
 
   claude-arba-review:
     needs: scan-arba-issues
-    if: needs.scan-arba-issues.outputs.has_arbas == 'true' && inputs.dry_run != 'true'
+    # `inputs.dry_run` is a BOOLEAN input. Comparing it to the string 'true'
+    # made GitHub coerce both to numbers — true -> 1, 'true' -> NaN — and every
+    # comparison against NaN is false, so `!= 'true'` was always true and the Dry
+    # run checkbox did nothing. Test the boolean directly. On the schedule path
+    # the input is null, which is falsy, so cron is unaffected.
+    if: needs.scan-arba-issues.outputs.has_arbas == 'true' && !inputs.dry_run
     runs-on: ubuntu-latest
     # A GitHub App installation token expires 60 minutes after minting and does
     # not refresh; stay inside that window.
