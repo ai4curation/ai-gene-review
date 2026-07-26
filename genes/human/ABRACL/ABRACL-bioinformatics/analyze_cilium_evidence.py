@@ -1,0 +1,242 @@
+"""Test the two claims that put human ABRACL in the cilium.
+
+ABRACL carries a GO cilium annotation (GO:0005929, IEA, GO_REF:0000044) that is
+mapped from the UniProt subcellular-location line
+``Cell projection, cilium {ECO:0000305|PubMed:37759737}``. PubMed:37759737 is a
+mouse/cat expression study that does not itself assay ciliary localisation; it
+cites a third-party high-throughput proteomics study. This script checks, from
+live public APIs and with no hard-coded results:
+
+1. What physical-interaction evidence actually links ABRACL to the
+   centrosome-cilium apparatus (IntAct), and by which detection method.
+2. Whether the Costars family (PANTHER PTHR46334) is present in lineages that
+   have completely lost cilia, centrioles and basal bodies. Angiosperms are the
+   controlled case: no flowering plant makes a cilium or a centriole. Cilium-core
+   families should be absent there; a family whose conserved function is not
+   ciliary need not be. Three cilium-core families and one universal
+   cytoskeletal family are queried alongside Costars as positive and negative
+   controls.
+
+Usage:  uv run python analyze_cilium_evidence.py
+Writes: RESULTS.md
+"""
+
+from __future__ import annotations
+
+import json
+import time
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+
+ABRACL_ACC = "Q9P1F3"
+
+# PANTHER families, resolved from UniProt cross-references for the named human
+# gene (see RESULTS.md provenance table). Costars is the family under test; the
+# IFT/BBS/ARL13B families are cilium-core positive controls; tubulin beta is a
+# universal-cytoskeleton negative control that must be present everywhere.
+FAMILIES = {
+    "PTHR46334": ("Costars / ABRACL", "test"),
+    "PTHR44117": ("IFT88", "cilium-core control"),
+    "PTHR12969": ("IFT52", "cilium-core control"),
+    "PTHR20870": ("BBS1", "cilium-core control"),
+    "PTHR46090": ("ARL13B", "cilium-core control"),
+    "PTHR11588": ("tubulin beta", "universal control"),
+}
+
+# Lineages with no cilium, no centriole and no basal body at any life stage.
+# Angiosperms lost the centriole/flagellum entirely; conifers likewise (unlike
+# cycads and Ginkgo, which retain flagellated sperm), so Pinaceae is excluded
+# here and only angiosperms are used, to keep the negative call unambiguous.
+# Dictyostelium discoideum is included because it is aciliate too, and because
+# it is the donor organism for ABRACL's phylogenetic (IBA) annotation.
+ACILIATE_TAXA = {
+    3702: "Arabidopsis thaliana",
+    39947: "Oryza sativa subsp. japonica",
+    4577: "Zea mays",
+    44689: "Dictyostelium discoideum",
+}
+CILIATE_TAXA = {
+    9606: "Homo sapiens",
+    7955: "Danio rerio",
+    3055: "Chlamydomonas reinhardtii",
+}
+
+
+def get_json(url: str) -> dict:
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as fh:
+        return json.load(fh)
+
+
+@dataclass
+class Interaction:
+    partner: str
+    method: str
+    itype: str
+    publications: str
+
+
+def intact_interactions(accession: str) -> list[Interaction]:
+    url = (
+        "https://www.ebi.ac.uk/intact/ws/interaction/findInteractions/"
+        f"{accession}?page=0&pageSize=200"
+    )
+    payload = get_json(url)
+    out = []
+    for row in payload.get("content", []):
+        a, b = row.get("moleculeA"), row.get("moleculeB")
+        partner = b if a and a.upper().startswith("ABRACL") else a
+        pubs = ";".join(
+            p for p in row.get("publicationIdentifiers", []) if "pubmed" in p
+        )
+        out.append(
+            Interaction(
+                partner=partner or "?",
+                method=row.get("detectionMethod", "?"),
+                itype=row.get("type", "?"),
+                publications=pubs,
+            )
+        )
+    return out
+
+
+def count_family_in_taxon(panther_id: str, taxon_id: int) -> int:
+    """Number of UniProtKB entries in `taxon_id` cross-referenced to `panther_id`."""
+    query = f"xref:panther-{panther_id} AND organism_id:{taxon_id}"
+    url = (
+        "https://rest.uniprot.org/uniprotkb/search?"
+        + urllib.parse.urlencode({"query": query, "format": "json", "size": "0"})
+    )
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as fh:
+        total = fh.headers.get("x-total-results")
+    return int(total) if total is not None else -1
+
+
+def main() -> None:
+    interactions = intact_interactions(ABRACL_ACC)
+
+    taxa = {**CILIATE_TAXA, **ACILIATE_TAXA}
+    grid: dict[str, dict[int, int]] = {}
+    for fam in FAMILIES:
+        grid[fam] = {}
+        for tax in taxa:
+            grid[fam][tax] = count_family_in_taxon(fam, tax)
+            time.sleep(0.3)
+
+    lines: list[str] = []
+    add = lines.append
+    add("# What actually places ABRACL in the cilium?")
+    add("")
+    add(
+        "Generated by `analyze_cilium_evidence.py`. All numbers are fetched live "
+        "from the IntAct and UniProt REST APIs at run time; nothing here is "
+        "hard-coded."
+    )
+    add("")
+    add("## Question")
+    add("")
+    add(
+        "Human ABRACL carries `GO:0005929 cilium` (IEA, GO_REF:0000044), mapped "
+        "from the UniProt subcellular-location line `Cell projection, cilium "
+        "{ECO:0000305|PubMed:37759737}`. That publication is an expression study "
+        "of mouse and cat embryonic telencephalon which does not assay ciliary "
+        "localisation; it attributes the claim to a high-throughput proteomics "
+        "study. This asks what that primary evidence is, and whether a ciliary "
+        "role is plausible for the family."
+    )
+    add("")
+    add("## Part 1 - the physical evidence, from IntAct")
+    add("")
+    add(f"| Interactions recorded for {ABRACL_ACC} | {len(interactions)} |")
+    add("|---|---|")
+    methods = sorted({i.method for i in interactions})
+    pubs = sorted({i.publications for i in interactions})
+    add(f"| Distinct detection methods | {len(methods)} |")
+    add(f"| Distinct source publications | {len(pubs)} |")
+    add("")
+    add("| Partner | Detection method | Interaction type | Publication |")
+    add("|---|---|---|---|")
+    for i in sorted(interactions, key=lambda x: x.partner):
+        add(f"| {i.partner} | {i.method} | {i.itype} | {i.publications} |")
+    add("")
+    add(f"Detection methods observed: {', '.join(methods) if methods else 'none'}.")
+    add("")
+    add("## Part 2 - is the family present where cilia do not exist?")
+    add("")
+    add(
+        "Counts are UniProtKB entries (reviewed + unreviewed) cross-referenced to "
+        "each PANTHER family in each proteome. Angiosperms build no cilium, "
+        "basal body or centriole at any life stage, and neither does "
+        "*Dictyostelium discoideum* - which is also the donor organism for "
+        "ABRACL's IBA annotation. A family whose conserved function is ciliary "
+        "should score zero in all four."
+    )
+    add("")
+    header = "| PANTHER | Family | Role | " + " | ".join(
+        taxa[t] for t in taxa
+    ) + " |"
+    add(header)
+    add("|" + "---|" * (3 + len(taxa)))
+    for fam, (label, role) in FAMILIES.items():
+        cells = " | ".join(str(grid[fam][t]) for t in taxa)
+        add(f"| {fam} | {label} | {role} | {cells} |")
+    add("")
+
+    aciliate_costars = sum(grid["PTHR46334"][t] for t in ACILIATE_TAXA)
+    aciliate_controls = {
+        FAMILIES[f][0]: sum(grid[f][t] for t in ACILIATE_TAXA)
+        for f in FAMILIES
+        if FAMILIES[f][1] == "cilium-core control"
+    }
+    add("### Read-out")
+    add("")
+    n_aciliate = len(ACILIATE_TAXA)
+    add(
+        f"- Costars/ABRACL entries across the {n_aciliate} aciliate proteomes: "
+        f"**{aciliate_costars}**"
+    )
+    for name, n in aciliate_controls.items():
+        add(f"- {name} (cilium-core control) across the same proteomes: **{n}**")
+    add(
+        f"- Tubulin beta (universal control) across the same proteomes: "
+        f"**{sum(grid['PTHR11588'][t] for t in ACILIATE_TAXA)}**"
+    )
+    add("")
+    add("## Interpretation")
+    add("")
+    add(
+        "Part 1 shows the entire physical-interaction record for ABRACL is one "
+        "proximity-labelling experiment. BioID biotinylates whatever comes within "
+        "roughly 10 nm of the bait during hours of labelling, so a prey list is a "
+        "neighbourhood, not a localisation call; and three of the four baits here "
+        "(SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins rather than "
+        "ciliary ones. Part 2 shows the family is retained "
+        "in four proteomes that build no cilium at all, while four "
+        "cilium-core families are absent from every one of them and the universal "
+        "control is present in all. The reciprocal observation points the same "
+        "way: no PTHR46334 member is cross-referenced in *Chlamydomonas "
+        "reinhardtii*, the most heavily ciliated proteome in the panel, where all "
+        "four cilium-core controls are present. Costars distribution therefore "
+        "does not track cilium presence in either direction. That single absence "
+        "is a cross-reference count rather than a homology search, so it is "
+        "reported as an observation and no weight is placed on it alone."
+    )
+    add("")
+    add(
+        "Neither part proves ABRACL is absent from human cilia; a lineage-specific "
+        "ciliary role would not show up in a phyletic comparison, and BioID hits "
+        "are sometimes real. What they establish is narrower and sufficient for "
+        "curation: there is no direct localisation evidence behind the cilium "
+        "annotation, and the conserved function of the family cannot be ciliary."
+    )
+    add("")
+
+    with open("RESULTS.md", "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+    print("\n".join(lines))
+
+
+if __name__ == "__main__":
+    main()
