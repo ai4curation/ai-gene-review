@@ -57,9 +57,20 @@ and
 [PMID:25814576 "Our structural data reveal how a single Arp11 subunit can cap both protofilaments."],
 with Arp11 the only capping element at that end
 [PMID:25814576 "Only Arp11 directly caps the pointed end"].
-Biochemically, Arp11 binds Arp1 but not free actin
+Biochemically Arp11 binds Arp1 directly
 [PMID:12857853 "Recombinant Arp11 and Arp1 were demonstrated to interact by coprecipitation."],
-[PMID:12857853 "suggesting that Arp11 and free cytosolic actin do not interact significantly."].
+and in cells has no free pool
+[PMID:12857853 "Like Arp1, cytosolic Arp11 is found only in dynactin, suggesting that Arp11 and free cytosolic actin do not interact significantly."].
+That second sentence must not be read as "Arp11 cannot bind actin" — the immediately preceding
+clause reports the opposite result
+[PMID:12857853 "We tested the ability of Arp11 to interact with conventional actin and found it could coassemble."],
+so the statement is about the absence of a free Arp11 pool in cells, not about binding capacity.
+The same paper raises an Arp2/3-like nucleation role as a hypothesis while arguing Arp1 needs no
+nucleator
+[PMID:12857853 "Arp1 has a vanishingly low critical concentration for polymerization (<1 nM) and assembles without a lag phase, suggesting nucleation is not required"],
+which is why no nucleation or polymerisation term is annotated here: not demonstrated, rather
+than excluded. See §14 — this correction only became visible when a merge brought in the full
+text.
 
 Nucleotide binding is a defining property of the actin *fold*, not of actin alone
 [PMID:42439233 "While actin is defined by its ability to form dynamic filaments, bind and hydrolyze ATP, and serve as a major cytoskeletal scaffold, Arps and actin-like proteins have evolved specialized roles in cytoplasmic and nuclear protein complexes."],
@@ -525,3 +536,46 @@ section F could not be regenerated at all. A retry loop was left cycling, and Re
 identical to the committed `RESULTS.md`** — so all five modules, section F included, are now
 verified reproducible, and the partial-re-run caveat above is superseded. This is the
 `diff`-reproducibility gate met properly rather than argued around.
+
+## 14. A merge brought in full text that refuted two of my own claims
+
+Resolving a merge conflict on `publications/PMID_12857853.md` — main's copy had
+`full_text_available: true` against my abstract-only one, so main's was kept per the
+add/add rule — made the Eckley & Schroer 2003 full text readable for the first time. It
+falsified two claims I had made from the abstract, both in the same way.
+
+**What went wrong.** The abstract reads: *"We tested the ability of Arp11 to interact with
+conventional actin and found it could coassemble. Like Arp1, cytosolic Arp11 is found only
+in dynactin, suggesting that Arp11 and free cytosolic actin do not interact
+significantly."* I quoted the **second** sentence and built on it, and the **first** —
+sitting immediately before it and reporting the opposite result — went unused. This is
+the ACBD3 lesson verbatim: *quote to the end of the interpreting clause*, and note that
+here the disconfirming clause came *before* the quoted one, which is the harder direction
+to catch.
+
+**The two corrections:**
+
+1. `proposed_new_terms` claimed that annotating ACTR10 to `GO:0051694` "would assert the
+   one thing the biochemistry excludes". **Wrong** — Arp11 *can* coassemble with
+   conventional actin in vitro, and its conserved barbed-end face was predicted to let it
+   interact with filament pointed ends generally. The surviving argument is narrower and
+   cleaner: in dynactin the subunits Arp11 blocks are Arp1, not actin, so what GO lacks is
+   a term for capping the **Arp1 minifilament** specifically — a question of grain, not a
+   prohibition on relating Arp11 to actin.
+2. The `GO:0005200` reason said Arp11 "binds Arp1 but not free actin, so no
+   actin-polymerisation or actin-nucleation term should follow". **Overstated.** The same
+   paper explicitly floats an Arp2/3-like nucleation role for Arp11. It was never
+   demonstrated, and the authors argue Arp1 needs no nucleator (critical concentration
+   <1 nM, no lag phase) — so the right ground for withholding those terms is *not
+   demonstrated*, not *excluded*.
+
+Both rows now cite **both halves** of the actin result rather than the half that suited
+the argument, which is the structural fix: a one-sided quote set is the symptom.
+
+**Process note.** This was found only because a merge conflict forced me to look at the
+file. Nothing in the review had flagged it — the quote was verbatim, the reference title
+matched, and the quote checker passed, because none of those checks can see a *quotation
+that is true but selectively bounded*. The `reference_review` for PMID:12857853 now
+records the full-text reading, and the stale `full_text_unavailable: true` flag is
+removed. (It is retained on PMID:42439233 and PMID:23650620, which really are
+abstract-only.)
