@@ -16,7 +16,13 @@ import re
 import sys
 from pathlib import Path
 
-GENE = Path("genes/human/ACBD3")
+REPO = Path(__file__).resolve()
+while REPO != REPO.parent and not (REPO / "genes").is_dir():
+    REPO = REPO.parent
+GENE = REPO / "genes/human/ACBD3"
+# Deliberately TWO files. ACBD3-deep-research-affinage.md is excluded because it is a
+# machine-fetched provider record that must not be edited - and FORBIDDEN[0] is still live
+# in it, correctly so. The audit governs what this review asserts, not what the provider said.
 FILES = [GENE / "ACBD3-ai-review.yaml", GENE / "ACBD3-notes.md"]
 
 # (round, retracted phrasing, why it is wrong)
@@ -68,26 +74,36 @@ FORBIDDEN: list[tuple[int, str, str]] = [
 # several sites, which is exactly how the c1ba137 scope qualifier was lost. Found by the
 # self-test below, which is the whole reason the self-test exists.
 REQUIRED: list[tuple[str, int, str]] = [
-    ("binds long-chain fatty acyl-CoAs", 1, "the corrected GO:0000062 call"),
+    ("binds long-chain fatty acyl-CoAs", 2, "the corrected GO:0000062 call"),
     ("Separately, ACBD3 restrains SREBP1 maturation", 1, "SREBP1 attributed to the protein"),
     ("only been assayed with full-length ACBD3", 1, "co-IP caveat in the description"),
     ("contributes to the effect rather than carrying it", 1, "partial N-terminal contribution"),
-    ("overlap as surfaces", 1, "helix-level, not residue-level, RII/3A claim"),
+    ("overlap as surfaces", 3, "helix-level, not residue-level, RII/3A claim"),
     ("an SCFD1-dependent step", 8, "SEC22B requirement is confounded; 1 description + 7 rows"),
     ("inferred by similarity rather than localised directly in human cells", 1,
      "mitochondrial pool hedge"),
     # a missing QUALIFIER cannot be caught by a forbidden string - only by requiring the scoped form.
     # This one was written in c1ba137, removed by 81f46c582, and flagged in round 15.
-    ("3A-mediated PI4KB recruitment", 5,
+    ("3A-mediated PI4KB recruitment", 8,
      "the PMID:30755512 dispensability result is the VIRAL assay; host recruitment was not tested"),
     ("enteroviral setting, but scoring the Q-domain", 2,
      "the bridge from the viral assay to the host claim must stay attached"),
 ]
 
 
+def norm(s: str) -> str:
+    """Collapse whitespace and drop markdown emphasis.
+
+    Both matter: a phrase broken across a line wrap is invisible to plain grep, and
+    `dispensable for **3A-mediated** PI4KB recruitment` in the notes was invisible to the
+    literal phrase - so the notes' most explicit statement of that scope counted for nothing.
+    """
+    return re.sub(r"[*`_]", "", re.sub(r"\s+", " ", s))
+
+
 def main() -> int:
     text = {f: f.read_text() for f in FILES}
-    flat = {f: re.sub(r"\s+", " ", t) for f, t in text.items()}
+    flat = {f: norm(t) for f, t in text.items()}
     # a retracted phrasing may legitimately be QUOTED inside its own retraction
     RETRACTION = re.compile(
         r"that was (wrong|false)|was over-dramatised|earlier versions? of|a (later|round-\d+) version|"
@@ -96,18 +112,20 @@ def main() -> int:
     )
     bad = 0
     for rnd, phrase, why in FORBIDDEN:
-        needle = re.sub(r"\s+", " ", phrase)
+        needle = norm(phrase)
         for f, t in flat.items():
             for m in re.finditer(re.escape(needle), t, re.I):
-                # a retraction introduces the phrasing it is retracting, so look BACK only,
-                # and narrowly - a wide symmetric window silently hides real regressions
+                # A retraction introduces the phrasing it is retracting, so weight the window
+                # backwards - but some retractions put the marker just after the quote, hence the
+                # smaller forward allowance. Keep both tight: a wide symmetric window silently
+                # hides real regressions (it did, on the first version of this script).
                 window = t[max(0, m.start() - 170) : m.end() + 140]
                 if RETRACTION.search(window):
                     continue  # quoted inside its own retraction; that is the point
                 print(f"REGRESSION (round {rnd})  {f.name}: {phrase!r}\n    -> {why}")
                 bad += 1
     for phrase, want, why in REQUIRED:
-        needle = re.sub(r"\s+", " ", phrase).lower()
+        needle = norm(phrase).lower()
         got = sum(t.lower().count(needle) for t in flat.values())
         if got < want:
             print(f"MISSING  {phrase!r}: {got} occurrence(s), expected >= {want}\n    -> {why}")
