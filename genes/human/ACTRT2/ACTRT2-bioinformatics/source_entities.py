@@ -117,12 +117,37 @@ def resolutions() -> dict:
             if not hits:
                 out.setdefault(tok["token"], {"label": tok["note"], "experimental": None})
                 continue
-            # Prefer the reviewed entry when a cross-reference is ambiguous, and say so.
+            # Prefer the reviewed entry when a cross-reference is ambiguous, and say so. The
+            # arithmetic below used to be `len(hits) - len(reviewed)`, which silently reported an
+            # INACTIVE (merged or deleted) hit as a TrEMBL entry, and `hits[0]` could pick a dead
+            # entry as the primary one. This is the fourth site in this review where the same
+            # inactive-entry class had to be handled after being fixed elsewhere, so the categories
+            # are now counted explicitly rather than inferred by subtraction.
             reviewed = [h for h in hits if h["reviewed"] == "Swiss-Prot"]
-            primary = reviewed[0] if reviewed else hits[0]
-            extra = ""
-            if len(hits) > 1:
-                extra = f"; cross-reference also maps to {len(hits) - len(reviewed)} TrEMBL entries"
+            unreviewed = [h for h in hits if h["reviewed"] == "TrEMBL"]
+            inactive = [h for h in hits if h["reviewed"] == "INACTIVE"]
+            live = reviewed + unreviewed
+            if not live:
+                out.setdefault(tok["token"], {
+                    "label": f"{len(inactive)} candidate entries, all INACTIVE (merged or deleted); "
+                             "no live entry to describe",
+                    "experimental": None,
+                })
+                continue
+            primary = live[0]
+            # Count the OTHER entries, not all of them. A first version counted every unreviewed hit,
+            # so a token with a single TrEMBL hit described itself as "also maps to 1 TrEMBL entries".
+            # Caught by diffing the freshly emitted blocks against the committed ones, which is the
+            # only reason a label regression like this is visible at all.
+            others = [h for h in hits if h is not primary]
+            parts = []
+            n_trembl = sum(1 for h in others if h["reviewed"] == "TrEMBL")
+            n_inactive = sum(1 for h in others if h["reviewed"] == "INACTIVE")
+            if n_trembl:
+                parts.append(f"{n_trembl} TrEMBL {'entry' if n_trembl == 1 else 'entries'}")
+            if n_inactive:
+                parts.append(f"{n_inactive} INACTIVE {'entry' if n_inactive == 1 else 'entries'}")
+            extra = f"; cross-reference also maps to {' and '.join(parts)}" if parts else ""
             genes = "/".join(primary["genes"]) or primary["name"]
             label = (
                 f"{primary['organism']} {genes} ({primary['accession']}, {primary['reviewed']}"

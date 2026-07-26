@@ -1006,7 +1006,13 @@ def partner_class_census(acc: str, self_symbol: str) -> dict:
 
 
 def reference_scope() -> dict:
-    """How many entities does each supporting reference annotate, repo-wide?
+    """How large is each supporting reference's GOA footprint, and where countable, over how
+    many entities?
+
+    The first line used to promise an entity count outright. It cannot always deliver one: the
+    walk is capped for paginated references, so `n_entities` is None for those and the sampled
+    figure is reported separately. Naming the function's limit in its own first line matters
+    because the docstring is what a reader trusts before checking the return value.
 
     Querying QuickGO by *reference* rather than by gene is what distinguishes an
     observation of this protein from a projection onto it. A reference that annotates many

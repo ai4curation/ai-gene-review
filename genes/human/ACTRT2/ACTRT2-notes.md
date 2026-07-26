@@ -155,7 +155,7 @@ that this gap is family-wide rather than gene-specific — QuickGO returns **zer
 annotations for beta-actin itself (P60709), which is the same observation the merged ACTR10
 review made.
 
-### The polymerisation-coupled hydrolysis switch is not intact
+### The ATP-hydrolysis trigger His161 is lost
 
 Actin's ATPase is coupled to filament incorporation, and the coupling runs through His161:
 
@@ -172,9 +172,9 @@ full text confirms it: the actin mutants A108G and P109A
 and
 [PMID:37009486 "The ATPase activities of A108G and P109A, which were estimated from the rate of Pi release, were similar to that of the wild type (Iwasa et al."]
 — so substituting those residues does **not** abolish polymerisation or hydrolysis. The Pro-rich
-loop *modulates the His161 rotamer*; it does not gate hydrolysis. Grouping all three as "the
-residues that couple filament incorporation to ATP hydrolysis" overstated two of them. **His161
-carries the argument alone**, and that is how it is now stated. Same failure shape as the ACBD3
+loop *modulates the His161 rotamer*; it does not gate hydrolysis. The earlier framing, which
+grouped all three residues together as jointly coupling filament incorporation to hydrolysis,
+overstated two of them. **His161 carries the argument alone**, and that is how it is now stated. Same failure shape as the ACBD3
 proline lesson: a substitution whose actin counterpart has no effect cannot be cited as evidence
 of lost function.
 
@@ -318,8 +318,8 @@ The eight partners besides PDCL3 are not a random set: **TCP1(CCT1), CCT2, CCT3,
 CCT7** plus SLC25A19 and ACSL4 — six CCT/TRiC chaperonin subunits alongside the chaperonin's
 co-chaperone. (Ten records, nine distinct partners, so **eight** besides PDCL3; PDCL3 appears
 twice, once spoke-expanded and once not, both at MI 0.50, and the other eight spoke rows are at
-0.35. An earlier draft said "nine partners besides PDCL3" and "nine at 0.35" — both off by one,
-caught by the reviewer.)
+0.35. An earlier draft put the non-PDCL3 partner count at nine rather than eight, and the count at
+MI 0.35 at nine rather than eight — both off by one, caught by the reviewer.)
 Querying PDCL3 itself confirms the reading — across IntAct it has 91 partners including
 **12 actin-superfamily proteins (ACTA2, ACTB, ACTBL2, ACTG1, ACTR1A, ACTR1B, ACTR2, ACTRT1,
 ACTRT2, ACTRT3, POTEF, POTEI), all nine CCT subunits, and three tubulins.**
