@@ -134,30 +134,46 @@ def assert_quickgo_calls_are_guarded() -> int:
             f"the QuickGO endpoint URL must be written literally exactly once (the QUICKGO_SEARCH "
             f"constant) but appears on {len(literal)} line(s): "
             f"{[h.strip()[:70] for h in literal]}. A new call site must go through quickgo_all().")
-    # (2) The constant is fetched exactly once, and that call sits inside quickgo_all.
+    # (2) Every READ of the constant must lie inside quickgo_all (or inside this self-check,
+    #     which legitimately names it).
     #
-    # Done over the AST, not the text. A textual search for the call matched this function's own
-    # error-message strings and reported four call sites where there is one - a checker whose
-    # pattern matches its own diagnostics. The AST sees code only.
+    # An earlier version required `get_json(QUICKGO_SEARCH, ...)` to appear exactly once inside
+    # quickgo_all. The reviewer pointed out that the escape route was already in this file:
+    # `SESSION.get(url, params=...)` is used directly for the x-total-results read, so a future
+    # `SESSION.get(QUICKGO_SEARCH, ...)` would satisfy that check while bypassing every coverage
+    # assertion - as would `get_json(url=QUICKGO_SEARCH, ...)` (a keyword first argument leaves
+    # `node.args` empty) or assigning the constant to a local first. Guarding the *name* instead of
+    # one call shape closes all of those at once, and is shorter.
+    #
+    # Done over the AST, not the text: the first textual version matched this function's own
+    # error-message strings and reported four call sites where there is one.
     tree = ast.parse(src)
-    guard = next((n for n in ast.walk(tree)
-                  if isinstance(n, ast.FunctionDef) and n.name == "quickgo_all"), None)
+    funcs = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    guard = funcs.get("quickgo_all")
     if guard is None:
         raise RuntimeError("quickgo_all() is gone; the QuickGO coverage guard no longer exists")
-    calls = [n for n in ast.walk(tree)
-             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
-             and n.func.id == "get_json" and n.args
-             and isinstance(n.args[0], ast.Name) and n.args[0].id == "QUICKGO_SEARCH"]
-    if len(calls) != 1:
+    selfcheck = funcs.get("assert_quickgo_calls_are_guarded")
+    if selfcheck is None:
+        raise RuntimeError("assert_quickgo_calls_are_guarded() is gone")
+    allowed = [(f.lineno, f.end_lineno or f.lineno) for f in (guard, selfcheck)]
+    reads = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Name) and n.id == "QUICKGO_SEARCH"
+             and not isinstance(n.ctx, ast.Store)]  # the module-level assignment is not a read
+    inside = [n for n in reads if any(lo <= n.lineno <= hi for lo, hi in allowed)]
+    stray = [n for n in reads if n not in inside]
+    if stray:
         raise RuntimeError(
-            f"expected exactly one QuickGO fetch through the constant but the AST shows "
-            f"{len(calls)} at line(s) {[c.lineno for c in calls]}; every QuickGO search must go "
-            "through quickgo_all()")
-    if not (guard.lineno <= calls[0].lineno <= (guard.end_lineno or guard.lineno)):
+            f"QUICKGO_SEARCH is read outside quickgo_all() at line(s) "
+            f"{[n.lineno for n in stray]}; every QuickGO search must go through quickgo_all() so "
+            "that the page-coverage assertions apply")
+    # Assert presence, not merely absence of strays: a guard defeatable by deleting the thing it
+    # guards is worse than no guard.
+    in_guard = [n for n in reads if guard.lineno <= n.lineno <= (guard.end_lineno or guard.lineno)]
+    if not in_guard:
         raise RuntimeError(
-            f"the QuickGO fetch at line {calls[0].lineno} is outside quickgo_all() "
-            f"(lines {guard.lineno}-{guard.end_lineno}); the coverage assertions are bypassed")
-    return len(calls)
+            "quickgo_all() no longer reads QUICKGO_SEARCH; it has stopped fetching from QuickGO "
+            "and the coverage assertions guard nothing")
+    return len(reads)
 
 
 def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
@@ -184,13 +200,18 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
     if total is None:
         raise RuntimeError(f"QuickGO returned no numberOfHits for {what}; cannot verify coverage")
     got = len(d.get("results", []))
-    if got < total:
+    if got != total:
+        # Equality, not `got < total`: an over-count would be just as much a sign that the
+        # response does not mean what this function assumes, and the previous commit message
+        # described this as an equality assertion.
         raise RuntimeError(
-            f"QuickGO truncated {what}: {got} of {total} rows returned at limit={limit}; "
-            "add pagination before trusting this count")
+            f"QuickGO row count disagrees with its own total for {what}: {got} of {total} rows at "
+            f"limit={limit}; raise the limit and re-run, or add pagination, before trusting this "
+            "count")
     if got >= limit:
         raise RuntimeError(
-            f"QuickGO returned a full page ({limit}) for {what}; the result set may be truncated")
+            f"QuickGO returned a full page ({limit}) for {what}; the result set may be truncated. "
+            "This is a deliberate conservative abort - raise the limit and re-run.")
     if total == 0 and not allow_zero:
         raise RuntimeError(
             f"QuickGO returned zero rows for {what}; this query underwrites an enumeration, so an "
@@ -677,8 +698,19 @@ def quickgo_evidence(gene_product: str, go_id: str) -> dict:
     for r in d.get("results", []):
         codes[r["goEvidence"]] += 1
         terms[f"{r['goId']} {r.get('goName','')}"] += 1
-    return {"n": d.get("numberOfHits", 0), "codes": dict(codes), "terms": dict(terms),
-            "has_experimental": bool(set(codes) & EXPERIMENTAL_CODES)}
+    n = d.get("numberOfHits", 0)
+    # A zero has two possible meanings and they are not interchangeable: the donor genuinely holds
+    # no annotation for the term it donated (a finding that weakens the propagation), or QuickGO
+    # does not hold this accession at all (a data artefact that would read as a property of the
+    # donor - the dead-accession trap). One unfiltered re-query separates them.
+    absent = None
+    if n == 0:
+        probe = quickgo_all({"geneProductId": gene_product, "limit": "1"},
+                            f"presence probe for {gene_product}", allow_zero=True)
+        absent = probe.get("numberOfHits", 0) == 0
+    return {"n": n, "codes": dict(codes), "terms": dict(terms),
+            "has_experimental": bool(set(codes) & EXPERIMENTAL_CODES),
+            "accession_absent_from_quickgo": absent}
 
 
 def go0005200_census() -> dict:
@@ -716,7 +748,8 @@ def paint_record() -> dict:
 
 def main() -> None:
     res: dict = {}
-    assert_quickgo_calls_are_guarded()
+    n_refs = assert_quickgo_calls_are_guarded()
+    print(f"guard: {n_refs} QUICKGO_SEARCH read(s), all inside quickgo_all()", file=sys.stderr)
     al62 = aligner()
 
     print("Q1  orthologue length distribution ...", file=sys.stderr)
