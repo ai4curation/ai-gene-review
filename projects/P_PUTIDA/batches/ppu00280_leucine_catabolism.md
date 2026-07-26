@@ -52,8 +52,16 @@ with valine and isoleucine.
   flavoprotein are the electron-transfer participants.
 - The MCC position is a two-subunit complex with distinct alpha
   biotin-carboxylase/carrier and beta carboxyltransferase roles.
-- Human AUH and bacterial LiuC occupy the same reaction position but belong to
-  different PANTHER families, represented as an enzyme-family variant set.
+- Human AUH and bacterial LiuC occupy the same reaction position but use
+  distinct lineage-associated implementations. AUH uses its exact PANTHER
+  subfamily; LiuC is selected by a crotonase-family record plus the required
+  methylglutaconyl-CoA hydratase function because its available PANTHER
+  assignment is not LiuC-specific.
+- The Ivd and MCC selectors use exact PANTHER subfamilies rather than broad
+  acyl-CoA dehydrogenase or biotin-dependent carboxylase parent families.
+- The electronic isoprenoid-catabolism annotation on `liuC` was removed:
+  PMID:16820476 reports that P. putida utilizes leucine and isovalerate but
+  not acyclic terpenes.
 - `PP_3394` has both HMGL-like and
   alpha-isopropylmalate/homocitrate-synthase signatures and lacks the HMG-CoA
   lyase PROSITE signature found in MvaB. Its exact function and pathway
