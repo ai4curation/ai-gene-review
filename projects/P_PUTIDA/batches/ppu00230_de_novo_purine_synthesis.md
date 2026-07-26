@@ -65,7 +65,9 @@ carboxylation.
   annotations are modified to enzyme-specific activities and `GO:0006189`.
   Purine nucleobase-process annotations are marked over-annotated because IMP
   is a nucleotide, while valid ATP, nucleotide, magnesium, and metal-binding
-  annotations are retained as non-core.
+  annotations are retained as non-core. PurF's L-glutamine metabolic-process
+  annotation is also retained as non-core because it describes a consumed
+  substrate rather than the enzyme's de novo purine-pathway role.
 - Human PPAT, GART, PFAS, PAICS, ADSL, and ATIC reviews and exact UniProt
   exemplars ground the eukaryotic fusion architectures alongside the bacterial
   proteins. Primary studies ground the PurN/PurT and PurK/PurE alternative
