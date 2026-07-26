@@ -4,8 +4,8 @@
 backs each agentic workflow. These tests pin the resolver's behaviour and, more
 importantly, keep the config honest: every key must map to a real workflow that
 actually sources its model from the config, and no workflow may pin a model of
-its own (a stale or retired model id silently no-ops a run into a phantom green
-check).
+its own — a stale or retired model id breaks every run of that workflow, and one
+config file is a much smaller place to keep current than twenty-odd call sites.
 """
 
 import importlib.util
@@ -147,8 +147,8 @@ def _model_pins(text: str) -> list[str]:
 def test_no_workflow_pins_a_model_inline():
     """No workflow should pin a model; models must come from the config.
 
-    A stale or retired model id silently no-ops an agent run into a phantom
-    green check, which is exactly why this lives in one file.
+    A stale or retired model id breaks every run of that workflow, so the set of
+    places that have to be kept current should be exactly one.
     """
     offenders = {
         stem: pins

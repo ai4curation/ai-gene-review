@@ -186,7 +186,12 @@ jobs:
           events = json.loads(open(sys.argv[1], encoding="utf-8").read())
           results = [e for e in events if isinstance(e, dict) and e.get("type") == "result"]
           if not results:
-              summary("### Claude review failed\n\nNo result event — the agent did not complete.")
+              msg = ("No result event in the execution log — the agent did not complete. "
+                     "A Claude usage limit on CLAUDE_CODE_OAUTH_TOKEN can present this way; "
+                     "check the run log for a quota message before assuming a problem with "
+                     "this PR.")
+              print(f"::error title=Claude review did not complete::{msg}")
+              summary("### Claude review failed\n\n" + msg)
               sys.exit(0)
 
           r = results[-1]
@@ -223,12 +228,27 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.reviewer-token.outputs.token || github.token }}
           REPO: ${{ github.repository }}
+        # Deliberately NOT `set -e`. The headline case this step exists to catch
+        # is a 403 because the reviewer App lacks Pull requests access — under
+        # `set -e` a failing `gh api` in a command substitution would take the
+        # step down with a raw "Resource not accessible by integration" instead
+        # of the warning. Transient 5xx and secondary rate limits land the same
+        # way. Every failure path here degrades to a warning.
         run: |
-          set -euo pipefail
-          head_sha="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq .head.sha)"
-          count="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" --paginate \
-            --jq "[.[] | select(.commit_id == \"${head_sha}\")] | length")"
-          if [[ "$count" -eq 0 ]]; then
+          set -uo pipefail
+          head_sha="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq .head.sha 2>&1)" || {
+            echo "::warning title=Review check inconclusive::Could not read PR ${PR_NUMBER}: ${head_sha}"
+            exit 0
+          }
+          # `--paginate` applies --jq per page, so a `| length` filter emits one
+          # number per page. Project the ids and count lines instead.
+          reviews="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" --paginate \
+            --jq ".[] | select(.commit_id == \"${head_sha}\") | .id" 2>&1)" || {
+            echo "::warning title=Review check inconclusive::Could not list reviews for PR ${PR_NUMBER}: ${reviews}"
+            exit 0
+          }
+          count="$(printf '%s' "$reviews" | grep -c . || true)"
+          if [ "$count" -eq 0 ]; then
             echo "::warning title=No review posted::The review agent completed successfully but no review is recorded against ${head_sha}. Its \`gh pr review\` may have been rejected — check the reviewer App's Pull requests permission."
           else
             echo "${count} review(s) recorded against ${head_sha}."
