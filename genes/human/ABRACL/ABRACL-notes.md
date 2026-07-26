@@ -1,7 +1,9 @@
 # ABRACL (Q9P1F3) — review notes
 
 Human ABRACL, "ABRA C-terminal like", formerly C6orf115 / HSPC280 / PRO2013. 81 aa, ~9 kDa,
-single-copy in every genome that has it. Sole member of PANTHER family PTHR46334 (Costars).
+usually one copy per genome, but not universally: PANTHER PTHR46334 resolves into two subfamilies,
+SF1 (human, Dictyostelium and most plants) and a plant-restricted SF3, and Arabidopsis has 2 members
+while maize has 3.
 
 ## Starting position: three annotations, no molecular function
 
@@ -102,7 +104,7 @@ the human protein. Nobody along the chain did anything unreasonable; the failure
 re-examined the one before it.
 
 The phyletic check in `ABRACL-bioinformatics/RESULTS.md` adds a family-level argument: Costars is
-retained as a single-copy ortholog in *Arabidopsis*, rice, maize and *Dictyostelium*, none of
+retained in *Arabidopsis*, rice, maize and *Dictyostelium*, none of
 which builds a cilium, basal body or centriole, while IFT88, IFT52, BBS1 and ARL13B are absent
 from all four. Whatever the family is conserved for, it is not ciliary. That does not exclude a
 human-specific ciliary role, and the notes say so — but there is no evidence for one either.
@@ -141,3 +143,42 @@ control), and it is honest about being weak.
   plus upstream regulators MYBL2, CBX4 and miR-145-5p. These are disease-context studies of a
   normal actin regulator; they do not add a distinct GO process for the gene and are not
   annotated here.
+
+
+## Correction: the family is not single-copy, and the subfamily structure matters
+
+A first draft of this review called PTHR46334 a single-copy family, in five places. **The PR's own
+fetched data contradicts that** — `RESULTS.md` shows *Arabidopsis* = 2 and *Zea mays* = 3, and the
+PANTHER metadata records `subfamilies: 2`.
+
+Resolving the entries file:
+
+| Subfamily | Members | Composition |
+|---|---|---|
+| `PTHR46334:SF1` | 13 | animals, *Dictyostelium*, and most plant entries — includes **human ABRACL (Q9P1F3)** and **Dicty cosA (Q558Y7)** |
+| `PTHR46334:SF3` | 2 | plant-restricted: *Arabidopsis* Q8LBN7, *Eutrema* B4YYA9 |
+
+This does **not** weaken the `GO:0032970` ACCEPT — it strengthens the provenance argument. The IBA
+donor (*Dictyostelium* cosA) and the human target are **both SF1**, so the transfer is
+*within-subfamily* and is not crossing the one boundary the family contains. The `propagation_review`
+now names that boundary rather than denying one exists.
+
+The lesson: the copy-number claim was a summary written alongside the analysis rather than read out
+of it, and the analysis script printed it as hardcoded prose regardless of the counts fetched. Any
+claim a script asserts should be derived from what the script fetched.
+
+
+## Two verifications added after review
+
+**`GO:0000513` is real.** It is absent from the local ontology cache, so the reviewer could not
+check it. QuickGO confirms: `GO:0000513 actin severing activator activity`, molecular_function,
+not obsolete, defined as *"Binds to and increases the activity of a actin severing protein."* That
+is exactly the positive counterpart of the inhibitor activity proposed under `proposed_new_terms`,
+so the asymmetry the proposal rests on is genuine.
+
+**RPGRIP1L is genuinely ciliary.** Conceded in the review rather than glossed: of the four BioID
+baits that labelled ABRACL, three (SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins, but
+RPGRIP1L is a transition-zone protein. The bait panel is therefore not uniformly non-ciliary. It
+does not rescue the annotation — proximity to one ciliary bait over hours of labelling is a
+neighbourhood observation, not a localisation — but the argument is stronger for stating the
+inconvenient part.
