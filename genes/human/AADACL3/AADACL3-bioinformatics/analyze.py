@@ -810,8 +810,11 @@ def render_markdown(r: dict, entries: dict[str, Entry]) -> str:
     L.append(
         "GO:0017171 serine hydrolase activity is defined by *mechanism* - a serine "
         "nucleophile activated by a proton relay through an acidic and a basic residue - "
-        "so it can only be placed at a phylogenetic node whose members all have a serine "
-        "nucleophile. This reads the residue at each source's first annotated active site. "
+        "so asserting it at a phylogenetic node propagates a serine nucleophile to every "
+        "descendant, and a single non-serine member makes a plain transfer unsafe. (It does "
+        "not make the term unreachable: PAINT can annotate the ancestral node and mark the "
+        "divergent descendant with a NOT.) This reads the residue at each source's first "
+        "annotated active site. "
         "WITH/FROM tokens are taken from the gene's own `AADACL3-goa.tsv` so they cannot "
         "drift from the record under review; model-organism identifiers are resolved through "
         "the Alliance API and Arabidopsis loci through UniProt, and anything that cannot be "

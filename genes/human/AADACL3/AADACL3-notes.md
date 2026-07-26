@@ -258,9 +258,15 @@ could not be resolved to a single reviewed UniProt entry through the Alliance
 record and are reported unresolved rather than counted either way, so the 13-of-14
 figure is a count of what was readable.)
 
-**Crucially, one exception is enough.** `GO:0017171` is defined by mechanism, so it
-can only sit at a node all of whose members have a serine nucleophile — and HIDH's
-`Thr164` means `PTN009058710` is not such a node. Nor can `GO:0052689` sit there,
+**Crucially, that one exception is enough to stop a plain transfer.** `GO:0017171`
+is defined by mechanism, so asserting it at a node propagates a serine nucleophile
+to every descendant — and HIDH's `Thr164` makes that false for one of them. PAINT
+does have a device for exactly this shape of problem: annotate the ancestral node
+and mark the divergent descendant with a `NOT`, which would leave `GO:0017171` on
+the AADACL paralogs while excluding HIDH. So HIDH is not structurally
+disqualifying, and the recommendation below offers both that route and the
+sub-node route. What it does mean is that the term cannot simply be moved to
+`PTN009058710` as-is, which is what I had proposed. Nor can `GO:0052689` sit there,
 because the two formamidases hydrolyse an amide rather than an ester bond. So
 **`GO:0016787` genuinely is the lowest common ancestor of this donor set, and
 PAINT's choice is correct curation rather than a term that stopped short.** I
@@ -268,10 +274,16 @@ initially proposed `GO:0017171` as a second replacement term on both hydrolase r
 that was wrong for exactly this reason and has been withdrawn. The rows are
 replaced on **redundancy** grounds only — AADACL3 already carries `GO:0052689` from
 a subfamily-specific signature, which is stronger and more direct evidence for this
-gene than a transfer from a clade that broad — so the propagation root cause is
-`EVIDENCE_CIRCULAR_OR_REDUNDANT`, not `TERM_SCOPING_PROBLEM`/`GRANULARITY_MISMATCH`.
-The `GO:0017171` recommendation lives in `suggested_questions` as a node-placement
-proposal for PAINT, where the HIDH obstacle can be named and worked around.
+gene than a transfer from a clade that broad — so the propagation **root cause** is
+`EVIDENCE_CIRCULAR_OR_REDUNDANT` rather than `TERM_SCOPING_PROBLEM`: the defect is
+not that PAINT chose the wrong node. The **failure mode** `GRANULARITY_MISMATCH` is
+kept, because the schema defines it as the parent term being true but uninformative
+(`gene_review.yaml:2469`), which is a statement about how much the term tells you
+about *this gene* and not an accusation about the node. Both readings are needed to
+describe the row honestly: correct where it was asserted, uninformative where it
+landed. The `GO:0017171` recommendation lives in `suggested_questions` as a
+node-placement proposal for PAINT, where the HIDH obstacle can be named and worked
+around.
 
 The same test applies to the location term and gives the same answer. The membrane
 IBA's donors resolve to **four distinct curated location strings** between them —
@@ -284,16 +296,32 @@ that node only if HIDH is excluded, whereas at the tighter `PTN009058713` there 
 no obstacle at all. That is a sharper version of the recommendation: the term is
 blocked by exactly one member, and it is nameable.
 
-**Where AADACL3 differs from AADACL2 (1): it does inherit a molecular-function
-term.** AADACL2/4 inherit no mechanism term, but AADACL3's GOA carries
-`GO:0016787 hydrolase activity` IBA from `PTN009058710` — a *different* node from
-the membrane row's `PTN009058713`. So for AADACL3 the defect is not absence but
-granularity, which is why this review uses MODIFY with two replacements rather
-than proposing a new annotation. `GO:0017171` and `GO:0052689` are independent
-children of `GO:0016787` (verified against QuickGO: neither is an ancestor of the
-other), so the generic term sits exactly at their join and both are needed.
+**This review now conflicts with the merged AADACL2 review, and the conflict
+should be resolved there rather than papered over here.** I checked the two records
+directly. `genes/human/AADACL2/AADACL2-goa.tsv` carries a `GO:0016787` IBA whose
+WITH/FROM set is **identical token-for-token** to AADACL3's — the same seventeen
+tokens, the same node `PTN009058710` (compared programmatically, not by eye). And
+`AADACL2-ai-review.yaml` resolves that row as `MODIFY → GO:0017171` with
+`root_cause: TERM_SCOPING_PROBLEM` and `failure_modes: [GRANULARITY_MISMATCH]`,
+reading its serine count as *supporting* the mechanism term. This review reads the
+same count as *blocking* it, because one member of that node — HIDH, `Thr164` — is
+not a serine hydrolase. Both cannot be right about the same row.
 
-**Where AADACL3 differs from AADACL2 (2): there is no topology contradiction to
+I think AADACL3's reading is the correct one, for a reason that is about the record
+rather than about the argument: `GO:0052689` already exists on the GOA from an
+independent subfamily signature, so a MODIFY toward it **merges two existing rows**,
+whereas `GO:0017171` appears nowhere in the GOA and a MODIFY toward it would
+*introduce* a claim that the cited node does not license. But AADACL2's review is
+already merged, so this needs a follow-up on **PR #2266** rather than a unilateral
+assertion here; a curator reading both files today gets contradictory advice about
+the same annotation row. Two further details for whoever picks that up: AADACL2's
+notes still describe HIDH as "a dehydratase, not a hydrolase", which is the
+characterisation corrected in `f50b47fcd` (UniProt gives it both EC 3.1.1.1 and EC
+4.2.1.105); and AADACL2 and AADACL3 do *not* differ in whether they inherit a
+molecular-function term, which is how I first framed it — they both inherit
+`GO:0016787` from the same node.
+
+**Where AADACL3 does differ from AADACL2: there is no topology contradiction to
 adjudicate, so ACCEPT is correct rather than UNDECIDED.** AADACL2's location rows
 were left UNDECIDED because a curated "Secreted" call collides with the family's
 type-II anchor and measurement declined to break the tie. AADACL3 has no curated
@@ -352,10 +380,13 @@ sets, including `GO:0016787` IBA from `PTN009058710` with all seventeen sources 
 to AADACL4 unchanged.
 
 That also corrects one premise in the cross-gene framing: AADACL3 and AADACL4 do
-**not** inherit "no mechanism term at all". They inherit `GO:0016787 hydrolase
-activity` at a second node, `PTN009058710` — it is simply the uninformative parent
-of the term that should be there, which is why MODIFY rather than a new annotation
-is the right action for both.
+**not** inherit "no mechanism term at all", and neither does AADACL2. All three
+inherit `GO:0016787 hydrolase activity` at a second node, `PTN009058710`. That term
+is the correct lowest common ancestor of that node's donors — it is not a parent
+standing in for something better that PAINT should have chosen — but it is
+uninformative *for these genes*, and it duplicates a more specific term two of them
+already carry from a subfamily signature. That is why MODIFY on redundancy grounds,
+rather than a new annotation, is the right action.
 
 One asymmetry in the two records is worth recording because it corroborates the
 UniProt-gap finding from a different direction: AADACL4's `GO:0016020` IEA carries
@@ -374,7 +405,7 @@ competence is a question for an amendment to that review, not this one.
 
 | # | term | evidence | action | why |
 |---|---|---|---|---|
-| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0052689 | the correct LCA of a heterogeneous donor set, so not over-general; replaced only as redundant with the subfamily-derived term |
+| 1 | GO:0016787 hydrolase activity | IBA | MODIFY → GO:0052689 | the correct LCA of a heterogeneous donor set, so not a bad node choice; replaced as redundant with the subfamily-derived term the record already carries |
 | 2 | GO:0016020 membrane | IBA `is_active_in` | ACCEPT | tight, topologically coherent source set; corroborated by concordant Phobius + TMHMM |
 | 3 | GO:0016020 membrane | IEA `located_in` | ACCEPT | same conclusion from an independent pipeline; supported despite UniProt having no TRANSMEM feature |
 | 4 | GO:0016787 hydrolase activity | IEA (IPR013094) | MODIFY → GO:0052689 | fair for the fold it describes; replaced as redundant, and the fold signature reaches outside the subfamily whose chemistry it asserts |
