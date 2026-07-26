@@ -3,6 +3,12 @@
 Human arylacetamide deacetylase-like 4, HGNC:32038, chromosome 1p36.21, 407 aa.
 Reviewed for the PAINT + affinage campaign.
 
+Paralog map (verified against NCBI Gene and UniProt, since it matters for how the IBA
+donors are read): AADAC (3q25.1), AADACL2 (3q25.1) and NCEH1/AADACL1 (3q26.31) are on
+chromosome 3; AADACL3 and AADACL4 are adjacent at 1p36.21. AADACL3 is the closest paralog -
+same 407-residue length, same active-site positions 193/347/377, 55% identity - and is being
+reviewed separately.
+
 ## Bottom line
 
 AADACL4 is a genuinely dark gene: no publication has assayed it, and UniProt classifies
