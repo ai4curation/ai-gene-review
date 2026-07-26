@@ -481,10 +481,22 @@ arguing that `GO:0016787` is the genuine LCA. Those two are in tension: `failure
 the *biological shape of a propagation issue*, and this propagation has none — the parent is
 uninformative because the donor set is heterogeneous, not because the transfer could have been
 more specific. `root_cause: EVIDENCE_CIRCULAR_OR_REDUNDANT` alone now carries the row, matching
-AADACL2 and AADACL4. `SOURCE_EVIDENCE_WEAK` is kept on the `IPR013094` row: that is a separate
-and still-correct judgment about a fold signature reaching outside the subfamily, not a
-granularity claim. (The schema's enum description does not yet distinguish the two readings and
+AADACL2 and AADACL4. (The schema's enum description does not yet distinguish the two readings and
 is worth clarifying; that is a repo question, raised in #2286.)
+
+**1b. Superseded: the `IPR013094` assessment was aligned too.** This section originally kept
+`SOURCE_EVIDENCE_WEAK` on the hydrolase rows and `source_status: SOURCE_WEAK_OR_INFERRED` on the
+`IPR013094` source entity, calling the latter "a separate and still-correct judgment". Both are
+now removed/changed, because the argument against the first applies unchanged to the second: the
+root cause recorded on the row is **redundancy** with the `IPR017157`-derived `GO:0052689`, which
+says nothing about source strength, and `IPR013094` — the alpha/beta-hydrolase fold-3 signature —
+is not a weak source. This review's own comment on that entity already concludes the fold match
+carries nothing ("the activity conclusion here is carried by the intact Ser-Asp-His triad and by
+the subfamily signature IPR017157, not by this fold match"), which is precisely what
+`CIRCULAR_OR_REDUNDANT` means. AADACL2 and AADACL4 make the identical fold-level argument and both
+record `CIRCULAR_OR_REDUNDANT`; `IPR013094` appears in only these three reviews repo-wide, so that
+is the complete comparison set. All six hydrolase rows and all three `IPR013094` source entities
+now agree.
 
 **2. Yeast BNA7 does resolve.** This gene's own audit reached `SGD:S000002836` through its
 Alliance record, failed, and honestly reported the nucleophile as unresolved — hence its
