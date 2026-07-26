@@ -184,15 +184,14 @@ domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the re
 (RII) of PKA and effectively recruits PKA holoenzyme to the Golgi"]. Combined with the Q-domain
 correction above, the UR/GOLD split collapses — leaving **three** functional regions, not four:
 
-- **ACB domain (83–174** per UniProt; PMID:23166793 writes "ACB domain (80–171)" and deletes
-  1–171, so the boundary is source-dependent — rule 3's own case, and nothing here turns on it**)
-  — binds C18:1-CoA / C16:0-CoA and oligomerises on ligand; binds
-  contributes to SREBP1 restraint (ΔN weakens but does not abolish it; the SREBP1 co-IP itself used
-  full-length ACBD3, so the interaction is not domain-mapped); and is credited by PMID:38134218 with
-  recruiting FAPP2,
-  citing PMID:29750412 — though that paper's own abstract maps nothing to the ACB domain and
-  models FAPP2 dispersal as a *consequence* of Golgi fragmentation. Treat the FAPP2 domain
-  assignment as PMID:38134218's, not as established.
+- **ACB domain** — boundaries are source-dependent (UniProt `83–174`; PMID:23166793 writes
+  "ACB domain (80–171)" and deletes `1–171`), which is rule 3's own case; nothing here turns on it.
+  Binds C18:1-CoA / C16:0-CoA and oligomerises on ligand. Contributes to SREBP1 restraint, but only
+  in part: ΔN weakens the effect without abolishing it, and the SREBP1 co-IP used full-length ACBD3,
+  so the interaction is not domain-mapped. Credited by PMID:38134218 with recruiting FAPP2, citing
+  PMID:29750412 — though that paper's abstract maps nothing to the ACB domain and models FAPP2
+  dispersal as a *consequence* of Golgi fragmentation, so treat the FAPP2 domain assignment as
+  PMID:38134218's rather than established.
 - **Q domain (241–308)** — PI4KB *or* TBC1D22A/B, mutually exclusively
 - **UR + GOLD** — one shared surface. UniProt places GOLD at **384–526**; the paper's
   Golgi-competent, SEC22B-binding fragment is **328–528**; and the 21-residue
