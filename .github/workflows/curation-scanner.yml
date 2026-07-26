@@ -198,7 +198,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.ai4c-token.outputs.token }}
-          show_full_output: true
           allowed_bots: "ai4c-agent,claude,github-actions"
           claude_args: |
             --dangerously-skip-permissions
@@ -304,17 +303,10 @@ jobs:
             - After choosing a target, spend the run on that one item only
 
       - name: Write step summary
-        if: always()
-        env:
-          # Pass model output through the environment, never interpolate it into
-          # the shell script (attacker-influenceable -> command injection).
-          RESULT: ${{ steps.curation-scanner.outputs.result }}
-          TIER: ${{ matrix.effort }}
-        run: |
-          {
-            echo "## 🔎 Curation Scanner Run (${TIER})"
-            echo ""
-            echo '~~~~'
-            printf '%s\n' "$RESULT"
-            echo '~~~~'
-          } >> "$GITHUB_STEP_SUMMARY"
+        # Not `always()`: with cancel-in-progress a superseded run writes no
+        # execution log, and the summary would report that as breakage.
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/agent-run-summary
+        with:
+          execution-file: ${{ steps.curation-scanner.outputs.execution_file }}
+          title: "🔎 Curation Scanner Run (${{ matrix.effort }})"

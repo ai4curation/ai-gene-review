@@ -86,7 +86,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.ai4c-token.outputs.token }}
-          show_full_output: true
           allowed_bots: "ai4c-agent,claude,github-actions"
           claude_args: |
             --dangerously-skip-permissions
@@ -267,16 +266,10 @@ jobs:
             classification (Type A, B, or C), action taken, and any blockers.
 
       - name: Write step summary
-        if: always()
-        env:
-          # Pass model output through the environment, never interpolate it into
-          # the shell script (attacker-influenceable -> command injection).
-          RESULT: ${{ steps.scanner.outputs.result }}
-        run: |
-          {
-            echo "## GO Annotation Issue Scanner Run"
-            echo ""
-            echo '~~~~'
-            printf '%s\n' "$RESULT"
-            echo '~~~~'
-          } >> "$GITHUB_STEP_SUMMARY"
+        # Not `always()`: with cancel-in-progress a superseded run writes no
+        # execution log, and the summary would report that as breakage.
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/agent-run-summary
+        with:
+          execution-file: ${{ steps.scanner.outputs.execution_file }}
+          title: "GO Annotation Issue Scanner Run"

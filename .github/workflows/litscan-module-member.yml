@@ -133,7 +133,6 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.ai4c-token.outputs.token }}
-          show_full_output: true
           allowed_bots: "ai4c-agent,claude,github-actions"
           claude_args: |
             --model ${{ env.AGENT_MODEL }}
@@ -210,20 +209,19 @@ jobs:
             - do NOT put your operating rules (e.g. "this is a lead", "verify
               snippets") into the issue body
 
-      - name: Write step summary
+      - name: Note the scan window
         if: always()
-        env:
-          # Pass model output through the environment, never interpolate it into
-          # the shell script (attacker-influenceable -> command injection).
-          RESULT: ${{ steps.litscan-handoff.outputs.result }}
         run: |
           {
-            echo "## LitScan Module-Member Run"
-            echo ""
             echo "- Date window: ${DATE_FROM:-last $SCAN_DAYS days} ${DATE_TO}"
             echo "- Packet: reports/litscan/module-member/ (uploaded as artifact)"
-            echo ""
-            echo '~~~~'
-            printf '%s\n' "$RESULT"
-            echo '~~~~'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write step summary
+        # Mirrors the handoff step's condition: with create_issues off there is
+        # no agent run, and the summary should not report a missing log.
+        if: ${{ !cancelled() && (github.event_name == 'schedule' || inputs.create_issues) }}
+        uses: ./.github/actions/agent-run-summary
+        with:
+          execution-file: ${{ steps.litscan-handoff.outputs.execution_file }}
+          title: "LitScan Module-Member Run"
