@@ -13,3 +13,8 @@ The generic phosphofructokinase annotation was marked over-annotated because it
 can be confused with fructose 6-phosphate kinase activity; GO:0008662 is the
 exact molecular function. ATP binding and predicted cytosolic localization were
 retained as non-core properties.
+
+The broad carbohydrate-catabolic annotation `GO:0016052` was modified to
+`GO:0006001` because FruK is the fructose-specific `fruBKA` step needed for
+fructose 1-phosphate phosphorylation
+[PMID:27933319 "a third gene needed for F1P phosphorylation, fruK"].
