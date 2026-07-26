@@ -43,7 +43,7 @@ independent confirmation, but almost all of it is rodent.
   of zSTARS alters atrial and ventricular dimensions and decreases ventricular fractional
   shortening"] rescued by SRF [PMID:22815879 "Co-injection of zsrf (serum response factor)
   mRNA rescues the cardiac phenotype of zSTARS knockdown"]. Mouse deletion impairs
-  arteriogenesis [PMID:19778941 "targeted deletion of Abra in mice"].
+  arteriogenesis [PMID:19778941 "targeted deletion of Abra in CL57BL/6 mice led to impaired arteriogenesis"].
 
 - **A second, MRTF-independent activity.** [PMID:26903873 "Exposing C2C12 cells to
   CCG-1423, a pharmacological inhibitor of SRF preventing the nuclear translocation of its

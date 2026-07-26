@@ -1,9 +1,12 @@
 # Where does the human ABRA GO record come from, and does its one plasma-membrane call have any support?
 
 Reproduce with `uv run --no-project --with requests python audit_abra_record.py`.
-Everything below is fetched at run time from the UniProt, QuickGO and InterPro REST APIs
-plus this gene's own `ABRA-goa.tsv`; nothing is hardcoded, and a failed fetch is reported
-rather than counted as an absence. Machine-readable output is written to `results.json`.
+Q1, Q2, Q4 and Q5 are fetched at run time from the UniProt, QuickGO and InterPro REST APIs,
+plus this gene's own `ABRA-goa.tsv`. Q3 instead reads the repository's committed PANTHER
+family export, `interpro/panther/PTHR22739/PTHR22739-entries.csv` (refresh it with
+`just fetch-panther-family PTHR22739`); if that file is absent the script aborts rather
+than dropping the section. Nothing is hardcoded, and a failed fetch is reported rather
+than counted as an absence. Machine-readable output is written to `results.json`.
 
 Run date: 2026-07-25.
 
@@ -72,3 +75,30 @@ occupies the C-terminus. Work reported on "Costars" — the 82-residue *Dictyost
 of PMID:20940261 and its small mammalian counterpart — is therefore a statement about the
 ABRACL-type protein, not about ABRA. Cytoskeletal phenotypes from that line of work should
 not be carried over to ABRA on the strength of the shared domain.
+
+## Q5. The mouse ortholog carries the import term, but not the regulation term
+
+The review proposes `GO:0042307` *positive regulation of protein import into nucleus* as a
+`NEW` annotation for human ABRA. That proposal previously rested on reasoning about the mouse
+record and the MRTF literature without being checkable here, unlike the Q2 back-propagation
+finding. Projecting both import terms onto mouse Q8BUZ1:
+
+| term | on mouse Q8BUZ1 | evidence | reference | WITH/FROM |
+|---|---|---|---|---|
+| GO:0006606 protein import into nucleus | yes | IDA | PMID:15798203 | *(none)* |
+| GO:0042307 positive regulation of protein import into nucleus | **no** | — | — | — |
+
+Two things follow, and they point the same way.
+
+The mouse annotation is a **direct assay with an empty WITH/FROM**, so it is not an ortholog
+transfer from human — it is primary evidence, and PMID:15798203 is the same paper the review
+already cites for the MRTF import mechanism. The `NEW` proposal is therefore anchored to a
+real experiment rather than to an inference chain.
+
+But the mouse record uses the **unqualified process term**, and that is very likely the less
+accurate of the two. `GO:0006606` reads as the annotated protein being part of the import
+event; ABRA is not the cargo. What PMID:15798203 shows is ABRA *promoting the import of
+MRTF-A/B*, which is what `GO:0042307` says. So the human proposal is not merely a copy of the
+mouse annotation at a different granularity — it is the term the mouse row arguably should
+have used, and the gap in the mouse record is itself the reason no transfer supplied it to
+human.

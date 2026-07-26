@@ -116,6 +116,34 @@ def audit_goa(goa_path: Path) -> dict[str, Any]:
 # Q2: is the plasma-membrane call supported anywhere else?
 # --------------------------------------------------------------------------
 
+def mouse_annotations(go_id: str) -> list[dict[str, Any]]:
+    """Every annotation of `go_id` on the mouse ortholog, with evidence and WITH/FROM.
+
+    Used to check the direction of travel between the two orthologs: a human-only IDA that
+    reappears in mouse citing the human accession is a round trip, not corroboration.
+    """
+    result = get(
+        f"{QUICKGO}/annotation/search",
+        geneProductId=f"UniProtKB:{MOUSE_ABRA}",
+        goId=go_id,
+        limit=100,
+    )
+    if result is None:
+        return []
+    return [
+        {
+            "evidence": annotation.get("goEvidence"),
+            "reference": annotation.get("reference"),
+            "with_from": [
+                c["id"]
+                for connected in annotation.get("withFrom", []) or []
+                for c in connected.get("connectedXrefs", [])
+            ],
+        }
+        for annotation in result.get("results", [])
+    ]
+
+
 def membrane_evidence() -> dict[str, Any]:
     queried = "cc_subcellular_location,ft_transmem,ft_signal,ft_lipid,ft_intramem"
     record = get(f"{UNIPROT}/{HUMAN_ABRA}.json", fields=queried)
@@ -131,26 +159,7 @@ def membrane_evidence() -> dict[str, Any]:
     features = sorted({f["type"] for f in record.get("features", [])})
 
     # Has the human-only call been projected into the mouse ortholog?
-    mouse = get(
-        f"{QUICKGO}/annotation/search",
-        geneProductId=f"UniProtKB:{MOUSE_ABRA}",
-        goId="GO:0005886",
-        limit=100,
-    )
-    projected = []
-    if mouse is not None:
-        for annotation in mouse.get("results", []):
-            projected.append(
-                {
-                    "evidence": annotation.get("goEvidence"),
-                    "reference": annotation.get("reference"),
-                    "with_from": [
-                        c["id"]
-                        for connected in annotation.get("withFrom", []) or []
-                        for c in connected.get("connectedXrefs", [])
-                    ],
-                }
-            )
+    projected = mouse_annotations("GO:0005886")
     return {
         "available": True,
         "uniprot_subcellular_locations": locations,
@@ -165,10 +174,20 @@ def membrane_evidence() -> dict[str, Any]:
 # Q3: is the PANTHER family ortholog-only?
 # --------------------------------------------------------------------------
 
-def family_composition(entries_csv: Path | None) -> dict[str, Any]:
-    if entries_csv is None or not entries_csv.exists():
-        print(f"  ! PANTHER entries CSV not found: {entries_csv}", file=sys.stderr)
-        return {"available": False}
+def family_composition(entries_csv: Path) -> dict[str, Any]:
+    """Summarise the PANTHER family's reviewed members from the repo's entries CSV.
+
+    A missing CSV is a hard error, not a degraded result. Returning {"available": False}
+    here would drop the whole Q3 section from RESULTS.md while results.json still carried
+    the numbers from an earlier run - a silent disagreement between the two artefacts, and
+    Q3's ortholog-only conclusion is quoted as supporting_text in the review.
+    """
+    if not entries_csv.exists():
+        raise SystemExit(
+            f"PANTHER entries CSV not found: {entries_csv}\n"
+            f"Q3 cannot be computed without it. Fetch it with:\n"
+            f"    just fetch-panther-family {PANTHER_FAMILY}"
+        )
     rows = list(csv.DictReader(entries_csv.open()))
     subfamilies = Counter(r["subfamily"] for r in rows)
     symbols = Counter(r["gene"].upper() for r in rows)
@@ -180,6 +199,30 @@ def family_composition(entries_csv: Path | None) -> dict[str, Any]:
         "subfamilies": dict(subfamilies),
         "gene_symbols": dict(symbols),
         "single_symbol": len(symbols) == 1,
+    }
+
+
+# --------------------------------------------------------------------------
+# Q5: what does the mouse ortholog actually carry for nuclear import?
+# --------------------------------------------------------------------------
+
+def nuclear_import_evidence() -> dict[str, Any]:
+    """The mouse ortholog's protein-import annotations, which the NEW GO:0042307 rests on.
+
+    The review proposes GO:0042307 "positive regulation of protein import into nucleus" for
+    human ABRA, reasoning from the mouse record plus the MRTF translocation literature. That
+    reasoning was previously unauditable, unlike the GO:0005886 back-propagation in Q2, so
+    the same projection check is applied to the import terms.
+    """
+    terms = {
+        "GO:0006606": "protein import into nucleus",
+        "GO:0042307": "positive regulation of protein import into nucleus",
+    }
+    return {
+        "available": True,
+        "mouse_accession": MOUSE_ABRA,
+        "annotations": {go_id: mouse_annotations(go_id) for go_id in terms},
+        "terms_queried": terms,
     }
 
 
@@ -262,9 +305,25 @@ def main() -> None:
             if protein["function"]:
                 print(f"      FUNCTION: {protein['function'][:160]}")
 
+    print("\nQ5. Mouse ortholog annotations for nuclear protein import")
+    nuclear = nuclear_import_evidence()
+    for go_id, annotations in nuclear["annotations"].items():
+        label = nuclear["terms_queried"][go_id]
+        if not annotations:
+            print(f"  {go_id} {label}: NONE on mouse {nuclear['mouse_accession']}")
+        for annotation in annotations:
+            print(f"  {go_id} {annotation['evidence']:5s} {annotation['reference']}  "
+                  f"from {annotation['with_from'] or '(none)'}")
+
     args.json.write_text(
         json.dumps(
-            {"provenance": provenance, "membrane": membrane, "family": family, "costars": costars},
+            {
+                "provenance": provenance,
+                "membrane": membrane,
+                "family": family,
+                "nuclear_import": nuclear,
+                "costars": costars,
+            },
             indent=2,
         )
     )
