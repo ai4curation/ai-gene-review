@@ -129,6 +129,16 @@ PANEL: dict[str, tuple[str, str]] = {
 # rather than tuned silently, and the margin assertion below is what keeps it
 # honest - an earlier attempt at 31.0 aborted the run because NlhH was only 0.7
 # points away.
+#
+# Note what the assertion does NOT cover. It is one-directional: it is fatal only
+# when a member lands *inside* the margin. A future release that moved a genuine
+# AADAC-family member cleanly below the threshold (or a distant node member above
+# it) passes the assertion and instead flips `register_cut_matches_family` to
+# False, which is reported in RESULTS.md but does not stop the run. That is
+# deliberate - the numeric cut has to be free to disagree with the hand-assigned
+# roles, since that disagreement is the whole point of cross-checking one against
+# the other - but it means a reader must look at that flag rather than assume the
+# assertion has already vouched for the partition.
 REGISTER_IDENTITY_THRESHOLD = 31.3
 REGISTER_MIN_GAP = 0.75
 
