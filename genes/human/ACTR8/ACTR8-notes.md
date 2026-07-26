@@ -44,14 +44,26 @@ A recombinant **human** minimal core containing ARP8 slides nucleosomes
 
 The recognition itself is quantified on the purified human protein
 [PMID:22977180 "strongly prefer nucleosomes and H3-H4 tetramers over H2A-H2B dimers, suggesting that Arp8 functions as a nucleosome recognition module"].
-Human ARP8 `K_d,app`: 207-bp nucleosome **51 nM**, (H3–H4)₂ **110 nM**, H2A–H2B **555 nM**,
-30-bp dsDNA **~6.9 µM**
+**Table 2 mixes species and must be read per-species** — see §11c, where a cross-species join in my
+first draft produced an inverted conclusion. The human rows only:
+
+| ligand | HsArp8 `K_d,app` (nM) | Hill `nH` |
+|---|---|---|
+| 207-bp nucleosome | **51.0 ± 9.6** | 1.31 ± 0.4 |
+| (H3–H4)₂ | **110 ± 40.4** | 1.11 ± 0.3 |
+| H2A–H2B | **555 ± 158** | 0.91 ± 0.2 |
+| 30-bp dsDNA | **6938 ± 3448** | 2.6 ± 0.6 |
+
+`HsArp8 Δ1–33` is closely comparable (nucleosome 62.6 ± 16, `nH` 2.11 ± 0.4)
 [PMID:22977180 "All Arp8 variants bind (H3–H4)2 and nucleosomes with comparable affinity, while the interaction with H2A–H2B is"],
 [PMID:22977180 "We conclude that the contribution of Arp8 to the nucleosome-binding ability of INO80 is significant."].
-Nucleosome binding is cooperative
+The paper reports cooperativity
 [PMID:22977180 "This suggests cooperative binding of more than one Arp8 molecule per nucleosome"],
-which is the biochemical basis of UniProt's dimer statement
-`[file:human/ACTR8/ACTR8-uniprot.txt "it may act as a nucleosome recognition module within the complex."]`.
+and this is the biochemical basis of UniProt's dimer statement
+`[file:human/ACTR8/ACTR8-uniprot.txt "it may act as a nucleosome recognition module within the complex."]` —
+but note the **full-length human** value `nH` = 1.31 ± 0.4 overlaps 1; the unambiguous cooperativity is
+in `Δ1–33` (2.11 ± 0.4) and the *yeast* sub-complex (3.13 ± 0.7). The `GO:0031491` proposal therefore
+rests on the **affinity**, not on the Hill coefficient.
 
 **(b) A mitotic, INO80-independent role on condensed chromosomes.**
 [PMID:18163988 "Here we report that hArp8, but not hArp5, accumulates on mitotic chromosomes."],
@@ -369,10 +381,27 @@ IntAct `findInteractions/Q9H981`: `totalElements` **82**. Methods: `anti tag coi
   chromatin remodeling complex) has 15 participants and **both** `Q9H9F9` and `Q9Y5K5` are among
   them, alongside `Q9H981`. So every `GO:0005515` row on ACTR8 is a within-complex contact whose
   informative content is already carried by `GO:0031011`.
-- **A null worth recording:** the *most* reproducibly detected ACTR8 partner in IntAct is
-  **INO80E** (MI-score 0.79, in 5 separate publications — 16230350, 18922472, 21303910, 33961781,
-  40205054), yet no `GO:0005515` row cites it. Not a defect (curators select), but it means the
-  six protein-binding rows under-represent rather than over-represent the interaction data.
+- **A result worth recording, and a correction to my own first draft.** I initially wrote that
+  INO80E is *"the most reproducibly detected ACTR8 partner in IntAct"*. **That was false** — an
+  unverified superlative built on true constituents, which is the campaign's dominant failure
+  shape. Ranking partners by distinct supporting publications:
+
+  | partner | distinct pubs | MI-score(s) | in GOA `GO:0005515`? |
+  |---|---|---|---|
+  | YY1 | 5 | 0.80 | **no** |
+  | INO80E | 5 | 0.79 | **no** |
+  | UCHL5 | 4 | 0.35, 0.71 | yes |
+  | RUVBL1 | 4 | 0.73 | no |
+  | RUVBL2 | 4 | 0.73 | no |
+  | ACTR5 | 3 | 0.67 | yes |
+
+  YY1 ties INO80E on publication count and *beats* it on MI-score, so the superlative was wrong.
+  The corrected statement is a **stronger** finding: **both** best-attested partners are absent
+  from GOA, and the two that are recorded rank 6th and 3rd. The omission of YY1 is the sharpest
+  case — `PMID:18026119` is *already cited on this gene* for the Ino80-complex IDA, and YY1 is the
+  bait that paper used, so the contact rests on a reference GOA has in hand. Not a defect in the
+  strong sense (curators select what to annotate), but it settles the direction: these six rows
+  **under**-represent the interaction data.
 
 Handling: all six `KEEP_AS_NON_CORE`, matching how the merged siblings treated *real, replicated*
 partners (ACTR1A, ACTR1B, ACTL7A all used `KEEP_AS_NON_CORE`; `MARK_AS_OVER_ANNOTATED` was
@@ -446,6 +475,90 @@ functionally unassigned trace activity is the mirror of accepting one off a fold
 - `GO:0051052 regulation of DNA metabolic process` (ARBA) is true but wholly subsumed by the
   separately annotated `GO:0006275` and `GO:0006282`. Kept non-core rather than flagged as
   over-annotation: a redundant true parent is not an over-annotation.
+
+## 11b. Three claims of my own that a self-audit retracted
+
+Recorded because the corrections are the useful part, and because each is a *composite* claim —
+every constituent quote verbatim, the join unsupported. None would have been caught by quote
+validation.
+
+1. **"the most reproducibly detected ACTR8 partner in IntAct is INO80E"** — false; YY1 ties on
+   publication count and beats it on MI-score. See §8; the corrected version is a stronger
+   finding.
+2. **"ARP8 was the only INO80 subunit whose depletion abolished recruitment"** — the source says
+   [PMID:25299602 "among all the tested subunits only Arp8 was indispensable for recruiting the INO80 complex to DSB in human cells"].
+   The qualifier is **"tested"**. Dropping it converts a screen result into a claim about every
+   subunit. Restored in all three places the claim appears (the `GO:0006302` IBA row, the
+   `GO:0006282` row, and core function 2), and the sentence is now quoted rather than paraphrased.
+3. **"the only reported function of a nuclear actin-related protein detached from its remodelling
+   complex"** — an unverifiable negative over the whole nuclear-ARP literature. Softened to
+   "rarely reported … one of the few instances with genetic controls behind the claim", with the
+   limitation stated inline.
+
+The audit that found these was a grep for superlatives and absolutes (`the most`, `the only`,
+`never`, `none of`, `no one has`, `all N`) over every string in the review plus these notes,
+followed by re-deriving each hit from its source. Twelve numeric claims were re-derived
+independently against QuickGO, ComplexPortal, IntAct and the committed PAINT file — node census
+348/87/4 terms, MF row count 7, `GO:0005524` count 0, `PMID:23979016` 80 = 16 × 5, CPX-846 15
+participants, IntAct 82 records / 14 publications, PTHR11937 9 `GO:0005200` rows = 8 IRD + 1 IBD,
+and the two ontology-ancestry claims — all confirmed. The three failures above were all
+*qualitative* superlatives, not numbers.
+
+## 11c. The error the reviewer caught: a cross-species join inside one table
+
+Worth recording in full, because it is the single sharpest instance in this review of the failure
+class the campaign says dominates — **every constituent number verbatim and correct, the join
+invalid** — and no mechanical check could catch it.
+
+I wrote, in the `GO:0031491` NEW reason:
+
+> *"the isolated Arp8-Arp4-actin-HSA sub-complex binds nucleosomes at 64 nM, so ARP8 accounts for
+> essentially all of the module's nucleosome affinity."*
+
+Both numbers are real. The inference is not, because **`PMID:22977180` Table 2 is a mixed-species
+table** and the paper says so in its own methods sentence: it assayed *"full-length and
+N-terminally truncated human Arp8 as well as **yeast** Arp8, Arp4 and the Arp8–Arp4–actin-HSA
+sub-complex I"*. The relevant rows, 207-bp nucleosome:
+
+| protein | species | `K_d,app` (nM) |
+|---|---|---|
+| Arp8, full length | **Hs** | 51.0 ± 9.6 |
+| Arp8 | **Sc** | **314 ± 35** |
+| Arp8–Arp4–actin-HSA sub-complex | **Sc** | 63.6 ± 6.2 |
+
+I had set the human 51 nM beside the **yeast** module's 63.6 nM. Matched within species the
+comparison **inverts**: the module binds ~4.9× *tighter* than ScArp8 alone, so far from ARP8
+accounting for "essentially all" of the module's affinity, assembly *increases* it. ARP8's
+fractional contribution simply cannot be derived from these data, and the defensible statement is
+the authors' own hedged one, which I already quote.
+
+**Three further species labels were missing for the same reason**, all now fixed and each verified
+against the source:
+
+| claim | species, per the source |
+|---|---|
+| "ARP4 shows the opposite preference" (H3–H4 74.3 nM vs nucleosome 204 nM) | **Sc**Arp4 — a cross-species contrast |
+| "ARP4 does not hydrolyse ATP above background" | **yeast** Arp4; Figure 3's caption says *"yeast and human Arp8 but not for yeast Arp4"* |
+| sub-complex DNA binding "366 nM … mainly the HSA/DBINO domain" | **Sc** sub-complex; bounds the human claim only by analogy |
+
+**Generalisable lesson: when a table's header enumerates species (`Hs`/`Sc`), treat every
+cross-row comparison as cross-species until proved otherwise, and re-derive any ratio within one
+species.** The affected verdicts did **not** change — `GO:0031491` IDA with `enables` rests on
+HsArp8 at 51 ± 9.6 nM measured on the purified human protein — which is exactly why the error
+survived my own audit: it sat in the *justification*, not in the term, the evidence code or the
+qualifier, and my superlative sweep (§11b) was looking for absolutes rather than for species.
+
+Two smaller reviewer corrections accepted on the same pass:
+
+- **FDR units.** `PMID:20844764`'s cut-off is FDR **≤ 0.01 %**, not 0.01 — its Methods define
+  *"a SAM-calculated False Discovery Rate (FDR) less than or equal to 0.01%"*. This makes the donor
+  annotation **stricter** than I had described, which strengthens the finding that the source is
+  sound and the fault lies in the propagation.
+- **Boilerplate.** The shared protein-binding and Compara blocks were ~200 and ~230 words repeated
+  across 6 and 5 rows respectively, burying the per-row reasoning. Both are now compact pointers
+  into §8 and §7b, with each row keeping only what is specific to it (the 17 records from
+  `PMID:16230350`, the MI 0.67 targeted co-IP, `NbExp=5`, the YY1/INO80E ranking, the negative
+  regulatory arm, the *Ino80*-null embryonic phenotype, the three conjoined claims).
 
 ## 12. Core-vs-non-core rule applied consistently
 
