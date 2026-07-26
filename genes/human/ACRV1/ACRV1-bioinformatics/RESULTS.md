@@ -94,7 +94,48 @@ ACRV1 has a signal peptide (True) and no lipidation feature (GPI anchor: False).
 | SLURP1 | P55000 | 103 | yes | no |
 | SLURP2 | P0DP57 | 97 | yes | no |
 
-**Bearing on the review.** The GPI-anchored members (CD59, uPAR, TEX101, SPACA4, LYNX1 ...) are cell-surface receptors and modulators. ACRV1 is not anchored, consistent with the experimental finding that SP-10 partitions as a hydrophilic, *peripheral* acrosomal protein released by chaotrope but not by detergent or salt (PMID:1591355). So the family context does not license a surface-receptor molecular function for ACRV1, and the protein's own compartment is the lumen of a secretory organelle, topologically separate from the cytosol.
+**Bearing on the review.** ACRV1 is not anchored, consistent with the experimental finding that SP-10 partitions as a hydrophilic, *peripheral* acrosomal protein released by chaotrope but not by detergent or salt (PMID:1591355), and its compartment is the lumen of a secretory organelle, topologically separate from the cytosol -- which is why its cytosolic yeast-two-hybrid partners cannot meet it in vivo.
+**What this count does NOT do is separate ACRV1 from the family members whose molecular functions might otherwise be transferred to it.** PATE1, PATE4, SLURP1 and SLURP2 are unanchored too, and they are the acetylcholine-receptor modulators of section 5. Anchoring is therefore the wrong discriminator; the next subsection supplies the right one.
+
+### 3b. Reaching a cell-surface receptor: the discriminator that does work
+
+Classifying each member's UniProt subcellular locations as extracellular-accessible (any of `Secreted`, `Cell membrane`, `Cell surface`, `Membrane, caveola`): 29 of the 30 members carrying a location annotation qualify, and ACRV1 is the sole exception.
+Every one of the 11 members carrying an acetylcholine-receptor molecular function is extracellular-accessible: True.
+
+| gene | UniProt locations | extracellular-accessible | acrosomal | ACh-receptor MF |
+|---|---|---|---|---|
+| ACRV1 | Cytoplasmic vesicle, secretory vesicle, acrosome | no | yes | no |
+| CD177 | Cell membrane; Cell projection, lamellipodium; Cytoplasmic granule membrane; Membrane raft; Secreted | yes | no | no |
+| CD59 | Cell membrane; Secreted | yes | no | no |
+| GML | Cell membrane | yes | no | no |
+| LY6D | Cell membrane | yes | no | no |
+| LY6E | Cell membrane | yes | no | yes |
+| LY6G5B | Secreted | yes | no | no |
+| LY6G5C | Secreted | yes | no | no |
+| LY6G6C | Cell membrane | yes | no | no |
+| LY6G6D | Cell membrane; Cell projection, filopodium | yes | no | yes |
+| LY6H | Cell membrane | yes | no | yes |
+| LY6L | Cell membrane | yes | no | no |
+| LY6S | Cell membrane | yes | no | yes |
+| LYNX1 | Cell membrane; Cell projection, dendrite; Endoplasmic reticulum | yes | no | yes |
+| LYPD1 | Cell membrane | yes | no | yes |
+| LYPD2 | Cell membrane | yes | no | no |
+| LYPD3 | Cell membrane | yes | no | no |
+| LYPD4 | Cell membrane | yes | no | no |
+| LYPD5 | Cell membrane | yes | no | no |
+| PATE1 | Secreted | yes | no | yes |
+| PATE2 | Secreted | yes | no | no |
+| PATE3 | Secreted | yes | no | no |
+| PATE4 | Cytoplasmic vesicle, secretory vesicle, acrosome; Secreted | yes | yes | yes |
+| PINLYP | Secreted | yes | no | no |
+| PLAUR | Cell membrane; Cell projection, invadopodium membrane; Secreted | yes | no | no |
+| PSCA | Cell membrane | yes | no | yes |
+| SLURP1 | Secreted | yes | no | yes |
+| SLURP2 | Secreted | yes | no | yes |
+| SPACA4 | Cell membrane; Cytoplasmic vesicle, secretory vesicle, acrosome; Cytoplasmic vesicle, secretory vesicle, acrosome inner membrane; Cytoplasmic vesicle, secretory vesicle, acrosome outer membrane | yes | yes | no |
+| TEX101 | Cell membrane; Cytoplasmic vesicle; Cytoplasmic vesicle, secretory vesicle, acrosome; Membrane raft; Secreted | yes | yes | no |
+
+ACRV1's only annotated location is Cytoplasmic vesicle, secretory vesicle, acrosome, and it is extracellular-accessible: False. The members annotated to the acrosome are ACRV1, PATE4, SPACA4, TEX101 -- so PATE4 shares ACRV1's compartment, but PATE4 is *also* annotated as secreted, and ACRV1 is not annotated as secreted or as a cell-membrane protein at all.
 
 ## 4. ACRV1 has no close human paralogue inside the LU family
 
@@ -219,5 +260,5 @@ Those 16 proteins between them carry 15 distinct molecular-function terms, and t
 ACRV1's own experimental molecular-function annotations are GO:0005515, of which informative: **none**.
 
 **Bearing on the review.** The LU fold is a protein-interaction scaffold whose members do unrelated things -- complement regulation, urokinase receptor activity, nicotinic acetylcholine receptor modulation, laminin and integrin binding, phospholipase inhibition.
-The one function with any breadth is GO:0030550 acetylcholine receptor inhibitor activity (7/30 members: LY6E, LY6G6D, LY6H, LY6S, LYNX1, LYPD1, SLURP2), and it is worth being explicit about the two members that make this a live question rather than a dismissal: PATE1 and PATE4 carry GO:0030548 acetylcholine receptor regulator activity, and the CDD model that matches ACRV1 is named for SP-10 *and the PATE-like proteins*. So ACRV1's nearest structural neighbours do have an assigned molecular function.
-Transferring it would nonetheless be wrong on three counts computed above: the acetylcholine-receptor annotations sit in the GPI-anchored / secreted cell-surface members of the family, whereas ACRV1 has no anchor (section 3) and resides in the lumen of a secretory organelle, so it has no access to a cell-surface receptor; the term is not shared family-wide, only within one subclade that ACRV1 does not belong to (section 4); and ACRV1 has no human paralogue at subfamily resolution to inherit from. Combined with ACRV1's own experimental record -- GO:0005515 and nothing informative -- the statement "no molecular-function term is currently justifiable for ACRV1" is a tested result rather than an assumption.
+The one function with any breadth is GO:0030550 acetylcholine receptor inhibitor activity (7/30 members: LY6E, LY6G6D, LY6H, LY6S, LYNX1, LYPD1, SLURP2), and it is worth being explicit about the two members that make this a live question rather than a dismissal: PATE1 and PATE4 carry GO:0030548 acetylcholine receptor regulator activity, and the CDD model that matches ACRV1 is named for SP-10 *and the PATE-like proteins*. So ACRV1's nearest structural neighbours do have an assigned molecular function. PATE4 is closer still: it is annotated to the acrosome, the same compartment as ACRV1.
+Transferring it would nonetheless be wrong on three counts computed above, and the first is **topology, not GPI anchoring** -- PATE1, PATE4, SLURP1 and SLURP2 have no anchor either (section 3), so anchoring cannot be the discriminator. What separates them is reachability: all 11 members with an acetylcholine-receptor function are annotated to a secreted or cell-membrane location where a surface receptor can be engaged, whereas ACRV1's only annotated location is the lumen of an intact secretory organelle, with no secreted or cell-membrane assignment (section 3b). PATE4 illustrates the point rather than undermining it: it shares the acrosomal location but is *also* secreted. Second, the term is not shared family-wide, only within one subclade, and ACRV1 belongs to neither the Ly-6/LYNX/SLURP nor the PATE PANTHER subfamily (section 4). Third, ACRV1 has no human paralogue at subfamily resolution to inherit from at all. Combined with ACRV1's own experimental record -- GO:0005515 and nothing informative -- the statement "no molecular-function term is currently justifiable for ACRV1" is a tested result rather than an assumption.

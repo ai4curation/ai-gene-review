@@ -104,6 +104,22 @@ terms that argues for annotating participation (`GO:0007342`) while *not* claimi
 requirement, and against `GO:0007283 spermatogenesis`, which the KO histology and the
 immunisation result both fail to support.
 
+**Evidence code.** A function-blocking antibody is a specific inhibitor, so the inference
+runs from a perturbation phenotype, not from direct observation of the protein acting. That
+is `IMP` territory, not `IDA` — the native-versus-overexpressed distinction that first
+tempted me is not the IDA/IMP discriminator. The two proposed localisation terms stay `IDA`,
+because immunogold EM and phase partitioning *are* direct observations of where the protein is.
+
+**One bovine result deliberately not annotated.** The same antibodies also
+[PMID:8882296 "reduced the ability of capacitated spermatozoa to complete the acrosome reaction"],
+which would suggest `GO:0007340 acrosome reaction`. Against taking it: the reagents are
+anti-human antibodies applied to bovine sperm; the same abstract reports they
+[PMID:8882296 "affected the motility of capacitated spermatozoa, while not affecting the motility of noncapacitated spermatozoa"],
+so a general effect on capacitated cells is not excluded as the cause; and a protein that
+only becomes accessible *after* the acrosome reaction is awkward to place as a participant in
+triggering it. The sperm–oolemma result avoids the second objection because it used human
+sperm, a defined-epitope monoclonal, and an assay scoring binding rather than progression.
+
 ## 5. Molecular function — a tested negative, not an assumption
 
 The 1990 cloning paper concluded SP-10 was unique
@@ -118,19 +134,25 @@ family-based function. `ACRV1-bioinformatics/RESULTS.md` computes the current pi
 - The 166-residue region between the signal peptide and the domain is 18.7% Ser, 17.5%
   Glu, 13.3% Gly and is MobiDB-lite disordered over 62–181; it is the S-E-H-[GA]-S /
   S-G-E-H / [SV]-G-E-Q-[PSA] repeat block of [PMID:1693291].
-- ACRV1 is one of 11 of 30 reviewed human LU-domain proteins with no GPI anchor. The
-  anchored majority (CD59, uPAR, TEX101, SPACA4, LYNX1 …) are cell-surface receptors and
-  modulators; ACRV1's lack of an anchor matches the experimental finding that it is a
-  chaotrope-releasable peripheral protein [PMID:1591355].
+- ACRV1 is one of 11 of 30 reviewed human LU-domain proteins with no GPI anchor, matching
+  the experimental finding that it is a chaotrope-releasable peripheral protein
+  [PMID:1591355]. **But anchoring is not the discriminator I first took it for**: PATE1,
+  PATE4, SLURP1 and SLURP2 are unanchored too, and they are precisely the
+  acetylcholine-receptor modulators. The discriminator that works is reachability — all 11
+  members carrying an acetylcholine-receptor function are annotated to a secreted or
+  cell-membrane location where a surface receptor can be engaged, whereas ACRV1's only
+  annotated location is the acrosomal lumen, and it is the sole member of the family with no
+  extracellular-accessible location at all. PATE4 is the sharpest test of this and survives
+  it: it shares ACRV1's acrosomal annotation but is *also* annotated as secreted.
 - ACRV1 is a subfamily singleton in human: neither PTHR17571 nor cd23628 contains another
   reviewed human LU protein, so no paralogue-based transfer is available — only orthologue
   transfer (mouse Acrv1, baboon ACRV1, red fox FSA-ACR.1).
 - Across the family, the most widely shared experimental MF is nicotinic acetylcholine
   receptor modulation (7/30). This is the honest complication: PATE1 and PATE4 carry
   `GO:0030548`, and the CDD model matching ACRV1 is named for SP-10 *and* the PATE-like
-  proteins. Transfer is still unjustified — the aChR annotations sit in surface-exposed
-  members, ACRV1 has no anchor and sits in an organelle lumen, and the term is not
-  family-wide — but the reason has to be stated rather than assumed.
+  proteins. Transfer is still unjustified — on topology (above), on the term not being
+  family-wide, and on ACRV1 belonging to neither the Ly-6/LYNX/SLURP nor the PATE PANTHER
+  subfamily — but the reason has to be stated rather than assumed, and stated correctly.
 
 Conclusion I acted on: no MF term is currently justifiable for ACRV1. Its only
 experimental MF annotation is bare `GO:0005515`, and neither its own record nor its family
@@ -159,7 +181,12 @@ So the propagation is mechanically sound and the donor is the correct orthologue
 term chosen is three levels *less* precise than the IDA it was drawn from, and human ACRV1
 already has its own IDA to `GO:0001669`. Hence MODIFY on both rows rather than REMOVE:
 the statement is true, just needlessly vague, and the fix is to say what the donor's
-evidence says.
+evidence says. The qualifier goes with it — the replacement is `located_in GO:0001669`,
+matching the two existing rows for that term, not `is_active_in`, which presupposes a
+molecular activity ACRV1 has not been shown to have. One caveat I record rather than
+suppress: PAN-GO annotates from a restricted term set, so the vague terms may be pipeline
+policy rather than a curator's misjudgement; `TERM_SCOPING_PROBLEM` describes where the
+annotation sits relative to its evidence either way, and the question is put to GO Central.
 
 **Rows 4–8, `GO:0005515`, IPI, PMID:32814053.** IntAct REST
 (`/intact/ws/interaction/findInteractions/P26436`) shows all five GOA partners come from
@@ -222,7 +249,7 @@ out of the annotations; raised as a question instead.
 | 8 | GO:0005515 (PANK2) | IPI | MARK_AS_OVER_ANNOTATED |
 | 9 | GO:0001669 acrosomal vesicle | IDA (HPA) | ACCEPT |
 | 10 | GO:0007283 spermatogenesis | NAS | MARK_AS_OVER_ANNOTATED |
-| — | GO:0007342 fusion of sperm to egg plasma membrane involved in single fertilization | IDA (proposed) | NEW |
+| — | GO:0007342 fusion of sperm to egg plasma membrane involved in single fertilization | IMP (proposed) | NEW |
 | — | GO:0002079 inner acrosomal membrane | IDA (proposed) | NEW |
 | — | GO:0043159 acrosomal matrix | IDA (proposed) | NEW |
 
