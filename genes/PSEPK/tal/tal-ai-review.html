@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tal - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>tal</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KX1" target="_blank" class="term-link">
+                        Q88KX1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "tal";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KX1" data-a="DESCRIPTION: tal (PP_2168) encodes transaldolase, a type 1 tran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>tal (PP_2168) encodes transaldolase, a type 1 transaldolase family enzyme in the non-oxidative pentose phosphate pathway. It reversibly converts sedoheptulose 7-phosphate and glyceraldehyde 3-phosphate to erythrose 4-phosphate and fructose 6-phosphate, helping balance PPP and glycolytic sugar phosphate pools.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004801" target="_blank" class="term-link">
+                                    GO:0004801
+                                </a>
+                            </span>
+                            <span class="term-label">transaldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0004801" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the exact catalytic activity for Tal. UniProt describes the non-oxidative PPP transaldolase reaction, and GOA links the term to RHEA:17053, EC 2.2.1.2, and PANTHER:PTN002242200.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004801 is the core molecular function of tal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Transaldolase involved in the non-oxidative phase in the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004801	transaldolase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">tal / PP_2168 encodes transaldolase (EC 2.2.1.2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is compatible with the soluble bacterial enzyme, but GOA also contains the more specific cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Avoid retaining both parent cytoplasm and child cytosol as equally informative locations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is the more specific localization for this soluble central-carbon enzyme and is supported by TreeGrafter GOA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Keep as location context while the catalytic activity remains the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005829	cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad carbohydrate metabolic process term is compatible with Tal but redundant with the pentose-phosphate pathway annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006098 plus the exact transaldolase activity provide more specific biological information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0006098" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tal catalyzes a core non-oxidative PPP rearrangement, so the pentose-phosphate shunt process term is appropriate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The process term is directly supported by the enzyme&#39;s pathway step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- PATHWAY: Carbohydrate degradation; pentose phosphate pathway; D-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006098	pentose-phosphate shunt</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004801" target="_blank" class="term-link">
+                                    GO:0004801
+                                </a>
+                            </span>
+                            <span class="term-label">transaldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KX1" data-a="GO:0004801" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This manually transferred similarity annotation duplicates the same exact transaldolase activity supported by the UniProt/GOA automated entry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The duplicated evidence line supports the same correct core molecular function and should be retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/tal/tal-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0004801	transaldolase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transaldolase that converts sedoheptulose 7-phosphate and glyceraldehyde 3-phosphate to erythrose 4-phosphate and fructose 6-phosphate in the non-oxidative pentose phosphate pathway.</h3>
+                <span class="vote-buttons" data-g="Q88KX1" data-a="FUNCTION: Transaldolase that converts sedoheptulose 7-phosph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004801" target="_blank" class="term-link">
+                            transaldolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                pentose-phosphate shunt
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tal/tal-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Transaldolase involved in the non-oxidative phase in the</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tal/tal-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0004801	transaldolase activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/tal/tal-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">tal / PP_2168 encodes transaldolase (EC 2.2.1.2)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tal/tal-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for tal (Q88KX1)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes Tal as a non-oxidative PPP transaldolase.</div>
+
+                        <div class="finding-text">"Transaldolase involved in the non-oxidative phase in the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tal/tal-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for tal</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA provides the exact transaldolase activity.</div>
+
+                        <div class="finding-text">"GO:0004801	transaldolase activity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/tal/tal-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for tal</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist independently corroborates the transaldolase identity and PPP role.</div>
+
+                        <div class="finding-text">"tal / PP_2168 encodes transaldolase (EC 2.2.1.2)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(tal-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KX1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *tal* (PP_2168, UniProt Q88KX1) — Transaldolase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-15T08:19:13.033570</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="tal-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="tal-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-tal-pp_2168-uniprot-q88kx1-transaldolase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>tal</em> (PP_2168, UniProt Q88KX1) — Transaldolase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-geneprotein-identity-verification">0. Gene/Protein Identity Verification</h2>
+<p>The target is <strong>unambiguous</strong>. The UniProt record (Q88KX1) describes:<br />
+- <strong>Protein:</strong> Transaldolase (RecName), <strong>EC 2.2.1.2</strong><br />
+- <strong>Gene:</strong> <em>tal</em>; ordered locus <strong>PP_2168</strong><br />
+- <strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125)<br />
+- <strong>Family/domains:</strong> Transaldolase family, <strong>Type 1 subfamily</strong>; Aldolase_TIM (IPR013785), TAL/FSA (IPR001585), Transaldolase_1 (IPR004730), Transaldolase active-site signature (IPR018225), Pfam <strong>PF00923</strong> (TAL_FSA).</p>
+<p>Every one of these annotations is internally consistent: the gene symbol <em>tal</em>, the EC number 2.2.1.2, the Pfam/InterPro transaldolase signatures, and the "Type 1 subfamily" classification all point to the same well-characterized enzyme, transaldolase. There is <strong>no ambiguity</strong> and no conflicting gene using the same symbol. Research therefore proceeds directly on transaldolase.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>tal / PP_2168 encodes transaldolase (EC 2.2.1.2), a soluble cytoplasmic enzyme of the non-oxidative branch of the pentose phosphate pathway.</strong> Its primary function is to catalyze the reversible transfer of a three-carbon <strong>dihydroxyacetone (C3) unit</strong> from a ketose-phosphate donor (sedoheptulose-7-phosphate or fructose-6-phosphate) to an aldose-phosphate acceptor (glyceraldehyde-3-phosphate or erythrose-4-phosphate). The signature reaction is <strong>sedoheptulose-7-P + glyceraldehyde-3-P ⇌ erythrose-4-P + fructose-6-P</strong>. It is a cofactor-less class I aldolase that acts through a covalent Schiff-base intermediate on a conserved active-site lysine. In <em>P. putida</em> KT2440 — a bacterium that runs glycolysis almost entirely through the Entner–Doudoroff route — transaldolase supplies the sugar-phosphate interconversion capacity that allows operation of the cyclic <strong>EDEMP</strong> metabolic architecture, balancing carbon between catabolism and biosynthesis and contributing to NADPH supply.</p>
+<hr />
+<h2 id="2-primary-function-reaction-catalyzed-and-substrate-specificity">2. Primary Function: Reaction Catalyzed and Substrate Specificity</h2>
+<p>Transaldolase (TAL) is a near-ubiquitous enzyme of central carbon metabolism that <strong>"transfers a dihydroxyacetone group from donor compounds (fructose 6-phosphate or sedoheptulose 7-phosphate) to aldehyde acceptor compounds"</strong> (Samland &amp; Sprenger, 2009, PMID 19401148).</p>
+<ul>
+<li><strong>Group transferred:</strong> a C3 dihydroxyacetone moiety (from the ketose donor's C1–C3).</li>
+<li><strong>Donors (ketoses):</strong> sedoheptulose-7-phosphate (S7P), fructose-6-phosphate (F6P).</li>
+<li><strong>Acceptors (aldoses):</strong> glyceraldehyde-3-phosphate (G3P), erythrose-4-phosphate (E4P).</li>
+<li><strong>Canonical net reaction (EC 2.2.1.2; Rhea RHEA:17053):</strong><br />
+<code>D-sedoheptulose-7-P + D-glyceraldehyde-3-P ⇌ D-erythrose-4-P + β-D-fructose-6-P</code></li>
+<li><strong>Reversibility:</strong> the reaction is freely reversible; direction is set by mass action / cellular metabolic demand.</li>
+</ul>
+<p>The UniProt/HAMAP curated function statement for Q88KX1 (Rule MF_00492) matches exactly: <em>"Transaldolase involved in the non-oxidative phase in the pentose phosphate pathway. Catalyzes the reversible conversion of sedoheptulose-7-phosphate and D-glyceraldehyde 3-phosphate into erythrose-4-phosphate and beta-D-fructose 6-phosphate. Transaldolase is important for the balance of metabolites in the pentose-phosphate pathway."</em> It is assigned to the non-oxidative PPP as <strong>step 2 of 3</strong> (generating G3P + F6P from ribose-5-P and xylulose-5-P).</p>
+<p>Together with transketolase (which transfers C2 glycolaldehyde units), transaldolase performs the reversible carbon-shuffling reactions that interconvert 3-, 4-, 5-, 6-, and 7-carbon sugar phosphates in the <strong>non-oxidative pentose phosphate pathway (PPP)</strong> (Samland &amp; Sprenger, 2009). This lets the cell (i) route pentose phosphates back into glycolytic hexose/triose phosphates and (ii) generate erythrose-4-phosphate (aromatic amino acid / vitamin precursor) and ribose-5-phosphate (nucleotide precursor) from glycolytic intermediates.</p>
+<p>The Q88KX1 assignment to the <strong>Type 1 transaldolase subfamily</strong> is meaningful: within the transaldolase superfamily, five subfamilies are distinguished — three with proven TAL activity, one of unclear function, and a fifth comprising the related <strong>fructose-6-phosphate aldolases</strong> (Samland &amp; Sprenger, 2009). Type 1 corresponds to the classical, catalytically confirmed transaldolases (the <em>E. coli</em> TalB type), so the substrate specificity above applies directly.</p>
+<hr />
+<h2 id="3-catalytic-mechanism-and-structural-basis">3. Catalytic Mechanism and Structural Basis</h2>
+<p>Transaldolase is a <strong>class I aldolase</strong>: it is <strong>cofactor-less</strong> (no metal ion, no thiamine/PLP) and <strong>"proceeds with a Schiff base intermediate (bound dihydroxyacetone)"</strong> (Samland &amp; Sprenger, 2009, PMID 19401148).</p>
+<p>Direct structural evidence comes from the <em>E. coli</em> transaldolase B (TalB) reduced-intermediate crystal structure (Jia et al., 1997, PMID 9007983):<br />
+- The <strong>dihydroxyacetone moiety is covalently linked to the ε-amino group of Lys132</strong> at the active site — the trapped Schiff-base intermediate.<br />
+- Surrounding residues position the substrate: the C1 hydroxyl H-bonds to Asn154 and Ser176; the C3 hydroxyl interacts with Asp17 and Asn35.<br />
+- A reaction mechanism for the whole class I aldolase family was deduced from this complex.</p>
+<p>Mechanistically: the active-site lysine attacks the donor ketose carbonyl, forming a protonated Schiff base; C–C bond cleavage releases the aldose product (e.g., E4P) and leaves an enamine/carbanion-stabilized dihydroxyacetone–enzyme adduct; this then condenses with the acceptor aldose (e.g., G3P), and hydrolysis of the resulting Schiff base releases the new ketose product (e.g., F6P).</p>
+<p><strong>Structural fold:</strong> the protein adopts an (α/β)₈ <strong>TIM-barrel</strong> fold (InterPro IPR013785, Aldolase_TIM), the shared scaffold of the TAL/FSA family. Q88KX1 carries the <strong>Transaldolase active-site signature (IPR018225)</strong>, the sequence motif harboring the conserved catalytic lysine, so the <em>P. putida</em> enzyme is confidently predicted to use the identical Schiff-base chemistry by homology to TalB. UniProt annotates the <strong>quaternary structure as a homodimer</strong> (HAMAP-Rule MF_00492), as is typical for bacterial Type 1 transaldolases such as <em>E. coli</em> TalB.</p>
+<p><strong>Direct residue-level evidence in Q88KX1 (this work).</strong> I retrieved the 308-residue Q88KX1 sequence and its HAMAP-Rule annotations and verified the catalytic machinery at the sequence level:<br />
+- <strong>Lys125</strong> — active-site <strong>nucleophile that forms the Schiff-base intermediate</strong> with substrate (confirmed as a lysine in the sequence). This is the <em>P. putida</em> positional equivalent of <em>E. coli</em> TalB <strong>Lys132</strong>.<br />
+- <strong>Glu89</strong> — active-site <strong>proton donor/acceptor</strong> (confirmed as glutamate).<br />
+- <strong>Substrate-binding residues Asp17, Asn35, Lys125, Asn147, Ser169, Arg174, Ser218, Arg220.</strong> Notably <strong>Asp17 and Asn35 are conserved at the <em>identical</em> sequence positions</strong> as the TalB residues shown to contact the substrate C3 hydroxyl (Jia et al., 1997), and Asn147/Ser169 occupy the positions equivalent to TalB Asn154/Ser176 (which contact the C1 hydroxyl). The Arg174/Arg220 pair is consistent with binding of the substrate phosphate groups.</p>
+<p>This constitutes structure/evolution-based evidence — beyond bare database annotation — that PP_2168 possesses a complete, correctly positioned Type 1 transaldolase catalytic site and is catalytically competent.</p>
+<p><strong>Quantitative homology to the experimentally solved enzyme (this work).</strong> A global (Needleman–Wunsch, BLOSUM62) alignment of Q88KX1 against <em>E. coli</em> TalB (P0A870, the enzyme whose Schiff-base intermediate was crystallized) gives <strong>62.3% sequence identity and 76.3% similarity</strong> over the full length — far above the ~30% identity threshold at which mechanism and fold can be confidently transferred. Critically, <strong>all nine functional residues align one-to-one</strong> with their experimentally characterized TalB counterparts:</p>
+<table>
+<thead>
+<tr>
+<th>P. putida (Q88KX1)</th>
+<th>E. coli TalB</th>
+<th>Role (from TalB structure, Jia et al. 1997)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lys125</td>
+<td>Lys132</td>
+<td>Catalytic nucleophile — Schiff base with dihydroxyacetone</td>
+</tr>
+<tr>
+<td>Glu89</td>
+<td>Glu96</td>
+<td>Proton donor/acceptor</td>
+</tr>
+<tr>
+<td>Asp17</td>
+<td>Asp17</td>
+<td>Contacts substrate C3 hydroxyl</td>
+</tr>
+<tr>
+<td>Asn35</td>
+<td>Asn35</td>
+<td>Contacts substrate C3 hydroxyl</td>
+</tr>
+<tr>
+<td>Asn147</td>
+<td>Asn154</td>
+<td>Contacts substrate C1 hydroxyl</td>
+</tr>
+<tr>
+<td>Ser169</td>
+<td>Ser176</td>
+<td>Contacts substrate C1 hydroxyl</td>
+</tr>
+<tr>
+<td>Arg174</td>
+<td>Arg181</td>
+<td>Substrate/phosphate binding</td>
+</tr>
+<tr>
+<td>Ser218</td>
+<td>Ser226</td>
+<td>Substrate binding</td>
+</tr>
+<tr>
+<td>Arg220</td>
+<td>Arg228</td>
+<td>Substrate/phosphate binding</td>
+</tr>
+</tbody>
+</table>
+<p>This upgrades the mechanistic assignment from database annotation to a <strong>strongly homology-supported inference</strong>: the <em>P. putida</em> enzyme forms the same Lys-Schiff-base intermediate and engages the same substrate hydroxyls as the structurally characterized <em>E. coli</em> enzyme.</p>
+<hr />
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>Transaldolase functions in the <strong>cytoplasm (cytosol)</strong>. UniProt (HAMAP-Rule MF_00492) explicitly annotates the subcellular location of Q88KX1 as <strong>Cytoplasm</strong>. This is supported by strong, convergent evidence:<br />
+- The pentose phosphate pathway is a soluble cytoplasmic pathway in bacteria; its enzymes act on phosphorylated sugar intermediates that do not cross membranes.<br />
+- Transaldolase is a soluble globular protein: it has <strong>no signal peptide, no membrane-spanning region, and no lipidation/secretion signal</strong> (consistent with the TIM-barrel fold and the absence of any localization signal in the Q88KX1 domain architecture).<br />
+- All biochemically and structurally characterized transaldolases (e.g., <em>E. coli</em> TalB, human TALDO1) are soluble cytosolic proteins (Samland &amp; Sprenger, 2009; Jia et al., 1997).</p>
+<p>Thus PP_2168 carries out its catalysis in the bacterial cytoplasm, physically and functionally co-localized with the other soluble central-metabolism enzymes.</p>
+<hr />
+<h2 id="5-pathway-context-and-physiological-role-in-p-putida-kt2440">5. Pathway Context and Physiological Role in <em>P. putida</em> KT2440</h2>
+<p>Transaldolase is a core enzyme of the <strong>non-oxidative PPP</strong>, but its physiological weight in <em>P. putida</em> KT2440 is distinctive because of this organism's unusual central metabolism.</p>
+<ul>
+<li><em>P. putida</em> KT2440 <strong>lacks a functional Embden–Meyerhof–Parnas (EMP) glycolysis</strong> and catabolizes glucose almost exclusively via the <strong>Entner–Doudoroff (ED)</strong> route; ~90% of consumed sugar is converted to gluconate, entering as 6-phosphogluconate and channeled into ED (Nikel et al., 2015, PMID 26350459).</li>
+<li>Crucially, ~10% of triose phosphates are recycled back to hexose phosphates by a set of reactions that <strong>"merges activities belonging to the ED, the EMP (operating in a gluconeogenic fashion), and the pentose phosphate pathways to form an unforeseen metabolic architecture (EDEMP cycle)"</strong> (Nikel et al., 2015). Transaldolase provides the PPP carbon-rearrangement activity required for this cycle to close.</li>
+<li>The net effect of the cycle is redox-relevant: <strong>"Cells growing on glucose thus run a biochemical cycle that favors NADPH formation"</strong> (Nikel et al., 2015). The default metabolic state shows a slight catabolic overproduction of NADPH, which supports anabolism and counteracts environmental/oxidative stress — a hallmark of this robust soil bacterium.</li>
+</ul>
+<p><strong>Genomic context — a single, non-redundant transaldolase.</strong> A proteome-wide query of <em>P. putida</em> KT2440 (taxon 160488) shows that <strong>Q88KX1/PP_2168 is the only protein in the genome carrying the transaldolase/FSA Pfam domain (PF00923)</strong> and the only one annotated as transaldolase; no fructose-6-phosphate aldolase (Fsa) paralog or transaldolase isozyme exists (this work, UniProt search). Consequently, the transaldolase reaction of the non-oxidative PPP is supplied <strong>uniquely</strong> by PP_2168 — there is no genetic backup for its dihydroxyacetone-transfer activity, giving the gene a non-redundant role in sugar-phosphate balancing and erythrose-4-phosphate provision.</p>
+<p>Beyond the EDEMP cycle, transaldolase's general PPP role supplies biosynthetic precursors:<br />
+- <strong>Erythrose-4-phosphate</strong> → shikimate pathway (aromatic amino acids Phe/Tyr/Trp, folate, ubiquinone precursors).<br />
+- Linkage to <strong>ribose-5-phosphate</strong> (via the non-oxidative PPP) → nucleotide and cofactor biosynthesis.</p>
+<p>The broader significance of the transaldolase/PPP node in redox homeostasis is echoed across organisms: transaldolase and G6PDH overexpression increases NADPH-dependent oxidant defense (e.g., Ghosh et al., 2015, PMID 25690656, in <em>Leishmania</em>), and transaldolase is a recognized participant in oxidative-stress responses (Samland &amp; Sprenger, 2009). Transaldolase-type chemistry has also been recruited into specialized catabolism, such as the sulfoglycolytic "sulfo-TAL" pathway for sulfoquinovose degradation (Wei et al., 2022, PMID 36196895), underscoring the enzyme's mechanistic versatility — though in <em>P. putida</em> KT2440 the annotated role of PP_2168 is the canonical central-metabolic one.</p>
+<hr />
+<h2 id="6-evidence-summary">6. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Type of evidence</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalyzes dihydroxyacetone (C3) transfer between S7P/F6P and G3P/E4P</td>
+<td>Biochemical/enzymology review</td>
+<td>Samland &amp; Sprenger 2009 (PMID 19401148)</td>
+</tr>
+<tr>
+<td>Cofactor-less class I aldolase, Schiff-base mechanism</td>
+<td>Review + X-ray structure</td>
+<td>Samland &amp; Sprenger 2009; Jia et al. 1997 (PMID 9007983)</td>
+</tr>
+<tr>
+<td>Covalent intermediate on active-site Lys (Lys132 in TalB)</td>
+<td>Crystal structure (2.2 Å) of trapped intermediate</td>
+<td>Jia et al. 1997 (PMID 9007983)</td>
+</tr>
+<tr>
+<td>Type 1 transaldolase subfamily; TIM-barrel fold; active-site signature</td>
+<td>Sequence/domain annotation</td>
+<td>UniProt Q88KX1 / InterPro IPR004730, IPR018225, IPR013785; Pfam PF00923</td>
+</tr>
+<tr>
+<td>Catalytic Lys125 (Schiff base) + Glu89 (proton donor/acceptor); binding Asp17/Asn35/Asn147/Ser169/Arg174/Ser218/Arg220</td>
+<td>Sequence-level verification of HAMAP-annotated active site; positional homology to TalB</td>
+<td>This work (Q88KX1 sequence) + Jia et al. 1997 (PMID 9007983)</td>
+</tr>
+<tr>
+<td>Homodimer; reaction Rhea RHEA:17053; non-oxidative PPP step 2/3</td>
+<td>Curated UniProt/HAMAP-Rule MF_00492 annotation</td>
+<td>UniProt Q88KX1</td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td>UniProt/HAMAP annotation + inference from pathway + absence of targeting signals + homolog characterization</td>
+<td>UniProt Q88KX1 (SL-0086); PPP biology</td>
+</tr>
+<tr>
+<td>Functions in non-oxidative PPP / EDEMP cycle; contributes to NADPH</td>
+<td>¹³C metabolic flux analysis, enzymatic assays</td>
+<td>Nikel et al. 2015 (PMID 26350459)</td>
+</tr>
+<tr>
+<td>Sole transaldolase-family gene in KT2440 (no paralog/Fsa) → non-redundant role</td>
+<td>Proteome-wide UniProt/Pfam search</td>
+<td>This work (UniProt taxon 160488)</td>
+</tr>
+<tr>
+<td>62.3% identity to E. coli TalB; all 9 catalytic/binding residues conserved &amp; aligned</td>
+<td>Global sequence alignment (BLOSUM62)</td>
+<td>This work + Jia et al. 1997 (PMID 9007983)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-supported-vs-refuted-hypotheses">7. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1: <em>tal</em>/PP_2168 is a bona fide transaldolase (EC 2.2.1.2) catalyzing reversible C3-unit transfer in the non-oxidative PPP. <strong>Supported</strong> (domain annotation + family review).<br />
+- H2: The enzyme uses a cofactor-independent Schiff-base (class I aldolase) mechanism via an active-site lysine. <strong>Supported</strong> (structural homolog TalB).<br />
+- H3: The enzyme is cytoplasmic. <strong>Supported</strong> (inference; no targeting signals; PPP is cytosolic).<br />
+- H4: In <em>P. putida</em> KT2440 the enzyme participates in the EDEMP cycle and NADPH-favoring metabolism. <strong>Supported</strong> (flux analysis, Nikel et al. 2015).<br />
+- H5: PP_2168 is the sole (non-redundant) transaldolase in KT2440. <strong>Supported</strong> (proteome-wide Pfam PF00923 search returns only Q88KX1; no Fsa paralog).</p>
+<p><strong>Refuted / not applicable:</strong><br />
+- The gene is <strong>not</strong> ambiguous and does <strong>not</strong> correspond to an unrelated "TAL" (e.g., transcription activator-like) protein — refuted by the concordant EC number, Pfam PF00923, and Type 1 transaldolase classification.</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No enzyme-specific experimental study of PP_2168 itself</strong> (purified-protein kinetics or crystal structure) was found; the biochemical/mechanistic conclusions rest on the canonical <em>E. coli</em> TalB structure and the transaldolase family review. However, this inference is unusually strong: Q88KX1 is 62.3% identical to TalB with 100% conservation and correct alignment of every catalytic and substrate-binding residue, so the risk of mechanistic divergence is very low. Direct kinetic characterization (kcat/Km for S7P, F6P, G3P, E4P) of the <em>P. putida</em> enzyme would nonetheless confirm substrate specificity quantitatively.</li>
+<li><strong>Localization is inferred</strong>, not experimentally demonstrated for this ortholog; a proteomic/fractionation confirmation would be definitive (though the prediction is very secure).</li>
+<li><strong>Quaternary structure</strong> (homodimer, as in TalB) is predicted, not verified for Q88KX1.</li>
+<li>A <em>tal</em> deletion/flux study in <em>P. putida</em> KT2440 would directly quantify its contribution to EDEMP-cycle flux and NADPH balance; transaldolase deficiency is generally well tolerated in microorganisms (Samland &amp; Sprenger, 2009), so a knockout phenotype may be subtle and condition-dependent.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ol>
+<li>Samland AK, Sprenger GA. <em>Transaldolase: from biochemistry to human disease.</em> Int J Biochem Cell Biol. 2009. <strong>PMID 19401148</strong>.</li>
+<li>Jia J, Schörken U, Lindqvist Y, Sprenger GA, Schneider G. <em>Crystal structure of the reduced Schiff-base intermediate complex of transaldolase B from Escherichia coli: mechanistic implications for class I aldolases.</em> Protein Sci. 1997. <strong>PMID 9007983</strong>.</li>
+<li>Nikel PI, Chavarría M, Fuhrer T, Sauer U, de Lorenzo V. <em>Pseudomonas putida KT2440 strain metabolizes glucose through a cycle formed by enzymes of the Entner-Doudoroff, Embden-Meyerhof-Parnas, and pentose phosphate pathways.</em> J Biol Chem. 2015. <strong>PMID 26350459</strong>.</li>
+<li>Wei Y, Tong Y, Zhang Y. <em>New mechanisms for bacterial degradation of sulfoquinovose.</em> 2022. <strong>PMID 36196895</strong> (context for transaldolase mechanistic versatility).</li>
+<li>Ghosh et al. <em>Metabolic reconfiguration of the central glucose metabolism...</em> 2015. <strong>PMID 25690656</strong> (context: TAL/PPP in NADPH-dependent oxidant defense).</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="tal-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="tal-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KX1
+gene_symbol: tal
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  tal (PP_2168) encodes transaldolase, a type 1 transaldolase family enzyme in
+  the non-oxidative pentose phosphate pathway. It reversibly converts
+  sedoheptulose 7-phosphate and glyceraldehyde 3-phosphate to erythrose
+  4-phosphate and fructose 6-phosphate, helping balance PPP and glycolytic sugar
+  phosphate pools.
+existing_annotations:
+- term:
+    id: GO:0004801
+    label: transaldolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the exact catalytic activity for Tal. UniProt describes the
+      non-oxidative PPP transaldolase reaction, and GOA links the term to
+      RHEA:17053, EC 2.2.1.2, and PANTHER:PTN002242200.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0004801 is the core molecular function of tal.
+    supported_by:
+    - reference_id: file:PSEPK/tal/tal-uniprot.txt
+      supporting_text: Transaldolase involved in the non-oxidative phase in the
+    - reference_id: file:PSEPK/tal/tal-goa.tsv
+      supporting_text: &#34;GO:0004801\ttransaldolase activity&#34;
+    - reference_id: file:PSEPK/tal/tal-deep-research-openscientist.md
+      supporting_text: tal / PP_2168 encodes transaldolase (EC 2.2.1.2)
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm is compatible with the soluble bacterial enzyme, but GOA also
+      contains the more specific cytosol annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Avoid retaining both parent cytoplasm and child cytosol as equally
+      informative locations.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol is the more specific localization for this soluble central-carbon
+      enzyme and is supported by TreeGrafter GOA.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Keep as location context while the catalytic activity remains the core
+      function.
+    supported_by:
+    - reference_id: file:PSEPK/tal/tal-goa.tsv
+      supporting_text: &#34;GO:0005829\tcytosol&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The broad carbohydrate metabolic process term is compatible with Tal but
+      redundant with the pentose-phosphate pathway annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0006098 plus the exact transaldolase activity provide more specific
+      biological information.
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Tal catalyzes a core non-oxidative PPP rearrangement, so the
+      pentose-phosphate shunt process term is appropriate.
+    action: ACCEPT
+    reason: &gt;-
+      The process term is directly supported by the enzyme&#39;s pathway step.
+    supported_by:
+    - reference_id: file:PSEPK/tal/tal-uniprot.txt
+      supporting_text: &#34;CC   -!- PATHWAY: Carbohydrate degradation; pentose phosphate pathway; D-&#34;
+    - reference_id: file:PSEPK/tal/tal-goa.tsv
+      supporting_text: &#34;GO:0006098\tpentose-phosphate shunt&#34;
+- term:
+    id: GO:0004801
+    label: transaldolase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This manually transferred similarity annotation duplicates the same exact
+      transaldolase activity supported by the UniProt/GOA automated entry.
+    action: ACCEPT
+    reason: &gt;-
+      The duplicated evidence line supports the same correct core molecular
+      function and should be retained.
+    supported_by:
+    - reference_id: file:PSEPK/tal/tal-goa.tsv
+      supporting_text: &#34;GO:0004801\ttransaldolase activity&#34;
+core_functions:
+- description: &gt;-
+    Transaldolase that converts sedoheptulose 7-phosphate and glyceraldehyde
+    3-phosphate to erythrose 4-phosphate and fructose 6-phosphate in the
+    non-oxidative pentose phosphate pathway.
+  molecular_function:
+    id: GO:0004801
+    label: transaldolase activity
+  directly_involved_in:
+  - id: GO:0006098
+    label: pentose-phosphate shunt
+  supported_by:
+  - reference_id: file:PSEPK/tal/tal-uniprot.txt
+    supporting_text: Transaldolase involved in the non-oxidative phase in the
+  - reference_id: file:PSEPK/tal/tal-goa.tsv
+    supporting_text: &#34;GO:0004801\ttransaldolase activity&#34;
+  - reference_id: file:PSEPK/tal/tal-deep-research-openscientist.md
+    supporting_text: tal / PP_2168 encodes transaldolase (EC 2.2.1.2)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to
+    orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/tal/tal-uniprot.txt
+  title: UniProt record for tal (Q88KX1)
+  findings:
+  - statement: UniProt describes Tal as a non-oxidative PPP transaldolase.
+    supporting_text: Transaldolase involved in the non-oxidative phase in the
+- id: file:PSEPK/tal/tal-goa.tsv
+  title: QuickGO GOA annotations for tal
+  findings:
+  - statement: GOA provides the exact transaldolase activity.
+    supporting_text: &#34;GO:0004801\ttransaldolase activity&#34;
+- id: file:PSEPK/tal/tal-deep-research-openscientist.md
+  title: OpenScientist deep research report for tal
+  findings:
+  - statement: OpenScientist independently corroborates the transaldolase identity and PPP role.
+    supporting_text: tal / PP_2168 encodes transaldolase (EC 2.2.1.2)
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

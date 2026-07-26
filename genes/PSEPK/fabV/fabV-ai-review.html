@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fabV - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fabV</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88E33" target="_blank" class="term-link">
+                        Q88E33
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fabV";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88E33" data-a="DESCRIPTION: FabV is the canonical NADH-dependent enoyl-ACP red..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FabV is the canonical NADH-dependent enoyl-ACP reductase of Pseudomonas putida KT2440 type-II fatty-acid synthesis. It performs the final reduction in each elongation round, converting trans-2-enoyl-ACP to saturated acyl-ACP for re-entry into the condensing step.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004318" target="_blank" class="term-link">
+                                    GO:0004318
+                                </a>
+                            </span>
+                            <span class="term-label">enoyl-[acyl-carrier-protein] reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E33" data-a="GO:0004318" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Exact core molecular function for FabV.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt specifies reduction of an ACP-linked enoyl double bond with NADH.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabV/fabV-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Involved in the final reduction of the elongation cycle of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                    GO:0006633
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E33" data-a="GO:0006633" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core pathway assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt places FabV in FAS-II.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabV/fabV-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">fatty acid synthesis (FAS II).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E33" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent activity but redundant with the specific enoyl-ACP term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ACP-substrate and NADH-specific reductase term is available.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050343" target="_blank" class="term-link">
+                                    GO:0050343
+                                </a>
+                            </span>
+                            <span class="term-label">trans-2-enoyl-CoA reductase (NADH) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E33" data-a="GO:0050343" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Likely family-level over-annotation of a possible model-substrate activity rather than the physiological FAS-II reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reviewed UniProt specifies an ACP-linked enoyl substrate for KT2440 FabV. A characterized FabV ortholog can also reduce a crotonyl-CoA model substrate, so CoA activity is not refuted, but it has not been demonstrated for Q88E33 or established as its physiological role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabV/fabV-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">acyl carrier protein (ACP).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fabV/fabV-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Purified FabV &#34;is active with both crotonyl-ACP and the model substrate, crotonyl-CoA&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E33" data-a="GO:0051287" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding property, but ancillary to the reductase reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NADH is the recorded reductant, while enoyl-ACP reductase activity is core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NADH-dependent reduction of trans-2-enoyl-ACP to saturated acyl-ACP in the final reaction of each FAS-II elongation round.</h3>
+                <span class="vote-buttons" data-g="Q88E33" data-a="FUNCTION: NADH-dependent reduction of trans-2-enoyl-ACP to s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004318" target="_blank" class="term-link">
+                            enoyl-[acyl-carrier-protein] reductase (NADH) activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006633" target="_blank" class="term-link">
+                                fatty acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fabV/fabV-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Involved in the final reduction of the elongation cycle of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fabV/fabV-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">**FabV (Q88E33, PP_4635) is the NADH-dependent enoyl-[acyl-carrier-protein] reductase (ENR; EC 1.3.1.9) of *Pseudomonas putida* KT2440.**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fabV/fabV-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88E33 for Pseudomonas putida KT2440 fabV</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviewed UniProt identifies FabV as the final FAS-II elongation reductase.</div>
+
+                        <div class="finding-text">"Involved in the final reduction of the elongation cycle of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt specifies an ACP-linked substrate.</div>
+
+                        <div class="finding-text">"acyl carrier protein (ACP)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fabV/fabV-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK fabV</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report independently matches Q88E33 and PP_4635 to an NADH-dependent FabV enoyl-ACP reductase.</div>
+
+                        <div class="finding-text">"**FabV (Q88E33, PP_4635) is the NADH-dependent enoyl-[acyl-carrier-protein] reductase (ENR; EC 1.3.1.9) of *Pseudomonas putida* KT2440.**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No KT2440-specific FabV enzymology was located.</div>
+
+                        <div class="finding-text">"**No *P. putida* KT2440-specific enzymology** was located; all mechanistic/structural data derive from orthologs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can the NADPH-dependent PP_1852 enzyme compensate for FabV loss in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E33" data-a="Q: Can the NADPH-dependent PP_1852 enzyme compensate ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare fabV depletion with PP_1852 overexpression using acyl-ACP profiles, growth, and triclosan susceptibility.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E33" data-a="EXPERIMENT: Compare fabV depletion with PP_1852 overexpression..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fabV-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E33" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: FabV (Q88E33) — Enoyl-[acyl-carrier-protein] reductase [NADH] of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T16:52:44.657719</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="fabV-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="fabV-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-fabv-q88e33-enoyl-acyl-carrier-protein-reductase-nadh-of-pseudomonas-putida-kt2440">Functional Annotation Report: FabV (Q88E33) — Enoyl-[acyl-carrier-protein] reductase [NADH] of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <em>fabV</em> (OrderedLocusName PP_4635)<br />
+<strong>UniProt:</strong> Q88E33<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> strain ATCC 47054 / DSM 6125 / KT2440 (PSEPK)<br />
+<strong>Enzyme:</strong> Enoyl-[acyl-carrier-protein] reductase [NADH]; ENR; EC 1.3.1.9<br />
+<strong>Family:</strong> TER reductase / FabV-like NADH-dependent reductase family (InterPro IPR050048, IPR010758, IPR024906, IPR024910; Pfam PF07055 Eno-Rase_FAD_bd)<br />
+<strong>Report date:</strong> 2026-07-23</p>
+<hr />
+<h2 id="0-geneprotein-identity-verification-mandatory">0. Gene/Protein Identity Verification (MANDATORY)</h2>
+<p>The target was cross-checked against the four verification criteria before any research claims were made:</p>
+<ol>
+<li><strong>Symbol vs. description:</strong> The gene symbol <em>fabV</em> matches the UniProt description "Enoyl-[acyl-carrier-protein] reductase [NADH]" exactly. In the <em>fab</em> (fatty acid biosynthesis) nomenclature, <em>fabV</em> is the established, unambiguous name for the fourth class of enoyl-ACP reductase (ENR). This is <em>not</em> a case of symbol collision.</li>
+<li><strong>Organism:</strong> Literature confirms that <em>Pseudomonas</em> species (notably <em>P. aeruginosa</em> PAO1) carry a <em>fabV</em> gene alongside <em>fabI</em>; the <em>P. putida</em> KT2440 ortholog PP_4635/Q88E33 sits in the same lineage and enzyme family.</li>
+<li><strong>Family/domain alignment:</strong> The UniProt family assignment ("TER reductase family") and domains (Trans-2-enoyl-CoA reductase IPR010758; FabV-like NADH-b IPR050048; Eno-Rase FAD-binding PF07055) align precisely with the published FabV/TER class — larger (~400 aa) than FabI, a short-chain dehydrogenase/reductase (SDR) with a Rossmann fold and a Y-X₈-K catalytic motif.</li>
+<li><strong>No conflicting literature:</strong> The symbol <em>fabV</em> returns a single, internally consistent body of literature (all enoyl-ACP/CoA reductases). No divergent gene shares this symbol.</li>
+</ol>
+<p><strong>Conclusion:</strong> Identity is confirmed. <em>fabV</em>/PP_4635/Q88E33 is a <em>bona fide</em> FabV-class enoyl-ACP reductase. Because no <em>P. putida</em>-specific enzymological paper was located, function is established by (i) the defining biochemistry of the FabV class and (ii) direct orthology, with organism-specific inferences flagged as such.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>FabV (Q88E33, PP_4635) is the NADH-dependent enoyl-[acyl-carrier-protein] reductase (ENR; EC 1.3.1.9) of <em>Pseudomonas putida</em> KT2440.</strong> It catalyzes the <strong>final, committed reduction step of every elongation cycle of the bacterial type II fatty acid synthesis (FAS-II) pathway</strong>: the stereospecific NADH-dependent reduction of the <em>trans</em>-2 double bond of <em>trans</em>-2-enoyl-ACP to the saturated acyl-ACP. This reaction pulls each round of chain elongation to completion and thereby drives the production of the acyl chains used for membrane phospholipid biosynthesis. FabV works as a soluble, <strong>cytoplasmic monomeric enzyme</strong> within the dissociated FAS-II system. It is a member of the short-chain dehydrogenase/reductase (SDR) superfamily and defines a distinct fourth ENR class (alongside FabI, FabL, and FabK), being larger (~400 residues) and displaying a <strong>strong kinetic preference for NADH over NADPH</strong>. A hallmark of the FabV class — highly relevant in <em>Pseudomonas</em> — is <strong>intrinsic resistance to the biocide triclosan</strong>, which inhibits the alternative isozyme FabI.</p>
+<hr />
+<h2 id="2-primary-function-the-catalyzed-reaction-and-substrate-specificity">2. Primary Function: The Catalyzed Reaction and Substrate Specificity</h2>
+<h3 id="21-the-reaction">2.1 The reaction</h3>
+<p>FabV catalyzes the last of the four reactions in each round of the FAS-II elongation cycle (condensation → ketoreduction → dehydration → <strong>enoyl reduction</strong>):</p>
+<blockquote>
+<p><em>trans</em>-2-enoyl-[acyl-carrier-protein] + NADH + H⁺ → acyl-[acyl-carrier-protein] + NAD⁺   (EC 1.3.1.9)</p>
+</blockquote>
+<p>Enoyl-ACP reductase "catalyzes the last step of the fatty acid elongation cycle" and is essential because it commits the elongated intermediate to a saturated acyl chain, making elongation effectively irreversible (Massengo-Tiassé &amp; Cronan, 2008, PMID 18032386). Across the enzyme class, "FabI and its isoforms (FabL, FabK, FabV and InhA) are essential enoyl-ACP reductases" (Rana et al., 2020, PMID 32883635).</p>
+<h3 id="22-substrate-specificity-and-cofactor-preference">2.2 Substrate specificity and cofactor preference</h3>
+<ul>
+<li><strong>Acyl-chain carrier:</strong> The physiological substrate is enoyl-<strong>ACP</strong> (acyl carrier protein-linked). Purified FabV "is active with both crotonyl-ACP and the model substrate, crotonyl-CoA" (Massengo-Tiassé &amp; Cronan, 2008, PMID 18032386), confirming it accepts short-chain enoyl thioesters and elongates the growing acyl chain through successive cycles.</li>
+<li><strong>Cofactor:</strong> FabV has a "very strong preference for NADH over NADP(H)" (Massengo-Tiassé &amp; Cronan, 2008, PMID 18032386) — reflected in the UniProt name "[NADH]." This contrasts with some ENR isoforms that can use NADPH, and is mechanistically explained by an ordered mechanism in which NADH binds first (Section 3).</li>
+<li><strong>Functional equivalence to FabI:</strong> FabV is fully interchangeable with FabI at this step: heterologous <em>fabV</em> "restored fatty acid synthesis" to a conditionally lethal <em>E. coli fabI</em> mutant both in vivo and in vitro (Massengo-Tiassé &amp; Cronan, 2008, PMID 18032386), and independently, "wild-type ucFabV, but not the [catalytic] mutant, functionally replaced FabI within living cells" (Fischer et al., 2015, PMID 26683704).</li>
+</ul>
+<hr />
+<h2 id="3-catalytic-mechanism-and-structural-basis">3. Catalytic Mechanism and Structural Basis</h2>
+<h3 id="31-kinetic-mechanism">3.1 Kinetic mechanism</h3>
+<p>Detailed kinetics of the <em>Burkholderia mallei</em> ortholog show that "bmFabV catalyzes a sequential bi-bi mechanism with NADH binding first and NAD(+) dissociating last" (Lu &amp; Tonge, 2010, PMID 20055482) — an <strong>ordered bi-bi mechanism</strong> in which cofactor binding precedes and gates substrate binding. This ordering rationalizes the strong NADH preference.</p>
+<h3 id="32-active-site-chemistry">3.2 Active-site chemistry</h3>
+<p>FabV is an SDR-superfamily enzyme whose "catalytic tyrosine (Y235) and lysine (K244) residues are organized in the consensus Tyr-(Xaa)₈-Lys motif" and both "are involved in acid-base chemistry during substrate reduction," while a second lysine (K245) "has an important role in binding of the enoyl substrate" (Lu &amp; Tonge, 2010, PMID 20055482). The catalytic Tyr protonates the substrate carbonyl-derived enolate while the nicotinamide ring delivers hydride to Cα, reducing the C2=C3 double bond.</p>
+<h3 id="33-three-dimensional-architecture">3.3 Three-dimensional architecture</h3>
+<ul>
+<li>The <em>Xanthomonas oryzae</em> FabV crystal structure (1.6 Å) is "a canonical Rossmann fold architecture," with the conserved Y236/K245 Y-X₈-K motif plus additional catalytically important residues (Y53, D111, Y226; T276) (Li et al., 2011, PMID 22039545).</li>
+<li>The <em>Yersinia pestis</em> FabV structure shows "the common architecture of the short-chain dehydrogenase reductase superfamily, but contains additional structural elements that are mostly folded around the usually flexible substrate-binding loop, thereby stabilizing it in a very tight conformation that seals the active site" (Hirschbeck et al., 2012, PMID 22244758). This extra loop structure is the defining feature that makes FabV larger than FabI and underlies its distinct inhibitor profile.</li>
+<li>FabV-class enzymes and their close relatives (trans-2-enoyl-CoA reductases, TERs) "function as monomers and consist of a cofactor-binding domain and a substrate-binding domain with the catalytic active site located at the interface of the two domains" (Hu et al., 2013, PMID 23050861). The FabV/TER relationship (&gt;45% shared identity in TER structural studies; the target's family is literally "TER reductase family") confirms that Q88E33 is a monomeric two-domain reductase of this type.</li>
+</ul>
+<hr />
+<h2 id="4-localization">4. Localization</h2>
+<p>FabV carries out its function in the <strong>bacterial cytoplasm</strong>. The bacterial FAS-II system is a <em>dissociated</em> (soluble, freestanding-enzyme) system in which each reaction — including the enoyl reduction performed by FabV — occurs on ACP-tethered intermediates in the cytosol; the fully elongated acyl chains are subsequently transferred to glycerophosphate acyltransferases at the inner membrane for phospholipid assembly. Consistent with this, FabV has no predicted signal peptide or transmembrane segment (it is a soluble SDR-fold protein purified to homogeneity as a monomer; Massengo-Tiassé &amp; Cronan, 2008, PMID 18032386; Hu et al., 2013, PMID 23050861). Localization is therefore <strong>cytoplasmic/soluble</strong>, inferred from the biochemistry of the purified enzyme and the well-established topology of the FAS-II pathway.</p>
+<hr />
+<h2 id="5-biochemical-pathway-and-physiological-role">5. Biochemical Pathway and Physiological Role</h2>
+<h3 id="51-pathway-context">5.1 Pathway context</h3>
+<p>FabV operates within the <strong>type II fatty acid synthesis (FAS-II) pathway</strong>, "a crucial component of the universal bacterial fatty acid biosynthetic pathway (FasII)" (Bulai et al., 2025, PMID 40472483). In each elongation cycle: FabB/FabF condense malonyl-ACP with the growing acyl-ACP; FabG reduces the β-ketoacyl group; FabA/FabZ dehydrate the β-hydroxyacyl-ACP to <em>trans</em>-2-enoyl-ACP; and <strong>FabV (or FabI) reduces enoyl-ACP to acyl-ACP</strong>, readying it for the next condensation. The products feed directly into membrane glycerophospholipid biosynthesis.</p>
+<h3 id="52-two-enr-isozymes-in-pseudomonas">5.2 Two ENR isozymes in <em>Pseudomonas</em></h3>
+<p>A distinctive feature of <em>Pseudomonas</em> is the presence of <strong>two ENR isozymes</strong>. In <em>P. aeruginosa</em> PAO1, the organism "contains two enoyl-ACP reductase isozymes, the previously characterized FabI homologue plus a homologue of FabV" (Zhu et al., 2010, PMID 19933806), and this pathogen "co-expresses FabV with its more common isozyme FabI" (Bulai et al., 2025, PMID 40472483). By direct orthology, <em>P. putida</em> KT2440 FabV (PP_4635) is expected to act as a second, parallel ENR alongside the KT2440 FabI homolog, providing redundancy/robustness at the committed reduction step. <em>(Organism-specific inference; the deletion genetics were performed in P. aeruginosa, not P. putida.)</em></p>
+<h3 id="53-triclosan-resistance">5.3 Triclosan resistance</h3>
+<p>The biocide <strong>triclosan</strong> is a mechanism-based inhibitor of the FabI ENR but is a poor inhibitor of FabV. In <em>P. aeruginosa</em>, FabV is the actual determinant of triclosan resistance: "Upon deletion of the <em>fabV</em> gene, the mutant strain became extremely sensitive to triclosan (&gt;2,000-fold more sensitive than the wild-type strain), whereas the mutant strain lacking FabI remained completely resistant to the biocide" (Zhu et al., 2010, PMID 19933806). The structural cause is the tightly sealed substrate-binding loop of FabV, which prevents productive triclosan binding (Hirschbeck et al., 2012, PMID 22244758). <em>P. putida</em> FabV is inferred to confer the same intrinsic triclosan tolerance.</p>
+<h3 id="54-biotechnological-and-drug-target-relevance">5.4 Biotechnological and drug-target relevance</h3>
+<ul>
+<li>Because FabV is essential to FAS-II and structurally distinct from FabI, it is an actively pursued <strong>antibacterial target</strong>; diaryl-ether and 2-pyridone inhibitor series have been developed specifically against FabV (Bulai et al., 2025, PMID 40472483; Neckles et al., 2016, PMID 27136302; Hirschbeck et al., 2012, PMID 22244758).</li>
+<li>The triclosan-resistance phenotype has been exploited as an <strong>antibiotic-free plasmid-selection system</strong> ("FabV–triclosan selection") for recombinant protein production in <em>E. coli</em> (Ali et al., 2015, PMID 26642325).</li>
+<li>The closely related NADH-dependent trans-2-enoyl-CoA reductases (TER family, to which FabV belongs) are workhorse enzymes in <strong>engineered n-butanol and fatty-acid biosynthesis</strong> pathways because they drive the reduction equilibrium forward (Hu et al., 2013, PMID 23050861; Bond-Watts et al., 2012, PMID 22906002).</li>
+</ul>
+<hr />
+<h2 id="6-evidence-summary">6. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Source (PMID)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FabV = enoyl-ACP reductase, final FAS-II step</td>
+<td>Direct biochemistry; complementation of <em>E. coli fabI</em> mutant</td>
+<td>18032386</td>
+</tr>
+<tr>
+<td>Reduces enoyl-ACP/CoA; strong NADH preference</td>
+<td>Purified-enzyme assays</td>
+<td>18032386</td>
+</tr>
+<tr>
+<td>Ordered bi-bi mechanism (NADH first)</td>
+<td>Steady-state kinetics (bmFabV)</td>
+<td>20055482</td>
+</tr>
+<tr>
+<td>Y-X₈-K catalytic motif; Tyr/Lys acid–base; K245 substrate binding</td>
+<td>Site-directed mutagenesis</td>
+<td>20055482, 22039545</td>
+</tr>
+<tr>
+<td>Rossmann-fold SDR; sealed substrate loop</td>
+<td>X-ray crystallography (xoFabV 1.6 Å; ypFabV)</td>
+<td>22039545, 22244758</td>
+</tr>
+<tr>
+<td>Monomeric two-domain reductase (FabV/TER family)</td>
+<td>Crystallography + sequence analysis</td>
+<td>23050861</td>
+</tr>
+<tr>
+<td>FabV interchangeable with FabI in vivo</td>
+<td>Functional complementation</td>
+<td>18032386, 26683704</td>
+</tr>
+<tr>
+<td><em>Pseudomonas</em> carries both FabI and FabV</td>
+<td>Genome + genetics (P. aeruginosa)</td>
+<td>19933806, 40472483</td>
+</tr>
+<tr>
+<td>FabV confers triclosan resistance (&gt;2000-fold)</td>
+<td>Gene-deletion phenotype</td>
+<td>19933806</td>
+</tr>
+<tr>
+<td>Drug target / biotech tool</td>
+<td>Inhibitor SAR; selection system</td>
+<td>40472483, 27136302, 26642325</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Nature of evidence:</strong> For the <em>P. putida</em> protein specifically, function rests on <strong>strong orthology inference</strong> (family/domain identity + a large, consistent body of FabV-class enzymology). The core reaction, mechanism, cofactor preference, structure, and triclosan phenotype are supported by <strong>direct experimental evidence</strong> in closely related orthologs (<em>V. cholerae</em>, <em>P. aeruginosa</em>, <em>B. mallei</em>, <em>Y. pestis</em>, <em>X. oryzae</em>).</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- H1 — <em>fabV</em>/Q88E33 encodes an NADH-dependent enoyl-ACP reductase (EC 1.3.1.9) that performs the final reduction of the FAS-II elongation cycle. ✔ Strongly supported.<br />
+- H2 — The enzyme is a cytoplasmic, monomeric SDR-superfamily protein with a Rossmann fold and Y-X₈-K active site. ✔ Supported (structure of orthologs; soluble monomer).<br />
+- H3 — FabV prefers NADH via an ordered bi-bi mechanism. ✔ Supported.<br />
+- H4 — FabV confers intrinsic triclosan resistance and coexists with FabI in <em>Pseudomonas</em>. ✔ Supported in <em>P. aeruginosa</em>; inferred for <em>P. putida</em>.</p>
+<p><strong>Refuted / not supported:</strong><br />
+- The earlier notion that <em>Pseudomonas</em> triclosan resistance is due solely to efflux is superseded — FabV is the primary genetic determinant (Zhu et al., 2010, PMID 19933806).<br />
+- No evidence supports any function outside FAS-II enoyl reduction (e.g., no transporter, structural, or signaling role); the domain architecture and biochemistry are exclusively consistent with an ENR.</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No <em>P. putida</em> KT2440-specific enzymology</strong> was located; all mechanistic/structural data derive from orthologs. Direct enzymatic characterization, an <em>fabV</em> knockout phenotype, and a <em>P. putida</em> crystal structure would confirm inferred properties.</li>
+<li><strong>Essentiality/redundancy in KT2440</strong> is inferred from <em>P. aeruginosa</em>. Whether <em>P. putida</em> FabV is individually essential or redundant with FabI (single- vs. double-knockout lethality) should be tested.</li>
+<li><strong>Chain-length substrate profile</strong> (short vs. long enoyl-ACP preference) and precise kinetic constants for the <em>P. putida</em> enzyme are unknown.</li>
+<li><strong>Regulation</strong> (transcriptional control, condition-dependent expression relative to FabI) in <em>P. putida</em> is uncharacterized.</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ul>
+<li>Massengo-Tiassé RP, Cronan JE. <em>Vibrio cholerae</em> FabV defines a new class of enoyl-acyl carrier protein reductase. <em>J Biol Chem</em> 2008. PMID 18032386.</li>
+<li>Zhu L, Lin J, Ma J, Cronan JE, Wang H. Triclosan resistance of <em>Pseudomonas aeruginosa</em> PAO1 is due to FabV. <em>Antimicrob Agents Chemother</em> 2010. PMID 19933806.</li>
+<li>Lu H, Tonge PJ. Mechanism and inhibition of the FabV enoyl-ACP reductase from <em>Burkholderia mallei</em>. <em>Biochemistry</em> 2010. PMID 20055482.</li>
+<li>Li H, Zhang Y, et al. Crystal structure and active residues of FabV from <em>Xanthomonas oryzae</em>. 2011. PMID 22039545.</li>
+<li>Hirschbeck M, Kuper J, et al. Structure of the <em>Yersinia pestis</em> FabV. <em>Structure</em> 2012. PMID 22244758.</li>
+<li>Hu K, et al. Structures of trans-2-enoyl-CoA reductases (TER/FabV family). 2013. PMID 23050861.</li>
+<li>Rana P, et al. FabI (enoyl-ACP reductase) — a potential broad-spectrum target and its inhibitors. 2020. PMID 32883635.</li>
+<li>Bulai A, et al. SAR of diaryl-ether-based paFabV inhibitors. 2025. PMID 40472483.</li>
+<li>Fischer C, et al. ucFabV requires functional reductase activity. 2015. PMID 26683704.</li>
+<li>Neckles C, et al. Selectivity of inhibitors for <em>Y. pestis</em> FabV. 2016. PMID 27136302.</li>
+<li>Ali S, et al. FabV–Triclosan plasmid selection system. 2015. PMID 26642325.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fabV-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="fabV-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fabV-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E33" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fabv-curation-notes">fabV curation notes</h1>
+<ul>
+<li>Reviewed UniProt accession Q88E33 identifies FabV as the NADH-dependent<br />
+  final reductase of the FAS-II elongation cycle<br />
+  [file:PSEPK/fabV/fabV-uniprot.txt,<br />
+  "Involved in the final reduction of the elongation cycle of"].</li>
+<li>The exact enoyl-ACP reductase activity and fatty-acid biosynthesis are<br />
+  accepted; generic oxidoreductase activity is replaced by the exact term.</li>
+<li><code>trans-2-enoyl-CoA reductase (NADH) activity</code> is removed because FabV uses an<br />
+  ACP-linked, not CoA-linked, substrate.</li>
+<li>NAD binding is retained as ancillary.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88E33
+gene_symbol: fabV
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  FabV is the canonical NADH-dependent enoyl-ACP reductase of Pseudomonas
+  putida KT2440 type-II fatty-acid synthesis. It performs the final reduction
+  in each elongation round, converting trans-2-enoyl-ACP to saturated
+  acyl-ACP for re-entry into the condensing step.
+existing_annotations:
+- term:
+    id: GO:0004318
+    label: enoyl-[acyl-carrier-protein] reductase (NADH) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Exact core molecular function for FabV.
+    action: ACCEPT
+    reason: Reviewed UniProt specifies reduction of an ACP-linked enoyl double bond with NADH.
+    supported_by:
+    - reference_id: file:PSEPK/fabV/fabV-uniprot.txt
+      supporting_text: &#39;Involved in the final reduction of the elongation cycle of&#39;
+- term:
+    id: GO:0006633
+    label: fatty acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct core pathway assignment.
+    action: ACCEPT
+    reason: Reviewed UniProt places FabV in FAS-II.
+    supported_by:
+    - reference_id: file:PSEPK/fabV/fabV-uniprot.txt
+      supporting_text: &#39;fatty acid synthesis (FAS II).&#39;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct parent activity but redundant with the specific enoyl-ACP term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The ACP-substrate and NADH-specific reductase term is available.
+- term:
+    id: GO:0050343
+    label: trans-2-enoyl-CoA reductase (NADH) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Likely family-level over-annotation of a possible model-substrate
+      activity rather than the physiological FAS-II reaction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Reviewed UniProt specifies an ACP-linked enoyl substrate for KT2440
+      FabV. A characterized FabV ortholog can also reduce a crotonyl-CoA model
+      substrate, so CoA activity is not refuted, but it has not been
+      demonstrated for Q88E33 or established as its physiological role.
+    supported_by:
+    - reference_id: file:PSEPK/fabV/fabV-uniprot.txt
+      supporting_text: &#39;acyl carrier protein (ACP).&#39;
+    - reference_id: file:PSEPK/fabV/fabV-deep-research-openscientist.md
+      supporting_text: &gt;-
+        Purified FabV &#34;is active with both crotonyl-ACP and the model substrate,
+        crotonyl-CoA&#34;
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding property, but ancillary to the reductase reaction.
+    action: KEEP_AS_NON_CORE
+    reason: NADH is the recorded reductant, while enoyl-ACP reductase activity is core.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/fabV/fabV-uniprot.txt
+  title: UniProtKB entry Q88E33 for Pseudomonas putida KT2440 fabV
+  findings:
+  - statement: Reviewed UniProt identifies FabV as the final FAS-II elongation reductase.
+    supporting_text: &#39;Involved in the final reduction of the elongation cycle of&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt specifies an ACP-linked substrate.
+    supporting_text: &#39;acyl carrier protein (ACP).&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reviewed UniProt entry for the exact target accession.
+- id: file:PSEPK/fabV/fabV-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK fabV
+  findings:
+  - statement: &gt;-
+      The report independently matches Q88E33 and PP_4635 to an
+      NADH-dependent FabV enoyl-ACP reductase.
+    supporting_text: &gt;-
+      **FabV (Q88E33, PP_4635) is the NADH-dependent
+      enoyl-[acyl-carrier-protein] reductase (ENR; EC 1.3.1.9) of *Pseudomonas
+      putida* KT2440.**
+    reference_section_type: RESULTS
+  - statement: No KT2440-specific FabV enzymology was located.
+    supporting_text: &gt;-
+      **No *P. putida* KT2440-specific enzymology** was located; all
+      mechanistic/structural data derive from orthologs.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. Exact accession, locus, family,
+      reaction, and NADH preference agree with reviewed UniProt; claims about
+      triclosan resistance, a second FabI isozyme, structure, and kinetics
+      derive from other species and were not imported.
+core_functions:
+- description: &gt;-
+    NADH-dependent reduction of trans-2-enoyl-ACP to saturated acyl-ACP in the
+    final reaction of each FAS-II elongation round.
+  molecular_function:
+    id: GO:0004318
+    label: enoyl-[acyl-carrier-protein] reductase (NADH) activity
+  directly_involved_in:
+  - id: GO:0006633
+    label: fatty acid biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/fabV/fabV-uniprot.txt
+    supporting_text: &#39;Involved in the final reduction of the elongation cycle of&#39;
+  - reference_id: file:PSEPK/fabV/fabV-deep-research-openscientist.md
+    supporting_text: &gt;-
+      **FabV (Q88E33, PP_4635) is the NADH-dependent
+      enoyl-[acyl-carrier-protein] reductase (ENR; EC 1.3.1.9) of *Pseudomonas
+      putida* KT2440.**
+suggested_questions:
+- question: Can the NADPH-dependent PP_1852 enzyme compensate for FabV loss in KT2440?
+suggested_experiments:
+- description: &gt;-
+    Compare fabV depletion with PP_1852 overexpression using acyl-ACP profiles,
+    growth, and triclosan susceptibility.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

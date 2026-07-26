@@ -1,0 +1,3835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMNAT2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NMNAT2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BZQ4" target="_blank" class="term-link">
+                        Q9BZQ4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NMNAT2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BZQ4" data-a="DESCRIPTION: NMNAT2 (nicotinamide/nicotinate mononucleotide ade..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NMNAT2 (nicotinamide/nicotinate mononucleotide adenylyltransferase 2) is one of three human NMNAT isoforms and catalyzes the central, committed adenylyl-transfer step of NAD+ biosynthesis: it condenses nicotinamide mononucleotide (NMN) with ATP to form NAD+ (EC 2.7.7.1), and less efficiently condenses nicotinate mononucleotide (NaMN) with ATP to form deamido-NAD+ (NaAD; EC 2.7.7.18), releasing pyrophosphate in each case. This reaction is shared by the NAD+ salvage and de novo routes. The active enzyme is a Mg2+-dependent monomer. Unlike the nuclear isoform NMNAT1 and the mitochondrial NMNAT3, NMNAT2 is a cytosolic, Golgi/Golgi-derived-vesicle-membrane-associated enzyme; membrane attachment requires palmitoylation, and the protein is trafficked into axons on Golgi-derived vesicles. NMNAT2 is highly expressed in brain and is a labile, short-lived protein. Its continuous supply is a key axon-maintenance/survival factor: by sustaining local NAD+ (and consuming NMN) it keeps the pro-degenerative NADase SARM1 inactive, thereby delaying Wallerian-type axon degeneration; loss or depletion of NMNAT2 triggers axon degeneration and, in mice, perinatal lethality with severe axon defects. In cytosolic NAD+-supply roles it can also support the mono-ADP-ribosyltransferase PARP16, promoting ribosomal-protein MARylation that tunes cytoplasmic translation. Biallelic loss-of-function variants cause a human polyneuropathy with skeletal abnormalities.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004515" target="_blank" class="term-link">
+                                    GO:0004515
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0004515" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) transfer of the nicotinate-nucleotide adenylyltransferase (EC 2.7.7.18) activity across the eukaryotic NMN adenylyltransferase family. This is directly supported for human NMNAT2 by experimental assays (PMID:16118205, PMID:17402747) and by UniProt EC=2.7.7.18. One of the two core catalytic activities.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0005794" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of Golgi localization, consistent with experimental data showing NMNAT2 is associated with the cytoplasmic face of the Golgi apparatus (PMID:16118205). Golgi/Golgi-derived-vesicle association is a defining, core feature of this isoform.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000309" target="_blank" class="term-link">
+                                    GO:0000309
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamide-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000309" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) transfer of the nicotinamide-nucleotide adenylyltransferase (EC 2.7.7.1, NMN + ATP -&gt; NAD+) activity. This is the primary, evolutionarily conserved catalytic function of NMNAT2 and is experimentally confirmed for the human enzyme (PMID:16118205, PMID:17402747). Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                    GO:0034355
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process via the salvage pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0034355" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment placing NMNAT2 in NAD+ biosynthesis via the salvage pathway. NMNAT2 catalyzes the final adenylylation step (NMN -&gt; NAD+) that is shared by the salvage route; a correct and informative more-specific child of the general NAD+ biosynthetic process. Core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000139" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi membrane location mapped electronically from the UniProt Subcellular Location keyword. Correct and experimentally corroborated: NMNAT2 associates with the Golgi apparatus membrane (PMID:16118205). Core location; redundant with the EXP/TAS Golgi-membrane annotations below.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000309" target="_blank" class="term-link">
+                                    GO:0000309
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamide-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000309" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core EC 2.7.7.1 (NMN + ATP -&gt; NAD+) activity via InterPro/RHEA/EC mapping. Consistent with the experimental annotations; core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity assigned electronically from an InterPro domain (cytidylyltransferase- like fold). Not incorrect, but far too general given that the specific adenylyltransferase activities (GO:0000309, GO:0004515) are experimentally established for this protein.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004515" target="_blank" class="term-link">
+                                    GO:0004515
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0004515" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the EC 2.7.7.18 (NaMN + ATP -&gt; deamido-NAD+) activity via InterPro/RHEA/EC mapping. Experimentally confirmed for the human enzyme (PMID:16118205, PMID:17402747). Core molecular function (secondary, lower-efficiency substrate).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm location mapped from the UniProt Subcellular Location keyword. Correct and experimentally supported (PMID:16118205); NMNAT2 acts in the cytoplasm/cytosol. The more specific cytosol (GO:0005829) IDA and the Golgi-membrane annotations are more informative.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009165" target="_blank" class="term-link">
+                                    GO:0009165
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0009165" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General nucleotide biosynthetic process assigned by an ARBA machine-learning model. True but much less informative than the specific NAD+ biosynthetic process (GO:0009435) and its salvage child, which are also annotated. Kept as a correct high-level parent.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                    GO:0009435
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0009435" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ biosynthetic process assigned electronically via InterPro/UniPathway. This is the core pathway role of NMNAT2, which catalyzes the final adenylylation step of NAD+ synthesis (PMID:16118205, PMID:17402747). Core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0030424" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Axon location mapped from the UniProt Subcellular Location keyword (cell projection, axon; by similarity to mouse Q8BNJ3). Biologically appropriate: NMNAT2 is trafficked into axons on Golgi-derived vesicles and its axonal presence underlies its axon-maintenance role. Genuine but non-core relative to the enzymatic activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    GO:0030659
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0030659" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic vesicle membrane location mapped from the UniProt Subcellular Location keyword. Consistent with delivery of NMNAT2 to axons on Golgi-derived cytoplasmic vesicles (palmitoylation- dependent membrane anchoring). Duplicated by the ISS annotation below; accept as a correct location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization from Human Protein Atlas immunofluorescence (IDA). Consistent with NMNAT2 acting in the cytoplasm/cytosol and with its Golgi-membrane/vesicle association. Core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000309" target="_blank" class="term-link">
+                                    GO:0000309
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamide-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000309" data-r="PMID:16118205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental assay (Berger et al. 2005) of human NMNAT2 catalyzing NAD+ formation from NMN and ATP (EC 2.7.7.1). This is the primary, defining catalytic activity of the enzyme; the abstract states NMNAT is &#34;the central enzyme of the NAD biosynthetic pathway&#34;. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000139" data-r="PMID:16118205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental subcellular-localization study (Berger et al. 2005) placing NMNAT2 at the Golgi complex, distinguishing it from nuclear NMNAT1 and mitochondrial NMNAT3. Golgi(-membrane) association is a defining, core feature of this isoform.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000309" target="_blank" class="term-link">
+                                    GO:0000309
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinamide-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17402747" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17402747
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Initial-rate kinetics of human NMN-adenylyltransferases: sub...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000309" data-r="PMID:17402747" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental initial-rate kinetics (Sorci et al. 2007) confirming NMNAT2 as an NMN adenylyltransferase (EC 2.7.7.1) with defined substrate and metal-ion specificity. Corroborates the core NMN -&gt; NAD+ activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004515" target="_blank" class="term-link">
+                                    GO:0004515
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17402747" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17402747
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Initial-rate kinetics of human NMN-adenylyltransferases: sub...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0004515" data-r="PMID:17402747" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental kinetics (Sorci et al. 2007) confirming NMNAT2 can also use the deamidated substrate nicotinate mononucleotide (NaMN + ATP -&gt; deamido-NAD+, EC 2.7.7.18). Core molecular function (secondary substrate).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0005737" data-r="PMID:16118205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental localization (Berger et al. 2005) supporting a cytoplasmic pool of NMNAT2 in addition to its Golgi-membrane association. Correct core location; the specific cytosol (GO:0005829) term is more informative.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030659" target="_blank" class="term-link">
+                                    GO:0030659
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0030659" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic vesicle membrane location transferred by sequence similarity from mouse Nmnat2 (Q8BNJ3). Consistent with NMNAT2 being palmitoylated and delivered to axons on Golgi-derived cytoplasmic vesicles. Correct; duplicates the IEA cytoplasmic-vesicle-membrane annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061564" target="_blank" class="term-link">
+                                    GO:0061564
+                                </a>
+                            </span>
+                            <span class="term-label">axon development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30304512" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30304512
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Low levels of NMNAT2 compromise axon development and surviva...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0061564" data-r="PMID:30304512" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Axon development role, transferred by similarity to mouse Nmnat2, supported by Gilley et al. 2019: NMNAT2 is &#34;an endogenous axon maintenance factor that preserves axon health by blocking Wallerian-like axon degeneration&#34;, mice lacking it &#34;die at birth with severe axon defects&#34;, and reduced levels compromise peripheral axon development. This axon-maintenance/development role is genuine and physiologically important, but the primary evolved function is the adenylyltransferase activity, so this is kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140768" target="_blank" class="term-link">
+                                    GO:0140768
+                                </a>
+                            </span>
+                            <span class="term-label">protein ADP-ribosyltransferase-substrate adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34314702
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ribosome ADP-ribosylation inhibits translation and maintains...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0140768" data-r="PMID:34314702" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Challa et al. 2021 show NMNAT2 supports PARP16 (a mono-ADP-ribosyltransferase) activity toward ribosomal proteins, with NMNAT2 and PARP16 physically interacting and catalytically active NMNAT2 enhancing PARP16 auto-MARylation. This is a context-specific (cytosolic NAD+ supply, high-PARP16 ovarian cancer) moonlighting role largely mediated through NAD+ production rather than the core metabolic function. Experimental IDA; retained as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000766" target="_blank" class="term-link">
+                                    GO:2000766
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of cytoplasmic translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34314702
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ribosome ADP-ribosylation inhibits translation and maintains...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:2000766" data-r="PMID:34314702" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Challa et al. 2021 show NMNAT2 (via PARP16-mediated ribosomal-protein MARylation) inhibits protein synthesis in a manner dependent on its catalytic activity, tuning cytoplasmic translation and proteostasis in cancer cells. Experimental IDA, but a specialized downstream/context-specific role rather than the core NAD+-biosynthetic function; kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009165" target="_blank" class="term-link">
+                                    GO:0009165
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0009165" data-r="PMID:16118205" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (IC) of the general nucleotide biosynthetic process from the demonstrated nicotinate-nucleotide adenylyltransferase activity. Correct but high-level; the specific NAD+ biosynthetic process (GO:0009435) and its salvage child capture the role more precisely.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004515" target="_blank" class="term-link">
+                                    GO:0004515
+                                </a>
+                            </span>
+                            <span class="term-label">nicotinate-nucleotide adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0004515" data-r="PMID:16118205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental assay (Berger et al. 2005) of the EC 2.7.7.18 activity (NaMN + ATP -&gt; deamido-NAD+) for human NMNAT2. Core molecular function (secondary substrate). Redundant with the EXP annotation from PMID:17402747.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16118205
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular compartmentation and differential catalytic prop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0005794" data-r="PMID:16118205" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization (Berger et al. 2005) of NMNAT2 to the Golgi apparatus. A defining, core feature distinguishing this isoform from nuclear NMNAT1 and mitochondrial NMNAT3.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-197235
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000139" data-r="Reactome:R-HSA-197235" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author statement (NMNAT2 NaMN -&gt; NaAD reaction) placing the enzyme at the cytoplasmic face of the Golgi membrane. Consistent with the experimental Golgi localization; core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8939959
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BZQ4" data-a="GO:0000139" data-r="Reactome:R-HSA-8939959" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author statement (NMNAT2 NMN -&gt; NAD+ reaction) placing the enzyme at the Golgi membrane. Consistent with the experimental Golgi localization; core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the central adenylyl-transfer step of NAD+ biosynthesis: condensation of nicotinamide mononucleotide (NMN) with ATP to yield NAD+ and pyrophosphate (EC 2.7.7.1). This Mg2+-dependent reaction, shared by the NAD+ salvage and de novo routes, is the primary evolved function of NMNAT2.</h3>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="FUNCTION: Catalyzes the central adenylyl-transfer step of NA..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000309" target="_blank" class="term-link">
+                            nicotinamide-nucleotide adenylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                NAD+ biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034355" target="_blank" class="term-link">
+                                NAD+ biosynthetic process via the salvage pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                Golgi apparatus
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link">
+                                PMID:16118205
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">NMNAT2 and -3 were localized to the Golgi complex and the mitochondria, respectively</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NMNAT2/NMNAT2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the formation of NAD(+) from nicotinamide mononucleotide (NMN) and ATP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Also condenses nicotinate mononucleotide (NaMN) with ATP to yield deamido-NAD+ (NaAD) and pyrophosphate (EC 2.7.7.18), the same adenylyltransferase chemistry acting on the deamidated substrate with lower efficiency; feeds the deamido-NAD+ branch of NAD+ biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="FUNCTION: Also condenses nicotinate mononucleotide (NaMN) wi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004515" target="_blank" class="term-link">
+                            nicotinate-nucleotide adenylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009435" target="_blank" class="term-link">
+                                NAD+ biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                Golgi apparatus
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/NMNAT2/NMNAT2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Can also use the deamidated form; nicotinic acid mononucleotide (NaMN) as substrate but with a lower efficiency</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" target="_blank" class="term-link">
+                            PMID:16118205
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Subcellular compartmentation and differential catalytic properties of the three human nicotinamide mononucleotide adenylyltransferase isoforms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17402747" target="_blank" class="term-link">
+                            PMID:17402747
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Initial-rate kinetics of human NMN-adenylyltransferases: substrate and metal ion specificity, inhibition by products and multisubstrate analogues, and isozyme contributions to NAD+ biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30304512" target="_blank" class="term-link">
+                            PMID:30304512
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Low levels of NMNAT2 compromise axon development and survival.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" target="_blank" class="term-link">
+                            PMID:34314702
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ribosome ADP-ribosylation inhibits translation and maintains proteostasis in cancers.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-197235
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NMNAT2 transfers an adenylyl group from ATP to NAMN to yield NAAD</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8939959
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NMNAT2 transfers an adenylyl group from ATP to NMN to yield NAD+</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the axon-maintenance function of NMNAT2 fully attributable to its NAD+-biosynthetic activity (and consequent SARM1 suppression via NMN consumption), or does NMNAT2 also have activity- independent (e.g. chaperone-like) contributions to axon survival?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="Q: Is the axon-maintenance function of NMNAT2 fully a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How central is the PARP16-adaptor / translation-regulatory role of NMNAT2 outside the cancer context in which it was characterized, and is it relevant in neurons?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="Q: How central is the PARP16-adaptor / translation-re..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the spectrum and mechanism of NMNAT2-related human disease (childhood-onset polyneuropathy with skeletal abnormalities) and how does it relate to the murine perinatal-lethal axon phenotype?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="Q: What is the spectrum and mechanism of NMNAT2-relat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantify axonal NAD+/NMN and SARM1 activation in human neurons upon graded NMNAT2 depletion versus catalytic-dead (H24 / W92) rescue, to separate metabolic from non-metabolic contributions to axon survival.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="EXPERIMENT: Quantify axonal NAD+/NMN and SARM1 activation in h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural and enzyme-kinetic comparison of the three human NMNAT isoforms under matched conditions to define isoform-specific substrate preferences (NMN vs NaMN vs NMNH) relevant to compartmentalized NAD+ pools.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BZQ4" data-a="EXPERIMENT: Structural and enzyme-kinetic comparison of the th..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NMNAT2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BZQ4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nmnat2-human-review-notes">NMNAT2 (human) — review notes</h1>
+<p>UniProt: Q9BZQ4 (NMNA2_HUMAN), gene NMNAT2 (HGNC:16789), 307 aa, chromosome 1q25.<br />
+Synonyms: C1orf15, KIAA0479. EC 2.7.7.1 and EC 2.7.7.18.</p>
+<h2 id="core-identity">Core identity</h2>
+<p>NMNAT2 is one of three human nicotinamide/nicotinate mononucleotide adenylyltransferase<br />
+isoforms (NMNAT1 nuclear, NMNAT2 Golgi/cytosolic, NMNAT3 mitochondrial). It catalyzes the<br />
+central, rate-committing adenylyl-transfer step of NAD+ biosynthesis, common to both the<br />
+salvage and de novo routes:<br />
+- NMN + ATP -&gt; NAD+ + PPi (EC 2.7.7.1, GO:0000309)<br />
+- NaMN + ATP -&gt; NaAD (deamido-NAD+) + PPi (EC 2.7.7.18, GO:0004515)</p>
+<p>The UniProt record names it "Nicotinamide/nicotinic acid mononucleotide adenylyltransferase 2"<br />
+with both EC numbers experimentally supported [file:human/NMNAT2/NMNAT2-uniprot.txt "EC=2.7.7.1 {ECO:0000269|PubMed:16118205, ECO:0000269|PubMed:17402747}"].</p>
+<p>The functional summary in UniProt:<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "Nicotinamide/nicotinate-nucleotide adenylyltransferase that acts as an axon maintenance factor"]<br />
+and<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "Catalyzes the formation of NAD(+) from nicotinamide mononucleotide (NMN) and ATP"]<br />
+plus lower-efficiency use of the deamidated substrate<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "Can also use the deamidated form; nicotinic acid mononucleotide (NaMN) as substrate but with a lower efficiency"].</p>
+<h2 id="catalytic-evidence-pmid16118205-pmid17402747">Catalytic evidence (PMID:16118205, PMID:17402747)</h2>
+<p>Both are abstract-only in the local cache (<code>full_text_available: false</code>), but they are the<br />
+ECO:0000269 experimental references cited by UniProt for EC 2.7.7.1/2.7.7.18 and for the<br />
+Golgi/cytoplasm localization. UniProt attributes FUNCTION, CATALYTIC ACTIVITY,<br />
+BIOPHYSICOCHEMICAL PROPERTIES, SUBSTRATE SPECIFICITY and SUBCELLULAR LOCATION to<br />
+PubMed:16118205, and FUNCTION, CATALYTIC ACTIVITY, ACTIVITY REGULATION and COFACTOR to<br />
+PubMed:17402747 [file:human/NMNAT2/NMNAT2-uniprot.txt "RP   FUNCTION, CATALYTIC ACTIVITY, BIOPHYSICOCHEMICAL PROPERTIES, SUBSTRATE"].</p>
+<p>Berger et al. 2005 (PMID:16118205) abstract: "Nicotinamide mononucleotide adenylyltransferase<br />
+(NMNAT) is the central enzyme of the NAD biosynthetic pathway" and localized NMNAT2 "to the<br />
+Golgi complex" <a href="https://pubmed.ncbi.nlm.nih.gov/16118205" title="NMNAT2 and -3 were localized to the Golgi complex and the mitochondria, respectively">PMID:16118205</a>.</p>
+<p>Sorci et al. 2007 (PMID:17402747) abstract: gives kinetic mechanism and confirms NMNAT2 as a<br />
+Golgi apparatus isozyme of NMNAT (EC 2.7.7.1) <a href="https://pubmed.ncbi.nlm.nih.gov/17402747" title="Golgi apparatus NMNAT2">PMID:17402747</a>; NMNH<br />
+conversion by NMNAT2 is "much slower" and TrMP is not a substrate for NMNAT2, consistent with<br />
+UniProt's "Cannot use triazofurin monophosphate (TrMP) as substrate".</p>
+<p>KM values (UniProt, from PMID:16118205/17402747): NMN 32 uM, NaMN 14.5 uM, ATP 204 uM;<br />
+Mg2+ is the preferred cofactor; monomeric active form; pH optimum 6.0–9.0.</p>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>UniProt SUBCELLULAR LOCATION: Golgi apparatus membrane (lipid-anchor), cytoplasmic vesicle<br />
+membrane (lipid-anchor), cytoplasm, and cell projection/axon<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "SUBCELLULAR LOCATION: Golgi apparatus membrane"].<br />
+Delivered to axons with Golgi-derived cytoplasmic vesicles<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "Delivered to axons with Golgi-"].<br />
+Palmitoylation (Cys164/Cys165) is required for membrane association<br />
+[file:human/NMNAT2/NMNAT2-uniprot.txt "Palmitoylated; palmitoylation is required for membrane"].<br />
+Cytosolic localization is also supported by HPA immunofluorescence (GOA IDA, GO_REF:0000052,<br />
+GO:0005829). The axon and cytoplasmic-vesicle-membrane C annotations are By-similarity/ISS to<br />
+mouse Q8BNJ3, consistent with the axonal-transport biology.</p>
+<h2 id="axon-maintenance-survival-factor">Axon maintenance / survival factor</h2>
+<p>This is the best-known physiological role of NMNAT2 and is central, not incidental. UniProt:<br />
+"Axon survival factor required for the maintenance of healthy axons: acts by delaying Wallerian<br />
+axon degeneration" [file:human/NMNAT2/NMNAT2-uniprot.txt "Axon survival"]. NMNAT2 is a labile<br />
+protein whose continuous replenishment from the soma maintains axonal NAD+ and keeps the<br />
+pro-degenerative NADase SARM1 inactive; when NMNAT2 is depleted, NMN accumulates, SARM1 is<br />
+activated, and Wallerian-type axon degeneration ensues.</p>
+<p>Gilley, Mayer, Yu &amp; Coleman 2019 (PMID:30304512), abstract-only in cache, is the ISS source<br />
+reference for GO:0061564 (axon development). Abstract: "Nicotinamide mononucleotide<br />
+adenylyltransferase 2 (NMNAT2) is an endogenous axon maintenance factor that preserves axon<br />
+health by blocking Wallerian-like axon degeneration" <a href="https://pubmed.ncbi.nlm.nih.gov/30304512" title="an endogenous axon maintenance factor that preserves axon health by blocking Wallerian-like axon degeneration">PMID:30304512</a>;<br />
+"Mice lacking NMNAT2 die at birth with severe axon defects" <a href="https://pubmed.ncbi.nlm.nih.gov/30304512" title="Mice lacking NMNAT2 die at birth with severe axon defects">PMID:30304512</a>; reduced levels "compromises the development of<br />
+peripheral axons and increases their vulnerability to stresses" <a href="https://pubmed.ncbi.nlm.nih.gov/30304512" title="compromises the development of peripheral axons">PMID:30304512</a>.</p>
+<p>Turnover: NMNAT2 is degraded after neurite injury via polyubiquitination by the MYCBP2 (PHR/PAM)<br />
+E3 ligase after recognition by FBXO45 [file:human/NMNAT2/NMNAT2-uniprot.txt "Degradation is<br />
+caused by polyubiquitination by MYCBP2 after recognition"] (PMID:29643511, PMID:29997255).</p>
+<p>Disease: biallelic loss-of-function NMNAT2 variants cause a childhood-onset polyneuropathy with<br />
+erythromelalgia / skeletal abnormalities (not in cached publications; consistent with the axon-<br />
+maintenance role). Recorded as a suggested-question / disease context, not annotated here.</p>
+<h2 id="parp16-adaptor-translation-role-pmid34314702-full-text-available">PARP16 adaptor / translation role (PMID:34314702, full text available)</h2>
+<p>Challa et al. 2021 (Cell) is the IDA source for two annotations:<br />
+- GO:0140768 protein ADP-ribosyltransferase-substrate adaptor activity<br />
+- GO:2000766 negative regulation of cytoplasmic translation</p>
+<p>Full text supports both. NMNAT2 supplies cytosolic NAD+ that "supports the catalytic activity of<br />
+the mono(ADP-ribosyl) transferase (MART) PARP-16, which mono(ADP-ribosyl)ates (MARylates)<br />
+ribosomal proteins" <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" title="NMNAT-2 supports the catalytic activity of the mono(ADP-ribosyl) transferase (MART) PARP-16, which mono(ADP-ribosyl)ates (MARylates) ribosomal proteins">PMID:34314702</a>. NMNAT2<br />
+and PARP-16 physically interact and "only wild-type and not catalytically dead mutant NMNAT-2<br />
+(W92G) enhances PARP-16 auto-MARylation" <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" title="only wild-type and not catalytically dead mutant NMNAT-2 (W92G) enhances PARP-16 auto-MARylation">PMID:34314702</a>. Functionally, "NMNAT-2, which<br />
+supports ribosomal protein MARylation, acts to inhibit protein synthesis in a manner that<br />
+depends on its catalytic activity" <a href="https://pubmed.ncbi.nlm.nih.gov/34314702" title="acts to inhibit protein synthesis in a manner that depends on its catalytic activity">PMID:34314702</a>.</p>
+<p>Note on GO:0140768: the effect is mediated through NAD+ production feeding PARP16 (catalytic-<br />
+activity dependent, W92G-sensitive), plus a direct NMNAT2–PARP16 interaction. This is a<br />
+context-specific (ovarian cancer / high-PARP16) moonlighting activity, not the core evolved<br />
+function; the primary MF remains the NMN/NaMN adenylyltransferase. Both annotations are<br />
+experimental IDA and are KEPT (non-core). Retained per policy (do not REMOVE experimental<br />
+annotations); marked KEEP_AS_NON_CORE.</p>
+<h2 id="annotation-by-annotation-disposition-summary">Annotation-by-annotation disposition (summary)</h2>
+<p>Core MF (adenylyltransferase): GO:0000309 and GO:0004515.<br />
+Core BP: GO:0009435 NAD+ biosynthetic process (and salvage-route child GO:0034355).<br />
+Core location: Golgi apparatus / Golgi membrane / cytosol.<br />
+Non-core but genuine: axon development (GO:0061564), axon/cytoplasmic-vesicle-membrane location,<br />
+PARP16 adaptor (GO:0140768), negative regulation of cytoplasmic translation (GO:2000766),<br />
+nucleotide biosynthetic process (GO:0009165, general parent).<br />
+Over-annotated / too-general: GO:0003824 catalytic activity (IEA, root-level MF).</p>
+<h2 id="term-label-verifications-ols-2026-07">Term label verifications (OLS, 2026-07)</h2>
+<ul>
+<li>GO:0000309 nicotinamide-nucleotide adenylyltransferase activity — current, matches.</li>
+<li>GO:0004515 nicotinate-nucleotide adenylyltransferase activity — current, matches.</li>
+<li>GO:0009435 NAD+ biosynthetic process — current.</li>
+<li>GO:0034355 NAD+ biosynthetic process via the salvage pathway — current.</li>
+<li>GO:0061564 axon development — current (covers axonogenesis + axon regeneration).</li>
+<li>GO:2000766 negative regulation of cytoplasmic translation — current.</li>
+<li>GO:0140768 protein ADP-ribosyltransferase-substrate adaptor activity — current.</li>
+<li>GO:0005794 Golgi apparatus / GO:0000139 Golgi membrane — current.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BZQ4
+gene_symbol: NMNAT2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  NMNAT2 (nicotinamide/nicotinate mononucleotide adenylyltransferase 2) is one of three
+  human NMNAT isoforms and catalyzes the central, committed adenylyl-transfer step of NAD+
+  biosynthesis: it condenses nicotinamide mononucleotide (NMN) with ATP to form NAD+
+  (EC 2.7.7.1), and less efficiently condenses nicotinate mononucleotide (NaMN) with ATP to
+  form deamido-NAD+ (NaAD; EC 2.7.7.18), releasing pyrophosphate in each case. This reaction
+  is shared by the NAD+ salvage and de novo routes. The active enzyme is a Mg2+-dependent
+  monomer. Unlike the nuclear isoform NMNAT1 and the mitochondrial NMNAT3, NMNAT2 is a
+  cytosolic, Golgi/Golgi-derived-vesicle-membrane-associated enzyme; membrane attachment
+  requires palmitoylation, and the protein is trafficked into axons on Golgi-derived vesicles.
+  NMNAT2 is highly expressed in brain and is a labile, short-lived protein. Its continuous
+  supply is a key axon-maintenance/survival factor: by sustaining local NAD+ (and consuming
+  NMN) it keeps the pro-degenerative NADase SARM1 inactive, thereby delaying Wallerian-type
+  axon degeneration; loss or depletion of NMNAT2 triggers axon degeneration and, in mice,
+  perinatal lethality with severe axon defects. In cytosolic NAD+-supply roles it can also
+  support the mono-ADP-ribosyltransferase PARP16, promoting ribosomal-protein MARylation that
+  tunes cytoplasmic translation. Biallelic loss-of-function variants cause a human polyneuropathy
+  with skeletal abnormalities.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9BZQ4-1
+- name: &#39;2&#39;
+  id: Q9BZQ4-2
+  sequence_note: VSP_015571
+existing_annotations:
+- term:
+    id: GO:0004515
+    label: nicotinate-nucleotide adenylyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) transfer of the nicotinate-nucleotide adenylyltransferase (EC 2.7.7.18)
+      activity across the eukaryotic NMN adenylyltransferase family. This is directly supported for
+      human NMNAT2 by experimental assays (PMID:16118205, PMID:17402747) and by UniProt EC=2.7.7.18.
+      One of the two core catalytic activities.
+    action: ACCEPT
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment of Golgi localization, consistent with experimental data showing
+      NMNAT2 is associated with the cytoplasmic face of the Golgi apparatus (PMID:16118205).
+      Golgi/Golgi-derived-vesicle association is a defining, core feature of this isoform.
+    action: ACCEPT
+- term:
+    id: GO:0000309
+    label: nicotinamide-nucleotide adenylyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) transfer of the nicotinamide-nucleotide adenylyltransferase (EC 2.7.7.1,
+      NMN + ATP -&gt; NAD+) activity. This is the primary, evolutionarily conserved catalytic function
+      of NMNAT2 and is experimentally confirmed for the human enzyme (PMID:16118205, PMID:17402747).
+      Core molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment placing NMNAT2 in NAD+ biosynthesis via the salvage pathway. NMNAT2
+      catalyzes the final adenylylation step (NMN -&gt; NAD+) that is shared by the salvage route; a
+      correct and informative more-specific child of the general NAD+ biosynthetic process. Core
+      biological process.
+    action: ACCEPT
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Golgi membrane location mapped electronically from the UniProt Subcellular Location keyword.
+      Correct and experimentally corroborated: NMNAT2 associates with the Golgi apparatus membrane
+      (PMID:16118205). Core location; redundant with the EXP/TAS Golgi-membrane annotations below.
+    action: ACCEPT
+- term:
+    id: GO:0000309
+    label: nicotinamide-nucleotide adenylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core EC 2.7.7.1 (NMN + ATP -&gt; NAD+) activity via InterPro/RHEA/EC
+      mapping. Consistent with the experimental annotations; core molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level catalytic activity assigned electronically from an InterPro domain (cytidylyltransferase-
+      like fold). Not incorrect, but far too general given that the specific adenylyltransferase
+      activities (GO:0000309, GO:0004515) are experimentally established for this protein.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004515
+    label: nicotinate-nucleotide adenylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the EC 2.7.7.18 (NaMN + ATP -&gt; deamido-NAD+) activity via InterPro/RHEA/EC
+      mapping. Experimentally confirmed for the human enzyme (PMID:16118205, PMID:17402747). Core
+      molecular function (secondary, lower-efficiency substrate).
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasm location mapped from the UniProt Subcellular Location keyword. Correct and
+      experimentally supported (PMID:16118205); NMNAT2 acts in the cytoplasm/cytosol. The more
+      specific cytosol (GO:0005829) IDA and the Golgi-membrane annotations are more informative.
+    action: ACCEPT
+- term:
+    id: GO:0009165
+    label: nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General nucleotide biosynthetic process assigned by an ARBA machine-learning model. True but
+      much less informative than the specific NAD+ biosynthetic process (GO:0009435) and its salvage
+      child, which are also annotated. Kept as a correct high-level parent.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0009435
+    label: NAD+ biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAD+ biosynthetic process assigned electronically via InterPro/UniPathway. This is the core
+      pathway role of NMNAT2, which catalyzes the final adenylylation step of NAD+ synthesis
+      (PMID:16118205, PMID:17402747). Core biological process.
+    action: ACCEPT
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Axon location mapped from the UniProt Subcellular Location keyword (cell projection, axon;
+      by similarity to mouse Q8BNJ3). Biologically appropriate: NMNAT2 is trafficked into axons on
+      Golgi-derived vesicles and its axonal presence underlies its axon-maintenance role. Genuine
+      but non-core relative to the enzymatic activity.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0030659
+    label: cytoplasmic vesicle membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic vesicle membrane location mapped from the UniProt Subcellular Location keyword.
+      Consistent with delivery of NMNAT2 to axons on Golgi-derived cytoplasmic vesicles (palmitoylation-
+      dependent membrane anchoring). Duplicated by the ISS annotation below; accept as a correct
+      location.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol localization from Human Protein Atlas immunofluorescence (IDA). Consistent with NMNAT2
+      acting in the cytoplasm/cytosol and with its Golgi-membrane/vesicle association. Core location.
+    action: ACCEPT
+- term:
+    id: GO:0000309
+    label: nicotinamide-nucleotide adenylyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16118205
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental assay (Berger et al. 2005) of human NMNAT2 catalyzing NAD+ formation from
+      NMN and ATP (EC 2.7.7.1). This is the primary, defining catalytic activity of the enzyme; the
+      abstract states NMNAT is &#34;the central enzyme of the NAD biosynthetic pathway&#34;. Core molecular
+      function.
+    action: ACCEPT
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: EXP
+  original_reference_id: PMID:16118205
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental subcellular-localization study (Berger et al. 2005) placing NMNAT2 at the Golgi
+      complex, distinguishing it from nuclear NMNAT1 and mitochondrial NMNAT3. Golgi(-membrane)
+      association is a defining, core feature of this isoform.
+    action: ACCEPT
+- term:
+    id: GO:0000309
+    label: nicotinamide-nucleotide adenylyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17402747
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental initial-rate kinetics (Sorci et al. 2007) confirming NMNAT2 as an NMN
+      adenylyltransferase (EC 2.7.7.1) with defined substrate and metal-ion specificity. Corroborates
+      the core NMN -&gt; NAD+ activity.
+    action: ACCEPT
+- term:
+    id: GO:0004515
+    label: nicotinate-nucleotide adenylyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17402747
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental kinetics (Sorci et al. 2007) confirming NMNAT2 can also use the deamidated
+      substrate nicotinate mononucleotide (NaMN + ATP -&gt; deamido-NAD+, EC 2.7.7.18). Core molecular
+      function (secondary substrate).
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:16118205
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental localization (Berger et al. 2005) supporting a cytoplasmic pool of NMNAT2 in
+      addition to its Golgi-membrane association. Correct core location; the specific cytosol
+      (GO:0005829) term is more informative.
+    action: ACCEPT
+- term:
+    id: GO:0030659
+    label: cytoplasmic vesicle membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic vesicle membrane location transferred by sequence similarity from mouse Nmnat2
+      (Q8BNJ3). Consistent with NMNAT2 being palmitoylated and delivered to axons on Golgi-derived
+      cytoplasmic vesicles. Correct; duplicates the IEA cytoplasmic-vesicle-membrane annotation.
+    action: ACCEPT
+- term:
+    id: GO:0061564
+    label: axon development
+  evidence_type: ISS
+  original_reference_id: PMID:30304512
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Axon development role, transferred by similarity to mouse Nmnat2, supported by Gilley et al.
+      2019: NMNAT2 is &#34;an endogenous axon maintenance factor that preserves axon health by blocking
+      Wallerian-like axon degeneration&#34;, mice lacking it &#34;die at birth with severe axon defects&#34;, and
+      reduced levels compromise peripheral axon development. This axon-maintenance/development role is
+      genuine and physiologically important, but the primary evolved function is the adenylyltransferase
+      activity, so this is kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0140768
+    label: protein ADP-ribosyltransferase-substrate adaptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:34314702
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Challa et al. 2021 show NMNAT2 supports PARP16 (a mono-ADP-ribosyltransferase) activity toward
+      ribosomal proteins, with NMNAT2 and PARP16 physically interacting and catalytically active NMNAT2
+      enhancing PARP16 auto-MARylation. This is a context-specific (cytosolic NAD+ supply, high-PARP16
+      ovarian cancer) moonlighting role largely mediated through NAD+ production rather than the core
+      metabolic function. Experimental IDA; retained as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:2000766
+    label: negative regulation of cytoplasmic translation
+  evidence_type: IDA
+  original_reference_id: PMID:34314702
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Challa et al. 2021 show NMNAT2 (via PARP16-mediated ribosomal-protein MARylation) inhibits
+      protein synthesis in a manner dependent on its catalytic activity, tuning cytoplasmic translation
+      and proteostasis in cancer cells. Experimental IDA, but a specialized downstream/context-specific
+      role rather than the core NAD+-biosynthetic function; kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0009165
+    label: nucleotide biosynthetic process
+  evidence_type: IC
+  original_reference_id: PMID:16118205
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator inference (IC) of the general nucleotide biosynthetic process from the demonstrated
+      nicotinate-nucleotide adenylyltransferase activity. Correct but high-level; the specific NAD+
+      biosynthetic process (GO:0009435) and its salvage child capture the role more precisely.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004515
+    label: nicotinate-nucleotide adenylyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16118205
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental assay (Berger et al. 2005) of the EC 2.7.7.18 activity (NaMN + ATP -&gt;
+      deamido-NAD+) for human NMNAT2. Core molecular function (secondary substrate). Redundant with the
+      EXP annotation from PMID:17402747.
+    action: ACCEPT
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IDA
+  original_reference_id: PMID:16118205
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental localization (Berger et al. 2005) of NMNAT2 to the Golgi apparatus. A
+      defining, core feature distinguishing this isoform from nuclear NMNAT1 and mitochondrial NMNAT3.
+    action: ACCEPT
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-197235
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author statement (NMNAT2 NaMN -&gt; NaAD reaction) placing the enzyme at the
+      cytoplasmic face of the Golgi membrane. Consistent with the experimental Golgi localization; core
+      location.
+    action: ACCEPT
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8939959
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author statement (NMNAT2 NMN -&gt; NAD+ reaction) placing the enzyme at the Golgi
+      membrane. Consistent with the experimental Golgi localization; core location.
+    action: ACCEPT
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16118205
+  title: Subcellular compartmentation and differential catalytic properties of the
+    three human nicotinamide mononucleotide adenylyltransferase isoforms.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary experimental characterization of the three human NMNAT isoforms; establishes NMNAT2 as
+      a Golgi-localized NMN/NaMN adenylyltransferase (central enzyme of NAD biosynthesis). Cited by
+      UniProt as ECO:0000269 for EC 2.7.7.1/2.7.7.18 and Golgi/cytoplasm localization. Cached record
+      is abstract-only (full_text_available: false); annotations anchored to the GOA/UniProt evidence
+      codes and abstract.
+- id: PMID:17402747
+  title: &#39;Initial-rate kinetics of human NMN-adenylyltransferases: substrate and metal
+    ion specificity, inhibition by products and multisubstrate analogues, and isozyme
+    contributions to NAD+ biosynthesis.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Detailed initial-rate kinetics of the three human NMNAT isozymes, including Golgi NMNAT2
+      (EC 2.7.7.1). Cited by UniProt as ECO:0000269 for catalytic activity, substrate/metal-ion
+      specificity, and activity regulation. Cached record abstract-only.
+- id: PMID:30304512
+  title: Low levels of NMNAT2 compromise axon development and survival.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes NMNAT2 as an endogenous axon maintenance factor that blocks Wallerian-like axon
+      degeneration; Nmnat2-null mice die at birth with severe axon defects, and reduced levels
+      compromise peripheral axon development and survival. ISS source for the human GO:0061564 (axon
+      development) annotation. Cached record abstract-only.
+- id: PMID:34314702
+  title: Ribosome ADP-ribosylation inhibits translation and maintains proteostasis
+    in cancers.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available and verified. Shows cytosolic NAD+ synthesis by NMNAT2 supports PARP16
+      (a MART) MARylation of ribosomal proteins, thereby inhibiting cytoplasmic translation and
+      maintaining proteostasis in ovarian cancer. Direct support for the GO:0140768 (ADP-
+      ribosyltransferase-substrate adaptor) and GO:2000766 (negative regulation of cytoplasmic
+      translation) IDA annotations. A context-specific moonlighting role, not the core metabolic
+      function.
+- id: Reactome:R-HSA-197235
+  title: NMNAT2 transfers an adenylyl group from ATP to NAMN to yield NAAD
+  findings: []
+- id: Reactome:R-HSA-8939959
+  title: NMNAT2 transfers an adenylyl group from ATP to NMN to yield NAD+
+  findings: []
+core_functions:
+- description: &gt;-
+    Catalyzes the central adenylyl-transfer step of NAD+ biosynthesis: condensation of nicotinamide
+    mononucleotide (NMN) with ATP to yield NAD+ and pyrophosphate (EC 2.7.7.1). This Mg2+-dependent
+    reaction, shared by the NAD+ salvage and de novo routes, is the primary evolved function of NMNAT2.
+  supported_by:
+  - reference_id: PMID:16118205
+    supporting_text: &gt;-
+      NMNAT2 and -3 were localized to the Golgi complex and the mitochondria, respectively
+  - reference_id: file:human/NMNAT2/NMNAT2-uniprot.txt
+    supporting_text: &gt;-
+      Catalyzes the formation of NAD(+) from nicotinamide mononucleotide (NMN) and ATP
+  molecular_function:
+    id: GO:0000309
+    label: nicotinamide-nucleotide adenylyltransferase activity
+  directly_involved_in:
+  - id: GO:0009435
+    label: NAD+ biosynthetic process
+  - id: GO:0034355
+    label: NAD+ biosynthetic process via the salvage pathway
+  locations:
+  - id: GO:0005794
+    label: Golgi apparatus
+  - id: GO:0000139
+    label: Golgi membrane
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Also condenses nicotinate mononucleotide (NaMN) with ATP to yield deamido-NAD+ (NaAD) and
+    pyrophosphate (EC 2.7.7.18), the same adenylyltransferase chemistry acting on the deamidated
+    substrate with lower efficiency; feeds the deamido-NAD+ branch of NAD+ biosynthesis.
+  supported_by:
+  - reference_id: file:human/NMNAT2/NMNAT2-uniprot.txt
+    supporting_text: &gt;-
+      Can also use the deamidated form; nicotinic acid mononucleotide (NaMN) as substrate but with a
+      lower efficiency
+  molecular_function:
+    id: GO:0004515
+    label: nicotinate-nucleotide adenylyltransferase activity
+  directly_involved_in:
+  - id: GO:0009435
+    label: NAD+ biosynthetic process
+  locations:
+  - id: GO:0005794
+    label: Golgi apparatus
+  - id: GO:0005829
+    label: cytosol
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is the axon-maintenance function of NMNAT2 fully attributable to its NAD+-biosynthetic activity
+    (and consequent SARM1 suppression via NMN consumption), or does NMNAT2 also have activity-
+    independent (e.g. chaperone-like) contributions to axon survival?
+- question: &gt;-
+    How central is the PARP16-adaptor / translation-regulatory role of NMNAT2 outside the cancer
+    context in which it was characterized, and is it relevant in neurons?
+- question: &gt;-
+    What is the spectrum and mechanism of NMNAT2-related human disease (childhood-onset polyneuropathy
+    with skeletal abnormalities) and how does it relate to the murine perinatal-lethal axon phenotype?
+suggested_experiments:
+- description: &gt;-
+    Quantify axonal NAD+/NMN and SARM1 activation in human neurons upon graded NMNAT2 depletion versus
+    catalytic-dead (H24 / W92) rescue, to separate metabolic from non-metabolic contributions to axon
+    survival.
+- description: &gt;-
+    Structural and enzyme-kinetic comparison of the three human NMNAT isoforms under matched conditions
+    to define isoform-specific substrate preferences (NMN vs NaMN vs NMNH) relevant to compartmentalized
+    NAD+ pools.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

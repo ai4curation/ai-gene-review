@@ -1,0 +1,3474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UPP1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q16831" target="_blank" class="term-link">
+                        Q16831
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UPP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q16831" data-a="DESCRIPTION: UPP1 (uridine phosphorylase 1) is a cytosolic enzy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UPP1 (uridine phosphorylase 1) is a cytosolic enzyme of the PNP/UDP phosphorylase family that catalyzes the reversible phosphorolysis of uridine, and to a lesser extent 2&#39;-deoxyuridine, into uracil plus (2-deoxy)-alpha-D-ribose 1-phosphate (EC 2.4.2.3). This is a central reaction of pyrimidine nucleoside salvage and catabolism: the liberated uracil can be salvaged for pyrimidine nucleotide synthesis or degraded reductively (by DPYD, DPYS and UPB1), while the ribose 1-phosphate feeds the pentose/energy pool. The active enzyme is a homodimer. UPP1 activity is important pharmacologically because it activates fluoropyrimidine chemotherapeutics such as 5-fluorouracil and its prodrug capecitabine, and its expression is induced by vitamin D3 and inflammatory cytokines (TNF, IL1, IFNG).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004850" target="_blank" class="term-link">
+                                    GO:0004850
+                                </a>
+                            </span>
+                            <span class="term-label">uridine phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0004850" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Phylogenetic (IBA) assignment of the family-defining uridine phosphorylase activity, in agreement with the direct experimental IDA (PMID:7488099) and the UniProt catalytic-activity/EC:2.4.2.3 annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible phosphorylytic cleavage of uridine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component. UPP1 is a soluble cytosolic enzyme (no signal/transmembrane features), consistent with the Reactome &#34;Cytosolic uridine phosphorylase&#34; description and the family-conserved localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74372
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006218" target="_blank" class="term-link">
+                                    GO:0006218
+                                </a>
+                            </span>
+                            <span class="term-label">uridine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0006218" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Phosphorolysis of uridine to uracil and ribose-1-phosphate is the committed step of uridine catabolism; consistent with the direct experimental IDA (PMID:7488099).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible phosphorylytic cleavage of uridine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity term. Not informative given the specific GO:0004850 (uridine phosphorylase activity) annotation, which is experimentally supported. Over-general, superseded by the specific MF.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004850" target="_blank" class="term-link">
+                                    GO:0004850
+                                </a>
+                            </span>
+                            <span class="term-label">uridine phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0004850" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant electronic (ARBA/Rhea/EC) support for the gene&#39;s own correct core molecular function, uridine phosphorylase activity (EC 2.4.2.3). Retained as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=uridine + phosphate = alpha-D-ribose 1-phosphate + uracil</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct, if less specific than cytosol. UPP1 is a cytoplasmic/cytosolic enzyme; this is the gene&#39;s own correct localization, so retained rather than flagged.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74372
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009116" target="_blank" class="term-link">
+                                    GO:0009116
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoside metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0009116" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but over-general ancestor of the specific and experimentally supported uridine catabolic process (GO:0006218). Adds no specific information beyond the more precise BP annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009166" target="_blank" class="term-link">
+                                    GO:0009166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0009166" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wrong branch. UPP1 acts on the nucleoSIDE uridine (uridine + phosphate -&gt; uracil + ribose-1-phosphate), not on nucleoTIDES (phosphorylated nucleosides). This is an over-propagated electronic InterPro inference; the biologically correct process is pyrimidine nucleoside catabolism (GO:0046135), captured by the uridine catabolic process annotation. Recommend removal of this IEA.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016763" target="_blank" class="term-link">
+                                    GO:0016763
+                                </a>
+                            </span>
+                            <span class="term-label">pentosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0016763" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but over-general parent term (EC 2.4.2 pentosyltransferases). UPP1 is a pentosyltransferase, but the specific and experimentally supported GO:0004850 (uridine phosphorylase activity) is the appropriate MF; the parent adds no information.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047847" target="_blank" class="term-link">
+                                    GO:0047847
+                                </a>
+                            </span>
+                            <span class="term-label">deoxyuridine phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0047847" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct secondary catalytic activity. UniProt documents a Rhea-mapped catalytic activity on 2&#39;-deoxyuridine (RHEA:22824), consistent with the enzyme&#39;s broad substrate specificity noted for uridine analogues.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=2&#39;-deoxyuridine + phosphate = 2-deoxy-alpha-D-ribose 1-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006218" target="_blank" class="term-link">
+                                    GO:0006218
+                                </a>
+                            </span>
+                            <span class="term-label">uridine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0006218" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant electronic (ARBA) support for the gene&#39;s own correct core biological process, uridine catabolic process. Retained as core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible phosphorylytic cleavage of uridine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042149" target="_blank" class="term-link">
+                                    GO:0042149
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to glucose starvation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0042149" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from the rat ortholog (ENSRNOP00000006765) via Ensembl Compara. Plausible in the context of uridine as an alternative carbon/energy source under glucose limitation, but not verified for human UPP1 and not a core function; kept as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                    GO:0044206
+                                </a>
+                            </span>
+                            <span class="term-label">UMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0044206" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Consistent with the UniProt UniPathway pathway assignment: UMP biosynthesis via the salvage pathway, uracil from uridine (phosphorylase route), step 1/1. UPP1 supplies uracil to the pyrimidine salvage route. Accepted.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPP1/UPP1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Pyrimidine metabolism; UMP biosynthesis via salvage pathway;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization. UPP1 is an established cytosolic enzyme with no known nuclear function; the family-conserved and physiologically supported location is the cytosol/cytoplasm. Treated as an over-annotation (localization noise) rather than removed, as it is an experimental IDA.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004850" target="_blank" class="term-link">
+                                    GO:0004850
+                                </a>
+                            </span>
+                            <span class="term-label">uridine phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7488099
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of human uridine phosphorylase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0004850" data-r="PMID:7488099" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function with direct experimental evidence. Recombinant human UPP1 expressed in COS-7 cells showed specific enzyme activity with uridine as substrate, blocked by a competitive uridine-analogue inhibitor.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link">
+                                        PMID:7488099
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">specific enzyme activity with uridine as the substrate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006218" target="_blank" class="term-link">
+                                    GO:0006218
+                                </a>
+                            </span>
+                            <span class="term-label">uridine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7488099
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of human uridine phosphorylase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0006218" data-r="PMID:7488099" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, direct experimental evidence. Phosphorolysis of uridine assayed for the cloned human enzyme places UPP1 in uridine catabolism.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link">
+                                        PMID:7488099
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">specific enzyme activity with uridine as the substrate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19291308" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19291308
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Implications of the structure of human uridine phosphorylase...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0042802" data-r="PMID:19291308" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Informative self-association. Crystallography shows the active human enzyme is a homodimer, in contrast to the hexameric microbial UPPs; this IPI (WITH UniProtKB:Q16831) captures the homodimer interface and is more informative than bare protein binding. Consistent with UniProt SUBUNIT &#34;Homodimer&#34;.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19291308" target="_blank" class="term-link">
+                                        PMID:19291308
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is dimeric in contrast to the hexameric assembly present in microbial UPPs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20856879" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20856879
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Active site conformational dynamics in human uridine phospho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0042802" data-r="PMID:20856879" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Independent structural confirmation of the homodimer (5-FU-bound structure); the enzyme forms strictly dimeric complexes in eukaryotes. Supports the identical protein binding (homodimer) annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20856879" target="_blank" class="term-link">
+                                        PMID:20856879
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">strictly dimeric complexes in eukaryotic organisms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-74372
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0005829" data-r="Reactome:R-HSA-74372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component. Reactome describes UPP1 as a cytosolic uridine phosphorylase; consistent with the IBA cytosol annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74372
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-74376
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0005829" data-r="Reactome:R-HSA-74376" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cellular component (reverse-direction Reactome reaction, same cytosolic localization). Consistent with the other cytosol annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-74376
+
+                                </span>
+
+                                <div class="support-text">Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006139" target="_blank" class="term-link">
+                                    GO:0006139
+                                </a>
+                            </span>
+                            <span class="term-label">nucleobase-containing compound metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7488099
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of human uridine phosphorylase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q16831" data-a="GO:0006139" data-r="PMID:7488099" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general (high-level) BP ancestor. The specific, experimentally supported uridine catabolic process (GO:0006218) captures the function precisely; this broad term adds no specific information.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the reversible phosphorolysis of uridine (and 2&#39;-deoxyuridine) with inorganic phosphate to yield uracil and (2-deoxy)-alpha-D-ribose 1-phosphate, the committed step of pyrimidine nucleoside catabolism and salvage.</h3>
+                <span class="vote-buttons" data-g="Q16831" data-a="FUNCTION: Catalyzes the reversible phosphorolysis of uridine..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004850" target="_blank" class="term-link">
+                            uridine phosphorylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006218" target="_blank" class="term-link">
+                                uridine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/UPP1/UPP1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=uridine + phosphate = alpha-D-ribose 1-phosphate + uracil</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link">
+                                PMID:7488099
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">specific enzyme activity with uridine as the substrate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Supplies uracil to the pyrimidine salvage route, contributing to UMP biosynthesis via the salvage pathway (uracil from uridine, phosphorylase route).</h3>
+                <span class="vote-buttons" data-g="Q16831" data-a="FUNCTION: Supplies uracil to the pyrimidine salvage route, c..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004850" target="_blank" class="term-link">
+                            uridine phosphorylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                UMP salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/UPP1/UPP1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Pyrimidine metabolism; UMP biosynthesis via salvage pathway;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19291308" target="_blank" class="term-link">
+                            PMID:19291308
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Implications of the structure of human uridine phosphorylase 1 on the development of novel inhibitors for improving the therapeutic window of fluoropyrimidine chemotherapy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-resolution crystal structures confirm that the active human uridine phosphorylase 1 is a homodimer, unlike the hexameric microbial UPPs, and define the active-site interactions used for inhibitor (BAU) design.</div>
+
+                        <div class="finding-text">"is dimeric in contrast to the hexameric assembly present in microbial UPPs"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20856879" target="_blank" class="term-link">
+                            PMID:20856879
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Active site conformational dynamics in human uridine phosphorylase 1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Structure of hUPP1 bound to 5-fluorouracil confirms the strictly dimeric eukaryotic assembly and reveals inter-domain hinge motion coupling the two active sites during catalysis.</div>
+
+                        <div class="finding-text">"strictly dimeric complexes in eukaryotic organisms"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7488099" target="_blank" class="term-link">
+                            PMID:7488099
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of human uridine phosphorylase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned human UPP1 (from colorectal tumor line HCT116); recombinant enzyme showed specific uridine phosphorylase activity inhibited by a competitive uridine-analogue inhibitor, and expression was induced by vitamin D3 and inflammatory cytokines.</div>
+
+                        <div class="finding-text">"specific enzyme activity with uridine as the substrate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-74372
+
+                    </span>
+                </div>
+
+                <div class="reference-title">uracil + (deoxy)ribose 1-phosphate &lt;=&gt; (deoxy)uridine + orthophosphate [UPP]</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-74376
+
+                    </span>
+                </div>
+
+                <div class="reference-title">(deoxy)uridine + orthophosphate &lt;=&gt; uracil + (deoxy)ribose 1-phosphate (UPP)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UPP1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q16831" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="upp1-uridine-phosphorylase-1-q16831-review-notes">UPP1 (Uridine phosphorylase 1, Q16831) — review notes</h1>
+<h2 id="identity-and-family">Identity and family</h2>
+<ul>
+<li>Human gene <code>UPP1</code> (HGNC:12576), synonym <code>UP</code>; UniProt Q16831, 310 aa, EC 2.4.2.3<br />
+  [file:human/UPP1/UPP1-uniprot.txt "RecName: Full=Uridine phosphorylase 1"; "EC=2.4.2.3"].</li>
+<li>Belongs to the PNP/UDP phosphorylase family (nucleoside phosphorylase-I superfamily)<br />
+  [file:human/UPP1/UPP1-uniprot.txt "Belongs to the PNP/UDP phosphorylase family"].</li>
+<li>InterPro/PANTHER: Nucleoside_phosphorylase_d (IPR000845), Uridine_phosphorylase_euk<br />
+  (IPR010059), PANTHER PTHR43691:SF10 URIDINE PHOSPHORYLASE 1.</li>
+</ul>
+<h2 id="catalytic-function">Catalytic function</h2>
+<ul>
+<li>Reversible phosphorolysis of uridine: <code>uridine + phosphate &lt;=&gt; alpha-D-ribose 1-phosphate + uracil</code><br />
+  (RHEA:24388, EC 2.4.2.3), physiological direction left-to-right<br />
+  [file:human/UPP1/UPP1-uniprot.txt "Reaction=uridine + phosphate = alpha-D-ribose 1-phosphate + uracil"].</li>
+<li>Also acts on 2'-deoxyuridine: <code>2'-deoxyuridine + phosphate &lt;=&gt; 2-deoxy-alpha-D-ribose 1-phosphate + uracil</code><br />
+  (RHEA:22824) [file:human/UPP1/UPP1-uniprot.txt "Reaction=2'-deoxyuridine + phosphate = 2-deoxy-alpha-D-ribose 1-"].</li>
+<li>Function summary: "Catalyzes the reversible phosphorylytic cleavage of uridine to uracil and<br />
+  ribose-1-phosphate which can then be utilized as carbon and energy sources or in the rescue of<br />
+  pyrimidine bases for nucleotide synthesis"<br />
+  [file:human/UPP1/UPP1-uniprot.txt "Catalyzes the reversible phosphorylytic cleavage of uridine"].</li>
+<li>Broad substrate specificity, can also accept deoxyuridine and analogues (Probable)<br />
+  [file:human/UPP1/UPP1-uniprot.txt "Shows broad substrate specificity and can"].</li>
+<li>Cloned and enzymatically characterized from human colorectal tumor line HCT116; recombinant enzyme<br />
+  in COS-7 cells showed "specific enzyme activity with uridine as the substrate; this activity was<br />
+  inhibited by the competitive inhibitor 2,2'-anhydro-5-ethyluridine"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7488099" title="specific enzyme activity with uridine as the substrate">PMID:7488099</a> (abstract-only cache;<br />
+  curated as IDA GO:0004850 / GO:0006218 by UniProt from the full text).</li>
+</ul>
+<h2 id="pathway-context">Pathway context</h2>
+<ul>
+<li>UniProt PATHWAY: "Pyrimidine metabolism; UMP biosynthesis via salvage pathway; uracil from uridine<br />
+  (phosphorylase route): step 1/1" (UniPathway UPA00574/UER00633)<br />
+  [file:human/UPP1/UPP1-uniprot.txt "UMP biosynthesis via salvage pathway"].</li>
+<li>Reactome places UPP1 in "Pyrimidine salvage" (R-HSA-73614) and "Pyrimidine catabolism"<br />
+  (R-HSA-73621); catalyzes the reversible reactions R-HSA-74372 / R-HSA-74376<br />
+  [reactome:R-HSA-74376 "Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2) catalyzes the<br />
+  reversible reactions of uridine or deoxyuridine with orthophosphate to yield uracil"].</li>
+<li>Uracil liberated by UPP1 is further degraded by the reductive pyrimidine catabolic pathway<br />
+  (DPYD -&gt; DPYS -&gt; UPB1); the ribose-1-phosphate feeds the pentose pool. Uridine phosphorylase is<br />
+  "a ubiquitous enzyme involved in pyrimidine salvage and maintenance of uridine homeostasis"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19291308" title="involved in pyrimidine salvage and maintenance of uridine homeostasis">PMID:19291308</a>.</li>
+</ul>
+<h2 id="quaternary-structure-identical-protein-binding">Quaternary structure (identical protein binding)</h2>
+<ul>
+<li>Homodimer [file:human/UPP1/UPP1-uniprot.txt "Homodimer."].</li>
+<li>Crystallography confirms the human enzyme is dimeric (contrasting the hexameric microbial UPPs):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19291308" title="is dimeric in contrast to the hexameric assembly present in microbial UPPs">PMID:19291308</a>;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20856879" title="strictly dimeric complexes in eukaryotic organisms">PMID:20856879</a>. The two annotations of<br />
+  GO:0042802 (identical protein binding, IPI, WITH UniProtKB:Q16831) capture this self-association.</li>
+<li>Structures: 3EUE, 3EUF (ligand-free / BAU-inhibited; 1.9 A) and 3NBQ (5-FU complex; 2.3 A).</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic enzyme (Reactome "Cytosolic uridine phosphorylase"; UniProt has no signal/TM features).</li>
+<li>GOA carries a nucleoplasm IDA (GO:0005654) from HPA (GO_REF:0000052). UPP1 has no known nuclear<br />
+  role; the physiologically supported and family-conserved location is the cytosol/cytoplasm. Treated<br />
+  as an over-annotation (HPA immunofluorescence localization), not removed (experimental IDA).</li>
+</ul>
+<h2 id="regulation-physiology">Regulation / physiology</h2>
+<ul>
+<li>Induced by vitamin D3 and inflammatory cytokines TNF, IL1, IFNG<br />
+  [file:human/UPP1/UPP1-uniprot.txt "By vitamin D3 and a mixture of inflammatory cytokines"].</li>
+<li>The GO:0042149 (cellular response to glucose starvation) annotation is IEA transferred from the rat<br />
+  ortholog (GO_REF:0000107, WITH ENSRNOP00000006765). Plausible but unverified in human; kept<br />
+  non-core.</li>
+</ul>
+<h2 id="pharmacology-disease-relevance">Pharmacology / disease relevance</h2>
+<ul>
+<li>Activates fluoropyrimidine chemotherapeutics: 5-fluorouracil (5-FU) and its prodrug capecitabine;<br />
+  elevated tumor UPP levels contribute to drug selectivity. Specific inhibitors (e.g.<br />
+  5-benzylacyclouridine, BAU) raise endogenous uridine and protect normal tissue<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19291308" title="its role in the activation of pyrimidine nucleoside analogues used in chemotherapy,   such as 5-fluorouracil (5-FU)">PMID:19291308</a>. DrugBank: Fluorouracil, Capecitabine, 5-Benzylacyclouridine.</li>
+</ul>
+<h2 id="isoforms">Isoforms</h2>
+<ul>
+<li>Isoform 2 ("Truncated", Q16831-2) diverges at residues 15-36 and is missing 37-310; annotated<br />
+  Inactive [file:human/UPP1/UPP1-uniprot.txt "[Isoform 2]: Inactive."].</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions (summary)</h2>
+<ul>
+<li>ACCEPT (core): GO:0004850 (MF, IBA+IEA+IDA), GO:0006218 (BP, IBA+IEA+IDA), GO:0005829 (CC,<br />
+  IBA+TASx2), GO:0005737 (CC, IEA), GO:0047847 (deoxyuridine phosphorylase, secondary catalytic<br />
+  activity documented by UniProt), GO:0044206 (UMP salvage, matches UniProt UniPathway pathway).</li>
+<li>MARK_AS_OVER_ANNOTATED: GO:0003824 (catalytic activity, root MF), GO:0016763 (pentosyltransferase,<br />
+  over-general parent), GO:0009116 (nucleoside metabolic process, over-general parent),<br />
+  GO:0006139 (nucleobase-containing compound metabolic process, over-general), GO:0005654<br />
+  (nucleoplasm IDA — experimental, not removed).</li>
+<li>REMOVE: GO:0009166 (nucleotide catabolic process, IEA) — UPP1 acts on the nucleoSIDE uridine, not<br />
+  on nucleoTIDES; wrong-branch electronic InterPro inference (correct process is pyrimidine nucleoside<br />
+  catabolism).</li>
+<li>KEEP_AS_NON_CORE: GO:0042149 (cellular response to glucose starvation, IEA from rat ortholog).</li>
+<li>ACCEPT (informative self-association, homodimer, structurally verified): GO:0042802 x2.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q16831
+gene_symbol: UPP1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UPP1 (uridine phosphorylase 1) is a cytosolic enzyme of the PNP/UDP phosphorylase
+  family that catalyzes the reversible phosphorolysis of uridine, and to a lesser
+  extent 2&#39;-deoxyuridine, into uracil plus (2-deoxy)-alpha-D-ribose 1-phosphate
+  (EC 2.4.2.3). This is a central reaction of pyrimidine nucleoside salvage and
+  catabolism: the liberated uracil can be salvaged for pyrimidine nucleotide
+  synthesis or degraded reductively (by DPYD, DPYS and UPB1), while the ribose
+  1-phosphate feeds the pentose/energy pool. The active enzyme is a homodimer.
+  UPP1 activity is important pharmacologically because it activates fluoropyrimidine
+  chemotherapeutics such as 5-fluorouracil and its prodrug capecitabine, and its
+  expression is induced by vitamin D3 and inflammatory cytokines (TNF, IL1, IFNG).
+alternative_products:
+- name: &#39;1&#39;
+  id: Q16831-1
+- name: 2 (Truncated)
+  id: Q16831-2
+  sequence_note: VSP_001279, VSP_001280
+existing_annotations:
+- term:
+    id: GO:0004850
+    label: uridine phosphorylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. Phylogenetic (IBA) assignment of the family-defining
+      uridine phosphorylase activity, in agreement with the direct experimental IDA
+      (PMID:7488099) and the UniProt catalytic-activity/EC:2.4.2.3 annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: Catalyzes the reversible phosphorylytic cleavage of uridine
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct core cellular component. UPP1 is a soluble cytosolic enzyme (no
+      signal/transmembrane features), consistent with the Reactome &#34;Cytosolic
+      uridine phosphorylase&#34; description and the family-conserved localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-74372
+      supporting_text: Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)
+- term:
+    id: GO:0006218
+    label: uridine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. Phosphorolysis of uridine to uracil and
+      ribose-1-phosphate is the committed step of uridine catabolism; consistent
+      with the direct experimental IDA (PMID:7488099).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: Catalyzes the reversible phosphorylytic cleavage of uridine
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level catalytic activity term. Not informative given the specific
+      GO:0004850 (uridine phosphorylase activity) annotation, which is
+      experimentally supported. Over-general, superseded by the specific MF.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004850
+    label: uridine phosphorylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Redundant electronic (ARBA/Rhea/EC) support for the gene&#39;s own correct core
+      molecular function, uridine phosphorylase activity (EC 2.4.2.3). Retained as
+      core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: Reaction=uridine + phosphate = alpha-D-ribose 1-phosphate + uracil
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct, if less specific than cytosol. UPP1 is a cytoplasmic/cytosolic
+      enzyme; this is the gene&#39;s own correct localization, so retained rather than
+      flagged.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-74372
+      supporting_text: Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)
+- term:
+    id: GO:0009116
+    label: nucleoside metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but over-general ancestor of the specific and experimentally
+      supported uridine catabolic process (GO:0006218). Adds no specific
+      information beyond the more precise BP annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0009166
+    label: nucleotide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Wrong branch. UPP1 acts on the nucleoSIDE uridine (uridine + phosphate -&gt;
+      uracil + ribose-1-phosphate), not on nucleoTIDES (phosphorylated nucleosides).
+      This is an over-propagated electronic InterPro inference; the biologically
+      correct process is pyrimidine nucleoside catabolism (GO:0046135), captured by
+      the uridine catabolic process annotation. Recommend removal of this IEA.
+    action: REMOVE
+- term:
+    id: GO:0016763
+    label: pentosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but over-general parent term (EC 2.4.2 pentosyltransferases). UPP1 is
+      a pentosyltransferase, but the specific and experimentally supported
+      GO:0004850 (uridine phosphorylase activity) is the appropriate MF; the parent
+      adds no information.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0047847
+    label: deoxyuridine phosphorylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct secondary catalytic activity. UniProt documents a Rhea-mapped
+      catalytic activity on 2&#39;-deoxyuridine (RHEA:22824), consistent with the
+      enzyme&#39;s broad substrate specificity noted for uridine analogues.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: &#34;Reaction=2&#39;-deoxyuridine + phosphate = 2-deoxy-alpha-D-ribose 1-&#34;
+- term:
+    id: GO:0006218
+    label: uridine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Redundant electronic (ARBA) support for the gene&#39;s own correct core biological
+      process, uridine catabolic process. Retained as core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: Catalyzes the reversible phosphorylytic cleavage of uridine
+- term:
+    id: GO:0042149
+    label: cellular response to glucose starvation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer from the rat ortholog (ENSRNOP00000006765) via Ensembl
+      Compara. Plausible in the context of uridine as an alternative carbon/energy
+      source under glucose limitation, but not verified for human UPP1 and not a
+      core function; kept as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0044206
+    label: UMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Consistent with the UniProt UniPathway pathway assignment: UMP biosynthesis
+      via the salvage pathway, uracil from uridine (phosphorylase route), step 1/1.
+      UPP1 supplies uracil to the pyrimidine salvage route. Accepted.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/UPP1/UPP1-uniprot.txt
+      supporting_text: &#34;Pyrimidine metabolism; UMP biosynthesis via salvage pathway;&#34;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization. UPP1 is an established cytosolic enzyme
+      with no known nuclear function; the family-conserved and physiologically
+      supported location is the cytosol/cytoplasm. Treated as an over-annotation
+      (localization noise) rather than removed, as it is an experimental IDA.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004850
+    label: uridine phosphorylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7488099
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function with direct experimental evidence. Recombinant human
+      UPP1 expressed in COS-7 cells showed specific enzyme activity with uridine as
+      substrate, blocked by a competitive uridine-analogue inhibitor.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7488099
+      supporting_text: specific enzyme activity with uridine as the substrate
+- term:
+    id: GO:0006218
+    label: uridine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:7488099
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, direct experimental evidence. Phosphorolysis of
+      uridine assayed for the cloned human enzyme places UPP1 in uridine catabolism.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:7488099
+      supporting_text: specific enzyme activity with uridine as the substrate
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19291308
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Informative self-association. Crystallography shows the active human enzyme is
+      a homodimer, in contrast to the hexameric microbial UPPs; this IPI (WITH
+      UniProtKB:Q16831) captures the homodimer interface and is more informative than
+      bare protein binding. Consistent with UniProt SUBUNIT &#34;Homodimer&#34;.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:19291308
+      supporting_text: is dimeric in contrast to the hexameric assembly present in microbial UPPs
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20856879
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Independent structural confirmation of the homodimer (5-FU-bound structure);
+      the enzyme forms strictly dimeric complexes in eukaryotes. Supports the
+      identical protein binding (homodimer) annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:20856879
+      supporting_text: strictly dimeric complexes in eukaryotic organisms
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-74372
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core cellular component. Reactome describes UPP1 as a cytosolic
+      uridine phosphorylase; consistent with the IBA cytosol annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-74372
+      supporting_text: Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-74376
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core cellular component (reverse-direction Reactome reaction, same
+      cytosolic localization). Consistent with the other cytosol annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: Reactome:R-HSA-74376
+      supporting_text: Cytosolic uridine phosphorylase (isoforms UPP1 and UPP2)
+- term:
+    id: GO:0006139
+    label: nucleobase-containing compound metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:7488099
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but very general (high-level) BP ancestor. The specific,
+      experimentally supported uridine catabolic process (GO:0006218) captures the
+      function precisely; this broad term adds no specific information.
+    action: MARK_AS_OVER_ANNOTATED
+core_functions:
+- description: &gt;-
+    Catalyzes the reversible phosphorolysis of uridine (and 2&#39;-deoxyuridine) with
+    inorganic phosphate to yield uracil and (2-deoxy)-alpha-D-ribose 1-phosphate,
+    the committed step of pyrimidine nucleoside catabolism and salvage.
+  molecular_function:
+    id: GO:0004850
+    label: uridine phosphorylase activity
+  supported_by:
+  - reference_id: file:human/UPP1/UPP1-uniprot.txt
+    supporting_text: Reaction=uridine + phosphate = alpha-D-ribose 1-phosphate + uracil
+  - reference_id: PMID:7488099
+    supporting_text: specific enzyme activity with uridine as the substrate
+  directly_involved_in:
+  - id: GO:0006218
+    label: uridine catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: &gt;-
+    Supplies uracil to the pyrimidine salvage route, contributing to UMP
+    biosynthesis via the salvage pathway (uracil from uridine, phosphorylase route).
+  molecular_function:
+    id: GO:0004850
+    label: uridine phosphorylase activity
+  supported_by:
+  - reference_id: file:human/UPP1/UPP1-uniprot.txt
+    supporting_text: &#34;Pyrimidine metabolism; UMP biosynthesis via salvage pathway;&#34;
+  directly_involved_in:
+  - id: GO:0044206
+    label: UMP salvage
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19291308
+  title: Implications of the structure of human uridine phosphorylase 1 on the development
+    of novel inhibitors for improving the therapeutic window of fluoropyrimidine chemotherapy.
+  findings:
+  - statement: &gt;-
+      High-resolution crystal structures confirm that the active human uridine
+      phosphorylase 1 is a homodimer, unlike the hexameric microbial UPPs, and
+      define the active-site interactions used for inhibitor (BAU) design.
+    reference_section_type: RESULTS
+    supporting_text: is dimeric in contrast to the hexameric assembly present in microbial UPPs
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text available; directly establishes the homodimer (identical protein
+      binding) and the enzyme&#39;s role in pyrimidine salvage and fluoropyrimidine
+      activation.
+- id: PMID:20856879
+  title: Active site conformational dynamics in human uridine phosphorylase 1.
+  findings:
+  - statement: &gt;-
+      Structure of hUPP1 bound to 5-fluorouracil confirms the strictly dimeric
+      eukaryotic assembly and reveals inter-domain hinge motion coupling the two
+      active sites during catalysis.
+    reference_section_type: RESULTS
+    supporting_text: strictly dimeric complexes in eukaryotic organisms
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text available; independently supports the homodimer and details
+      active-site conformational dynamics relevant to catalysis.
+- id: PMID:7488099
+  title: Cloning and expression of human uridine phosphorylase.
+  findings:
+  - statement: &gt;-
+      Cloned human UPP1 (from colorectal tumor line HCT116); recombinant enzyme
+      showed specific uridine phosphorylase activity inhibited by a competitive
+      uridine-analogue inhibitor, and expression was induced by vitamin D3 and
+      inflammatory cytokines.
+    reference_section_type: ABSTRACT
+    supporting_text: specific enzyme activity with uridine as the substrate
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache (full_text_available: false); title/abstract match the
+      gene and support the IDA catalytic-activity and uridine catabolic annotations
+      curated by UniProt from the full text.
+- id: Reactome:R-HSA-74372
+  title: uracil + (deoxy)ribose 1-phosphate &lt;=&gt; (deoxy)uridine + orthophosphate [UPP]
+  findings: []
+- id: Reactome:R-HSA-74376
+  title: (deoxy)uridine + orthophosphate &lt;=&gt; uracil + (deoxy)ribose 1-phosphate (UPP)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

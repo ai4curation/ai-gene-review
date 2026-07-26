@@ -1,0 +1,2763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hmgC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hmgC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88E49" target="_blank" class="term-link">
+                        Q88E49
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hmgC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88E49" data-a="DESCRIPTION: HmgC is the glutathione-dependent maleylacetoaceta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HmgC is the glutathione-dependent maleylacetoacetate isomerase of the Pseudomonas putida KT2440 homogentisate pathway. It converts maleylacetoacetate to fumarylacetoacetate between the HmgA ring-cleavage and HmgB hydrolysis reactions during aromatic-compound catabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformative parent-level catalytic annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88E49 has the specific maleylacetoacetate isomerase activity, so that term should replace generic catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Maleylacetoacetate isomerase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004364" target="_blank" class="term-link">
+                                    GO:0004364
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0004364" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level transferase term that overstates the supported HmgC chemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GST-zeta family membership and use of glutathione as a regenerated catalytic cofactor do not establish a physiologically relevant net glutathione-transferase reaction for Q88E49. GO:0016034 captures the supported substrate-specific isomerase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the GST superfamily. Zeta family.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">It uses reduced glutathione (GSH) as an **essential catalytic cofactor** that is regenerated each cycle rather than consumed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Consistent localization for a soluble intracellular pathway enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HmgC acts between the soluble HmgA and HmgB reactions in the intracellular homogentisate pathway and has no signal peptide or membrane role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0006559" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway annotation for phenylalanine degradation through homogentisate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The P. putida pathway study establishes that phenylalanine is converted to homogentisate and then catabolized by HmgABC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into 4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as the central intermediate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006749" target="_blank" class="term-link">
+                                    GO:0006749
+                                </a>
+                            </span>
+                            <span class="term-label">glutathione metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0006749" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-propagated process annotation from the GST-zeta enzyme family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Glutathione is a catalytic cofactor for maleylacetoacetate isomerization; that cofactor requirement does not make HmgC part of glutathione biosynthesis, degradation, or homeostasis. Its established biological process is homogentisate catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">It uses reduced glutathione (GSH) as an **essential catalytic cofactor** that is regenerated each cycle rather than consumed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                    GO:0009072
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0009072" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad, redundant process annotation for HmgC&#39;s defined pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HmgC can receive homogentisate-derived carbon from aromatic amino-acid catabolism, but this broad umbrella term is redundant with the specific GO:1902000 homogentisate catabolic process annotation added below.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016034" target="_blank" class="term-link">
+                                    GO:0016034
+                                </a>
+                            </span>
+                            <span class="term-label">maleylacetoacetate isomerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0016034" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 5.2.1.2 and the exact maleylacetoacetate isomerase name, and the P. putida pathway study identifies HmgC as this enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SubName: Full=Maleylacetoacetate isomerase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">maleylacetoacetate isomerase (HmgC)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902000" target="_blank" class="term-link">
+                                    GO:1902000
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15262943
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The homogentisate pathway: a central catabolic pathway invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:1902000" data-r="PMID:15262943" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing specific process annotation for HmgC&#39;s central pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The organism-specific study directly identifies HmgC as one of the three enzymes that catabolize homogentisate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15262943
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The homogentisate pathway: a central catabolic pathway invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E49" data-a="GO:0006572" data-r="PMID:15262943" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Missing process annotation for tyrosine degradation through HmgABC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Tyrosine is converted to the central intermediate homogentisate, which is then catabolized by the HmgABC pathway containing HmgC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into 4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as the central intermediate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes glutathione-dependent isomerization of maleylacetoacetate to fumarylacetoacetate in the central homogentisate-catabolic pathway.</h3>
+                <span class="vote-buttons" data-g="Q88E49" data-a="FUNCTION: Catalyzes glutathione-dependent isomerization of m..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016034" target="_blank" class="term-link">
+                            maleylacetoacetate isomerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902000" target="_blank" class="term-link">
+                                homogentisate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hmgC/hmgC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SubName: Full=Maleylacetoacetate isomerase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                PMID:15262943
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hmgC/hmgC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88E49 for Pseudomonas putida KT2440 hmgC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns maleylacetoacetate isomerase activity to Q88E49.</div>
+
+                        <div class="finding-text">"SubName: Full=Maleylacetoacetate isomerase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places Q88E49 in the GST zeta family.</div>
+
+                        <div class="finding-text">"Belongs to the GST superfamily. Zeta family."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                            PMID:15262943
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The homogentisate pathway: a central catabolic pathway involved in the degradation of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HmgC is one of the three enzymes of the P. putida homogentisate pathway.</div>
+
+                        <div class="finding-text">"Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK hmgC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report assigns HmgC the glutathione-dependent cis-trans isomerization between the HmgA and HmgB reactions.</div>
+
+                        <div class="finding-text">"Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct purified-enzyme kinetics are not available for Q88E49.</div>
+
+                        <div class="finding-text">"No purified-enzyme kinetic characterization (kcat, Km for maleylacetoacetate, GSH dependence) for Q88E49/PP_4619 was located"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 HmgC have physiologically relevant GST-zeta activities beyond maleylacetoacetate isomerization?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E49" data-a="Q: Does KT2440 HmgC have physiologically relevant GST..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88E49 and compare glutathione-dependent turnover of maleylacetoacetate with representative alternative GST-zeta substrates.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E49" data-a="EXPERIMENT: Purify Q88E49 and compare glutathione-dependent tu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hmgC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E49" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hmgC* (Q88E49, PP_4619) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T13:48:34.514246</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hmgC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hmgC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hmgc-q88e49-pp_4619-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hmgC</em> (Q88E49, PP_4619) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> hmgC (OrderedLocusName PP_4619) · <strong>UniProt:</strong> Q88E49 · <strong>EC:</strong> 5.2.1.2<br />
+<strong>Protein:</strong> Maleylacetoacetate isomerase (MAAI / HmgC)<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440 (PSEPK)<br />
+<strong>Family:</strong> Glutathione S-transferase (GST) superfamily, Zeta class<br />
+<strong>Domains:</strong> GST N-terminal thioredoxin-like (IPR004045); GST C-terminal / C-terminal-like (IPR036282, IPR010987); GST_Zeta signature (IPR005955); Glutathione_S-Trfase (IPR040079)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>hmgC</strong> (UniProt <strong>Q88E49</strong>; ordered locus <strong>PP_4619</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>maleylacetoacetate isomerase (MAAI; HmgC; EC 5.2.1.2)</strong>, the third enzyme of the central <strong>homogentisate ring-cleavage pathway</strong>. Its primary function is the <strong>glutathione-dependent <em>cis</em>→<em>trans</em> isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate</strong> — the penultimate biochemical step that channels the carbon skeletons of aromatic amino acids into central metabolism. The enzyme belongs to the <strong>Zeta class of the glutathione S-transferase superfamily</strong> and is the bacterial counterpart of the well-characterized eukaryotic <strong>GSTZ1/MAAI</strong> enzyme. It uses reduced glutathione (GSH) as an <strong>essential catalytic cofactor</strong> that is regenerated each cycle rather than consumed.</p>
+<p>In <em>P. putida</em>, HmgC operates within a defined, experimentally validated catabolic module. The aromatic substrates <strong>L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate</strong> all converge on the intermediate <strong>homogentisate</strong>, which is processed by three enzymes encoded in a single operon: <strong>homogentisate 1,2-dioxygenase (HmgA)</strong> cleaves the aromatic ring; <strong>HmgC</strong> isomerizes the resulting maleylacetoacetate; and <strong>fumarylacetoacetate hydrolase (HmgB)</strong> hydrolyzes fumarylacetoacetate to <strong>fumarate and acetoacetate</strong>, which feed the TCA cycle and acetyl-CoA pool. The isomerization is obligatory, because only the <em>trans</em> (fumaryl) isomer is a substrate for HmgB — HmgC therefore gates flux through the pathway's terminal step.</p>
+<p>The gene product is a <strong>soluble, cytoplasmic</strong> homodimeric enzyme, consistent both with its role in the cytosolic aromatic-catabolic pathway and with the predominantly cytosolic distribution documented for GSTZ/MAAI enzymes across species. The <em>hmgABC</em> genes form a single transcriptional unit that is de-repressed by homogentisate acting through the IclR-type repressor <strong>HmgR</strong>. All of the core conclusions — reaction, substrate, cofactor requirement, structural fold, subcellular location, and transcriptional regulation — are supported by a combination of direct experimental characterization in <em>P. putida</em> and detailed biochemical/structural work on the conserved GSTZ/MAAI family.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>The gene symbol, organism, family, and domains provided by UniProt are internally consistent and confirmed by primary literature:</p>
+<ul>
+<li>The symbol <strong>hmgC</strong> is used in <em>P. putida</em> precisely for <strong>maleylacetoacetate isomerase</strong>, one of the three enzymes of the homogentisate pathway (HmgA/B/C) (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>).</li>
+<li><strong>Maleylacetoacetate isomerase is identical to the Zeta-class GST (GSTZ1)</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16399379/">PMID: 16399379</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/21303221/">PMID: 21303221</a>), matching the UniProt "GST superfamily, Zeta family" assignment and the IPR005955 GST_Zeta domain.</li>
+<li>The EC number (<strong>5.2.1.2</strong>, a <em>cis-trans</em> isomerase) matches the reaction defined below.</li>
+</ul>
+<p>No conflicting-gene ambiguity was encountered. Importantly, most <em>mechanistic and structural</em> studies of this enzyme were performed on the human/mammalian orthologue GSTZ1; the <em>pathway role and gene assignment</em> are established experimentally and directly in <em>P. putida</em>, while the strong family/domain conservation makes the mechanistic conclusions applicable to the bacterial enzyme by homology. The extensive human GSTZ1 disease literature (hepatocellular carcinoma, dichloroacetate pharmacology, NRF2/KEAP1 and Wnt signaling) describes the <em>ortholog's</em> biology and is <strong>not</strong> attributed to the bacterial protein here.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hmgc-pp_4619-is-the-maleylacetoacetate-isomerase-of-the-homogentisate-central-catabolic-pathway">Finding 1 — HmgC (PP_4619) is the maleylacetoacetate isomerase of the homogentisate central catabolic pathway</h3>
+<p>The primary functional assignment of <em>hmgC</em> is firmly established by direct experimental characterization of the homogentisate pathway in <em>Pseudomonas putida</em>. This pathway is a <strong>central catabolic route</strong> that degrades three aromatic substrates — L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate — that all funnel into the common intermediate <strong>homogentisate (2,5-dihydroxyphenylacetate)</strong>. Homogentisate is then processed by three enzymes acting in series, of which HmgC is the <strong>maleylacetoacetate isomerase</strong>.</p>
+<p>As stated directly in the primary study of this pathway: <em>"Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate."</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>). This single statement assigns the enzymatic identity of HmgC, places it relative to HmgA and HmgB, and defines the pathway's ultimate products. HmgC carries <strong>EC 5.2.1.2</strong>, the classification for maleylacetoacetate <em>cis</em>-<em>trans</em> isomerase.</p>
+<p>The biological significance is that HmgC sits at a metabolic bottleneck. After the aromatic ring of homogentisate is oxidatively opened by HmgA to yield maleylacetoacetate (a <em>cis</em>-configured molecule), the downstream hydrolase HmgB requires the <em>trans</em> (fumaryl) isomer. HmgC provides the obligatory isomerization that connects these two reactions. Without HmgC activity, maleylacetoacetate cannot be productively hydrolyzed and flux through the pathway stalls — making HmgC essential for the complete degradation of aromatic amino acids by this route.</p>
+<h3 id="finding-2-hmgc-is-a-zeta-class-glutathione-transferase-gstz1maai-family-catalyzing-a-glutathione-dependent-isomerization">Finding 2 — HmgC is a Zeta-class glutathione transferase (GSTZ1/MAAI family) catalyzing a glutathione-dependent isomerization</h3>
+<p>HmgC belongs to the <strong>Zeta family of the glutathione S-transferase superfamily</strong>, indicated by its domain architecture (IPR005955 GST_Zeta; IPR004045 GST N-terminal thioredoxin-like; IPR010987/IPR036282 GST C-terminal-like). In eukaryotes the equivalent enzyme is <strong>GSTZ1</strong>, which is biochemically <strong>identical to maleylacetoacetate isomerase (MAAI)</strong> — the two names denote the same protein. This family identity provides deep mechanistic insight into how HmgC works, because the eukaryotic orthologue has been studied in extensive structural and kinetic detail.</p>
+<p>The hallmark reactions of the Zeta-class GST/MAAI family are twofold: <em>"GSTZ was found to catalyze the oxygenation of dichloroacetic acid (DCA) to glyoxylic acid and the cis-trans isomerization of maleylacetoacetate to fumarylacetoacetate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16399379/">PMID: 16399379</a>). The second reaction — the <strong>isomerization of maleylacetoacetate to fumarylacetoacetate</strong> — is exactly the physiological reaction catalyzed by HmgC in <em>P. putida</em>. The first (dehalogenation of DCA) reflects the catalytic promiscuity of the active site and is medically important in the eukaryotic enzyme, but it is a xenobiotic side-reaction rather than the primary physiological function.</p>
+<p>The structural basis was resolved by the <strong>1.9 Å crystal structure of human MAAI in complex with glutathione</strong>: <em>"Here we report the crystal structure of human MAAI at 1.9 A resolution in complex with glutathione and a sulfate ion which mimics substrate binding."</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/11327815/">PMID: 11327815</a>). This structure demonstrates the <strong>canonical GST fold</strong> — an N-terminal thioredoxin-like domain forming the glutathione "G-site" and a C-terminal all-α-helical domain forming the hydrophobic substrate "H-site." The title of that work — <em>"Crystal structure of maleylacetoacetate isomerase/glutathione transferase zeta reveals the molecular basis for its remarkable catalytic promiscuity"</em> — captures the central insight that one active-site architecture supports isomerization, oxygenation, dehalogenation, and peroxidation.</p>
+<p>Critically, <strong>glutathione functions as a cofactor, not a co-substrate, in the isomerization</strong>: it is required for activity but is regenerated at the end of each catalytic cycle and is not net-consumed. Mechanistically, the GSH thiolate is thought to add reversibly to the maleyl double bond, converting it to a freely rotatable single bond, permit rotation, then be eliminated to yield the <em>trans</em> (fumaryl) product — a glutathione-mediated addition-rotation-elimination isomerization. Kinetic and mutagenesis studies of the family identify a reactive active-site cysteine (Cys16 in the human enzyme) as central to GSH binding and catalysis, and an active-site arginine (Arg42) as governing substrate access/product release (<a href="https://pubmed.ncbi.nlm.nih.gov/15173170/">PMID: 15173170</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/11692075/">PMID: 11692075</a>).</p>
+<h3 id="finding-3-hmgc-lies-in-the-homogentisate-inducible-hmgabc-operon-and-its-product-acts-in-the-cytoplasm">Finding 3 — <em>hmgC</em> lies in the homogentisate-inducible <em>hmgABC</em> operon and its product acts in the cytoplasm</h3>
+<p>The <em>hmgC</em> gene is not an isolated cistron but part of a <strong>co-regulated catabolic operon</strong>. In <em>P. putida</em>, <em>"the hmgABC genes appear to form a single transcriptional unit"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>), meaning HmgA, HmgB, and HmgC are transcribed together and coordinately controlled — a logical arrangement for three enzymes acting sequentially on a shared intermediate.</p>
+<p>Expression is under <strong>substrate-inducible negative control</strong>. The divergently transcribed regulatory gene <em>hmgR</em> encodes an <strong>IclR-type transcriptional repressor</strong>: <em>"hmgR encodes a specific repressor that controls the inducible expression of the divergently transcribed hmgABC catabolic genes, and homogentisate is the inducer molecule"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>). In the absence of substrate, HmgR binds a 17-bp palindromic operator in the divergent <em>Phmg</em> promoter and blocks transcription. When homogentisate accumulates, it binds HmgR, relieves repression, and switches on the pathway. This demand-driven logic ensures HmgC and its partner enzymes are produced only when substrate is present.</p>
+<p>The gene product carries out its function in the <strong>cytoplasm</strong>. HmgC is a soluble homodimeric enzyme with no signal peptide or transmembrane segment, consistent with the intracellular, cytosolic nature of the homogentisate pathway. This cytosolic localization is further supported by the documented distribution of the orthologous GSTZ/MAAI enzyme: <em>"GSTZ1 is most abundant in rodent and human liver, with its concentration several fold higher in cytoplasm than in mitochondria"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/37742772/">PMID: 37742772</a>). Across the family the enzyme is predominantly cytoplasmic, and there is no evidence for a distinct localization of the bacterial orthologue.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-homogentisate-pathway-and-hmgcs-position-within-it">The homogentisate pathway and HmgC's position within it</h3>
+<p>HmgC is the isomerase at the heart of the homogentisate central catabolic pathway. The pathway is a funnel: multiple aromatic substrates are converted (by peripheral pathways) into a single common intermediate, homogentisate, which is then ring-cleaved and processed to central-metabolism products.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nt">L-Phenylalanine</span><span class="w">    </span><span class="nt">L-Tyrosine</span><span class="w">    </span><span class="nt">3-Hydroxyphenylacetate</span>
+<span class="w">  </span><span class="err">\</span><span class="w">               </span><span class="o">|</span><span class="w">                </span><span class="o">/</span>
+<span class="w">   </span><span class="err">\</span><span class="w">              </span><span class="o">|</span><span class="w">               </span><span class="o">/</span>
+<span class="w">    </span><span class="o">+</span><span class="nt">-------------</span><span class="o">+</span><span class="nt">--------------</span><span class="o">+</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="o">(</span><span class="nt">peripheral</span><span class="w"> </span><span class="nt">pathways</span><span class="o">:</span><span class="w"> </span><span class="nt">PhhAB</span><span class="o">,</span><span class="w"> </span><span class="nt">TyrB</span><span class="o">,</span><span class="w"> </span><span class="nt">Hpd</span><span class="w"> </span><span class="o">...)</span>
+<span class="w">          </span><span class="nt">v</span>
+<span class="w">   </span><span class="nt">HOMOGENTISATE</span><span class="w">  </span><span class="o">(</span><span class="nt">2</span><span class="o">,</span><span class="nt">5-dihydroxyphenylacetate</span><span class="o">)</span>
+<span class="w">          </span><span class="o">|</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">HmgA</span><span class="w">  </span><span class="o">(</span><span class="nt">homogentisate</span><span class="w"> </span><span class="nt">1</span><span class="o">,</span><span class="nt">2-dioxygenase</span><span class="o">)</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">ring</span><span class="w"> </span><span class="nt">cleavage</span><span class="o">;</span><span class="w"> </span><span class="nt">O2</span><span class="w"> </span><span class="nt">incorporation</span>
+<span class="w">          </span><span class="nt">v</span>
+<span class="w">  </span><span class="nt">4-MALEYLACETOACETATE</span><span class="w">   </span><span class="o">(</span><span class="nt">cis</span><span class="w"> </span><span class="nt">isomer</span><span class="o">)</span>
+<span class="w">          </span><span class="o">|</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="o">&gt;&gt;&gt;</span><span class="w"> </span><span class="nt">HmgC</span><span class="w">  </span><span class="o">(</span><span class="nt">maleylacetoacetate</span><span class="w"> </span><span class="nt">isomerase</span><span class="o">,</span><span class="w"> </span><span class="nt">PP_4619</span><span class="o">)</span><span class="w"> </span><span class="o">&lt;&lt;&lt;</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">glutathione-dependent</span><span class="w"> </span><span class="nt">cis</span><span class="w"> </span><span class="nt">-</span><span class="o">&gt;</span><span class="w"> </span><span class="nt">trans</span><span class="w"> </span><span class="nt">isomerization</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">EC</span><span class="w"> </span><span class="nt">5</span><span class="p">.</span><span class="nc">2</span><span class="p">.</span><span class="nc">1</span><span class="p">.</span><span class="nc">2</span><span class="w"> </span><span class="o">;</span><span class="w"> </span><span class="nt">GSH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">catalytic</span><span class="w"> </span><span class="nt">cofactor</span><span class="w"> </span><span class="o">(</span><span class="nt">not</span><span class="w"> </span><span class="nt">consumed</span><span class="o">)</span>
+<span class="w">          </span><span class="nt">v</span>
+<span class="w"> </span><span class="nt">4-FUMARYLACETOACETATE</span><span class="w">   </span><span class="o">(</span><span class="nt">trans</span><span class="w"> </span><span class="nt">isomer</span><span class="o">)</span>
+<span class="w">          </span><span class="o">|</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">HmgB</span><span class="w">  </span><span class="o">(</span><span class="nt">fumarylacetoacetate</span><span class="w"> </span><span class="nt">hydrolase</span><span class="o">)</span>
+<span class="w">          </span><span class="o">|</span><span class="w">   </span><span class="nt">hydrolysis</span>
+<span class="w">          </span><span class="nt">v</span>
+<span class="w"> </span><span class="nt">FUMARATE</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nt">ACETOACETATE</span>
+<span class="w">    </span><span class="o">|</span><span class="w">               </span><span class="o">|</span>
+<span class="w">      </span><span class="o">(</span><span class="nt">TCA</span><span class="w"> </span><span class="nt">cycle</span><span class="o">)</span><span class="w">    </span><span class="o">(</span><span class="nt">ketone</span><span class="w"> </span><span class="nt">body</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">acetyl-CoA</span><span class="o">)</span>
+</code></pre></div>
+
+<p><strong>Table 1. The three enzymes of the <em>P. putida</em> homogentisate pathway.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Enzyme</th>
+<th>Reaction</th>
+<th>EC</th>
+<th>Role relative to HmgC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>hmgA</em></td>
+<td>Homogentisate 1,2-dioxygenase</td>
+<td>Homogentisate + O₂ → maleylacetoacetate</td>
+<td>1.13.11.5</td>
+<td>Acts <strong>before</strong> HmgC; produces its substrate</td>
+</tr>
+<tr>
+<td><strong><em>hmgC</em></strong> (PP_4619)</td>
+<td><strong>Maleylacetoacetate isomerase</strong></td>
+<td>Maleylacetoacetate → fumarylacetoacetate</td>
+<td><strong>5.2.1.2</strong></td>
+<td><strong>This gene</strong></td>
+</tr>
+<tr>
+<td><em>hmgB</em></td>
+<td>Fumarylacetoacetate hydrolase</td>
+<td>Fumarylacetoacetate → fumarate + acetoacetate</td>
+<td>3.7.1.2</td>
+<td>Acts <strong>after</strong> HmgC; consumes its product</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-the-isomerization-step-is-required">Why the isomerization step is required</h3>
+<p>HmgA opens the aromatic ring to generate maleylacetoacetate, in which the newly formed backbone is in the <em>cis</em> (maleyl) configuration. The downstream hydrolase HmgB is specific for the <em>trans</em> (fumaryl) isomer. HmgC bridges this stereochemical mismatch. Because <em>cis</em>→<em>trans</em> isomerization across a C=C double bond is thermodynamically favorable but kinetically slow, the cell employs a glutathione-based catalytic strategy: the GSH thiolate adds reversibly to the double bond, rotation occurs, and GSH is eliminated to release the <em>trans</em> product. This chemistry is why the enzyme is a member of the GST superfamily even though its physiological reaction is an isomerization rather than a conjugation.</p>
+<h3 id="regulatory-logic">Regulatory logic</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">No</span><span class="w"> </span><span class="n">aromatic</span><span class="w"> </span><span class="n">substrate</span><span class="w">                </span><span class="n">Aromatic</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="n">present</span>
+<span class="w">   </span><span class="o">---------------------</span><span class="w">                </span><span class="o">---------------------------</span>
+<span class="w">   </span><span class="n">HmgR</span><span class="w"> </span><span class="p">(</span><span class="n">IclR</span><span class="w"> </span><span class="n">repressor</span><span class="p">)</span><span class="w">                </span><span class="n">Homogentisate</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">HmgR</span>
+<span class="w">   </span><span class="n">bound</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">Phmg</span><span class="w"> </span><span class="n">operator</span><span class="w">      </span><span class="o">---&gt;</span><span class="w">     </span><span class="n">Repressor</span><span class="w"> </span><span class="n">released</span>
+<span class="w">   </span><span class="n">hmgABC</span><span class="w"> </span><span class="n">transcription</span><span class="w"> </span><span class="n">OFF</span><span class="w">             </span><span class="n">hmgABC</span><span class="w"> </span><span class="n">transcription</span><span class="w"> </span><span class="n">ON</span>
+<span class="w">                        </span><span class="n">HmgA</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">HmgC</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">HmgB</span><span class="w"> </span><span class="n">produced</span>
+</code></pre></div>
+
+<p>This demand-driven induction means HmgC is synthesized specifically under conditions where its substrate is being generated — an efficient allocation of biosynthetic resources.</p>
+<h3 id="evolutionary-and-functional-context">Evolutionary and functional context</h3>
+<p>Bacterial HmgC and eukaryotic GSTZ1/MAAI are orthologues performing the identical physiological reaction — the penultimate step of tyrosine/phenylalanine catabolism. This deep conservation from bacteria to humans underscores the fundamental importance of the homogentisate pathway. In eukaryotes, loss of GSTZ1/MAAI makes phenylalanine toxic and leads to accumulation of tyrosine intermediates (<a href="https://pubmed.ncbi.nlm.nih.gov/21303221/">PMID: 21303221</a>), and the enzyme additionally metabolizes the drug dichloroacetate. While the human disease literature does not describe the <em>P. putida</em> protein, it provides robust, transferable insight into the <strong>catalytic mechanism, glutathione dependence, fold, and substrate chemistry</strong> of the conserved MAAI reaction that HmgC performs.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<p><strong>Table 2. Key literature and how each source supports the annotation of HmgC.</strong></p>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Focus</th>
+<th>Contribution to this annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">15262943</a></td>
+<td>Homogentisate pathway in <em>P. putida</em></td>
+<td><strong>Primary, direct evidence.</strong> Assigns HmgC as maleylacetoacetate isomerase; defines substrates (L-Phe, L-Tyr, 3-hydroxyphenylacetate) and products (fumarate, acetoacetate); establishes the <em>hmgABC</em> operon and HmgR/homogentisate regulation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11327815/">11327815</a></td>
+<td>Crystal structure of MAAI/GSTZ</td>
+<td>Establishes the canonical GST fold, glutathione binding, and the structural basis of the isomerase reaction and catalytic promiscuity for the family.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16399379/">16399379</a></td>
+<td>Human glutathione transferase zeta</td>
+<td>Defines the two hallmark GSTZ/MAAI reactions (MAA→FAA isomerization; DCA→glyoxylate), confirming the primary isomerase function and substrate.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37742772/">37742772</a></td>
+<td>Clinical physiology/pharmacology of GSTZ1/MAAI</td>
+<td>Supports predominantly cytosolic localization of the MAAI/GSTZ family enzyme.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21303221/">21303221</a></td>
+<td>Discovery, catalysis, and <em>Gstz1⁻/⁻</em> mice</td>
+<td>Confirms the identity GSTZ1 = MAAI, the GSH-dependent chemistry, and that loss of the enzyme makes phenylalanine toxic — underscoring the pathway role.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15173170/">15173170</a></td>
+<td>Binding/kinetic mechanism of Zeta-class GST</td>
+<td>Details GSH binding and the catalytic role of active-site Cys16 in the family.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11692075/">11692075</a></td>
+<td>GSTZ1d allele; MAAI catalysis</td>
+<td>Confirms Zeta-class GSTs isomerize maleylacetoacetate to fumarylacetoacetate and maps active-site residues (e.g., Arg42) affecting catalysis.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a-note-on-citation-scope">A note on citation scope</h3>
+<p>The human GSTZ1 papers concerning <strong>hepatocellular carcinoma, DCA pharmacokinetics, NRF2/KEAP1 signaling, ferroptosis, and Wnt/β-catenin regulation</strong> (e.g., <a href="https://pubmed.ncbi.nlm.nih.gov/31782257/">PMID: 31782257</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/31666108/">PMID: 31666108</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/33931597/">PMID: 33931597</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/35562974/">PMID: 35562974</a>) describe <strong>human disease biology of the orthologue</strong> and are <strong>not</strong> claims about the <em>P. putida</em> protein. They are noted only to document the conserved enzymatic identity (GSTZ1 = MAAI) and catalytic chemistry, which transfer to HmgC by orthology. The core functional annotation of HmgC rests on the direct <em>P. putida</em> study (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>) plus structural/mechanistic work on the conserved family.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong></p>
+<ul>
+<li><strong>H1 — hmgC = maleylacetoacetate isomerase, the third enzyme of the homogentisate pathway.</strong> Supported by direct experimental evidence in <em>P. putida</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>).</li>
+<li><strong>H2 — The enzyme is a Zeta-class GST that uses glutathione as a catalytic cofactor for a <em>cis-trans</em> isomerization.</strong> Supported by family identity, biochemistry, and structure (<a href="https://pubmed.ncbi.nlm.nih.gov/16399379/">PMID: 16399379</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/11327815/">PMID: 11327815</a>).</li>
+<li><strong>H3 — The product is soluble/cytoplasmic and co-regulated with hmgA/hmgB via homogentisate-responsive HmgR.</strong> Supported (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/37742772/">PMID: 37742772</a>).</li>
+</ul>
+<p><strong>Refuted / not supported:</strong></p>
+<ul>
+<li>The gene is <strong>not</strong> a transporter, structural protein, or signaling molecule; no evidence supports such roles. Broad pleiotropic and disease-biomarker associations reported for the human orthologue GSTZ1 (cancer metabolism, DCA pharmacology) are not part of the bacterial enzyme's primary catabolic function and are excluded as off-target to this annotation.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No dedicated biochemical study of the <em>P. putida</em> HmgC protein itself.</strong> The assignment rests on (a) direct genetic/pathway characterization in <em>P. putida</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>) and (b) enzymology of the conserved eukaryotic orthologue. No purified-enzyme kinetic characterization (kcat, Km for maleylacetoacetate, GSH dependence) for Q88E49/PP_4619 was located; kinetic parameters are inferred, not measured, for this exact protein.</p>
+</li>
+<li>
+<p><strong>No experimental structure of HmgC.</strong> The GST fold, glutathione-binding mode, and catalytic residues (reactive Cys, active-site Arg) are inferred from the human MAAI crystal structure (<a href="https://pubmed.ncbi.nlm.nih.gov/11327815/">PMID: 11327815</a>) and InterPro domain assignments rather than confirmed in the bacterial enzyme.</p>
+</li>
+<li>
+<p><strong>UniProt annotation provenance.</strong> The EC number and enzyme name in the Q88E49 record carry an ECO:0000313 (imported/automatic from EMBL) evidence code, indicating derivation from sequence/database inference rather than direct assay of this protein — though this is strongly corroborated by the independent experimental pathway study in the same organism.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity breadth is unquantified for HmgC.</strong> The eukaryotic enzyme is catalytically promiscuous (isomerase, dehalogenase, peroxidase). Whether the <em>P. putida</em> enzyme retains side activities (e.g., toward α-haloacids such as DCA) has not been tested; only the physiological isomerase reaction is documented.</p>
+</li>
+<li>
+<p><strong>Regulatory fine detail.</strong> While the <em>hmgABC</em> operon and HmgR-mediated homogentisate induction are established, operator occupancy, HmgR–homogentisate binding affinity, and possible global inputs (e.g., carbon catabolite control) for <em>hmgC</em> specifically were not examined.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzyme characterization.</strong> Overexpress and purify PP_4619 (His-tagged) and measure steady-state kinetics of the maleylacetoacetate → fumarylacetoacetate isomerization (using maleylacetone as a convenient surrogate substrate, as done for human GSTZ1), quantifying kcat, Km, and the absolute glutathione requirement — converting orthology-based inference into direct evidence for the bacterial protein.</p>
+</li>
+<li>
+<p><strong>Structural determination / prediction validation.</strong> Solve a crystal structure or analyze an AlphaFold model of HmgC, superpose it on human MAAI (<a href="https://pubmed.ncbi.nlm.nih.gov/11327815/">PMID: 11327815</a>), and confirm conservation of the G-site GSH-binding residues, the catalytic cysteine, and the H-site geometry accommodating the acetoacetate moiety.</p>
+</li>
+<li>
+<p><strong>Gene knockout / complementation.</strong> Construct a <em>P. putida</em> KT2440 Δ<em>hmgC</em> mutant and test growth on L-tyrosine, L-phenylalanine, and 3-hydroxyphenylacetate as sole carbon sources. Predicted outcome: a growth defect (and accumulation of maleylacetoacetate/pigmented homogentisate-derived products) rescued by plasmid-borne <em>hmgC</em>, directly demonstrating physiological essentiality.</p>
+</li>
+<li>
+<p><strong>Metabolite profiling.</strong> Use LC-MS to detect accumulation of maleylacetoacetate (and homogentisate autoxidation pigments) in the Δ<em>hmgC</em> strain versus wild type upon aromatic-substrate feeding, confirming the metabolic block occurs at the isomerization step.</p>
+</li>
+<li>
+<p><strong>Promoter/regulation assay.</strong> Fuse the <em>Phmg</em> promoter to a reporter and confirm homogentisate-dependent, HmgR-mediated induction of <em>hmgABC</em>, quantifying induction ratio and testing which aromatic intermediates act as inducers.</p>
+</li>
+<li>
+<p><strong>Substrate-promiscuity screen.</strong> Test whether purified HmgC dehalogenates dichloroacetate to glyoxylate (the diagnostic GSTZ side reaction), establishing the degree of functional conservation with the eukaryotic enzyme and any potential utility in bioremediation of haloacid pollutants.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The evidence robustly supports annotation of <strong>hmgC (Q88E49, PP_4619)</strong> as <strong>maleylacetoacetate isomerase (EC 5.2.1.2)</strong>, a soluble cytoplasmic <strong>Zeta-class glutathione S-transferase</strong> that catalyzes the <strong>glutathione-dependent <em>cis</em>→<em>trans</em> isomerization of maleylacetoacetate to fumarylacetoacetate</strong>. It is the third enzyme of the <em>P. putida</em> homogentisate central catabolic pathway, acting between the ring-cleaving dioxygenase HmgA and the hydrolase HmgB, thereby enabling complete degradation of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate to fumarate and acetoacetate. Its gene is co-transcribed in the homogentisate-inducible <em>hmgABC</em> operon under IclR-type (HmgR) repressor control. This assignment is anchored by direct experimental study of the pathway in <em>P. putida</em> and reinforced by extensive structural and mechanistic characterization of the conserved GSTZ1/MAAI orthologues.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hmgC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hmgC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15262943</li>
+<li>PMID:16399379</li>
+<li>PMID:21303221</li>
+<li>PMID:11327815</li>
+<li>PMID:15173170</li>
+<li>PMID:11692075</li>
+<li>PMID:37742772</li>
+<li>PMID:31782257</li>
+<li>PMID:31666108</li>
+<li>PMID:33931597</li>
+<li>PMID:35562974</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hmgC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E49" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hmgc-curation-notes">hmgC curation notes</h1>
+<p>Q88E49/PP_4619 is annotated as maleylacetoacetate isomerase (EC 5.2.1.2) and<br />
+belongs to the GST zeta family<br />
+[UniProtKB:Q88E49, "SubName: Full=Maleylacetoacetate isomerase";<br />
+"Belongs to the GST superfamily. Zeta family."].</p>
+<p>The organism-specific pathway paper identifies HmgC as the middle enzyme of the<br />
+three-step homogentisate pathway<br />
+[PMID:15262943, "Homogentisate is then catabolized by a central catabolic<br />
+pathway that involves three enzymes, homogentisate dioxygenase (HmgA),<br />
+fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC),<br />
+finally yielding fumarate and acetoacetate."].</p>
+<p>The GST-family molecular-function annotation is retained as non-core, but its<br />
+propagated <code>glutathione metabolic process</code> annotation is over-annotated:<br />
+catalytic use of glutathione does not establish a role in glutathione<br />
+homeostasis or turnover.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88E49
+gene_symbol: hmgC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  HmgC is the glutathione-dependent maleylacetoacetate isomerase of the
+  Pseudomonas putida KT2440 homogentisate pathway. It converts
+  maleylacetoacetate to fumarylacetoacetate between the HmgA ring-cleavage and
+  HmgB hydrolysis reactions during aromatic-compound catabolism.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but uninformative parent-level catalytic annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Q88E49 has the specific maleylacetoacetate isomerase activity, so that
+      term should replace generic catalytic activity.
+    supported_by:
+    - reference_id: file:PSEPK/hmgC/hmgC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Maleylacetoacetate isomerase&#39;
+- term:
+    id: GO:0004364
+    label: glutathione transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Family-level transferase term that overstates the supported HmgC chemistry.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GST-zeta family membership and use of glutathione as a regenerated
+      catalytic cofactor do not establish a physiologically relevant net
+      glutathione-transferase reaction for Q88E49. GO:0016034 captures the
+      supported substrate-specific isomerase function.
+    supported_by:
+    - reference_id: file:PSEPK/hmgC/hmgC-uniprot.txt
+      supporting_text: &#39;Belongs to the GST superfamily. Zeta family.&#39;
+    - reference_id: file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+      supporting_text: &#39;It uses reduced glutathione (GSH) as an **essential catalytic cofactor** that is regenerated each cycle rather than consumed.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Consistent localization for a soluble intracellular pathway enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      HmgC acts between the soluble HmgA and HmgB reactions in the intracellular
+      homogentisate pathway and has no signal peptide or membrane role.
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct pathway annotation for phenylalanine degradation through homogentisate.
+    action: ACCEPT
+    reason: &gt;-
+      The P. putida pathway study establishes that phenylalanine is converted
+      to homogentisate and then catabolized by HmgABC.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway
+        involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into
+        4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as
+        the central intermediate.
+      full_text_unavailable: true
+- term:
+    id: GO:0006749
+    label: glutathione metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Over-propagated process annotation from the GST-zeta enzyme family.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Glutathione is a catalytic cofactor for maleylacetoacetate isomerization;
+      that cofactor requirement does not make HmgC part of glutathione
+      biosynthesis, degradation, or homeostasis. Its established biological
+      process is homogentisate catabolism.
+    supported_by:
+    - reference_id: file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+      supporting_text: &#39;It uses reduced glutathione (GSH) as an **essential catalytic cofactor** that is regenerated each cycle rather than consumed.&#39;
+- term:
+    id: GO:0009072
+    label: aromatic amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad, redundant process annotation for HmgC&#39;s defined pathway role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      HmgC can receive homogentisate-derived carbon from aromatic amino-acid
+      catabolism, but this broad umbrella term is redundant with the specific
+      GO:1902000 homogentisate catabolic process annotation added below.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Homogentisate is then catabolized by a central catabolic pathway that
+        involves three enzymes, homogentisate dioxygenase (HmgA),
+        fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+        (HmgC), finally yielding fumarate and acetoacetate.
+      full_text_unavailable: true
+- term:
+    id: GO:0016034
+    label: maleylacetoacetate isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct and specific core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 5.2.1.2 and the exact maleylacetoacetate isomerase
+      name, and the P. putida pathway study identifies HmgC as this enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/hmgC/hmgC-uniprot.txt
+      supporting_text: &#39;SubName: Full=Maleylacetoacetate isomerase&#39;
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        maleylacetoacetate isomerase (HmgC)
+      full_text_unavailable: true
+    - reference_id: file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+      supporting_text: &#39;Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**&#39;
+- term:
+    id: GO:1902000
+    label: homogentisate catabolic process
+  evidence_type: IC
+  original_reference_id: PMID:15262943
+  qualifier: involved_in
+  review:
+    summary: Missing specific process annotation for HmgC&#39;s central pathway.
+    action: NEW
+    reason: &gt;-
+      The organism-specific study directly identifies HmgC as one of the three
+      enzymes that catabolize homogentisate.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Homogentisate is then catabolized by a central catabolic pathway that
+        involves three enzymes, homogentisate dioxygenase (HmgA),
+        fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+        (HmgC), finally yielding fumarate and acetoacetate.
+      full_text_unavailable: true
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IC
+  original_reference_id: PMID:15262943
+  qualifier: involved_in
+  review:
+    summary: Missing process annotation for tyrosine degradation through HmgABC.
+    action: NEW
+    reason: &gt;-
+      Tyrosine is converted to the central intermediate homogentisate, which is
+      then catabolized by the HmgABC pathway containing HmgC.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway
+        involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into
+        4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as
+        the central intermediate.
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/hmgC/hmgC-uniprot.txt
+  title: UniProtKB entry Q88E49 for Pseudomonas putida KT2440 hmgC
+  findings:
+  - statement: UniProt assigns maleylacetoacetate isomerase activity to Q88E49.
+    supporting_text: &#39;SubName: Full=Maleylacetoacetate isomerase&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places Q88E49 in the GST zeta family.
+    supporting_text: &#39;Belongs to the GST superfamily. Zeta family.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession; the EMBL-submitted functional assignment was
+      checked against the organism-specific HmgABC pathway study.
+- id: PMID:15262943
+  title: &#39;The homogentisate pathway: a central catabolic pathway involved in the degradation
+    of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida.&#39;
+  findings:
+  - statement: HmgC is one of the three enzymes of the P. putida homogentisate pathway.
+    supporting_text: &gt;-
+      Homogentisate is then catabolized by a central catabolic pathway that
+      involves three enzymes, homogentisate dioxygenase (HmgA),
+      fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+      (HmgC), finally yielding fumarate and acetoacetate.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary P. putida pathway study. The cached record is
+      abstract-only but explicitly identifies HmgC and the pathway products.
+- id: file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK hmgC
+  findings:
+  - statement: The report assigns HmgC the glutathione-dependent cis-trans isomerization between the HmgA and HmgB reactions.
+    supporting_text: &#39;Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**&#39;
+    reference_section_type: RESULTS
+  - statement: Direct purified-enzyme kinetics are not available for Q88E49.
+    supporting_text: &#39;No purified-enzyme kinetic characterization (kcat, Km for maleylacetoacetate, GSH dependence) for Q88E49/PP_4619 was located&#39;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The target, pathway role, and exact
+      reaction agree with UniProt and PMID:15262943; detailed GST-zeta
+      mechanism and cofactor behavior are supported chiefly by ortholog work.
+core_functions:
+- description: &gt;-
+    Catalyzes glutathione-dependent isomerization of maleylacetoacetate to
+    fumarylacetoacetate in the central homogentisate-catabolic pathway.
+  molecular_function:
+    id: GO:0016034
+    label: maleylacetoacetate isomerase activity
+  directly_involved_in:
+  - id: GO:1902000
+    label: homogentisate catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/hmgC/hmgC-uniprot.txt
+    supporting_text: &#39;SubName: Full=Maleylacetoacetate isomerase&#39;
+  - reference_id: PMID:15262943
+    supporting_text: &gt;-
+      Homogentisate is then catabolized by a central catabolic pathway that
+      involves three enzymes, homogentisate dioxygenase (HmgA),
+      fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+      (HmgC), finally yielding fumarate and acetoacetate.
+    full_text_unavailable: true
+  - reference_id: file:PSEPK/hmgC/hmgC-deep-research-openscientist.md
+    supporting_text: &#39;Its primary function is the **glutathione-dependent *cis*→*trans* isomerization of 4-maleylacetoacetate to 4-fumarylacetoacetate**&#39;
+suggested_questions:
+- question: &gt;-
+    Does KT2440 HmgC have physiologically relevant GST-zeta activities beyond
+    maleylacetoacetate isomerization?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88E49 and compare glutathione-dependent turnover of
+    maleylacetoacetate with representative alternative GST-zeta substrates.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
