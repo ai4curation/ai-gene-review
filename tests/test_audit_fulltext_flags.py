@@ -155,3 +155,94 @@ def test_removal_is_a_noop_for_unlisted_pmids(tmp_path):
     review = _review(tmp_path, "U-ai-review.yaml", original)
     assert remove_stale_flags(review, {"111"}) == 0
     assert review.read_text() == original
+
+
+def test_nested_finding_level_flag_is_not_removed(tmp_path, publications):
+    """The mutator must not strip a flag the detector never inspects.
+
+    A first version matched the flag at any indentation until the next `id:` line, so it also
+    stripped a Finding-level flag under `findings:` (this happened to genes/MYCTU/clpP2,
+    PMID:35507665). `find_stale_flags` only inspects reference-level flags, so the post-fix
+    re-check was structurally blind to the over-removal.
+    """
+    review = _review(
+        tmp_path,
+        "N-ai-review.yaml",
+        """references:
+- id: PMID:111
+  title: reference-level flag is stale
+  full_text_unavailable: true
+  findings:
+  - statement: a finding carrying its own flag
+    full_text_unavailable: true
+""",
+    )
+    assert remove_stale_flags(review, {"111"}) == 1
+    text = review.read_text()
+    assert "  title: reference-level flag is stale\n  findings:" in text
+    # The nested flag, which find_stale_flags never reports, survives.
+    assert "    full_text_unavailable: true\n" in text
+    assert text.count("full_text_unavailable: true") == 1
+
+
+def test_reference_id_block_does_not_capture_a_nested_flag(tmp_path):
+    """A SupportingTextInReference block is keyed by `reference_id:`, not `id:`.
+
+    If that key reset the current reference, a flag nested under it could be attributed to the
+    wrong PMID and removed.
+    """
+    review = _review(
+        tmp_path,
+        "R-ai-review.yaml",
+        """existing_annotations:
+- term:
+    id: GO:0000001
+  review:
+    supported_by:
+    - reference_id: PMID:111
+      supporting_text: quoted text
+      full_text_unavailable: true
+references:
+- id: PMID:111
+  full_text_unavailable: true
+""",
+    )
+    assert remove_stale_flags(review, {"111"}) == 1
+    text = review.read_text()
+    # The nested one under reference_id: is untouched; only the top-level reference lost its flag.
+    assert "      full_text_unavailable: true\n" in text
+    assert text.count("full_text_unavailable: true") == 1
+
+
+def test_audit_returns_nonzero_while_flags_remain_and_zero_after_fix(
+    tmp_path, publications
+):
+    """The exit code is the CI-gate contract, so pin it."""
+    from ai_gene_review.tools.audit_fulltext_flags import audit
+
+    genes = tmp_path / "genes" / "human" / "G"
+    genes.mkdir(parents=True)
+    (genes / "G-ai-review.yaml").write_text(
+        "references:\n- id: PMID:111\n  full_text_unavailable: true\n"
+    )
+    assert audit(tmp_path, fix=False, echo=lambda *_: None) == 1
+    assert audit(tmp_path, fix=True, echo=lambda *_: None) == 0
+    assert audit(tmp_path, fix=False, echo=lambda *_: None) == 0
+
+
+def test_audit_raises_when_publications_dir_is_absent(tmp_path):
+    from ai_gene_review.tools.audit_fulltext_flags import audit
+
+    with pytest.raises(FileNotFoundError):
+        audit(tmp_path, echo=lambda *_: None)
+
+
+def test_frontmatter_key_found_beyond_a_fixed_byte_window(tmp_path):
+    """Parsing the real frontmatter block has no truncation cliff."""
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    padding = "\n".join(f"note_{i}: filler value for padding" for i in range(400))
+    (pubs / "PMID_555.md").write_text(
+        f"---\ntitle: t\n{padding}\nfull_text_available: true\n---\nbody\n"
+    )
+    assert cached_full_text_availability(pubs) == {"555": True}
