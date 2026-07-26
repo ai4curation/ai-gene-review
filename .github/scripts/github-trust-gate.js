@@ -15,15 +15,11 @@ const fs = require("fs");
 
 const TRUSTED_PERMISSIONS = new Set(["admin", "maintain", "write", "triage"]);
 
-const DEFAULT_BOT_LOGINS = new Set([
-  "ai4c-agent",
-  "ai4c-reviewer",
-  "app/claude",
-  "claude",
-  "dragon-ai-agent",
-  "github-actions",
-  "github-actions[bot]",
-]);
+// Deliberately NOT a list of bare names. A comment author that is a GitHub App
+// always appears as "<slug>[bot]", so the "[bot]" suffix is the only reliable
+// signal. Listing bare logins such as "claude" would hand automatic trust to
+// whoever registers that username.
+const BOT_LOGIN_SUFFIX = "[bot]";
 
 const RISKY_COMMENT_PATTERNS = [
   {
@@ -73,12 +69,12 @@ function isBotLogin(login, extraBotLogins = []) {
     return true;
   }
   const normalized = normalizeLogin(login);
-  const botLogins = new Set(
-    [...DEFAULT_BOT_LOGINS, ...extraBotLogins].map((value) =>
-      normalizeLogin(value),
-    ),
-  );
-  return normalized.endsWith("[bot]") || botLogins.has(normalized);
+  if (normalized.endsWith(BOT_LOGIN_SUFFIX)) {
+    return true;
+  }
+  // extraBotLogins is an explicit, caller-supplied override; it is not populated
+  // with bare names by default.
+  return extraBotLogins.map(normalizeLogin).includes(normalized);
 }
 
 async function isTrustedLogin({

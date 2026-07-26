@@ -9,16 +9,12 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
-  workflow_dispatch:
-    inputs:
-      model:
-        description: "Claude model to use"
-        default: claude-sonnet-4-6
-        type: choice
-        options:
-          - claude-sonnet-4-6
-          - claude-haiku-4-5-20251001
-          - claude-opus-4-7
+
+# `edited` is not a trigger here, but a comment can still arrive while a run is
+# in flight; keep one agent per issue/PR.
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
 
 jobs:
   claude:
@@ -63,6 +59,11 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Resolve agent config
+        uses: ./.github/actions/resolve-agent-config
+        with:
+          workflow: claude
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
             
@@ -99,7 +100,7 @@ jobs:
           additional_permissions: |
             actions: read
           
-          model: ${{ inputs.model || 'claude-sonnet-4-6' }}
+          model: ${{ env.AGENT_MODEL }}
           
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"

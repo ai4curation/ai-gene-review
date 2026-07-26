@@ -79,14 +79,22 @@ describe("github trust gate comment risk classification", () => {
 });
 
 describe("github trust gate login handling", () => {
-  it("treats our own bots and any [bot] suffix as bots", () => {
+  it("treats any [bot] suffix as a bot", () => {
     for (const login of [
-      "ai4c-agent",
-      "AI4C-Reviewer",
+      "ai4c-agent[bot]",
+      "AI4C-Reviewer[bot]",
       "github-actions[bot]",
       "some-other-app[bot]",
     ]) {
       assert.equal(isBotLogin(login), true, `${login} should be a bot`);
+    }
+  });
+
+  it("does NOT trust a bare login that merely looks like one of our bots", () => {
+    // An impostor could register these usernames; only the "[bot]" suffix,
+    // which GitHub reserves for Apps, is a reliable signal.
+    for (const login of ["ai4c-agent", "claude", "dragon-ai-agent", "github-actions"]) {
+      assert.equal(isBotLogin(login), false, `${login} must not be auto-trusted`);
     }
   });
 
