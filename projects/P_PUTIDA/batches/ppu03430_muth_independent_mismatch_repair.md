@@ -9,6 +9,8 @@ autolink_gene_symbols: false
 
 # PSEPK MutH-independent mismatch repair
 
+- Pull request: [#2258](https://github.com/ai4curation/ai-gene-review/pull/2258)
+
 This batch curates the dedicated recognition, incision, unwinding, and candidate
 excision machinery for the MutH-independent mismatch-repair route in
 *Pseudomonas putida* KT2440. The broad KEGG membership extract is retained in
@@ -64,8 +66,8 @@ gene-review batch.
 - [x] Attempt OpenScientist deep research for selected genes; `uvrD`, `xseA`,
   `xseB`, `sbcB`, and `recJ` returned reports, while the corrected `mutS` and
   `mutL` requests each exhausted the 7,200-second provider timeout.
-- [ ] Open one PR for this module/pathway.
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Open one PR for this module/pathway.
+- [ ] Shepherd PR through review and CI; both are in progress.
 
 ## Notes
 
