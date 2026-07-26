@@ -23,7 +23,8 @@ from live data only:
    triad member or shifting the nucleophile elbow.
 3. What is the functional spread of the PANTHER node that donated the
    `GO:0016787 hydrolase activity` IBA? Every accession in that row's WITH/FROM
-   column is resolved and classified by EC class. If the node's members include
+   column is resolved, the resolution is checked back against the resolved
+   entry's own cross-references, and each member is classified by EC class. If the node's members include
    amide hydrolases and a lyase, then stopping at the general "hydrolase" parent
    is a deliberate last-common-ancestor call, not a lazy one.
 4. What does the family's N-terminal annotation look like, and do the donors of
@@ -136,8 +137,21 @@ NTERM_SCAN_END = 45
 FIELDS = (
     "accession,id,protein_name,gene_names,organism_name,sequence,"
     "protein_existence,ft_act_site,ft_motif,ft_signal,ft_transmem,"
-    "cc_subcellular_location,cc_catalytic_activity,ec"
+    "cc_subcellular_location,cc_catalytic_activity,ec,"
+    "xref_mgi,xref_rgd,xref_sgd,xref_araport"
 )
+
+# How a GOA WITH/FROM token maps onto a UniProt cross-reference database, so the
+# hand-made resolutions above can be checked rather than trusted. The token is
+# split on its first colon; the remainder is compared to the cross-reference id.
+# UniProtKB tokens are checked against the accession itself, and PANTHER tokens
+# name ancestral nodes with no entry to check.
+TOKEN_XREF_DATABASE = {
+    "MGI": "MGI",
+    "RGD": "RGD",
+    "SGD": "SGD",
+    "AGI_LocusCode": "Araport",
+}
 
 
 @dataclass
@@ -157,6 +171,7 @@ class Entry:
     nterm_features: list[tuple[str, int, int, str, tuple[str, ...]]] = field(default_factory=list)
     subcellular: list[str] = field(default_factory=list)
     reactions: list[str] = field(default_factory=list)
+    xrefs: dict[str, list[str]] = field(default_factory=dict)
 
 
 def fetch_json(url: str, what: str) -> dict:
@@ -227,6 +242,9 @@ def load_entry(acc: str, label: str, role: str) -> Entry:
             if start <= NTERM_SCAN_END:
                 entry.nterm_features.append((kind, start, end, note, evidence_codes(feat)))
 
+    for xref in doc.get("uniProtKBCrossReferences", []):
+        entry.xrefs.setdefault(xref["database"], []).append(xref["id"])
+
     for com in doc.get("comments", []):
         if com["commentType"] == "SUBCELLULAR LOCATION":
             for loc in com.get("subcellularLocations", []):
@@ -239,6 +257,51 @@ def load_entry(acc: str, label: str, role: str) -> Entry:
                 entry.reactions.append(name)
 
     return entry
+
+
+def verify_withfrom_resolution(
+    withfrom: dict[str, str | None], entries: dict[str, Entry]
+) -> int:
+    """Check each hand-made WITH/FROM resolution against the entry's own cross-references.
+
+    A wrong accession in the tables above would silently mis-describe the donor
+    node, so this fails the whole run rather than reporting a wrong member.
+    Returns the number of tokens actually checked.
+    """
+    checked = 0
+    for token, acc in withfrom.items():
+        prefix, _, rest = token.partition(":")
+        if prefix == "PANTHER":
+            if acc is not None:
+                raise SystemExit(f"FATAL: PANTHER token {token} should resolve to None, got {acc}.")
+            continue
+        if acc is None:
+            raise SystemExit(f"FATAL: WITH/FROM token {token} has no resolution.")
+        entry = entries[acc]
+        if prefix == "UniProtKB":
+            if rest != acc:
+                raise SystemExit(
+                    f"FATAL: token {token} is mapped to accession {acc}, which is a different "
+                    f"entry. Fix the WITH/FROM table."
+                )
+            checked += 1
+            continue
+        database = TOKEN_XREF_DATABASE.get(prefix)
+        if database is None:
+            raise SystemExit(
+                f"FATAL: no cross-reference database is configured for WITH/FROM prefix "
+                f"{prefix!r} (token {token}), so its resolution to {acc} cannot be checked. "
+                f"Add it to TOKEN_XREF_DATABASE."
+            )
+        found = entry.xrefs.get(database, [])
+        if rest not in found:
+            raise SystemExit(
+                f"FATAL: token {token} was resolved to {acc}, but that entry's {database} "
+                f"cross-references are {found or '[]'} - {rest} is not among them. The "
+                f"WITH/FROM resolution is wrong."
+            )
+        checked += 1
+    return checked
 
 
 def classify_ec(ec_numbers: list[str]) -> str:
@@ -336,6 +399,9 @@ def main() -> None:
 
     # The hypothesis under test must still be what UniProt says. If UniProt has
     # moved the features, stop rather than silently checking the wrong columns.
+    n_verified = verify_withfrom_resolution(IBA_HYDROLASE_WITHFROM, entries)
+    n_verified += verify_withfrom_resolution(IBA_MEMBRANE_WITHFROM, entries)
+
     if tuple(sorted(test.act_sites)) != EXPECTED_ACT_SITES:
         raise SystemExit(
             f"FATAL: {TEST_ACC} ACT_SITE positions are now {sorted(test.act_sites)}, "
@@ -343,7 +409,11 @@ def main() -> None:
             f"the write-up before trusting it."
         )
 
-    results: dict = {"test": TEST_ACC, "test_length": len(test.sequence)}
+    results: dict = {
+        "test": TEST_ACC,
+        "test_length": len(test.sequence),
+        "withfrom_tokens_verified": n_verified,
+    }
 
     # ---- Part 1: does AADACL4 actually carry the triad residues? -------------
     triad = []
@@ -601,6 +671,12 @@ def write_report(entries: dict[str, Entry], r: dict) -> None:
         "`GO:0016787 hydrolase activity` (IBA, GO_REF:0000033) was propagated from PANTHER node "
         "PTN009058710. Every token in that GOA row's WITH/FROM column is resolved below and "
         "classified by the EC number UniProt assigns to it."
+    )
+    w("")
+    w(
+        f"Each non-PANTHER token's resolution is checked back against the resolved entry's own "
+        f"cross-references before anything is reported, and a mismatch aborts the run; "
+        f"**{r['withfrom_tokens_verified']}** token resolutions across both IBA rows passed."
     )
     w("")
     w("| WITH/FROM token | Resolved | Organism | UniProt name | EC | Class |")

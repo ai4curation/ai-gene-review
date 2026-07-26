@@ -50,6 +50,8 @@ Each reference is aligned to AADACL4 globally (BLOSUM62, gap open -11, extend -1
 
 `GO:0016787 hydrolase activity` (IBA, GO_REF:0000033) was propagated from PANTHER node PTN009058710. Every token in that GOA row's WITH/FROM column is resolved below and classified by the EC number UniProt assigns to it.
 
+Each non-PANTHER token's resolution is checked back against the resolved entry's own cross-references before anything is reported, and a mismatch aborts the run; **19** token resolutions across both IBA rows passed.
+
 | WITH/FROM token | Resolved | Organism | UniProt name | EC | Class |
 |---|---|---|---|---|---|
 | `AGI_LocusCode:AT1G49660` | Q9FX94 | Arabidopsis thaliana | Probable carboxylesterase 5 | - | no EC assigned |

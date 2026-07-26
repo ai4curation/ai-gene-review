@@ -214,6 +214,13 @@ evidence supports, and a substrate-level child would not be licensed by homology
 `GO:0016020` IBA, 4 tokens: MGI:MGI:1915008 → Q99PG0 (ER membrane); MGI:MGI:2443191 →
 Q8BLF1 (cell membrane); UniProtKB:P22760 (ER membrane); PANTHER:PTN009058713 (node).
 
+These resolutions are not taken on trust: `analyze_catalytic_machinery.py` checks each
+non-PANTHER token back against the resolved entry's own UniProt cross-references (MGI, RGD,
+SGD, Araport, or accession equality) before it reports anything, and a mismatch aborts the
+run. 19 token resolutions across the two IBA rows pass. I confirmed the guard actually bites
+by temporarily mis-mapping `RGD:631440` to `Q8BLF1`, which exits non-zero with
+`FATAL: token RGD:631440 was resolved to Q8BLF1, but that entry's RGD cross-references are []`.
+
 `GO:0016020` IEA, 3 tokens: `ARBA:ARBA00028763` and `UniProtKB-SubCell:SL-0162` are the
 UniProt automatic-annotation and controlled-vocabulary handles for the `Membrane`
 subcellular-location line; `InterPro:IPR017157` is the arylacetamide-deacetylase family
