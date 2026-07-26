@@ -21,7 +21,17 @@ PAINT no-IBA project review, using the `affinage` deep-research provider
   PI4KB recruitment, steroidogenesis, sphingolipid transport, STING trafficking and picornavirus
   biology — and **never mentions acyl-CoA once**.
 
-That last point is the strongest evidence available, and it is *negative* evidence from a source
+- **The ACB domain is experimentally dispensable.** Reconstituting ACBD3 domain-deletion
+  mutants in ACBD3-knockout cells shows [PMID:30755512 "we show that acyl-coenzyme A binding
+  (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
+  recruitment and efficient enterovirus replication"]. This is the strongest point and it is
+  *positive* evidence — the domain the gene is named for is not needed for the activity the
+  gene is known for.
+
+That last point was found late, by filling in `findings` for the six references that had full
+text cached and an empty `findings` list — the campaign's own "an empty `findings:` on a
+full-text reference is a flashing light" rule, applied to this file's own reference list rather
+than to someone else's. Before it, the case rested on *negative* evidence from a source
 that is otherwise dense and specific. Marked `MARK_AS_OVER_ANNOTATED` rather than removed: the
 domain is genuinely present and PROSITE-recognised, ACBD-family members vary in whether the
 domain retains binding, and a ligand may yet be found. But it should not read as characterised.
@@ -323,8 +333,18 @@ Both halves were verbatim; both readings were wrong.
    *suggesting*, *while*, *although*, *whereas* or a comparison, the continuation is part of
    the result. Cutting at a comma inverts meaning as often as it shortens it.
 2. **A mutant's phenotype names an element, not a residue, unless the substitution is
-   conservative and the structure is holo.** Proline scans report on helices. Apo structures
-   propose contacts; they do not map them.
+   conservative and the structure is holo.** Two corollaries, one for each error:
+   - a **proline** substitution that abolishes binding implicates the *secondary structure*, not
+     the side chain;
+   - a substitution with **no effect** does not nominate its residue as a contact either — it is
+     evidence against, or at best uninformative.
+   Apo structures propose contacts; they do not map them.
 3. **When two sources draw different boundaries for one region, resolve to residue numbers**
    and treat the domain names as commentary. (Rounds 3–5 were all boundary-label
    collisions; see the UR/GOLD correction above.)
+
+**One caveat on my own numbers.** The `≈379–383` span I use for the helix is an *inference*,
+flagged here under rule 3 because it is the same class of thing rule 3 warns about. Neither paper
+gives the helix endpoints. What is sourced is: the GOLD domain has *one* α helix; Q379, I380 and
+K381 were the residues substituted as helix-breakers; and Phe383 is buried. `379–383` is bracketed
+from those facts, which is why it is written as "roughly" everywhere it appears.
