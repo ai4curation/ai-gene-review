@@ -225,15 +225,29 @@ CLAUDE_ACTION_V1_OUTPUTS = {
 }
 
 
+def _action_definition_files():
+    """Every file that can invoke an action: workflows and composite actions."""
+    return sorted(WORKFLOW_DIR.glob("*.y*ml")) + sorted(
+        (REPO_ROOT / ".github" / "actions").glob("*/action.yml")
+    )
+
+
+def _steps(doc: dict):
+    """Yield steps from a workflow (jobs.*.steps) or a composite action (runs.steps)."""
+    for job in (doc.get("jobs") or {}).values():
+        yield from (job or {}).get("steps") or []
+    yield from ((doc.get("runs") or {}).get("steps") or [])
+
+
 def _claude_action_steps():
-    """Yield (workflow stem, step mapping) for every claude-code-action step."""
-    for path in WORKFLOW_DIR.glob("*.y*ml"):
-        doc = yaml.safe_load(path.read_text())
-        for job in (doc.get("jobs") or {}).values():
-            for step in (job or {}).get("steps") or []:
-                uses = (step or {}).get("uses") or ""
-                if uses.startswith("anthropics/claude-code-action@"):
-                    yield path.stem, step
+    """Yield (file stem, step mapping) for every claude-code-action step."""
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
+        for step in _steps(doc):
+            if ((step or {}).get("uses") or "").startswith(
+                "anthropics/claude-code-action@"
+            ):
+                yield path.stem if path.name != "action.yml" else path.parent.name, step
 
 
 def test_no_workflow_passes_an_undeclared_input_to_claude_code_action():
@@ -251,12 +265,11 @@ def test_no_workflow_passes_an_undeclared_input_to_claude_code_action():
 def test_no_workflow_reads_an_undeclared_claude_code_action_output():
     """`steps.<id>.outputs.result` does not exist; it renders as empty."""
     offenders = []
-    for path in WORKFLOW_DIR.glob("*.y*ml"):
-        doc = yaml.safe_load(path.read_text())
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
         ids = {
             step.get("id")
-            for job in (doc.get("jobs") or {}).values()
-            for step in ((job or {}).get("steps") or [])
+            for step in _steps(doc)
             if (step or {}).get("uses", "").startswith("anthropics/claude-code-action@")
         }
         text = path.read_text()
@@ -296,7 +309,7 @@ def test_claude_action_pin_matches_the_recorded_sets():
     of quietly turning both tests into no-ops.
     """
     pins = set()
-    for path in WORKFLOW_DIR.glob("*.y*ml"):
+    for path in _action_definition_files():
         pins.update(
             re.findall(r"anthropics/claude-code-action@([0-9a-f]{40})", path.read_text())
         )
@@ -311,7 +324,7 @@ def test_claude_action_pin_matches_the_recorded_sets():
 def test_claude_code_action_is_always_sha_pinned():
     """A moved tag could swap in code that exfiltrates the App token."""
     floating = []
-    for path in WORKFLOW_DIR.glob("*.y*ml"):
+    for path in _action_definition_files():
         for ref in re.findall(r"anthropics/claude-code-action@(\S+)", path.read_text()):
             if not re.fullmatch(r"[0-9a-f]{40}", ref):
                 floating.append(f"{path.stem}: @{ref}")
