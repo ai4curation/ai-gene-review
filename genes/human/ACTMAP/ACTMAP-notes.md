@@ -1,0 +1,253 @@
+# ACTMAP (C19orf54) — review notes
+
+UniProt `Q5BKX5` (`ACTMP_HUMAN`), HGNC:24758, 351 aa (canonical isoform 1, MANE-Select
+`ENST00000378313.7`), chromosome 19. `PE 1: Evidence at protein level`. Formerly `C19orf54`;
+renamed `ACTMAP` after the 2022 identification of its activity.
+
+Reviewed 2026-07-26 (PAINT + affinage campaign). Sources used: `ACTMAP-uniprot.txt`,
+`ACTMAP-goa.tsv`, `ACTMAP-deep-research-affinage.md` (`gates_passed: True`, faith 100%),
+three primary/secondary PMIDs, QuickGO, IntAct, PANTHER PTHR28631, and the computed audit in
+`ACTMAP-bioinformatics/RESULTS.md`.
+
+## 1. What the protein does
+
+ACTMAP is the protease that performs the **noncanonical, post-translational** step of actin
+N-terminal maturation. The initiator methionine of cytoplasmic actin is *not* removed
+co-translationally by methionine aminopeptidase; it is Nt-acetylated and then excised, as a whole
+Nα-acetyl-methionine, by ACTMAP:
+
+- [PMID:36173861 "Protein synthesis generally starts with a methionine that is removed during translation. However, cytoplasmic actin defies this rule because its synthesis involves noncanonical excision of the acetylated methionine by an unidentified enzyme after translation."]
+- [PMID:36173861 "Here, we identified C19orf54, named ACTMAP (actin maturation protease), as this enzyme."]
+- [PMID:42159598 "ACTMAP is a ∼45 kDa cytosolic protein identified in a haploid genetic screen to function as a protease that post-translationally cleaves the N-terminally acetylated methionine from β- and γ-actin, which are then reacetylated by N-acetyltransferase NAA80 to generate mature actins."]
+  (The "∼45 kDa" is an apparent mass; UniProt computes **37,779 Da** for the 351-residue canonical
+  form, so the review quotes this sentence only from "protein identified in a haploid genetic
+  screen…" onward and does not import the mass figure.)
+
+So the pathway order is: translation → Nt-acetylation of Met1 → **ACTMAP cleaves acetyl-Met1** →
+NAA80 re-acetylates the newly exposed Asp2/Glu2 → mature actin. For muscle α-actins the initiator
+Met *is* removed canonically and ACTMAP then removes the acetylated Cys.
+
+UniProt records four Rhea reactions for this, all of which release a **substituted** amino acid,
+not a free one:
+
+- [file:human/ACTMAP/ACTMAP-uniprot.txt "Reaction=N-terminal N(alpha)-acetyl-L-methionyl-L-aspartyl-[protein] +"] → `N-acetyl-L-methionine` (Rhea:74571)
+- plus the Glu2 variant (Rhea:74575), and the acetyl-Cys/Asp and acetyl-Cys/Glu variants (Rhea:74579, 74583) for muscle α-actins.
+
+UniProt's own EC assignment is deliberately unspecific:
+[file:human/ACTMAP/ACTMAP-uniprot.txt "EC=3.4.11.- {ECO:0000269|PubMed:36173861}"] — i.e. **not**
+EC 3.4.11.18.
+
+## 2. The activity claim rests on a tested catalytic residue, not on a domain name
+
+- UniProt annotates a `REGION 124..244` [file:human/ACTMAP/ACTMAP-uniprot.txt "/note=\"Peptidase C39-like\""] and `ACT_SITE 132`.
+- The residue was tested: [file:human/ACTMAP/ACTMAP-uniprot.txt "C->A: Catalytically inactive, disrupts N-terminal"] cleavage of immature actin (`ECO:0000269|PubMed:36173861`).
+- Independently re-tested four years later with covalent chemistry:
+  [PMID:42159598 "AlphaFold predictions revealed that ACTMAP has structural similarity to bacterial cysteine proteases with C132 representing the catalytic nucleophile."]
+  [PMID:42159598 "we confirmed the stereoselective reactivity of WX-02-570 with recombinant WT-ACTMAP, but not a C132A mutant, both in HEK293T cells and in cell lysates by gel-ABPP"]
+  with the specificity control that other cysteines are not the reactive site:
+  [PMID:42159598 "Other representative cysteine mutants of ACTMAP (C119A and C271A) retained reactivity with WX-02-570"]
+  and an orthogonal thermal-stability readout:
+  [PMID:42159598 "in the thermal stability of WT-, but not C132A-ACTMAP (Figure S6D,E), further supporting that tryptoline butynamides react with the cysteine nucleophile of ACTMAP."]
+- Chemical inhibition reproduces the genetic phenotype in human cells:
+  [PMID:42159598 "which produced a concentration-dependent increase in immature β-actin"] after
+  [PMID:42159598 "genetic disruption of ACTMAP by CRISPR/Cas9 gene editing resulted in substantial accumulation of immature actin"].
+
+Conclusion: the protease call is **not** domain-name-derived. It is a mutated-residue call
+supported twice by independent labs and methods. `GO:0070005 cysteine-type aminopeptidase
+activity` is therefore well earned on the *mechanism* axis.
+
+## 3. Headline curation finding — `GO:0004239` is the wrong term, and it is a term-scoping problem, not a curator error
+
+`GO:0004239 initiator methionyl aminopeptidase activity` is annotated to ACTMAP twice (IDA by
+UniProt from PMID:36173861; IEA by Ensembl ortholog projection). Three computed observations, all
+in `ACTMAP-bioinformatics/RESULTS.md`:
+
+1. **The term means canonical MetAP.** Its definition is "Catalysis of the release of N-terminal
+   initiator methionine from peptides" and its **only** EC xref is `3.4.11.18` — the
+   co-translational, metal-dependent methionine aminopeptidase reaction. ACTMAP releases
+   `N-acetyl-L-methionine`, and UniProt gives it `EC 3.4.11.-`, explicitly not `3.4.11.18`. The
+   2022 paper's entire point is that actin "defies this rule".
+2. **The branch requires a free N-terminus that ACTMAP's substrate does not have.** Both
+   `GO:0004239` and `GO:0070005` are descendants of `GO:0008238 exopeptidase activity`, whose
+   definition ends "...in a reaction that **requires a free N-terminal amino group**, C-terminal
+   carboxyl group or both". ACTMAP's substrate is Nα-acetylated. `GO:0008242 omega peptidase
+   activity` (EC `3.4.19.-`, `3.4.19.1` acylaminoacyl-peptidase) is *not* under exopeptidase and
+   is defined for "releasing substituted amino acids".
+   **GO already models the exact analogue correctly**: `GO:0016920 pyroglutamyl-peptidase
+   activity` releases a single N-terminal residue whose α-amino group is blocked, and it sits under
+   `GO:0008242` + `GO:0008234` (cysteine-type peptidase) and **not** under `GO:0004177`
+   aminopeptidase activity. Computed: `under omega peptidase: True`, `under cysteine type
+   peptidase: True`, `under aminopeptidase: False`.
+3. **The term now conflates two mechanistically distinct enzyme families.** Censused over five
+   model organisms (`9606,10090,7227,7955,559292`): 86 annotations on 74 gene products, of which
+   **4 are ACTMAP-family** (PANTHER PTHR28631: human `Q5BKX5`, mouse `J3QPC3`, zebrafish `B0V3H4`,
+   *Drosophila* `Q9VCE8`) and **70 are not** — `METAP1`, `METAP1D`, `METAP2`, yeast `MAP1`/`MAP2`,
+   `RNPEPL1`, fly `MAP1A`/`MAP1B`/`und`. So one term is being used both for the cobalt/manganese
+   MetAP family that removes the *unmodified* initiator Met co-translationally, and for the
+   cysteine-nucleophile ACTMAP family that removes the *Nα-acetylated* initiator residue
+   post-translationally.
+
+The right fix is a **new term** (a cysteine-type omega peptidase for Nα-acetylamino-acid release
+from actin), which would correct 4 gene products in 4 species in one edit. Note the term's own
+history: `GO:0004239` was obsoleted in 2015 and **reinstated on 2023-03-14** with the narrow
+"initiator methionine" definition (QuickGO `comment: This term was reinstated from obsolete`);
+UniProt's ACTMAP IDA is dated 2023-03-31, 17 days later. So the term choice was a deliberate,
+recent curator decision made when nothing better existed — this is a gap in the ontology, not
+sloppy curation, and it should be raised as a term request rather than pinned on the curator.
+
+## 4. The two Ensembl IEA rows are reciprocally circular
+
+`GO:0004239` and `GO:0016485` each appear twice: once IDA from PMID:36173861, once IEA
+(`GO_REF:0000107`, Ensembl Compara) with `WITH/FROM = UniProtKB:J3QPC3 | ensembl:ENSMUSP00000137189`.
+
+Resolved: `J3QPC3` → `ACTMP_MOUSE`, mouse Actmap, 361 aa, Swiss-Prot reviewed, requested accession
+returns itself (so not a dead/merged entry). The donor **does** carry its own experimental
+annotation — but from **the same publication**:
+
+| row term | mouse donor's own evidence | donor WITH/FROM points back at Q5BKX5? |
+|---|---|---|
+| GO:0004239 | IDA (PMID:36173861), ISS (GO_REF:0000024), ISO (GO_REF:0000119), IEA (GO_REF:0000107) | yes — GO_REF:0000024, :0000107, :0000119 |
+| GO:0016485 | IDA (PMID:36173861), ISO (GO_REF:0000119), IEA (GO_REF:0000107) | yes — GO_REF:0000107, :0000119 |
+
+Haahr et al. assayed both the human protein and a mouse knockout, so mouse and human each hold an
+independent IDA *from the same paper*; and three of the mouse donor's four annotations to the term
+are themselves projections **from human Q5BKX5**. The human IEA row therefore adds no evidence
+independent of the human IDA it sits beside. It is not wrong — the donor is the true 1:1 ortholog —
+so it is kept, but it must not be counted as a second line of support.
+
+## 5. The anticipated actin-role conflation did **not** happen (negative result, reported)
+
+ACTMAP acts *on* actin, so the obvious risk was that actin's own cell-biology terms would leak onto
+it (the `ROLE_CONFLATION` shape that hit ACTL8, where 10 of 11 IBA rows were transfers of β-actin's
+specific biology). Checked and refuted: ACTMAP's entire GOA record is 6 rows — cytoplasm, two
+protease MF terms, and protein processing. There is **no** actin-binding, actin-cytoskeleton,
+actin-filament, sarcomere or cell-motility term, and no `GO:0005515`. The conflation that *did*
+occur is at the term level (the MetAP-family term above), not the substrate level.
+
+Also checked, and also negative:
+- **No IBA rows at all.** `DR PAN-GO; Q5BKX5; 0 GO annotations based on evolutionary models` — PAN-GO
+  has not annotated ACTMAP despite PTHR28631 being a clean single-subfamily family (1109 proteins,
+  845 proteomes, 2999 taxa, subfamily `PTHR28631:SF1` "ACTIN MATURATION PROTEASE") whose human
+  member has IDA-grade evidence. That is a PAINT gap, not a PAINT error.
+- **No paralog problem.** PTHR28631 has one subfamily and six reviewed members, one per species
+  (bovine, *Xenopus*, zebrafish, mouse, human, *Drosophila* CG33108) — there is no paralog to
+  mis-transfer from.
+- **The renaming did not split the literature.** PubMed returns 3 records for `C19orf54` and 5 for
+  `ACTMAP`; the 3 are a subset of the 5, and the 2 extra are one unrelated paper (a GPS
+  "ActMAP framework" in *Health & Place*) plus the JACS study. The old name persists only in
+  resource metadata (PANTHER family name "UPF0692 PROTEIN C19ORF54", `BioMuta; C19orf54`), not in
+  the primary literature.
+
+## 6. Interaction data: the partner list belongs to a catalytically dead isoform
+
+UniProt's `CC INTERACTION` block lists 66 partners, and **every one is recorded against isoform
+`Q5BKX5-3`**. Isoform 3 carries `VSP_039884`, which replaces residues 1..216 with a 35-residue
+alternative N-terminus — deleting `ACT_SITE 132` and most of the `Peptidase C39-like` region
+(124..244). Isoforms 2 and 3 therefore **cannot be catalytically active**.
+
+IntAct directly (`/intact/ws/interaction/findInteractions/Q5BKX5`, 220 records): 212 of the 216
+ACTMAP-side records are against `Q5BKX5-3`; 197 records have *S. cerevisiae* as host organism and
+are logged as `two hybrid array` (70) + `two hybrid prey pooling approach` (70) + `validated two
+hybrid` (67) — i.e. the ACRV1 pattern, three sub-methods of one Y2H screen, so a UniProt
+`NbExp=3` here is one experiment counted three ways. Only 4 records are `anti tag coip` in human
+cells. Profilin appears nowhere in the IntAct set.
+
+GO has imported none of this, which is the right call. The **profilin** interaction, by contrast, is
+from the primary paper and is well supported:
+[file:human/ACTMAP/ACTMAP-uniprot.txt "Interacts (via N-terminus) with PFN2 isoforms IIa and IIb; the"]
+… [file:human/ACTMAP/ACTMAP-uniprot.txt "interactions may facilitate efficient cleavage of the acetylated N-"]terminus of
+immature actin, and [file:human/ACTMAP/ACTMAP-uniprot.txt "Interacts with PFN1"]; the binding
+surface is mapped to [file:human/ACTMAP/ACTMAP-uniprot.txt "The N-terminal proline-rich disordered region contributes to"]
+the interaction with PFN2. Corroborated independently:
+[PMID:42159598 "These IP-MS experiments also revealed stereoselective reductions in the enrichment of established ACTMAP-interacting proteins, such as profilin 1 and 2 (PFN1/2)"].
+`GO:0005522 profilin binding` exists and is informative, and GOA has no interaction annotation at
+all — so this is a concrete, fillable gap. Note the caveat: the "may facilitate efficient cleavage"
+mechanism is UniProt's hypothesis, so annotate the *binding*, not a substrate-delivery function.
+
+## 7. Mouse phenotype, and the MGI gap
+
+[PMID:36173861 "Its ablation resulted in viable mice in which the cytoskeleton was composed of immature actin molecules across all tissues."]
+[PMID:36173861 "However, in skeletal muscle, the lengths of sarcomeric actin filaments were shorter, muscle function was decreased, and centralized nuclei, a common hallmark of myopathies, progressively accumulated."]
+[PMID:36173861 "Thus, ACTMAP encodes the missing factor required for the synthesis of mature actin and regulates specific actin-dependent traits in vivo."]
+
+Despite that knockout being in the same paper, MGI still carries root `ND` (no data) annotations for
+mouse Actmap in all three aspects (`GO:0003674`, `GO:0008150`, `GO:0005575`, `GO_REF:0000015`). The
+sarcomere/muscle-function phenotype is therefore uncurated. It is deliberately **not** proposed as a
+human annotation here: the phenotype is mouse-only and the human evidence is biochemical.
+
+## 8. Reference hygiene
+
+- No retractions or corrections. Checked `CommentsCorrections` via E-utilities for all three PMIDs:
+  `36173861` has none; `42159598` is `UpdateOf 41757055` and `41757055` is `UpdateIn 42159598`.
+- **The affinage record cites the same study twice.** Its 2026 finding is attributed to
+  "PMID:42159598, PMID:41757055", but those are the JACS paper and its own bioRxiv preprint. Cited
+  as two sources this reads as independent corroboration; it is one study. The review cites the
+  peer-reviewed JACS version (`42159598`) and records `41757055` as `LOW` relevance / the preprint.
+- No `PMID:bio_*` pseudo-PMIDs in the citation list; all three ids are numeric and resolve.
+- Affinage's own mechanism grounding (`GO:0140096`, `GO:0016787`, `GO:0005829`) was not imported, per
+  the standing rule; its narrative was used only as a lead and every claim above is anchored to a
+  PMID or to UniProt.
+
+## 9. Row-by-row disposition
+
+| # | term | evidence | action | why |
+|---|---|---|---|---|
+| 1 | GO:0005737 cytoplasm | IEA (SubCell) | ACCEPT | faithful mapping of UniProt's own `Cytoplasm` call; both papers describe ACTMAP as cytosolic, so `GO:0005829` is plausible but I could not verify a fractionation/imaging experiment (Science full text unavailable) — raised as a question instead |
+| 2 | GO:0004239 initiator methionyl aminopeptidase | IEA (Ensembl) | MODIFY | same term problem as row 5, plus reciprocally circular (§4) |
+| 3 | GO:0016485 protein processing | IEA (Ensembl) | ACCEPT | term correct; redundant/circular with row 6, recorded but not a defect in the term |
+| 4 | GO:0070005 cysteine-type aminopeptidase | IDA (FlyBase) | ACCEPT | best available MF; mechanism twice-tested (§2). The odd assigner is explained: FlyBase curated fly `CG33108` by ISS from `Q5BKX5` and created the human source annotation — it is the *only* row in GOA capturing the cysteine mechanism, since UniProt annotated only `GO:0004239` |
+| 5 | GO:0004239 initiator methionyl aminopeptidase | IDA (UniProt) | MODIFY | wrong branch and wrong EC (§3) |
+| 6 | GO:0016485 protein processing | IDA (UniProt) | ACCEPT | core biological process |
+| 7 | GO:0030047 actin modification | IMP (proposed) | NEW | §10 |
+| 8 | GO:0005522 profilin binding | IPI (proposed) | NEW | §6 |
+
+## 10. The substrate is absent from the GO record, and an existing term fixes it
+
+Nothing in ACTMAP's GOA record says the protein it processes is actin. `GO:0030047 actin
+modification` ("Covalent modification of an actin molecule") says it exactly, and the precedent is
+already set one step downstream: **NAA80 carries `GO:0030047` by IDA from three separate papers**
+(`PMID:29581253`, `PMID:29581307`, `PMID:30028079`; verified via QuickGO for `Q93015`), alongside
+`GO:0017190` and `GO:0018002` for the N-terminal Asp/Glu acetylation it performs. Human evidence for
+ACTMAP is loss-of-function and directly quotable, hence **IMP**:
+[PMID:42159598 "genetic disruption of ACTMAP by CRISPR/Cas9 gene editing resulted in substantial accumulation of immature actin as measured by Western blotting with an antibody recognizing the N-terminus of β-actin"]
+and [PMID:42159598 "which produced a concentration-dependent increase in immature β-actin"] on
+covalent Cys132 engagement.
+
+**Recorded caveat, not glossed:** `GO:0030047`'s ancestors include `GO:0030036 actin cytoskeleton
+organization` and `GO:0030029 actin filament-based process` (QuickGO closure). So the term hands a
+substrate-directed enzyme cytoskeletal-organisation ancestry on the strength of a modification
+result. That is the §5 role-conflation risk re-entering through the ontology's `is_a` structure
+rather than through the annotations — and it applies to NAA80 identically. It is filed as a
+`suggested_questions` item for GO editors rather than used as a reason to leave ACTMAP's substrate
+unrecorded.
+
+## 11. Sibling and repo-wide cross-checks
+
+- `ACTR5` and `ACTR8` merged into `main` while this review was in progress (PRs #2290, #2291, #2293).
+  Re-checked after rebasing onto the new `main`: neither mentions ACTMAP, actin maturation,
+  N-terminal processing or NAA80, so there is no sibling inconsistency to reconcile.
+- Grepped every `*-ai-review.yaml` in the repo for `GO:0004239` and `GO:0030047`: **ACTMAP is the
+  only gene review that touches either term**, so no other merged review has already resolved these
+  rows a different way.
+- `ACTB`, `ACTL7A`, `ACTL7B`, `ACTL8`, `ACTR1A`, `ACTR1B`, `ACTR10` were checked for statements about
+  actin maturation or N-terminal processing. None makes any; `ACTL7A`'s N-terminal-extension material
+  is about a LIM-domain ligand, unrelated.
+
+## 12. Gates
+
+- `checkquotes.py`: 41 quotes in the review, 0 problems; 23 bracketed quotes in these notes checked
+  by the same normalisation, 0 problems.
+- Extra check beyond the shared script: every `file:` quote was additionally required to be an
+  **exact** (not whitespace-normalised) substring, which is what catches a UniProt quote that
+  silently crosses a `CC       ` continuation line. 26 `file:` quotes, 0 problems.
+- `just validate human ACTMAP`: `✓ Valid`, one warning left standing deliberately - "No annotations
+  reference available deep research files". The affinage record's substantive content is entirely
+  traceable to PMIDs which are cited directly, and the campaign rule forbids quoting a provider
+  sentence as `supporting_text` for a mechanistic claim, so citing it would be decorative.
+- `cache/go/terms.csv`: 0 deletions versus `origin/main`; exactly 2 additions (`GO:0030047`,
+  `GO:0070005`) appended at EOF without re-sorting. Note that `just validate` **de-duplicated**
+  `GO:0001675` and `GO:0009566`, main's two known pre-existing duplicates; that unrelated change was
+  reverted by restoring main's file and re-appending only the two new rows, so the duplicates remain
+  as `main` has them.
+- The bioinformatics report was re-generated from scratch and byte-compared against the committed
+  copy: `RESULTS.md` reproduces exactly and `results.json` is identical.
