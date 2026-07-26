@@ -211,6 +211,35 @@ def actmap_family_accessions() -> dict[str, str]:
     return fam
 
 
+def family_wide_usage(go_id: str, family: dict[str, str]) -> dict:
+    """Ask every reviewed family member directly whether it carries the term.
+
+    The taxon-restricted census below cannot see family members outside its five
+    taxa (bovine and Xenopus, here), so it UNDERSTATES how many family members
+    would be corrected by a term fix. This per-member query is the honest count.
+    """
+    members = {}
+    for acc, gene in sorted(family.items()):
+        data = get_json(
+            f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{acc}"
+            f"&goId={go_id}&goUsage=exact&limit=100"
+        )
+        res = data.get("results", [])
+        members[acc] = {
+            "gene": gene,
+            "carries_term": bool(res),
+            "evidence": sorted({r.get("goEvidence") for r in res if r.get("goEvidence")}),
+            "references": sorted({r.get("reference") for r in res if r.get("reference")}),
+        }
+    carrying = [a for a, v in members.items() if v["carries_term"]]
+    return {
+        "go_id": go_id,
+        "n_reviewed_members": len(members),
+        "n_carrying_term": len(carrying),
+        "members": members,
+    }
+
+
 def census(go_id: str, family: dict[str, str]) -> dict:
     url = (
         f"{QUICKGO}/annotation/search?goId={go_id}&goUsage=exact"
@@ -259,6 +288,73 @@ def census(go_id: str, family: dict[str, str]) -> dict:
         "n_other_products": len(others),
         "other_symbols": other_symbols,
     }
+
+
+# --------------------------------------------------------------------------- #
+# 3b. Is the substrate-specific process term in the right branch, and who else
+#     carries it? Both questions decide whether ACTMAP can use GO:0030047.
+# --------------------------------------------------------------------------- #
+BRANCH_PROBES = {
+    "GO:0006508": "proteolysis",
+    "GO:0036211": "protein modification process",
+    "GO:0030036": "actin cytoskeleton organization",
+    "GO:0051604": "protein maturation",
+}
+NAA80 = "Q93015"          # the enzyme performing the NEXT step of actin maturation
+FLY_ORTHOLOG = "Q9VCE8"   # CG33108, whose FlyBase ISS explains the human GO:0070005 assigner
+
+
+def process_branch_audit() -> dict:
+    out = {"terms": {}, "probes": BRANCH_PROBES}
+    for go_id in ("GO:0016485", "GO:0030047", "GO:0007014"):
+        anc = get_json(
+            f"{QUICKGO}/ontology/go/terms/{go_id}/ancestors?relations=is_a,part_of"
+        )["results"][0]
+        ancestors = sorted(anc.get("ancestors") or [])
+        out["terms"][go_id] = {
+            "name": anc.get("name"),
+            "ancestors": ancestors,
+            "under": {probe: probe in ancestors for probe in BRANCH_PROBES},
+        }
+    a, b = out["terms"]["GO:0016485"]["under"], out["terms"]["GO:0030047"]["under"]
+    out["proteolysis_and_modification_are_disjoint"] = (
+        a["GO:0006508"] and not a["GO:0036211"] and b["GO:0036211"] and not b["GO:0006508"]
+    )
+    naa80 = get_json(
+        f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{NAA80}"
+        "&goId=GO:0030047&goUsage=exact&limit=100"
+    )
+    out["naa80_GO_0030047"] = {
+        "accession": NAA80,
+        "n": naa80.get("numberOfHits"),
+        "rows": [
+            {"evidence": r.get("goEvidence"), "reference": r.get("reference"),
+             "assigned_by": r.get("assignedBy")}
+            for r in naa80.get("results", [])
+        ],
+    }
+    fly = get_json(
+        f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{FLY_ORTHOLOG}&limit=100"
+    )
+    out["fly_ortholog"] = {
+        "accession": FLY_ORTHOLOG,
+        "n": fly.get("numberOfHits"),
+        "rows": [
+            {
+                "go_id": r.get("goId"),
+                "evidence": r.get("goEvidence"),
+                "reference": r.get("reference"),
+                "assigned_by": r.get("assignedBy"),
+                "with_from": [
+                    f"{x['db']}:{x['id']}"
+                    for w in (r.get("withFrom") or [])
+                    for x in (w.get("connectedXrefs") or [])
+                ],
+            }
+            for r in fly.get("results", [])
+        ],
+    }
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -342,6 +438,7 @@ def main() -> int:
     terms = {t: term_record(t) for t in TERMS_OF_INTEREST}
     family = actmap_family_accessions()
     cen = census("GO:0004239", family)
+    fam_wide = family_wide_usage("GO:0004239", family)
 
     # The branch question, computed rather than asserted.
     exo = terms["GO:0008238"]
@@ -370,8 +467,10 @@ def main() -> int:
         "terms": terms,
         "branch_audit": branch,
         "census_GO_0004239": cen,
+        "family_wide_GO_0004239": fam_wide,
         "panther_family": {"id": "PTHR28631", "reviewed_members": family},
         "curation_state": curation_state(),
+        "process_branch_audit": process_branch_audit(),
     }
     (HERE / "results.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
     (HERE / "RESULTS.md").write_text(render(results))
@@ -481,6 +580,51 @@ def render(r: dict) -> str:
         add(
             f"| {acc} | {v['symbol']} | {v['taxon']} | {', '.join(v['evidence'])} | "
             f"{', '.join(v['references'])} |"
+        )
+
+    fw = r["family_wide_GO_0004239"]
+    add(
+        f"\n### Family-wide usage of `{fw['go_id']}` (not taxon-restricted)\n"
+    )
+    add(
+        f"The census above is limited to five taxa and therefore **understates** the family. "
+        f"Asking each reviewed PTHR28631 member directly: "
+        f"**{fw['n_carrying_term']} of {fw['n_reviewed_members']}** carry the term.\n"
+    )
+    add("| accession | gene | carries GO:0004239 | evidence | references |")
+    add("|---|---|---|---|---|")
+    for acc, v in fw["members"].items():
+        add(
+            f"| {acc} | {v['gene']} | {v['carries_term']} | "
+            f"{', '.join(v['evidence']) or '-'} | {', '.join(v['references']) or '-'} |"
+        )
+
+    pb = r["process_branch_audit"]
+    add("\n## 3b. Can ACTMAP use a substrate-specific *process* term?\n")
+    add("| term | name | " + " | ".join(f"under {k}" for k in pb["probes"]) + " |")
+    add("|---|---|" + "---|" * len(pb["probes"]))
+    for go_id, v in pb["terms"].items():
+        cells = " | ".join(str(v["under"][k]) for k in pb["probes"])
+        add(f"| {go_id} | {v['name']} | {cells} |")
+    add(
+        f"\n- **GO keeps proteolysis and protein modification in disjoint branches: "
+        f"{pb['proteolysis_and_modification_are_disjoint']}** - `GO:0016485 protein processing` is "
+        "under `GO:0006508 proteolysis` and NOT under `GO:0036211 protein modification process`, "
+        "while `GO:0030047 actin modification` is under `GO:0036211` and NOT under `GO:0006508`."
+    )
+    n8 = pb["naa80_GO_0030047"]
+    add(
+        f"- NAA80 (`{n8['accession']}`) carries `GO:0030047` **{n8['n']}** time(s): "
+        + ", ".join(f"{x['evidence']} ({x['reference']}, {x['assigned_by']})" for x in n8["rows"])
+        + " - but NAA80's reaction is an acetyl *transfer*, an additive modification, so the "
+        "precedent does not extend to peptide-bond hydrolysis."
+    )
+    fo = pb["fly_ortholog"]
+    add(f"- Drosophila ortholog `{fo['accession']}` (CG33108) carries {fo['n']} annotation(s):")
+    for x in fo["rows"]:
+        add(
+            f"  - {x['go_id']} {x['evidence']} ({x['reference']}) assigned by "
+            f"**{x['assigned_by']}**, WITH/FROM `{', '.join(x['with_from']) or '-'}`"
         )
 
     cs = r["curation_state"]

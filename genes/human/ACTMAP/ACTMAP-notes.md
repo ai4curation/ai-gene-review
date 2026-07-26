@@ -87,8 +87,15 @@ in `ACTMAP-bioinformatics/RESULTS.md`:
    cysteine-nucleophile ACTMAP family that removes the *Nα-acetylated* initiator residue
    post-translationally.
 
+**Correction to my own first pass (see §13):** the five-taxon census **understates** the family,
+because bovine and *Xenopus* sit outside those taxa. Querying each reviewed PTHR28631 member
+directly gives **6 of 6 carrying `GO:0004239`** — `A6QQD2` (bovine, ISS), `B0BM95` (*Xenopus*,
+ISS), `B0V3H4` (zebrafish, ISS), `J3QPC3` (mouse, IDA+ISS+ISO+IEA), `Q5BKX5` (human, IDA+IEA),
+`Q9VCE8` (*Drosophila*, ISS). Every non-human one is an ISS/ISO/IEA descendant of the human
+annotation.
+
 The right fix is a **new term** (a cysteine-type omega peptidase for Nα-acetylamino-acid release
-from actin), which would correct 4 gene products in 4 species in one edit. Note the term's own
+from actin), which would correct **6 gene products in 6 species** in one edit. Note the term's own
 history: `GO:0004239` was obsoleted in 2015 and **reinstated on 2023-03-14** with the narrow
 "initiator methionine" definition (QuickGO `comment: This term was reinstated from obsolete`);
 UniProt's ACTMAP IDA is dated 2023-03-31, 17 days later. So the term choice was a deliberate,
@@ -195,13 +202,12 @@ human annotation here: the phenotype is mouse-only and the human evidence is bio
 | 1 | GO:0005737 cytoplasm | IEA (SubCell) | ACCEPT | faithful mapping of UniProt's own `Cytoplasm` call; both papers describe ACTMAP as cytosolic, so `GO:0005829` is plausible but I could not verify a fractionation/imaging experiment (Science full text unavailable) — raised as a question instead |
 | 2 | GO:0004239 initiator methionyl aminopeptidase | IEA (Ensembl) | MODIFY | same term problem as row 5, plus reciprocally circular (§4) |
 | 3 | GO:0016485 protein processing | IEA (Ensembl) | ACCEPT | term correct; redundant/circular with row 6, recorded but not a defect in the term |
-| 4 | GO:0070005 cysteine-type aminopeptidase | IDA (FlyBase) | ACCEPT | best available MF; mechanism twice-tested (§2). The odd assigner is explained: FlyBase curated fly `CG33108` by ISS from `Q5BKX5` and created the human source annotation — it is the *only* row in GOA capturing the cysteine mechanism, since UniProt annotated only `GO:0004239` |
-| 5 | GO:0004239 initiator methionyl aminopeptidase | IDA (UniProt) | MODIFY | wrong branch and wrong EC (§3) |
-| 6 | GO:0016485 protein processing | IDA (UniProt) | ACCEPT | core biological process |
-| 7 | GO:0030047 actin modification | IMP (proposed) | NEW | §10 |
-| 8 | GO:0005522 profilin binding | IPI (proposed) | NEW | §6 |
+| 4 | GO:0070005 cysteine-type aminopeptidase | IDA (FlyBase) | ACCEPT | best available MF; mechanism twice-tested (§2); `has_input` ACTB/ACTG1 added. Verified about the odd assigner: FlyBase holds `GO:0070005` and `GO:0016485` ISS on fly `Q9VCE8` with WITH/FROM `UniProtKB:Q5BKX5`; that the human IDA was created as the ISS source is inference. It is the *only* row in GOA capturing the cysteine mechanism, since UniProt annotated only `GO:0004239` |
+| 5 | GO:0004239 initiator methionyl aminopeptidase | IDA (UniProt) | MODIFY | wrong released product and wrong EC, plus family conflation (§3); the branch argument does not discriminate the replacement and motivates the term request instead |
+| 6 | GO:0016485 protein processing | IDA (UniProt) | ACCEPT | core biological process; `has_input` ACTB/ACTG1 added, which is what records the substrate (§10) |
+| 7 | GO:0005522 profilin binding | IPI (proposed) | NEW | §6 |
 
-## 10. The substrate is absent from the GO record, and an existing term fixes it
+## 10. The substrate is absent from the GO record, and the fix is an extension, not a process term
 
 Nothing in ACTMAP's GOA record says the protein it processes is actin. `GO:0030047 actin
 modification` ("Covalent modification of an actin molecule") says it exactly, and the precedent is
@@ -213,13 +219,29 @@ ACTMAP is loss-of-function and directly quotable, hence **IMP**:
 and [PMID:42159598 "which produced a concentration-dependent increase in immature β-actin"] on
 covalent Cys132 engagement.
 
-**Recorded caveat, not glossed:** `GO:0030047`'s ancestors include `GO:0030036 actin cytoskeleton
-organization` and `GO:0030029 actin filament-based process` (QuickGO closure). So the term hands a
-substrate-directed enzyme cytoskeletal-organisation ancestry on the strength of a modification
-result. That is the §5 role-conflation risk re-entering through the ontology's `is_a` structure
-rather than through the annotations — and it applies to NAA80 identically. It is filed as a
-`suggested_questions` item for GO editors rather than used as a reason to leave ACTMAP's substrate
-unrecorded.
+**Withdrawn after review (see §14).** Two objections, and the second is decisive:
+
+1. `GO:0030047`'s ancestors include `GO:0030036 actin cytoskeleton organization` and
+   `GO:0030029 actin filament-based process`, so the term hands a substrate-directed enzyme
+   cytoskeletal-organisation ancestry on the strength of a modification result — the §5
+   role-conflation risk re-entering through the ontology's `is_a` structure rather than through the
+   annotations. This applies to NAA80 identically, so on its own it is an argument for a question to
+   GO editors, not against the annotation.
+2. **GO keeps proteolysis and protein modification in disjoint branches.** Computed:
+   `GO:0016485 protein processing` is under `GO:0006508 proteolysis` and **not** under
+   `GO:0036211 protein modification process`; `GO:0030047 actin modification` is under `GO:0036211`
+   and **not** under `GO:0006508`. So a proteolytic event has no place in the modification branch at
+   all, and the NAA80 precedent is an acetyl *transfer* — an additive modification — which does not
+   extend to peptide-bond hydrolysis. (The term's only child, `GO:0007014 actin ubiquitination`, is
+   additive too.) Same shape as the ABR lesson that GO keeps the Rac and Rho *regulation* branches
+   disjoint: the structure, not the label, decides.
+
+**What replaced it.** The substrate is recorded with `RO:0002233` has_input extensions to ACTB
+(`UniProtKB:P60709`) and ACTG1 (`UniProtKB:P63261`) on **both** the accepted `GO:0070005` MF row and
+the accepted `GO:0016485` BP row. That states the same fact with no branch violation and no unwanted
+ancestry. The definitional question — whether GO intends "covalent modification" to include
+hydrolytic removal — is now the primary `suggested_questions` item, with the placement question
+secondary to it.
 
 ## 11. Sibling and repo-wide cross-checks
 
@@ -235,8 +257,9 @@ unrecorded.
 
 ## 12. Gates
 
-- `checkquotes.py`: 41 quotes in the review, 0 problems; 23 bracketed quotes in these notes checked
-  by the same normalisation, 0 problems.
+- `checkquotes.py`: all `supported_by`/`provenance`/`findings` quotes in the review verified verbatim,
+  0 problems; the bracketed quotes in these notes verified by the same normalisation, 0 problems.
+  (Counts are printed by the runs rather than restated here, since round 2 changed them.)
 - Extra check beyond the shared script: every `file:` quote was additionally required to be an
   **exact** (not whitespace-normalised) substring, which is what catches a UniProt quote that
   silently crosses a `CC       ` continuation line. 26 `file:` quotes, 0 problems.
@@ -244,10 +267,60 @@ unrecorded.
   reference available deep research files". The affinage record's substantive content is entirely
   traceable to PMIDs which are cited directly, and the campaign rule forbids quoting a provider
   sentence as `supporting_text` for a mechanistic claim, so citing it would be decorative.
-- `cache/go/terms.csv`: 0 deletions versus `origin/main`; exactly 2 additions (`GO:0030047`,
-  `GO:0070005`) appended at EOF without re-sorting. Note that `just validate` **de-duplicated**
+- `cache/go/terms.csv`: 0 deletions versus `origin/main`; exactly 1 addition (`GO:0070005`) appended
+  at EOF without re-sorting - `GO:0030047` was removed again when that annotation was withdrawn. Note that `just validate` **de-duplicated**
   `GO:0001675` and `GO:0009566`, main's two known pre-existing duplicates; that unrelated change was
   reverted by restoring main's file and re-appending only the two new rows, so the duplicates remain
   as `main` has them.
 - The bioinformatics report was re-generated from scratch and byte-compared against the committed
   copy: `RESULTS.md` reproduces exactly and `results.json` is identical.
+
+## 13. A claim of mine that was wrong, and how it was caught
+
+My first pass wrote "would correct 4 gene products in 4 species", taken from the taxon-restricted
+census. That census covers `9606,10090,7227,7955,559292`, so it **cannot see** the bovine (`A6QQD2`)
+and *Xenopus* (`B0BM95`) members of PTHR28631, both of which carry `GO:0004239` by ISS. The true
+figure is **6 of 6 reviewed family members**. The number was not wrong as scoped, but the sentence
+built on it understated the scope of the fix, which is the load-bearing part of the argument.
+
+Caught by asking each PANTHER-reviewed accession directly rather than reading the census total — the
+same "the denominator is set by my query, not by the biology" mistake the campaign has hit before.
+The fix is now computed by `family_wide_usage()` in the script and printed as its own table, so the
+two numbers (taxon-restricted census, family-wide count) are visibly different quantities instead of
+one being mistaken for the other. All four assertion sites were corrected together
+(`review.reason`, `review.knowledge_gaps[0].resolution`, `suggested_questions[0].question`, and these
+notes) using a script that asserts each anchor is present before replacing, re-greps afterwards, and
+checks that exactly the intended leaf values changed and no structure did. The PR body was the fifth
+site and was patched too.
+
+## 14. Round 2: the reviewer was right, and the decisive fact was not the one it used
+
+`ai4c-reviewer` requested changes on one item: `GO:0030047 actin modification` is a
+covalent-modification term proposed for a proteolytic event, the NAA80 precedent is *acetylation* and
+does not transfer, and this very file already demonstrated the side-effect-free alternative —
+`RO:0002233` has_input extensions.
+
+Checked before conceding, and the check went **against** me and beyond the reviewer's own argument:
+`GO:0016485 protein processing` is under `GO:0006508 proteolysis` and **not** under
+`GO:0036211 protein modification process`, while `GO:0030047` is under `GO:0036211` and **not** under
+`GO:0006508`. The branches are **disjoint**, so this is not a matter of how loosely "covalent
+modification" reads — GO's structure already says a proteolytic process does not live there. The
+annotation was withdrawn and the substrate moved onto has_input extensions on the two accepted rows.
+Both facts are now computed by `process_branch_audit()` in the script, so the ancestry and NAA80-IDA
+claims are no longer the only uncomputed ones.
+
+Four non-blocking suggestions, all taken:
+
+- **The exopeptidase argument does not discriminate the two terms.** Correct: `GO:0004239` and
+  `GO:0070005` are both under `GO:0008238`, so ground 2 cannot motivate replacing one with the other.
+  The row now says so explicitly and attributes ground 2 to the *term request*, leaving grounds 1
+  (wrong EC / wrong released product) and 3 (family conflation) to carry the MODIFY.
+- **Row 4's FlyBase-assigner explanation was unsourced.** Split into the verified part — FlyBase holds
+  `GO:0070005` and `GO:0016485` ISS annotations on fly `Q9VCE8` with WITH/FROM `UniProtKB:Q5BKX5`, now
+  printed by the script — and the causal step ("the human IDA was created to serve as the ISS
+  source"), which is labelled a plausible inference rather than a fact.
+- **`core_functions.substrates` listed ACTA1 where the extensions listed only ACTB/ACTG1.** ACTA1
+  removed; the knowledge gap now records that its omission is deliberate and why.
+- **The description stated the alpha-actin activity flatly.** Hedged in both the top-level
+  `description` and the core-function description: established for mouse, inferred for human by
+  similarity (`ECO:0000250|UniProtKB:J3QPC3`).

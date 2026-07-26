@@ -79,6 +79,34 @@ Precedent for a single-residue-releasing enzyme acting on a *blocked* N-terminus
 | Q5BKX5 | ACTMAP | 9606 | IDA, IEA | GO_REF:0000107, PMID:36173861 |
 | Q9VCE8 | CG33108 | 7227 | ISS | GO_REF:0000024 |
 
+### Family-wide usage of `GO:0004239` (not taxon-restricted)
+
+The census above is limited to five taxa and therefore **understates** the family. Asking each reviewed PTHR28631 member directly: **6 of 6** carry the term.
+
+| accession | gene | carries GO:0004239 | evidence | references |
+|---|---|---|---|---|
+| A6QQD2 | ACTMAP | True | ISS | GO_REF:0000024 |
+| B0BM95 | actmap | True | ISS | GO_REF:0000024 |
+| B0V3H4 | actmap | True | ISS | GO_REF:0000024 |
+| J3QPC3 | Actmap | True | IDA, IEA, ISO, ISS | GO_REF:0000024, GO_REF:0000107, GO_REF:0000119, PMID:36173861 |
+| Q5BKX5 | ACTMAP | True | IDA, IEA | GO_REF:0000107, PMID:36173861 |
+| Q9VCE8 | CG33108 | True | ISS | GO_REF:0000024 |
+
+## 3b. Can ACTMAP use a substrate-specific *process* term?
+
+| term | name | under GO:0006508 | under GO:0036211 | under GO:0030036 | under GO:0051604 |
+|---|---|---|---|---|---|
+| GO:0016485 | protein processing | True | False | False | True |
+| GO:0030047 | actin modification | False | True | True | False |
+| GO:0007014 | actin ubiquitination | False | True | True | False |
+
+- **GO keeps proteolysis and protein modification in disjoint branches: True** - `GO:0016485 protein processing` is under `GO:0006508 proteolysis` and NOT under `GO:0036211 protein modification process`, while `GO:0030047 actin modification` is under `GO:0036211` and NOT under `GO:0006508`.
+- NAA80 (`Q93015`) carries `GO:0030047` **3** time(s): IDA (PMID:29581253, UniProt), IDA (PMID:29581307, UniProt), IDA (PMID:30028079, UniProt) - but NAA80's reaction is an acetyl *transfer*, an additive modification, so the precedent does not extend to peptide-bond hydrolysis.
+- Drosophila ortholog `Q9VCE8` (CG33108) carries 3 annotation(s):
+  - GO:0004239 ISS (GO_REF:0000024) assigned by **UniProt**, WITH/FROM `UniProtKB:Q5BKX5`
+  - GO:0070005 ISS (GO_REF:0000024) assigned by **FlyBase**, WITH/FROM `UniProtKB:Q5BKX5`
+  - GO:0016485 ISS (GO_REF:0000024) assigned by **FlyBase**, WITH/FROM `UniProtKB:Q5BKX5`
+
 ## 4. Curation state of the orthologue and of the evolutionary-model pipeline
 
 - mouse orthologue `J3QPC3` carries **13** GO annotations
