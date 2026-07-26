@@ -45,8 +45,12 @@ reduction of palmitate synthesis"].
 inference is corroborated. But no acyl-CoA-*dependent* step in ACBD3's Golgi activity is
 known. This is a statement about the **ligand**, not the domain — the ACB domain has its own
 functions (SREBP1 restraint, and the FAPP2 attribution; see the domain map). What is absent is
-any demonstrated consequence of acyl-CoA binding: deleting the ACBD domain does not prevent
-Golgi localisation, and the domain is dispensable for PI4KB recruitment
+any demonstrated consequence of acyl-CoA binding. Deleting the ACBD domain does not prevent Golgi
+localisation [PMID:38134218 "Our data suggest that the binding of ACBD3 to C18:1-CoA, C16:0-CoA or
+related fatty acyl chains and the subsequent oligomerization does not affect its recruitment to the
+Golgi as deletion of the ACBD domain does not prevent Golgi localization."], and the domain is
+dispensable for **3A-mediated** PI4KB recruitment — the enteroviral assay, not host recruitment on
+its own
 [PMID:30755512 "we show that acyl-coenzyme A
 binding (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
 recruitment and efficient enterovirus replication"], with Q+GOLD sufficient [PMID:30755512 "we
@@ -112,8 +116,8 @@ not core-strength:
   explicitly in the `core_functions` description rather than left implicit.
 - `GO:0000062 fatty-acyl-CoA binding` — the binding is *demonstrated* (see the corrected headline),
   so it is not an over-annotation; but no acyl-CoA-dependent step in ACBD3's Golgi activity is
-  known, and the ACB domain is dispensable for PI4KB recruitment. Real molecular function, not the
-  core one, and so not promoted into `core_functions`.
+  known, and the ACB domain is dispensable for 3A-mediated PI4KB recruitment (the enteroviral
+  assay). Real molecular function, not the core one, and so not promoted into `core_functions`.
 
 
 ## Correction: PI4KB binds the Q domain, not GOLD
