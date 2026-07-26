@@ -47,8 +47,25 @@ evidence via QuickGO, at run time
 
 **The single most important result: 6 of the 7 sources carry their own experimental evidence**
 for at least one propagated term — only the PANTHER node does not. These IBAs are propagating
-from genuinely characterised enzymes in four organisms, not from a family-level guess. That is
-what makes over-annotation the right verdict and `REMOVE` the wrong one.
+from genuinely characterised enzymes, not from a family-level guess. That is what makes
+over-annotation the right verdict and `REMOVE` the wrong one — and it is also why the
+`propagation_review` `root_cause` on every row is **`PROPAGATION_BAD`** ("the source annotation
+is sound, but the term should not propagate to this target") rather than any `SOURCE_*` value.
+Classifying these as weak sources would now contradict the evidence table.
+
+**Evidence provenance and name provenance are different questions, and only one is settled for
+all six.** The Drosophila source has no reviewed UniProt entry, and its FlyBase id maps to *two*
+TrEMBL accessions for the same gene, carrying different names — Q5U191 *"1-acylglycerol-3-phosphate
+O-acyltransferase ABHD5"* and A1Z753 *"Pummelig, isoform A"*. Its curated GO annotations are real,
+but that first name is an automatic by-similarity label. Listing it beside `LPAAT_ARATH` and
+`CLD1` made an uncharacterised protein look characterised, and inflated the count of independent
+characterisations from three to four. **So: 6 sources with their own experimental evidence, but 3
+independently *characterised* proteins** (Arabidopsis, mouse, yeast).
+
+That ambiguity was found only because the resolver was changed to fetch two hits and refuse to
+pick silently. The generalisable point: **`size=1` on an identifier lookup converts an ambiguity
+into a confident wrong answer**, and it did so here on the one source whose name was doing
+argumentative work.
 
 Two source identities were **misdescribed** in an earlier draft, and both errors ran the same
 way — dismissing a source without resolving it:

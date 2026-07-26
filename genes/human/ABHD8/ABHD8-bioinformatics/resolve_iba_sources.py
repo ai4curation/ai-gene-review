@@ -122,7 +122,9 @@ def resolve_xref(token: str) -> dict:
         local = local.removeprefix("MGI:")
         query = f"xref:{XREF_DB[db]}-{local}"
         fields = "accession,id,protein_name,organism_name,gene_names"
-        url = f"https://rest.uniprot.org/uniprotkb/search?query={{q}}&fields={fields}&format=json&size=1"
+        # size=2 rather than 1: these lookups overturned two of this review's claims, so a
+        # silently-truncated multi-hit result would be a bad way to be wrong.
+        url = f"https://rest.uniprot.org/uniprotkb/search?query={{q}}&fields={fields}&format=json&size=2"
         d = get(url.format(q=f"{query}+AND+reviewed:true"))
         if not d.get("results"):
             # Some sources (the Drosophila member here) have no reviewed entry at all. Falling
@@ -133,8 +135,15 @@ def resolve_xref(token: str) -> dict:
         else:
             reviewed = True
         if d.get("results"):
-            return {**entry_fields(d["results"][0]), "token": token, "kind": "protein",
-                    "reviewed": reviewed}
+            hits = d["results"]
+            # Report ambiguity instead of silently taking the first hit. FB:FBgn0033226 maps to
+            # two TrEMBL accessions for the same gene, and they carry DIFFERENT names - one an
+            # automatic by-similarity label naming an activity, one just the FlyBase gene name.
+            # Taking the first made an uncharacterised protein look characterised.
+            alternatives = [{"acc": h["primaryAccession"],
+                             "name": entry_fields(h)["name"]} for h in hits[1:]]
+            return {**entry_fields(hits[0]), "token": token, "kind": "protein",
+                    "reviewed": reviewed, "alternatives": alternatives}
     else:
         raise LookupError(f"no resolver for WITH/FROM database {db!r} in token {token!r}")
     if not d.get("results"):
@@ -196,32 +205,51 @@ def main() -> None:
     L.append("members, so 'this source only carries the same family-level inference' is a testable")
     L.append("claim rather than a safe hedge - and the table below is what settles it.")
     L.append("")
-    L.append("| WITH/FROM | protein | organism | own evidence for the propagated terms |")
-    L.append("|---|---|---|---|")
+    L.append("| WITH/FROM | protein | UniProt status | organism | own evidence for the propagated terms |")
+    L.append("|---|---|---|---|---|")
     go_ids = sorted(srcs)
     resolved: dict[str, dict] = {}
     for token in all_tokens:
         info = resolve_xref(token)
         resolved[token] = info
         if info["kind"] != "protein":
-            L.append(f"| `{token}` | *{info['name']}* | — | not applicable |")
+            L.append(f"| `{token}` | *{info['name']}* | — | — | not applicable |")
             continue
         ev = source_evidence(info["acc"], go_ids)
         info["evidence"] = ev
         cells = [f"{g.split(':')[1]}={'/'.join(v)}" for g, v in ev.items() if v]
         genes = ", ".join(g for g in info["genes"] if g)
-        L.append(f"| `{token}` | {info['acc']} ({genes or info['id']}) — {info['name']} | "
+        # Reviewed vs unreviewed is load-bearing, not cosmetic: an unreviewed TrEMBL entry's
+        # protein NAME is assigned automatically by similarity, so it must not be read as a
+        # characterisation the way a Swiss-Prot recommended name can be.
+        status = "Swiss-Prot (reviewed)" if info.get("reviewed") else "**TrEMBL (UNREVIEWED)**"
+        alts = info.get("alternatives") or []
+        if alts:
+            listed = ", ".join(f"{a['acc']} \"{a['name']}\"" for a in alts)
+            status += f"; **{len(alts) + 1} entries for this id** - also {listed}"
+        L.append(f"| `{token}` | {info['acc']} ({genes or info['id']}) — {info['name']} | {status} | "
                  f"{info['organism']} | {'; '.join(cells) or '**none**'} |")
     L.append("")
     L.append("Term ids are abbreviated to their digits; each entry lists the evidence codes that")
     L.append("source carries for that term or any of its descendants.")
     L.append("")
-    exp_sources = [t for t, i in resolved.items()
-                   if i["kind"] == "protein"
-                   and any(c in EXPERIMENTAL for v in i.get("evidence", {}).values() for c in v)]
+    proteins = {t: i for t, i in resolved.items() if i["kind"] == "protein"}
+    exp_sources = [t for t, i in proteins.items()
+                   if any(c in EXPERIMENTAL for v in i.get("evidence", {}).values() for c in v)]
+    unreviewed = [t for t, i in proteins.items() if not i.get("reviewed")]
     L.append(f"**{len(exp_sources)} of the {len(all_tokens)} sources carry experimental evidence of")
     L.append(f"their own** for at least one propagated term: {', '.join(f'`{t}`' for t in exp_sources) or 'none'}.")
     L.append("")
+    if unreviewed:
+        L.append(f"**But {len(unreviewed)} of the {len(proteins)} protein sources "
+                 f"({', '.join(f'`{t}`' for t in unreviewed)}) has no reviewed UniProt entry.** Its GO")
+        L.append("annotations are real curated annotations, but its protein NAME in the column above is")
+        L.append("an automatic by-similarity label, not a characterisation - so it must not be counted")
+        L.append("alongside the Swiss-Prot recommended names as independent evidence of what the family")
+        L.append("does. Evidence provenance and name provenance are separate questions, and only the")
+        f_reviewed = len(proteins) - len(unreviewed)
+        L.append(f"former is settled here for all {len(proteins)} sources; the latter for {f_reviewed}.")
+        L.append("")
 
     L.append("## The two identifications the review depends on")
     L.append("")

@@ -23,21 +23,28 @@ propagated to ABHD8. IBA WITH/FROM is supposed to list experimentally-annotated
 members, so 'this source only carries the same family-level inference' is a testable
 claim rather than a safe hedge - and the table below is what settles it.
 
-| WITH/FROM | protein | organism | own evidence for the propagated terms |
-|---|---|---|---|
-| `AGI_LocusCode:AT4G24160` | O22975 (LPAAT_ARATH) — 1-acylglycerol-3-phosphate O-acyltransferase | Arabidopsis thaliana | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA/IDA/IEA; 0052689=IBA/IDA; 0055088=IBA/IMP |
-| `FB:FBgn0033226` | Q5U191 (puml) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | Drosophila melanogaster | 0004620=IBA/IMP; 0006654=IBA; 0042171=IBA/IEA; 0052689=IBA/IDA; 0055088=IBA |
-| `MGI:MGI:1915938` | Q8VD66 (Abhd4) — (Lyso)-N-acylphosphatidylethanolamine lipase | Mus musculus | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA; 0055088=IBA |
-| `PANTHER:PTN008676419` | *PANTHER family/subfamily node - an internal tree node, not a protein* | — | not applicable |
-| `SGD:S000003342` | P53264 (CLD1) — Cardiolipin-specific deacylase 1, mitochondrial | Saccharomyces cerevisiae (strain ATCC 204508 / S288c) | 0004620=IBA/IDA/IMP; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA/IMP; 0055088=IBA |
-| `SGD:S000004089` | Q12385 (ICT1) — 1-acylglycerol-3-phosphate O-acyltransferase ICT1 | Saccharomyces cerevisiae (strain ATCC 204508 / S288c) | 0004620=IBA; 0006654=IBA/IMP; 0042171=IBA/IDA/IEA; 0052689=IBA; 0055088=IBA |
-| `UniProtKB:Q8WTS1` | Q8WTS1 (ABHD5) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | Homo sapiens | 0004620=IBA; 0006654=IBA/IDA; 0042171=IBA/IDA/IEA; 0052689=IBA/ISS; 0055088=IBA |
+| WITH/FROM | protein | UniProt status | organism | own evidence for the propagated terms |
+|---|---|---|---|---|
+| `AGI_LocusCode:AT4G24160` | O22975 (LPAAT_ARATH) — 1-acylglycerol-3-phosphate O-acyltransferase | Swiss-Prot (reviewed) | Arabidopsis thaliana | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA/IDA/IEA; 0052689=IBA/IDA; 0055088=IBA/IMP |
+| `FB:FBgn0033226` | Q5U191 (puml) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | **TrEMBL (UNREVIEWED)**; **2 entries for this id** - also A1Z753 "Pummelig, isoform A" | Drosophila melanogaster | 0004620=IBA/IMP; 0006654=IBA; 0042171=IBA/IEA; 0052689=IBA/IDA; 0055088=IBA |
+| `MGI:MGI:1915938` | Q8VD66 (Abhd4) — (Lyso)-N-acylphosphatidylethanolamine lipase | Swiss-Prot (reviewed) | Mus musculus | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA; 0055088=IBA |
+| `PANTHER:PTN008676419` | *PANTHER family/subfamily node - an internal tree node, not a protein* | — | — | not applicable |
+| `SGD:S000003342` | P53264 (CLD1) — Cardiolipin-specific deacylase 1, mitochondrial | Swiss-Prot (reviewed) | Saccharomyces cerevisiae (strain ATCC 204508 / S288c) | 0004620=IBA/IDA/IMP; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA/IMP; 0055088=IBA |
+| `SGD:S000004089` | Q12385 (ICT1) — 1-acylglycerol-3-phosphate O-acyltransferase ICT1 | Swiss-Prot (reviewed) | Saccharomyces cerevisiae (strain ATCC 204508 / S288c) | 0004620=IBA; 0006654=IBA/IMP; 0042171=IBA/IDA/IEA; 0052689=IBA; 0055088=IBA |
+| `UniProtKB:Q8WTS1` | Q8WTS1 (ABHD5) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | Swiss-Prot (reviewed) | Homo sapiens | 0004620=IBA; 0006654=IBA/IDA; 0042171=IBA/IDA/IEA; 0052689=IBA/ISS; 0055088=IBA |
 
 Term ids are abbreviated to their digits; each entry lists the evidence codes that
 source carries for that term or any of its descendants.
 
 **6 of the 7 sources carry experimental evidence of
 their own** for at least one propagated term: `AGI_LocusCode:AT4G24160`, `FB:FBgn0033226`, `MGI:MGI:1915938`, `SGD:S000003342`, `SGD:S000004089`, `UniProtKB:Q8WTS1`.
+
+**But 1 of the 6 protein sources (`FB:FBgn0033226`) has no reviewed UniProt entry.** Its GO
+annotations are real curated annotations, but its protein NAME in the column above is
+an automatic by-similarity label, not a characterisation - so it must not be counted
+alongside the Swiss-Prot recommended names as independent evidence of what the family
+does. Evidence provenance and name provenance are separate questions, and only the
+former is settled here for all 6 sources; the latter for 5.
 
 ## The two identifications the review depends on
 
