@@ -142,8 +142,10 @@ lost. Terms that merely place it in the actin cytoskeleton are not contradicted 
 32 human members of PTHR11937. 24 have at least one experimental-code MF annotation, but only
 **7** have an *informative* one once bare `GO:0005515 protein binding` is excluded — nearly every
 human protein has that from interactome screens, so counting it would make the survey say nothing.
-Among the divergent, testis-restricted subset (ACTL7A, ACTL7B, ACTL8, ACTL9, ACTL10, ACTRT1,
-ACTRT2, ACTRT3) **only ACTRT1** has one (`GO:0003682 chromatin binding`).
+Among the eight divergent actin-like / actin-related-T members (ACTL7A, ACTL7B, ACTL8, ACTL9,
+ACTL10, ACTRT1, ACTRT2, ACTRT3) **only ACTRT1** has one (`GO:0003682 chromatin binding`). Most of
+that set is testis-restricted but not all of it — UniProt calls ACTRT3 "Ubiquitously expressed" —
+so it is grouped by sequence divergence rather than by tissue.
 
 So "no molecular function is currently justifiable for ACTL8" is not a claim about ACTL8's
 peculiarity; it is the normal state of this clade. And it is not because the family is
