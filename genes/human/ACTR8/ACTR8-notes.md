@@ -25,7 +25,9 @@ committed in this repo, ComplexPortal, IntAct and 20 primary papers.
 
 Retraction screen: all 20 PMIDs cited here were checked against PubMed publication types and
 an explicit `retracted publication[pt] OR expression of concern[pt]` query over the whole set —
-**0 hits**. No reference in this review is retracted or carries an expression of concern.
+**0 hits**. No reference in this review is retracted or carries an expression of concern. **But
+that method is insufficient on its own — see §13**, which records one Publisher Correction it
+missed and the check that finds them.
 
 ---
 
@@ -565,6 +567,110 @@ Two smaller reviewer corrections accepted on the same pass:
   into §8 and §7b, with each row keeping only what is specific to it (the 17 records from
   `PMID:16230350`, the MI 0.67 targeted co-IP, `NbExp=5`, the YY1/INO80E ranking, the negative
   regulatory arm, the *Ino80*-null embryonic phenotype, the three conjoined claims).
+
+## 12c. Two parallel PRs, one new term, one duplicate — a gate that cannot fire per-PR
+
+Found while re-running the gates for this follow-up. `cache/go/terms.csv` on `main` carried
+**`GO:0031011` twice**:
+
+| line | timestamp | added by |
+|---|---|---|
+| 3456 | `13:43:14` | ACTR5 #2291, in sorted position |
+| 9070 | `13:40:43` | ACTR8 #2290, appended at EOF |
+
+ARP5 and ARP8 are both INO80 subunits, so **both reviews needed the same new term for
+`core_functions.in_complex`**. Each branch's duplicate gate
+(`cut -d, -f1 cache/go/terms.csv | sort | uniq -d`) passed in isolation, because within either
+branch the term appeared once — and they landed in *different positions*, so git auto-merged both
+without a conflict. The duplicate exists only in the merge result.
+
+This is a **new variant** of the known duplicate failure mode: the documented one is self-inflicted
+within a single branch (hand-insert, then a later `just validate` re-appends because the appender is
+blind to the inserted row). This one is *inter-branch*, and no per-PR check can see it — the
+per-branch gate is not wrong, it is simply looking at the wrong artefact. The EOF duplicate is
+removed here, keeping the sorted-position row, so the term appears exactly once.
+
+**Two generalisations worth carrying:**
+1. **Related genes reviewed in parallel are the high-risk case**, because they are precisely the
+   ones that need the same new terms. Whenever a sibling PR is in flight, expect a `terms.csv`
+   collision on whatever complex or activity term they share.
+2. **The duplicate check belongs in CI on `main`, not only in each PR**, since only the merge
+   result can exhibit the fault. A per-PR approximation is to re-run the check after
+   `git merge origin/main` immediately before pushing — which this review did on three merges, but
+   ACTR5 had not yet merged at that point, so the collision was still invisible.
+
+
+
+Prompted by a cross-gene note that provider records cite corrected papers unflagged. Re-running
+the screen properly found one item my round-1 method could not have found, and the **method** is
+the transferable part.
+
+**What round 1 did:** an `esearch` over the 20 cited PMIDs `AND (published erratum[pt] OR
+corrected and republished article[pt] OR retracted publication[pt] OR expression of concern[pt])`.
+Re-run now, that query returns **`Count: 0`**.
+
+**Why it is wrong:** those publication types sit on the *erratum record*, not on the article being
+corrected. Querying the cited set therefore asks "is any paper I cite itself an erratum?", which
+is never the question. The right field is `CommentsCorrections/RefType` **on each cited article**,
+read from `efetch&retmode=xml`, matching `ErratumIn`, `RetractionIn`, `ExpressionOfConcernIn`,
+`CorrectedAndRepublishedIn`, `RepublishedIn`, `PartialRetractionIn`.
+
+**What that found**, across all 20:
+
+| PMID | `RefType` | target |
+|---|---|---|
+| `PMID:18922472` | `CommentIn` | commentary, not a correction |
+| `PMID:26496610` | `CommentIn` | commentary, not a correction |
+| **`PMID:40205054`** | **`ErratumIn`** | **`PMID:41039152`** |
+
+`PMID:41039152` is a **Publisher Correction** (*Nature* 646:E16, Oct 2025) to "Multimodal cell maps
+as a foundation for structural and functional genomics" — a publisher-side correction, **not** a
+data- or figure-integrity notice, and the article is not retracted. The single claim this review
+rests on it is an ACTR8–UCHL5 association independently established by `PMID:18922472` and by
+`CPX-846` membership, so nothing changes. `is_invalid` is deliberately **not** set: that flag is
+for retracted or replaced references, and using it here would misrepresent a typesetting-class
+correction as an integrity problem.
+
+**Rule to carry forward: screen corrections by reading `CommentsCorrections` on each cited
+article, never by a publication-type query over the cited set.** The two `CommentIn` hits also
+show why the `RefType` must be matched rather than merely counted — a commentary is not a
+correction.
+
+## 12b. Two cross-gene claims checked, and one refuted
+
+Both arrived as cross-gene guidance while this review was in flight. Recorded with outcomes
+because a check whose result is not written down reads the same as a check never run.
+
+**Confirmed, and it distinguishes ACTR8 from ACTR5.** `PMID:25016522`'s ComplexPortal-assigned
+rows (`GO:0006275`, `GO:0060382`) are `ACCEPT`ed here rather than kept non-core, on the grounds
+that the paper assayed ARP8 itself. Counting occurrences in the cached full text settles it:
+**27 × "Arp8", 0 × "Arp5"/"ACTR5"**. The paper has a dedicated results section *"Effect of Arp8
+depletion on recovery after replication stress"*, an esiRNA against human Arp8 (485–916,
+`NM_022899.3`), its own qPCR primers, a 4-fold increase in discontinued forks by fibre labelling,
+and the conclusion that *"depletion of the Arp8 subunit had the same consequences as Ino80
+deficiency"*. So the same rows that are complex-level projections for ARP5 are gene-level evidence
+for ARP8 — the asymmetry is real and is why the two reviews should **not** be harmonised on these
+rows.
+
+**Refuted.** A suggestion that ARP8 should take no nucleotide term without a structural check,
+because it has "1 of 5 catalytic positions with no resolved nucleotide". The structural check was
+done, and it is stronger than an alignment: human ARP8 has exactly **one** PDB entry, `4FO0`,
+whose own deposited title is *"Human actin-related protein Arp8 in its ATP-bound state"* and whose
+ligand list contains **ATP** and **MG** (the physiological Mg²⁺ counter-ion). Add the omit map
+computed for the bound ATP, an ATPase measured on the human protein, and ATP occupancy gating DNA
+binding through the annotated pocket residues, and `GO:0005524` is IDA-grade. The residue
+observation is nonetheless correct and is already reflected: actin's catalytic Gln137 and sensor
+His73 **are** substituted in ARP8 (Glu266, Arg187), which is precisely why `GO:0016887` ATP
+hydrolysis activity is withheld. Binding and hydrolysis are separate claims and the review
+separates them; "no nucleotide term at all" does not follow.
+
+**Null result, recorded as one.** A concern that the seeded stub can silently collapse duplicate
+`GO:0005515` rows, so annotations must be counted against the GOA TSV rather than the stub. Checked
+per `(term, evidence, reference)` key: all **31** distinct GOA keys are present in the review, all
+**6** `GO:0005515` rows survive with their own verdicts, and no review row lacks a GOA counterpart.
+The only multiplicity difference is the `GO:0031011`/IDA/`PMID:21303910` row that GOA banks twice
+(once ComplexPortal, once UniProt), documented at the top of these notes. **No collapse occurred
+here** — but the check is what establishes that, not the absence of a symptom.
 
 ## 12. Core-vs-non-core rule applied consistently
 
