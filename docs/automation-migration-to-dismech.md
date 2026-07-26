@@ -165,6 +165,19 @@ values, `strategy.matrix` entries, an `env:` indirection
 `tests/test_agent_config.py` checks all four shapes instead, and treats a stale
 allowlist entry as a failure so the list can only shrink.
 
+**A manifest is not just YAML.** `agent-run-summary` shipped broken and took
+the summary step down in seven workflows, because its `description:` contained
+an illustrative `${{ steps... }}` expression — the prose explaining the bug was
+the bug. GitHub template-evaluates `description:` when an action manifest loads,
+`steps` is not a valid manifest context, and the action failed to load outright.
+CI's YAML parse passed the whole time: the file *is* valid YAML, and the
+rejection happens in the expression layer above it. Note the shape of the
+regression — before, that step succeeded while writing an empty report; after,
+the report was still missing *and* the job went red. `tests/test_agent_config.py`
+now checks every manifest-level field. Nothing in this repo parsed action
+manifests before that, which is the same blind spot that hides
+`.github/actions/claude-code-action`.
+
 **Read trust from the default branch.** `ai.yml` read its controller allowlist
 from the checked-out PR ref, so a proposer with push access could add themselves
 to `.github/ai-controllers.json` on their own branch and self-authorize. Same
@@ -206,15 +219,26 @@ routine event in the repo into a red X.
   If required-approval rules are ever enabled, raise the App to
   `Contents: write` first (an App-settings change plus accepting the permission
   bump on the org installation).
+- **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
+  account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
+  nothing, but the entry should be removed. The recipes that re-added it — and
+  that re-installed `PAT_FOR_PR` — are gone as of the cleanup PR; before that, a
+  single `just gh-add-secrets` would have reinstalled the exposed credential and
+  undone this migration. Worth remembering that a revoked token is not a revoked
+  account, and neither is a deleted account a removed collaborator.
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it. It
   should be deleted. Note it is already non-functional — a checkout using it
   fails outright, which is how `pr-shepherd` came to fail 24 runs in a row — so
   deleting it is bookkeeping rather than a cutover.
-- **Scanners still run with `--dangerously-skip-permissions`** while reading
-  upstream `geneontology/go-annotation` issue text. The mitigations are the
+- **Five workflows run with `--dangerously-skip-permissions`**:
+  `arba-issue-monitor`, `curation-scanner`, `go-annotation-scanner`,
+  `pr-shepherd` and `weekly-compliance`. Not just the scanners —
+  **`pr-shepherd` reads PR titles, bodies, diffs and review comments**, a wider
+  untrusted-input surface than upstream GO issue text. The mitigations are the
   prompt-level untrusted-input guardrail and the App token's scope, not tool
-  restriction. Enumerating `--allowedTools` per scanner (as
-  `litscan-module-member` does) would be a real tightening.
+  restriction. `litscan-module-member`, `claude-code-review` and `claude` all
+  enumerate `--allowedTools` instead, so the precedent for tightening the other
+  five is already in the repo.
 - **`.github/actions/claude-code-action` is an unmanaged agent path.** It is an
   older composite — `npm install -g` plus a CBORG endpoint — sitting behind
   `claude-issue-summarize` and `claude-issue-triage`. None of the guards here
