@@ -214,6 +214,13 @@ as an ONTOLOGY knowledge gap.
   domain, and despite the family's GAP activity being phosphoinositide-dependent
   (PMID:11062263). No direct lipid-binding assay has been done on ACAP3 itself, so this
   is left as a suggested experiment rather than asserted.
+- Related, and larger than ACAP3: `GO:0180020 membrane bending activity` is a current MF
+  term defined as "The activity of bending or deforming a membrane", and it has **four**
+  human annotations in total (CHMP2A, CHMP3, OPA1 — QuickGO, checked 2026-07-25). Not one
+  BAR-domain protein carries it, although BAR domains are the canonical membrane-bending
+  module and ACAP1's BAR-PH tandem has been shown directly to tubulate liposomes
+  (PMID:25284369). ACAP3 has no such assay so it cannot be annotated here, but the gap is
+  worth flagging: the term exists and the family that most obviously needs it is absent.
 - Nothing from the four functional papers (§2): no `GTPase activator activity` from
   PMID:27330119, no experimental neuronal-migration annotation from PMID:28919417, no
   receptor-recycling annotation from PMID:41520057. Every annotation ACAP3 has is
