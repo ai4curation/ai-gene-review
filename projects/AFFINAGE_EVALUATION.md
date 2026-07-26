@@ -19,6 +19,8 @@ sidecars:
   batch4_summary_md: AFFINAGE_EVALUATION/results/batch4/summary.md
   hard_cases: AFFINAGE_EVALUATION/results/hard-cases.md
   narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
+  fa_cohort_summary: AFFINAGE_EVALUATION/results/fa-cohort.md
+  fa_cohort_dir: AFFINAGE_EVALUATION/results/fa-cohort/
 ---
 # Affinage Evaluation Project
 
@@ -221,6 +223,38 @@ split sharply:
 Across the **combined 42-gene set** the specific curated primary function is captured
 **1/42** (KRAS). Three other nominal matches (AATF, ABL1, GAPDH) are general/secondary
 terms, not the primary activity.
+
+## Forward test: Affinage as a deep-research *input* (FA cohort, n=22)
+
+Full analysis: [`results/fa-cohort.md`](AFFINAGE_EVALUATION/results/fa-cohort.md) · per-gene
+writeups in [`results/fa-cohort/`](AFFINAGE_EVALUATION/results/fa-cohort/).
+
+The cohorts above judge Affinage's **GO layer** against finished reviews. This cohort runs the
+*forward* experiment the [Relationship to AIGR](#relationship-to-aigr) section flagged as
+"weaker than it first appears": take the whole **Fanconi-anemia complementation group (A–W, 22
+genes)**, review each de-novo, then feed the Affinage narrative back in as a deep-research source
+and measure **net curation value** — not exact-GO overlap.
+
+- **The narrative earned its keep:** **59** Affinage-surfaced primary papers were folded into the
+  reviews and **13 new GO annotations** added across **10** genes (including one genuine
+  biochemistry gap — FANCA's intrinsic RAD52-like single-strand-annealing activity — and prose-only
+  functions like FANCD2 fork protection, FANCM ATR-checkpoint, RAD51C/XRCC2 ICL-repair, MAD2L2
+  fork-resection control). **No** existing curation decision was reversed.
+- **The GO layer stayed unusable (0/22 imported), and its FA failure mode is sharper than
+  "general parent":** on this adaptor/scaffold-heavy pathway it lands on the **wrong catalytic
+  branch** — typing the non-catalytic subunits FANCB/E/I as `catalytic activity, acting on a
+  protein`, FANCA/PALB2/SLX4 as acting-on-DNA, the RING-E3s FANCL/RFWD3/BRCA1 as generic
+  `ligase`, and — inverting the error — the *catalytic* helicase BRIP1/FANCJ as `molecular
+  adaptor activity`.
+- Several times Affinage's own cited evidence **reinforced** an AIGR non-core/over-annotation
+  call (FANCC redox mutants; RAD51C is-not-an-endonuclease; XRCC2 is-not-a-damage-sensor; SLX4
+  nuclease-dead), the opposite of redundancy.
+- The two `tie`/CAUTION records (ERCC4, BRCA1) were correctly flagged, but against the **GO
+  layer** (a spurious RNA-catalytic term on BRCA1), not the prose, which was factually sound.
+
+**Takeaway:** used as this project endorses — narrative-as-input, GO-layer-ignored — Affinage
+delivered measurable, conservative value on the very pathway where it should have been most
+redundant with AIGR's own deep-research step.
 
 ## Failure-mode taxonomy (verified by inspection)
 

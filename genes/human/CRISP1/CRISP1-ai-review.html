@@ -1,0 +1,3550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRISP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CRISP1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P54107" target="_blank" class="term-link">
+                        P54107
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CRISP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P54107" data-a="DESCRIPTION: CRISP1 is an epididymis-enriched, secreted CAP/CRI..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CRISP1 is an epididymis-enriched, secreted CAP/CRISP-family glycoprotein that associates with the human sperm surface, including the postacrosomal sperm-head region. A tightly associated sperm pool promotes two successive fertilization steps: binding of sperm to the zona pellucida through a specific interaction with ZP3, and progression from sperm-oolemma binding to plasma-membrane fusion. Human CRISP1 also binds the calcium exporter PMCA4b through its N-terminal region and delays PMCA4b-mediated calcium extrusion in a heterologous assay, although the endogenous importance of this mechanism in human sperm remains unresolved. CRISP-family redundancy in mouse models indicates a modulatory, cooperative role rather than an indispensable standalone fusogen.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0005576" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PAINT extracellular-region inference agrees with CRISP1&#39;s signal peptide and with direct human localization in the epididymal lumen, seminal plasma, and on the sperm surface.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human tissue and immunohistochemical experiments identify CRISP1 as an epididymal secretory glycoprotein in luminal fluids and at the extracellular sperm surface. Its demonstrated zona-binding and gamete-fusion roles occur in this extracellular context, so the broad IBA term is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8543280" target="_blank" class="term-link">
+                                        PMID:8543280
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060090" target="_blank" class="term-link">
+                                    GO:0060090
+                                </a>
+                            </span>
+                            <span class="term-label">molecular adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0060090" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT propagated molecular adaptor activity to CRISP1 from a single mouse Glipr1l1 seed at a broad CAP-family ancestral node.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cached PTHR10334 trace places this activity at PTN000036124 using only MGI:MGI:1916536, mouse Glipr1l1. GLIPR1L1 is a distinct GPI-anchored sperm/acrosomal paralog implicated in organizing IZUMO1 redistribution. Human CRISP1 directly binds ZP3, participates in gamete fusion, and regulates PMCA4b, but no experiment shows it bringing multiple macromolecules together as required by molecular adaptor activity. The source annotation may be sound for Glipr1l1, but root-family propagation to CRISP1 is not.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1916536</span>
+
+                                    &middot; mouse Glipr1l1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The seed supports a sperm/acrosomal organizing role in a distinct GLIPR1-like paralog, not adaptor activity in CRISP1.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000036124</span>
+
+                                    &middot; broad PTHR10334 ancestral node
+
+
+                                    <span class="badge">UNRESOLVED</span>
+
+
+                                    <div class="propagation-comment">This node spans functionally divergent CAP-family subfamilies and is too broad for transfer of the Glipr1l1-specific adaptor role.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CRISP1/CRISP1-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">The cached PANTHER trace places GO:0060090 molecular adaptor activity at the broad PTHR10334 node PTN000036124 from only MGI:MGI:1916536, mouse `Glipr1l1`.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0005576" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro maps the secreted CAP/CRISP architecture to extracellular region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The automated term is broad but independently supported by the N-terminal signal peptide and direct localization of human CRISP1 in epididymal lumen, seminal plasma, and on the extracellular sperm surface.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8543280" target="_blank" class="term-link">
+                                        PMID:8543280
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Immunohistochemical analysis showed that the human AEG-like molecule is located in the lumen and epithelium of distal ductus efferentes and epididymal ducts, and on the postacrosomal region of the sperm head.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0005634" data-r="PMID:21630459" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CRISP1 was assigned to the sperm nucleus from a large-scale proteomic catalogue, but the cached publication is abstract-only and does not list individual proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The abstract reports a highly purified sperm-nuclear preparation and 403 protein identifications, but it does not name CRISP1 or expose peptide-level evidence. Nuclear localization is unexpected for a secreted sperm-surface protein, yet the curator&#39;s full evidence cannot be checked from the cache. Following the incomplete-evidence rule, this experimental annotation is retained as unresolved rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                                        PMID:21630459
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">With this approach, 403 different proteins have been identified from the isolated sperm nuclei.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8543280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8543280
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    [Analysis of the human acidic epididymal glycoprotein-like m...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0005576" data-r="PMID:8543280" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original human tissue study directly places CRISP1 in reproductive-duct lumina, seminal plasma, and on the sperm head.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although the TAS code is statement-level, the cited study reports antibody detection in sperm and seminal plasma and immunohistochemical localization in epididymal lumina. These observations directly support the broad extracellular-region annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8543280" target="_blank" class="term-link">
+                                        PMID:8543280
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007342" target="_blank" class="term-link">
+                                    GO:0007342
+                                </a>
+                            </span>
+                            <span class="term-label">fusion of sperm to egg plasma membrane involved in single fertilization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8838800" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8838800
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of a human glycoprotein with a potential ro...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0007342" data-r="PMID:8838800" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original characterization proposed CRISP1 as the human functional counterpart of rodent AEG/DE; later direct human functional experiments support its participation after sperm-oolemma binding and before fusion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:8838800 alone established secretion and postacrosomal sperm binding while proposing a fusion role. PMID:11566719 subsequently showed that anti-CRISP1 specifically inhibits penetration of zona-free eggs without impairing viability, motility, acrosome reaction, or initial oolemma binding, and demonstrated CRISP1-binding sites on human oocytes. The term is therefore supported, while CRISP1 should not be described as the sole indispensable fusogen.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8838800" target="_blank" class="term-link">
+                                        PMID:8838800
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Although this protein, designated ARP (AEG-related protein), is not the ortholog of rodent AEG, it resembles AEG in that it is an epididymal secretory glycoprotein that binds to the postacrosomal region of the sperm head.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11566719" target="_blank" class="term-link">
+                                        PMID:11566719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007339" target="_blank" class="term-link">
+                                    GO:0007339
+                                </a>
+                            </span>
+                            <span class="term-label">binding of sperm to zona pellucida</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24334245" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24334245
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human fertilization: epididymal hCRISP1 mediates sperm-zona ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0007339" data-r="PMID:24334245" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human CRISP1 promotes sperm binding to the zona pellucida through a direct, preferential interaction with ZP3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Anti-CRISP1 and recombinant CRISP1 independently reduced the number of human sperm bound in hemizona assays without affecting motility, capacitation-associated tyrosine phosphorylation, or acrosome reaction. Recombinant CRISP1 bound ZP3 dose-dependently and saturably, providing a specific direct mechanism for this missing process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24334245" target="_blank" class="term-link">
+                                        PMID:24334245
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Results revealed that both anti-hCRISP1 and rec-hCRISP1 produced a significant inhibition in the number of sperm bound per HZ compared with the corresponding controls.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24334245" target="_blank" class="term-link">
+                                        PMID:24334245
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097524" target="_blank" class="term-link">
+                                    GO:0097524
+                                </a>
+                            </span>
+                            <span class="term-label">sperm plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11566719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11566719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evidence that human epididymal protein ARP plays a role in g...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:0097524" data-r="PMID:11566719" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A tightly associated population of human CRISP1 is present at the sperm surface and is positioned to act during gamete interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequential extraction of ejaculated human sperm directly demonstrated a tightly sperm-surface-associated CRISP1 pool. Independent immunohistochemistry places CRISP1 on the postacrosomal sperm head, making sperm plasma membrane more informative than extracellular region alone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11566719" target="_blank" class="term-link">
+                                        PMID:11566719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903170" target="_blank" class="term-link">
+                                    GO:1903170
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of calcium ion transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37882330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37882330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian cysteine-rich secretory proteins interact with pla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P54107" data-a="GO:1903170" data-r="PMID:37882330" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human CRISP1 binds PMCA4b through its N-terminal domain and delays PMCA4b-mediated calcium extrusion in co-transfected cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct co-immunoprecipitation and calcium assays distinguish human CRISP1 from CRISP3: both bind PMCA4b, but only CRISP1 delays transporter-mediated calcium extrusion. The process term captures the measured effect without overextending the rodent CatSper data to human calcium-channel regulator activity. Endogenous relevance in human sperm remains a knowledge gap.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37882330" target="_blank" class="term-link">
+                                        PMID:37882330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37882330" target="_blank" class="term-link">
+                                        PMID:37882330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts at the extracellular face of the human sperm head as a reproductive interaction factor: it binds ZP3 to promote sperm attachment to the zona pellucida and subsequently participates in the step after oolemma binding that leads to sperm-egg plasma-membrane fusion.</h3>
+                <span class="vote-buttons" data-g="P54107" data-a="FUNCTION: Acts at the extracellular face of the human sperm ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007339" target="_blank" class="term-link">
+                                binding of sperm to zona pellucida
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007342" target="_blank" class="term-link">
+                                fusion of sperm to egg plasma membrane involved in single fertilization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097524" target="_blank" class="term-link">
+                                sperm plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24334245" target="_blank" class="term-link">
+                                PMID:24334245
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11566719" target="_blank" class="term-link">
+                                PMID:11566719
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Interacts through its N-terminal region with human PMCA4b and delays PMCA4b-mediated calcium extrusion; this direct biochemical activity may tune sperm calcium homeostasis, but its endogenous reproductive context remains to be demonstrated.</h3>
+                <span class="vote-buttons" data-g="P54107" data-a="FUNCTION: Interacts through its N-terminal region with human..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903170" target="_blank" class="term-link">
+                                negative regulation of calcium ion transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37882330" target="_blank" class="term-link">
+                                PMID:37882330
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study generated a catalogue of proteins from highly purified human sperm nuclei.</div>
+
+                        <div class="finding-text">"With this approach, 403 different proteins have been identified from the isolated sperm nuclei."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8543280" target="_blank" class="term-link">
+                            PMID:8543280
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">[Analysis of the human acidic epididymal glycoprotein-like molecule: isolation of cDNA and tissue localization].</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 is specifically expressed in epididymis and detected in reproductive-tract fluids and sperm.</div>
+
+                        <div class="finding-text">"This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 localizes to epididymal lumina/epithelium and the postacrosomal sperm head.</div>
+
+                        <div class="finding-text">"Immunohistochemical analysis showed that the human AEG-like molecule is located in the lumen and epithelium of distal ductus efferentes and epididymal ducts, and on the postacrosomal region of the sperm head."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8838800" target="_blank" class="term-link">
+                            PMID:8838800
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of a human glycoprotein with a potential role in sperm-egg fusion: cDNA cloning, immunohistochemical localization, and chromosomal assignment of the gene (AEGL1).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 is an epididymal secretory glycoprotein bound to the postacrosomal sperm head.</div>
+
+                        <div class="finding-text">"Although this protein, designated ARP (AEG-related protein), is not the ortholog of rodent AEG, it resembles AEG in that it is an epididymal secretory glycoprotein that binds to the postacrosomal region of the sperm head."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11566719" target="_blank" class="term-link">
+                            PMID:11566719
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Evidence that human epididymal protein ARP plays a role in gamete fusion through complementary sites on the surface of the human egg.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A tightly associated human CRISP1 population is present at the sperm surface.</div>
+
+                        <div class="finding-text">"Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Blocking human CRISP1 specifically inhibits a step after oolemma binding and leading to sperm-egg fusion.</div>
+
+                        <div class="finding-text">"The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24334245" target="_blank" class="term-link">
+                            PMID:24334245
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human fertilization: epididymal hCRISP1 mediates sperm-zona pellucida binding through its interaction with ZP3.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Blocking sperm CRISP1 or occupying its zona sites reduces human sperm binding to hemizonae.</div>
+
+                        <div class="finding-text">"Results revealed that both anti-hCRISP1 and rec-hCRISP1 produced a significant inhibition in the number of sperm bound per HZ compared with the corresponding controls."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 preferentially binds ZP3.</div>
+
+                        <div class="finding-text">"Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37882330" target="_blank" class="term-link">
+                            PMID:37882330
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian cysteine-rich secretory proteins interact with plasma membrane Ca(2+) exporter PMCA4b.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 interacts with PMCA4b through its N-terminal domain.</div>
+
+                        <div class="finding-text">"Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CRISP1 delays PMCA4b-mediated calcium extrusion.</div>
+
+                        <div class="finding-text">"Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18571638" target="_blank" class="term-link">
+                            PMID:18571638
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Impaired sperm fertilizing ability in mice lacking Cysteine-RIch Secretory Protein 1 (CRISP1).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mouse Crisp1 loss impairs in-vitro zona penetration and fusion without abolishing natural fertility.</div>
+
+                        <div class="finding-text">"In vitro fertilization assays showed that Crisp1(-/-) sperm also exhibited a significantly reduced ability to penetrate both ZP-intact and ZP-free eggs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26416967" target="_blank" class="term-link">
+                            PMID:26416967
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CRISP1 as a novel CatSper regulator that modulates sperm motility and orientation during fertilization.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Native rat CRISP1 regulates CatSper in mouse sperm and modulates hyperactivation/orientation.</div>
+
+                        <div class="finding-text">"Moreover, patch clamping of sperm revealed that CRISP1 has the ability to regulate CatSper, the principal sperm Ca(2+) channel involved in hyperactivation and essential for fertility."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30510210" target="_blank" class="term-link">
+                            PMID:30510210
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Impaired male fertility and abnormal epididymal epithelium differentiation in mice lacking CRISP1 and CRISP4.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined mouse Crisp1/Crisp4 loss reveals reproductive redundancy and epididymal phenotypes.</div>
+
+                        <div class="finding-text">"Our data showed that the simultaneous lack of the two epididymal proteins results in clear fertility defects."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8665901" target="_blank" class="term-link">
+                            PMID:8665901
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The human cysteine-rich secretory protein (CRISP) family. Primary structure and tissue distribution of CRISP-1, CRISP-2 and CRISP-3.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An early study found epididymis-specific human CRISP1 but no significant sperm association.</div>
+
+                        <div class="finding-text">"In contrast to findings on its rat counterpart epididymal protein DE/acidic epididymal glycoprotein (AEG), no significant association of CRISP-1 with human spermatozoa was observed."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER PAINT node-level annotations for PTHR10334</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/CRISP1/CRISP1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry for human CRISP1 (P54107)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates CRISP1 as a secreted precursor with a cleaved signal peptide.</div>
+
+                        <div class="finding-text">"SIGNAL          1..21"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/CRISP1/CRISP1-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual literature synthesis for human CRISP1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the human oolemma receptor for CRISP1, and does CRISP1 directly alter membrane fusion or organize a transient adhesion/signaling interface after initial sperm-oolemma binding?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Patricia S. Cuasnicu, Debora J. Cohen</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="Q: What is the human oolemma receptor for CRISP1, and..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does endogenous human sperm CRISP1 regulate PMCA4b, CatSper, or both during capacitation and fertilization, and which CRISP1 domain mediates each effect?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bhagyashri R. Pathak, Patricia S. Cuasnicu</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="Q: Does endogenous human sperm CRISP1 regulate PMCA4b..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the long and short CRISP1 isoforms differ in secretion, stable sperm-surface association, zona/fusion activity, or release during capacitation?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Masaru Hayashi, Patricia S. Cuasnicu</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="Q: Do the long and short CRISP1 isoforms differ in se..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use affinity-matured monovalent CRISP1 probes and proximity labeling on live zona-free human oocytes, followed by quantitative membrane proteomics and orthogonal receptor knockout or blocking assays in a validated gamete-fusion model.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CRISP1 engages a specific oolemma receptor distinct from the initial sperm-binding machinery and promotes the transition to membrane fusion.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: receptor discovery, live-cell proximity labeling, and functional blocking</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="EXPERIMENT: Use affinity-matured monovalent CRISP1 probes and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure PMCA4b extrusion and CatSper currents in capacitated human sperm after acute CRISP1 depletion or isoform-specific blocking, then rescue with mammalian-expressed wild-type CRISP1 and CAP- or CRD-domain mutants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Endogenous human CRISP1 restrains calcium flux through separable PMCA4b- and channel-regulatory interfaces that tune rather than abolish fertilizing competence.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: human sperm electrophysiology, calcium imaging, and separation-of-function rescue</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="EXPERIMENT: Measure PMCA4b extrusion and CatSper currents in c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag both CRISP1 isoforms in primary human epididymal organoids, trace secretion and sperm acquisition, and quantify loosely versus tightly associated pools before and after capacitation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Isoform identity and epididymal processing determine whether CRISP1 is released during capacitation or retained at the postacrosomal sperm membrane for gamete interaction.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: isoform-resolved genome editing, organoid secretomics, and sperm-surface biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="EXPERIMENT: Endogenously tag both CRISP1 isoforms in primary h..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reanalyze purified human sperm nuclei and matched membrane fractions with targeted CRISP1 peptides, isotope-labeled standards, and microscopy using knockout-validated antibodies.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The historical sperm-nucleus HDA signal reflects residual membrane-associated CRISP1 rather than a reproducible intranuclear pool.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: targeted spatial proteomics and orthogonal localization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P54107" data-a="EXPERIMENT: Reanalyze purified human sperm nuclei and matched ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct human oolemma partner and molecular mechanism by which CRISP1 promotes sperm-egg plasma-membrane fusion are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Antibody inhibition places CRISP1 after initial oolemma binding, and recombinant CRISP1 binds the human oocyte surface, but neither experiment identifies the receptor or distinguishes adhesion, signaling, and membrane remodeling mechanisms.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the partner and activity is necessary to replace a process-only description with a precise molecular function and to assess contraceptive or infertility relevance.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Live-oocyte receptor capture, direct binding kinetics, loss-of-function validation, and reconstituted membrane-fusion assays are required.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Experiments in which zona-free human oocytes discarded from in vitro fertilization programs were exposed to ARP, fixed, and subjected to indirect immunofluorescence revealed the presence of specific ARP-binding sites on the entire surface of the human egg, in agreement with the fusogenic properties of the human oolema."</em> — PMID:11566719</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is not known whether human CRISP1 regulates endogenous PMCA4b or calcium channels in human sperm during capacitation and fertilization.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Human CRISP1 directly binds and delays PMCA4b-mediated calcium extrusion in a heterologous system, while native rat CRISP1 regulates CatSper and TRPM8 in mouse sperm; the endogenous human connection has not been tested.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Calcium control could connect CRISP1&#39;s extracellular interactions to sperm motility, capacitation, and fusion and define its domain-specific molecular activities.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Acute perturbation and electrophysiology in human sperm, endogenous interaction mapping, and separation-of-function rescue are needed.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain."</em> — PMID:37882330</li>
+
+                <li><em>"Moreover, patch clamping of sperm revealed that CRISP1 has the ability to regulate CatSper, the principal sperm Ca(2+) channel involved in hyperactivation and essential for fertility."</em> — PMID:26416967</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The functional distinction between CRISP1 isoforms and loosely versus tightly sperm-associated pools is unresolved, and the reported sperm-nuclear pool is unverified.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Two UniProt isoforms exist; direct human studies detect both soluble reproductive-fluid and tightly sperm-surface-associated CRISP1, whereas the abstract-only nuclear proteomics source cannot be inspected at peptide level.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Pool and isoform resolution is required to assign where each activity occurs and to decide whether the nuclear HDA annotation is reproducible.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Isoform-resolved endogenous tagging, pulse-chase/secretome analysis, surface extraction, targeted spatial proteomics, and validated microscopy should resolve the locations.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction."</em> — PMID:11566719</li>
+
+                <li><em>"With this approach, 403 different proteins have been identified from the isolated sperm nuclei."</em> — PMID:21630459</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CRISP1-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54107" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Manual literature synthesis for human CRISP1 (P54107)</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="manual-literature-synthesis-for-human-crisp1-p54107">Manual literature synthesis for human CRISP1 (P54107)</h1>
+<h2 id="scope-and-provenance">Scope and provenance</h2>
+<p>This report was prepared manually from the project-cached UniProt record, GOA rows, PANTHER PAINT trace, ontology lookups, and primary publications after the configured automated providers failed on 2026-07-18 (Falcon/Edison HTTP 402; Perplexity-lite HTTP 401 insufficient quota). It is intentionally named <code>deep-research-manual</code> rather than after a provider.</p>
+<h2 id="molecular-identity-and-localization">Molecular identity and localization</h2>
+<p>Human CRISP1 is a 249-amino-acid secreted glycoprotein precursor in the CAP/CRISP family. UniProt annotates a signal peptide at residues 1–21, a CAP domain, a cysteine-rich domain, multiple disulfide bonds, and two splice isoforms. Direct human tissue studies identify an epididymis-enriched protein in distal ductus efferentes and epididymal epithelium/lumen, ductus deferens, sperm, and seminal plasma. Immunohistochemistry places it on the postacrosomal sperm-head region <a href="https://pubmed.ncbi.nlm.nih.gov/8543280">PMID:8543280</a>. Sequential extraction additionally demonstrates a tightly sperm-surface-associated population <a href="https://pubmed.ncbi.nlm.nih.gov/11566719">PMID:11566719</a>. These data establish extracellular-region and sperm-plasma-membrane pools.</p>
+<p>An early biochemical study found epididymis-specific CRISP1 but reported no significant sperm association <a href="https://pubmed.ncbi.nlm.nih.gov/8665901">PMID:8665901</a>, whereas later immunolocalization, sequential extraction, and functional antibody studies support a sperm-associated population [PMID:8543280; PMID:8838800; PMID:11566719]. This apparent difference may reflect extraction, antibody, sample, or pool-specific sensitivity and should not be converted into an isoform-specific claim without direct testing.</p>
+<p>The sperm-nucleus proteomics annotation from PMID:21630459 cannot be fully assessed from the cached abstract. The abstract reports a highly purified sperm-nuclear preparation and 403 identified proteins but does not list CRISP1. Nuclear localization is therefore unresolved, not disproven.</p>
+<h2 id="direct-human-reproductive-functions">Direct human reproductive functions</h2>
+<p>Human CRISP1 acts at two successive stages of gamete interaction:</p>
+<ol>
+<li>Human sperm-zona pellucida binding: blocking sperm CRISP1 with antibody or occupying zona sites with recombinant CRISP1 reduces human sperm binding in hemizona assays. Recombinant CRISP1 binds ZP3 preferentially, dose-dependently, and saturably compared with ZP2 and ZP4 <a href="https://pubmed.ncbi.nlm.nih.gov/24334245">PMID:24334245</a>. This directly supports GO:0007339 binding of sperm to zona pellucida.</li>
+<li>Sperm-egg plasma-membrane fusion: anti-CRISP1 inhibits penetration of zona-free hamster eggs by capacitated human sperm without reducing motility, viability, acrosome reaction, or initial oolemma binding. Recombinant human CRISP1 also binds complementary sites across the surface of zona-free human oocytes <a href="https://pubmed.ncbi.nlm.nih.gov/11566719">PMID:11566719</a>. Together these experiments support the existing GO:0007342 fusion annotation while placing CRISP1 after initial oolemma attachment rather than treating it as the sole essential fusogen.</li>
+</ol>
+<p>The 1995–1996 characterization papers established epididymal secretion and postacrosomal localization and proposed functional equivalence to rodent AEG/DE [PMID:8543280; PMID:8838800]. Their functional interpretation was initially inferential, but it is corroborated by the later direct human experiments above.</p>
+<h2 id="calcium-homeostasis-mechanism">Calcium-homeostasis mechanism</h2>
+<p>In co-transfected cells, human CRISP1 and CRISP3 both interact with human PMCA4b through their N-terminal domains, but only human CRISP1 and rat CRISP4 delay PMCA4b-mediated calcium extrusion <a href="https://pubmed.ncbi.nlm.nih.gov/37882330">PMID:37882330</a>. This supports GO:1903170 negative regulation of calcium ion transmembrane transport for human CRISP1. Whether this interaction regulates endogenous PMCA4b in human sperm, which CRISP1 pool is responsible, and how it integrates with capacitation remain open.</p>
+<p>Native rat CRISP1 inhibits mouse sperm CatSper and TRPM8 currents and modulates hyperactivation/orientation <a href="https://pubmed.ncbi.nlm.nih.gov/26416967">PMID:26416967</a>. These findings motivate testing human CRISP1 for GO:0005246 calcium channel regulator activity, but they are not treated as direct human evidence because the experimental protein and sperm were nonhuman.</p>
+<h2 id="mammalian-genetic-context-and-transfer-boundary">Mammalian genetic context and transfer boundary</h2>
+<p>Mouse Crisp1 single-gene deletion leaves natural fertility intact but lowers capacitation-associated tyrosine phosphorylation and reduces sperm penetration of both zona-intact and zona-free eggs in vitro <a href="https://pubmed.ncbi.nlm.nih.gov/18571638">PMID:18571638</a>. Combined Crisp1/Crisp4 deletion produces fertility defects in most males and epididymal epithelial differentiation, luminal-pH, and inflammatory phenotypes in a subset <a href="https://pubmed.ncbi.nlm.nih.gov/30510210">PMID:30510210</a>. These data establish redundancy among rodent epididymal CRISPs and caution against describing human CRISP1 as an indispensable standalone fusogen. Humans lack rodent CRISP4, and human CRISP1 has been proposed as a functional counterpart of both rodent proteins, but rodent tissue-level phenotypes are not direct human annotations.</p>
+<h2 id="paint-inference-assessment">PAINT inference assessment</h2>
+<p>The cached PANTHER trace places GO:0060090 molecular adaptor activity at the broad PTHR10334 node PTN000036124 from only MGI:MGI:1916536, mouse <code>Glipr1l1</code>. That source protein is a distinct GPI-anchored sperm/acrosomal CAP-family paralog involved in IZUMO1 redistribution. Human CRISP1 has direct evidence for ligand interaction and calcium-transport regulation, but no study demonstrates that it brings multiple macromolecules together as required for molecular adaptor activity. The root-family IBA is therefore over-propagated and should be removed from CRISP1.</p>
+<h2 id="evidence-boundaries-and-open-questions">Evidence boundaries and open questions</h2>
+<ul>
+<li>The direct human studies support participation in zona binding and fusion, not absolute requirement for natural fertility.</li>
+<li>The molecular identity of CRISP1's human oolemma binding partner remains unknown.</li>
+<li>The relative contributions, processing, and fate of loosely versus tightly sperm-associated CRISP1 pools are not resolved at isoform level.</li>
+<li>Endogenous human-sperm PMCA4b regulation has not been demonstrated, and conserved CatSper/TRPM8 regulation remains an orthology-based hypothesis.</li>
+<li>The sperm-nuclear HDA annotation cannot be verified from the abstract-only cached source.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CRISP1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P54107" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="crisp1-review-notes">CRISP1 review notes</h1>
+<h2 id="2026-07-18-review-initiation-and-source-audit">2026-07-18 — review initiation and source audit</h2>
+<ul>
+<li>Seeded the human CRISP1 review with <code>just fetch-gene human CRISP1</code> (UniProt P54107). QuickGO returned six rows, each retained as a separate annotation group.</li>
+<li>Ran <code>just fetch-gene-pmids human CRISP1</code> while attempting <code>just deep-research-falcon human CRISP1 --fallback perplexity-lite</code>. Edison/Falcon returned HTTP 402 Payment Required and Perplexity returned HTTP 401 insufficient quota. No provider-named report was created; the evidence synthesis is recorded in <code>CRISP1-deep-research-manual.md</code>.</li>
+<li>CRISP1 is a 249-aa secreted CAP/CRISP-family glycoprotein precursor with a cleaved signal peptide and two annotated splice isoforms. Human tissue evidence places it in the epididymal duct lumen and epithelium, sperm, seminal plasma, and the postacrosomal sperm-head region <code>[PMID:8543280](https://pubmed.ncbi.nlm.nih.gov/8543280 "Immunohistochemical analysis showed that the human AEG-like molecule is located in the lumen and epithelium of distal ductus efferentes and epididymal ducts, and on the postacrosomal region of the sperm head.")</code>.</li>
+<li>The strongest direct human fertilization evidence comes from two studies. Antibody inhibition and recombinant-protein binding support a role after sperm-oolemma binding in gamete fusion <code>[PMID:11566719](https://pubmed.ncbi.nlm.nih.gov/11566719 "The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.")</code>. Human hemizona and recombinant zona-protein assays support sperm-zona binding through ZP3 <code>[PMID:24334245](https://pubmed.ncbi.nlm.nih.gov/24334245 "Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.")</code>.</li>
+<li>A newer biochemical study found that human CRISP1 interacts with PMCA4b through its N-terminal region and delays PMCA4b-mediated calcium extrusion <code>[PMID:37882330](https://pubmed.ncbi.nlm.nih.gov/37882330 "Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain.")</code> <code>[PMID:37882330](https://pubmed.ncbi.nlm.nih.gov/37882330 "Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.")</code>. This supports a direct human calcium-transport-regulatory annotation, while the physiological sperm context remains to be established.</li>
+<li>Mouse genetics supports a conserved but partly redundant reproductive role. Single Crisp1-null mice remain fertile but their sperm show reduced zona penetration and fusion in vitro <code>[PMID:18571638](https://pubmed.ncbi.nlm.nih.gov/18571638 "In vitro fertilization assays showed that Crisp1(-/-) sperm also exhibited a significantly reduced ability to penetrate both ZP-intact and ZP-free eggs.")</code>. Combined Crisp1/Crisp4 loss yields fertility and epididymal-epithelium phenotypes, but these mouse phenotypes are not transferred directly to human <code>[PMID:30510210](https://pubmed.ncbi.nlm.nih.gov/30510210 "the simultaneous lack of the two epididymal proteins results in clear fertility defects")</code>.</li>
+</ul>
+<h2 id="paintiba-trace">PAINT/IBA trace</h2>
+<ul>
+<li>The cached PANTHER trace <code>interpro/panther/PTHR10334/PTHR10334-paint.tsv</code> places GO:0060090 molecular adaptor activity at broad node PTN000036124 using only MGI:MGI:1916536, mouse <code>Glipr1l1</code>.</li>
+<li>Mouse GLIPR1L1 is a GPI-anchored sperm/acrosomal organizer associated with IZUMO1. CRISP1 is a distinct secreted CRISP subfamily member for which direct human experiments establish ZP3 binding, gamete-fusion participation, and PMCA4b regulation, but not the GO-defined activity of bringing multiple macromolecules together.</li>
+<li>The molecular-adaptor IBA is therefore reviewed as <code>REMOVE</code> with <code>PROPAGATION_BAD</code>; the source supports its own target but not CRISP1. This does not remove CRISP1's well-supported reproductive functions.</li>
+</ul>
+<h2 id="annotation-decisions-and-evidence-boundaries">Annotation decisions and evidence boundaries</h2>
+<ul>
+<li>Accept all three extracellular-region annotations. They agree with the signal peptide and direct recovery/localization in epididymal lumen, sperm, and seminal plasma.</li>
+<li>Keep the TAS sperm-egg-fusion annotation as <code>ACCEPT</code>; although its 1996 source was initially inferential, the later direct human study PMID:11566719 independently supports the term.</li>
+<li>Mark the HDA nucleus annotation <code>UNDECIDED</code>. The cached record for PMID:21630459 is abstract-only and does not name CRISP1, so the source-level peptide evidence and contamination controls cannot be checked. The annotation is not removed because the curator had access to information absent from the cache.</li>
+<li>Add <code>NEW</code> direct-human annotations for binding of sperm to zona pellucida (GO:0007339), sperm plasma membrane (GO:0097524), and negative regulation of calcium ion transmembrane transport (GO:1903170).</li>
+<li>Do not transfer rodent sperm-capacitation, CatSper, hyperactivation, cumulus-penetration, or epididymal-development phenotypes as direct human annotations. These remain mechanistic hypotheses and experimental priorities.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P54107
+gene_symbol: CRISP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CRISP1 is an epididymis-enriched, secreted CAP/CRISP-family glycoprotein that
+  associates with the human sperm surface, including the postacrosomal sperm-head
+  region. A tightly associated sperm pool promotes two successive fertilization
+  steps: binding of sperm to the zona pellucida through a specific interaction
+  with ZP3, and progression from sperm-oolemma binding to plasma-membrane fusion.
+  Human CRISP1 also binds the calcium exporter PMCA4b through its N-terminal
+  region and delays PMCA4b-mediated calcium extrusion in a heterologous assay,
+  although the endogenous importance of this mechanism in human sperm remains
+  unresolved. CRISP-family redundancy in mouse models indicates a modulatory,
+  cooperative role rather than an indispensable standalone fusogen.
+alternative_products:
+- name: Long
+  id: P54107-1
+  description: &gt;-
+    Canonical 249-amino-acid secreted precursor containing both the CAP and
+    C-terminal cysteine-rich domains; no isoform-specific activity has been
+    established.
+- name: Short (CRISP-1 delta)
+  id: P54107-2
+  sequence_note: VSP_006027, VSP_006028
+  description: &gt;-
+    Alternatively spliced product with two sequence changes relative to the
+    canonical form; its localization and fertilization functions have not been
+    distinguished experimentally.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      The PAINT extracellular-region inference agrees with CRISP1&#39;s signal
+      peptide and with direct human localization in the epididymal lumen,
+      seminal plasma, and on the sperm surface.
+    action: ACCEPT
+    reason: &gt;-
+      Human tissue and immunohistochemical experiments identify CRISP1 as an
+      epididymal secretory glycoprotein in luminal fluids and at the extracellular
+      sperm surface. Its demonstrated zona-binding and gamete-fusion roles occur
+      in this extracellular context, so the broad IBA term is correct.
+    supported_by:
+    - reference_id: PMID:8543280
+      supporting_text: &gt;-
+        This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0060090
+    label: molecular adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PAINT propagated molecular adaptor activity to CRISP1 from a single mouse
+      Glipr1l1 seed at a broad CAP-family ancestral node.
+    action: REMOVE
+    reason: &gt;-
+      The cached PTHR10334 trace places this activity at PTN000036124 using only
+      MGI:MGI:1916536, mouse Glipr1l1. GLIPR1L1 is a distinct GPI-anchored
+      sperm/acrosomal paralog implicated in organizing IZUMO1 redistribution.
+      Human CRISP1 directly binds ZP3, participates in gamete fusion, and
+      regulates PMCA4b, but no experiment shows it bringing multiple
+      macromolecules together as required by molecular adaptor activity. The
+      source annotation may be sound for Glipr1l1, but root-family propagation to
+      CRISP1 is not.
+    additional_reference_ids:
+    - file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+    - file:human/CRISP1/CRISP1-deep-research-manual.md
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - WRONG_ORTHOLOG_OR_PARALOG
+      - FUNCTIONAL_DIVERGENCE
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: MGI:MGI:1916536
+        source_label: mouse Glipr1l1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The seed supports a sperm/acrosomal organizing role in a distinct
+          GLIPR1-like paralog, not adaptor activity in CRISP1.
+      - source_id: PANTHER:PTN000036124
+        source_label: broad PTHR10334 ancestral node
+        source_status: UNRESOLVED
+        comment: &gt;-
+          This node spans functionally divergent CAP-family subfamilies and is
+          too broad for transfer of the Glipr1l1-specific adaptor role.
+    supported_by:
+    - reference_id: file:human/CRISP1/CRISP1-deep-research-manual.md
+      supporting_text: &gt;-
+        The cached PANTHER trace places GO:0060090 molecular adaptor activity at the broad PTHR10334 node PTN000036124 from only MGI:MGI:1916536, mouse `Glipr1l1`.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro maps the secreted CAP/CRISP architecture to extracellular region.
+    action: ACCEPT
+    reason: &gt;-
+      The automated term is broad but independently supported by the N-terminal
+      signal peptide and direct localization of human CRISP1 in epididymal lumen,
+      seminal plasma, and on the extracellular sperm surface.
+    supported_by:
+    - reference_id: PMID:8543280
+      supporting_text: &gt;-
+        Immunohistochemical analysis showed that the human AEG-like molecule is located in the lumen and epithelium of distal ductus efferentes and epididymal ducts, and on the postacrosomal region of the sperm head.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      CRISP1 was assigned to the sperm nucleus from a large-scale proteomic
+      catalogue, but the cached publication is abstract-only and does not list
+      individual proteins.
+    action: UNDECIDED
+    reason: &gt;-
+      The abstract reports a highly purified sperm-nuclear preparation and 403
+      protein identifications, but it does not name CRISP1 or expose peptide-level
+      evidence. Nuclear localization is unexpected for a secreted sperm-surface
+      protein, yet the curator&#39;s full evidence cannot be checked from the cache.
+      Following the incomplete-evidence rule, this experimental annotation is
+      retained as unresolved rather than removed.
+    supported_by:
+    - reference_id: PMID:21630459
+      supporting_text: &gt;-
+        With this approach, 403 different proteins have been identified from the isolated sperm nuclei.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: PMID:8543280
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The original human tissue study directly places CRISP1 in reproductive-duct
+      lumina, seminal plasma, and on the sperm head.
+    action: ACCEPT
+    reason: &gt;-
+      Although the TAS code is statement-level, the cited study reports antibody
+      detection in sperm and seminal plasma and immunohistochemical localization
+      in epididymal lumina. These observations directly support the broad
+      extracellular-region annotation.
+    supported_by:
+    - reference_id: PMID:8543280
+      supporting_text: &gt;-
+        This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0007342
+    label: fusion of sperm to egg plasma membrane involved in single fertilization
+  evidence_type: TAS
+  original_reference_id: PMID:8838800
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The original characterization proposed CRISP1 as the human functional
+      counterpart of rodent AEG/DE; later direct human functional experiments
+      support its participation after sperm-oolemma binding and before fusion.
+    action: ACCEPT
+    reason: &gt;-
+      PMID:8838800 alone established secretion and postacrosomal sperm binding
+      while proposing a fusion role. PMID:11566719 subsequently showed that
+      anti-CRISP1 specifically inhibits penetration of zona-free eggs without
+      impairing viability, motility, acrosome reaction, or initial oolemma
+      binding, and demonstrated CRISP1-binding sites on human oocytes. The term
+      is therefore supported, while CRISP1 should not be described as the sole
+      indispensable fusogen.
+    additional_reference_ids:
+    - PMID:11566719
+    supported_by:
+    - reference_id: PMID:8838800
+      supporting_text: &gt;-
+        Although this protein, designated ARP (AEG-related protein), is not the ortholog of rodent AEG, it resembles AEG in that it is an epididymal secretory glycoprotein that binds to the postacrosomal region of the sperm head.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:11566719
+      supporting_text: &gt;-
+        The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0007339
+    label: binding of sperm to zona pellucida
+  evidence_type: IDA
+  original_reference_id: PMID:24334245
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Human CRISP1 promotes sperm binding to the zona pellucida through a direct,
+      preferential interaction with ZP3.
+    action: NEW
+    reason: &gt;-
+      Anti-CRISP1 and recombinant CRISP1 independently reduced the number of
+      human sperm bound in hemizona assays without affecting motility,
+      capacitation-associated tyrosine phosphorylation, or acrosome reaction.
+      Recombinant CRISP1 bound ZP3 dose-dependently and saturably, providing a
+      specific direct mechanism for this missing process annotation.
+    supported_by:
+    - reference_id: PMID:24334245
+      supporting_text: &gt;-
+        Results revealed that both anti-hCRISP1 and rec-hCRISP1 produced a significant inhibition in the number of sperm bound per HZ compared with the corresponding controls.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:24334245
+      supporting_text: &gt;-
+        Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0097524
+    label: sperm plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:11566719
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      A tightly associated population of human CRISP1 is present at the sperm
+      surface and is positioned to act during gamete interaction.
+    action: NEW
+    reason: &gt;-
+      Sequential extraction of ejaculated human sperm directly demonstrated a
+      tightly sperm-surface-associated CRISP1 pool. Independent
+      immunohistochemistry places CRISP1 on the postacrosomal sperm head, making
+      sperm plasma membrane more informative than extracellular region alone.
+    additional_reference_ids:
+    - PMID:8543280
+    supported_by:
+    - reference_id: PMID:11566719
+      supporting_text: &gt;-
+        Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:1903170
+    label: negative regulation of calcium ion transmembrane transport
+  evidence_type: IDA
+  original_reference_id: PMID:37882330
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Human CRISP1 binds PMCA4b through its N-terminal domain and delays
+      PMCA4b-mediated calcium extrusion in co-transfected cells.
+    action: NEW
+    reason: &gt;-
+      Direct co-immunoprecipitation and calcium assays distinguish human CRISP1
+      from CRISP3: both bind PMCA4b, but only CRISP1 delays transporter-mediated
+      calcium extrusion. The process term captures the measured effect without
+      overextending the rodent CatSper data to human calcium-channel regulator
+      activity. Endogenous relevance in human sperm remains a knowledge gap.
+    supported_by:
+    - reference_id: PMID:37882330
+      supporting_text: &gt;-
+        Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:37882330
+      supporting_text: &gt;-
+        Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings:
+  - statement: The study generated a catalogue of proteins from highly purified human sperm nuclei.
+    supporting_text: &gt;-
+      With this approach, 403 different proteins have been identified from the isolated sperm nuclei.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The abstract does not name
+      CRISP1 and the cache lacks the peptide table/full text needed to verify the
+      nuclear HDA assignment.
+- id: PMID:8543280
+  title: &#39;[Analysis of the human acidic epididymal glycoprotein-like molecule: isolation of cDNA and tissue localization].&#39;
+  findings:
+  - statement: Human CRISP1 is specifically expressed in epididymis and detected in reproductive-tract fluids and sperm.
+    supporting_text: &gt;-
+      This antibody detected a major band of 30 kD and a minor band of 26 kD in the caput, corpus, and cauda regions of the epididymis, the ductus deferens, the sperm, and the seminal plasma.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Human CRISP1 localizes to epididymal lumina/epithelium and the postacrosomal sperm head.
+    supporting_text: &gt;-
+      Immunohistochemical analysis showed that the human AEG-like molecule is located in the lumen and epithelium of distal ductus efferentes and epididymal ducts, and on the postacrosomal region of the sperm head.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This primary human study
+      directly supports expression and localization, but its sperm-maturation
+      role was stated as an assumption rather than tested.
+- id: PMID:8838800
+  title: &#39;Characterization of a human glycoprotein with a potential role in sperm-egg fusion: cDNA cloning, immunohistochemical localization, and chromosomal assignment of the gene (AEGL1).&#39;
+  findings:
+  - statement: Human CRISP1 is an epididymal secretory glycoprotein bound to the postacrosomal sperm head.
+    supporting_text: &gt;-
+      Although this protein, designated ARP (AEG-related protein), is not the ortholog of rodent AEG, it resembles AEG in that it is an epididymal secretory glycoprotein that binds to the postacrosomal region of the sperm head.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The paper directly supports
+      secretion/localization and proposes a fusion role; later PMID:11566719
+      supplies direct human functional evidence for that role.
+- id: PMID:11566719
+  title: Evidence that human epididymal protein ARP plays a role in gamete fusion through complementary sites on the surface of the human egg.
+  findings:
+  - statement: A tightly associated human CRISP1 population is present at the sperm surface.
+    supporting_text: &gt;-
+      Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Blocking human CRISP1 specifically inhibits a step after oolemma binding and leading to sperm-egg fusion.
+    supporting_text: &gt;-
+      The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The primary study directly
+      tests human sperm and human CRISP1, with zona-free hamster penetration and
+      recombinant-protein binding to human oocytes as complementary assays.
+- id: PMID:24334245
+  title: &#39;Human fertilization: epididymal hCRISP1 mediates sperm-zona pellucida binding through its interaction with ZP3.&#39;
+  findings:
+  - statement: Blocking sperm CRISP1 or occupying its zona sites reduces human sperm binding to hemizonae.
+    supporting_text: &gt;-
+      Results revealed that both anti-hCRISP1 and rec-hCRISP1 produced a significant inhibition in the number of sperm bound per HZ compared with the corresponding controls.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Human CRISP1 preferentially binds ZP3.
+    supporting_text: &gt;-
+      Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. Human hemizona inhibition and
+      recombinant ZP-protein ELISA directly support the sperm-zona-binding role.
+- id: PMID:37882330
+  title: Mammalian cysteine-rich secretory proteins interact with plasma membrane Ca(2+) exporter PMCA4b.
+  findings:
+  - statement: Human CRISP1 interacts with PMCA4b through its N-terminal domain.
+    supporting_text: &gt;-
+      Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: Human CRISP1 delays PMCA4b-mediated calcium extrusion.
+    supporting_text: &gt;-
+      Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The study directly tests human
+      CRISP1-PMCA4b interaction and calcium extrusion, although the functional
+      assay is heterologous rather than endogenous human sperm.
+- id: PMID:18571638
+  title: Impaired sperm fertilizing ability in mice lacking Cysteine-RIch Secretory Protein 1 (CRISP1).
+  findings:
+  - statement: Mouse Crisp1 loss impairs in-vitro zona penetration and fusion without abolishing natural fertility.
+    supporting_text: &gt;-
+      In vitro fertilization assays showed that Crisp1(-/-) sperm also exhibited a significantly reduced ability to penetrate both ZP-intact and ZP-free eggs.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. This primary mouse knockout
+      study supports conserved reproductive context and redundancy, but its
+      phenotypes are not treated as direct human evidence.
+- id: PMID:26416967
+  title: CRISP1 as a novel CatSper regulator that modulates sperm motility and orientation during fertilization.
+  findings:
+  - statement: Native rat CRISP1 regulates CatSper in mouse sperm and modulates hyperactivation/orientation.
+    supporting_text: &gt;-
+      Moreover, patch clamping of sperm revealed that CRISP1 has the ability to regulate CatSper, the principal sperm Ca(2+) channel involved in hyperactivation and essential for fertility.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. The electrophysiology used
+      native rat CRISP1 and mouse sperm, so it motivates but does not directly
+      establish human calcium-channel regulator activity.
+- id: PMID:30510210
+  title: Impaired male fertility and abnormal epididymal epithelium differentiation in mice lacking CRISP1 and CRISP4.
+  findings:
+  - statement: Combined mouse Crisp1/Crisp4 loss reveals reproductive redundancy and epididymal phenotypes.
+    supporting_text: &gt;-
+      Our data showed that the simultaneous lack of the two epididymal proteins results in clear fertility defects.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC identity and full text were checked. The mouse double-knockout
+      provides an important redundancy boundary but is not used for direct human
+      process annotation.
+- id: PMID:8665901
+  title: The human cysteine-rich secretory protein (CRISP) family. Primary structure and tissue distribution of CRISP-1, CRISP-2 and CRISP-3.
+  findings:
+  - statement: An early study found epididymis-specific human CRISP1 but no significant sperm association.
+    supporting_text: &gt;-
+      In contrast to findings on its rat counterpart epididymal protein DE/acidic epididymal glycoprotein (AEG), no significant association of CRISP-1 with human spermatozoa was observed.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and abstract were checked. The negative sperm-association
+      result contrasts with later extraction, localization, and functional data
+      and is retained as an assay/pool-specific evidence boundary.
+- id: file:interpro/panther/PTHR10334/PTHR10334-paint.tsv
+  title: PANTHER PAINT node-level annotations for PTHR10334
+  findings: []
+- id: file:human/CRISP1/CRISP1-uniprot.txt
+  title: UniProt entry for human CRISP1 (P54107)
+  findings:
+  - statement: UniProt annotates CRISP1 as a secreted precursor with a cleaved signal peptide.
+    supporting_text: SIGNAL          1..21
+- id: file:human/CRISP1/CRISP1-deep-research-manual.md
+  title: Manual literature synthesis for human CRISP1
+  findings: []
+core_functions:
+- description: &gt;-
+    Acts at the extracellular face of the human sperm head as a reproductive
+    interaction factor: it binds ZP3 to promote sperm attachment to the zona
+    pellucida and subsequently participates in the step after oolemma binding
+    that leads to sperm-egg plasma-membrane fusion.
+  directly_involved_in:
+  - id: GO:0007339
+    label: binding of sperm to zona pellucida
+  - id: GO:0007342
+    label: fusion of sperm to egg plasma membrane involved in single fertilization
+  locations:
+  - id: GO:0097524
+    label: sperm plasma membrane
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:24334245
+    supporting_text: &gt;-
+      Results revealed that rec-hCRISP1 mainly interacted with ZP3 in a dose-dependent and saturable manner, supporting the specificity of this interaction.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: PMID:11566719
+    supporting_text: &gt;-
+      The antibody did not inhibit the occurrence of spontaneous or Ca(2+) ionophore-induced acrosome reaction, nor did it inhibit the ability of sperm to bind to the oolema, supporting a specific inhibition of the antibody at the sperm-egg fusion level.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- description: &gt;-
+    Interacts through its N-terminal region with human PMCA4b and delays
+    PMCA4b-mediated calcium extrusion; this direct biochemical activity may tune
+    sperm calcium homeostasis, but its endogenous reproductive context remains
+    to be demonstrated.
+  directly_involved_in:
+  - id: GO:1903170
+    label: negative regulation of calcium ion transmembrane transport
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:37882330
+    supporting_text: &gt;-
+      Interestingly, hCRISP1 and rCRISP4 delayed PMCA4b-mediated calcium extrusion but hCRISP3 did not.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the human oolemma receptor for CRISP1, and does CRISP1 directly alter
+    membrane fusion or organize a transient adhesion/signaling interface after
+    initial sperm-oolemma binding?
+  experts:
+  - Patricia S. Cuasnicu
+  - Debora J. Cohen
+- question: &gt;-
+    Does endogenous human sperm CRISP1 regulate PMCA4b, CatSper, or both during
+    capacitation and fertilization, and which CRISP1 domain mediates each effect?
+  experts:
+  - Bhagyashri R. Pathak
+  - Patricia S. Cuasnicu
+- question: &gt;-
+    Do the long and short CRISP1 isoforms differ in secretion, stable sperm-surface
+    association, zona/fusion activity, or release during capacitation?
+  experts:
+  - Masaru Hayashi
+  - Patricia S. Cuasnicu
+suggested_experiments:
+- description: &gt;-
+    Use affinity-matured monovalent CRISP1 probes and proximity labeling on live
+    zona-free human oocytes, followed by quantitative membrane proteomics and
+    orthogonal receptor knockout or blocking assays in a validated gamete-fusion
+    model.
+  experiment_type: receptor discovery, live-cell proximity labeling, and functional blocking
+  hypothesis: &gt;-
+    CRISP1 engages a specific oolemma receptor distinct from the initial
+    sperm-binding machinery and promotes the transition to membrane fusion.
+- description: &gt;-
+    Measure PMCA4b extrusion and CatSper currents in capacitated human sperm after
+    acute CRISP1 depletion or isoform-specific blocking, then rescue with
+    mammalian-expressed wild-type CRISP1 and CAP- or CRD-domain mutants.
+  experiment_type: human sperm electrophysiology, calcium imaging, and separation-of-function rescue
+  hypothesis: &gt;-
+    Endogenous human CRISP1 restrains calcium flux through separable PMCA4b- and
+    channel-regulatory interfaces that tune rather than abolish fertilizing
+    competence.
+- description: &gt;-
+    Endogenously tag both CRISP1 isoforms in primary human epididymal organoids,
+    trace secretion and sperm acquisition, and quantify loosely versus tightly
+    associated pools before and after capacitation.
+  experiment_type: isoform-resolved genome editing, organoid secretomics, and sperm-surface biochemistry
+  hypothesis: &gt;-
+    Isoform identity and epididymal processing determine whether CRISP1 is released
+    during capacitation or retained at the postacrosomal sperm membrane for gamete
+    interaction.
+- description: &gt;-
+    Reanalyze purified human sperm nuclei and matched membrane fractions with
+    targeted CRISP1 peptides, isotope-labeled standards, and microscopy using
+    knockout-validated antibodies.
+  experiment_type: targeted spatial proteomics and orthogonal localization
+  hypothesis: &gt;-
+    The historical sperm-nucleus HDA signal reflects residual membrane-associated
+    CRISP1 rather than a reproducible intranuclear pool.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct human oolemma partner and molecular mechanism by which CRISP1
+    promotes sperm-egg plasma-membrane fusion are unknown.
+  boundary: &gt;-
+    Antibody inhibition places CRISP1 after initial oolemma binding, and
+    recombinant CRISP1 binds the human oocyte surface, but neither experiment
+    identifies the receptor or distinguishes adhesion, signaling, and membrane
+    remodeling mechanisms.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving the partner and activity is necessary to replace a process-only
+    description with a precise molecular function and to assess contraceptive or
+    infertility relevance.
+  resolution: &gt;-
+    Live-oocyte receptor capture, direct binding kinetics, loss-of-function
+    validation, and reconstituted membrane-fusion assays are required.
+  provenance:
+  - reference_id: PMID:11566719
+    supporting_text: &gt;-
+      Experiments in which zona-free human oocytes discarded from in vitro fertilization programs were exposed to ARP, fixed, and subjected to indirect immunofluorescence revealed the presence of specific ARP-binding sites on the entire surface of the human egg, in agreement with the fusogenic properties of the human oolema.
+    full_text_unavailable: true
+- gap_statement: &gt;-
+    It is not known whether human CRISP1 regulates endogenous PMCA4b or calcium
+    channels in human sperm during capacitation and fertilization.
+  boundary: &gt;-
+    Human CRISP1 directly binds and delays PMCA4b-mediated calcium extrusion in a
+    heterologous system, while native rat CRISP1 regulates CatSper and TRPM8 in
+    mouse sperm; the endogenous human connection has not been tested.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Calcium control could connect CRISP1&#39;s extracellular interactions to sperm
+    motility, capacitation, and fusion and define its domain-specific molecular
+    activities.
+  resolution: &gt;-
+    Acute perturbation and electrophysiology in human sperm, endogenous
+    interaction mapping, and separation-of-function rescue are needed.
+  provenance:
+  - reference_id: PMID:37882330
+    supporting_text: &gt;-
+      Human CRISP1 (hCRISP1) and hCRISP3 also interacted with PMCA4b via the N-terminal domain.
+    full_text_unavailable: true
+  - reference_id: PMID:26416967
+    supporting_text: &gt;-
+      Moreover, patch clamping of sperm revealed that CRISP1 has the ability to regulate CatSper, the principal sperm Ca(2+) channel involved in hyperactivation and essential for fertility.
+- gap_statement: &gt;-
+    The functional distinction between CRISP1 isoforms and loosely versus tightly
+    sperm-associated pools is unresolved, and the reported sperm-nuclear pool is
+    unverified.
+  boundary: &gt;-
+    Two UniProt isoforms exist; direct human studies detect both soluble
+    reproductive-fluid and tightly sperm-surface-associated CRISP1, whereas the
+    abstract-only nuclear proteomics source cannot be inspected at peptide level.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Pool and isoform resolution is required to assign where each activity occurs
+    and to decide whether the nuclear HDA annotation is reproducible.
+  resolution: &gt;-
+    Isoform-resolved endogenous tagging, pulse-chase/secretome analysis, surface
+    extraction, targeted spatial proteomics, and validated microscopy should
+    resolve the locations.
+  provenance:
+  - reference_id: PMID:11566719
+    supporting_text: &gt;-
+      Sequential extraction of proteins from ejaculated human sperm revealed the existence of a population of ARP that is tightly associated with the sperm surface and thus, potentially capable of participating in gamete interaction.
+    full_text_unavailable: true
+  - reference_id: PMID:21630459
+    supporting_text: &gt;-
+      With this approach, 403 different proteins have been identified from the isolated sperm nuclei.
+    full_text_unavailable: true
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
