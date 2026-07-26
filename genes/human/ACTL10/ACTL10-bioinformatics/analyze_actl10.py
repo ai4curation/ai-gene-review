@@ -148,7 +148,21 @@ def assert_quickgo_calls_are_guarded() -> int:
     # Done over the AST, not the text: the first textual version matched this function's own
     # error-message strings and reported four call sites where there is one.
     tree = ast.parse(src)
-    funcs = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    # Match async defs too, and reject a shadowed name rather than silently keeping the last
+    # definition: containment is tested by line range, so two definitions of the same name would
+    # make the allowed range depend on which one the dict happened to keep. Neither can happen in
+    # this file today; the guard is written to be copied, so it should not carry the trap.
+    defs: dict[str, list] = defaultdict(list)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            defs[node.name].append(node)
+    for name in ("quickgo_all", "assert_quickgo_calls_are_guarded"):
+        if len(defs.get(name, [])) > 1:
+            raise RuntimeError(
+                f"{name}() is defined {len(defs[name])} times (lines "
+                f"{[d.lineno for d in defs[name]]}); containment is tested by line range, so a "
+                "shadowed definition makes the allowed range ambiguous")
+    funcs = {k: v[0] for k, v in defs.items()}
     guard = funcs.get("quickgo_all")
     if guard is None:
         raise RuntimeError("quickgo_all() is gone; the QuickGO coverage guard no longer exists")
@@ -176,7 +190,8 @@ def assert_quickgo_calls_are_guarded() -> int:
     return len(reads)
 
 
-def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
+def quickgo_all(params: dict, what: str, allow_zero: bool = False,
+                count_only: bool = False) -> dict:
     """QuickGO search whose result set is asserted to be complete.
 
     QuickGO reports the true total in `numberOfHits` while returning at most `limit` rows, so
@@ -189,6 +204,15 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
     and must abort. For a per-donor evidence lookup, a donor that carries no annotation for the
     term it donated is a genuine and interesting **finding** - aborting would destroy it rather
     than surface it, the same reasoning that keeps an ambiguous cross-reference as data.
+
+    `count_only` is for a caller that reads **no rows** and wants `numberOfHits` alone. For such a
+    caller page coverage is not merely inconvenient to satisfy, it is *inapplicable*: there is no
+    row set whose completeness matters. It exists because the first version of the presence probe
+    below passed `limit=1` through the normal path, where `got != total` fires for any accession
+    with more than one annotation and `got >= limit` fires for exactly one - so the probe could
+    only ever return "absent" or abort, and the accession-present-but-lacking-the-term case it was
+    written to detect took the run down with a message about a phantom API inconsistency. Caught
+    by the reviewer; it is the same two-states-rendered-as-one-value shape as the bugs it followed.
     """
     if "limit" not in params:
         raise RuntimeError(
@@ -200,6 +224,12 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
     if total is None:
         raise RuntimeError(f"QuickGO returned no numberOfHits for {what}; cannot verify coverage")
     got = len(d.get("results", []))
+    if count_only:
+        # No rows are read, so completeness of the row set is not a property this caller depends
+        # on. The zero check below still applies, because the count itself is what it wants.
+        if total == 0 and not allow_zero:
+            raise RuntimeError(f"QuickGO returned zero rows for {what}")
+        return d
     if got != total:
         # Equality, not `got < total`: an over-count would be just as much a sign that the
         # response does not mean what this function assumes, and the previous commit message
@@ -706,7 +736,8 @@ def quickgo_evidence(gene_product: str, go_id: str) -> dict:
     absent = None
     if n == 0:
         probe = quickgo_all({"geneProductId": gene_product, "limit": "1"},
-                            f"presence probe for {gene_product}", allow_zero=True)
+                            f"presence probe for {gene_product}", allow_zero=True,
+                            count_only=True)
         absent = probe.get("numberOfHits", 0) == 0
     return {"n": n, "codes": dict(codes), "terms": dict(terms),
             "has_experimental": bool(set(codes) & EXPERIMENTAL_CODES),
@@ -749,7 +780,8 @@ def paint_record() -> dict:
 def main() -> None:
     res: dict = {}
     n_refs = assert_quickgo_calls_are_guarded()
-    print(f"guard: {n_refs} QUICKGO_SEARCH read(s), all inside quickgo_all()", file=sys.stderr)
+    print(f"guard: {n_refs} QUICKGO_SEARCH read(s), all inside quickgo_all() or the guard itself",
+          file=sys.stderr)
     al62 = aligner()
 
     print("Q1  orthologue length distribution ...", file=sys.stderr)
