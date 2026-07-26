@@ -54,8 +54,12 @@ broad KEGG map do not make them TauABC-TauD core members.
 
 PMID:22221834 directly characterizes the PSEPK TauD reaction, kinetics,
 structure, and tetrameric assembly. The TauABC organization and transport
-stoichiometry are grounded in the reviewed Q88RA1 UniProtKB record. The broad
-candidate inventory remains in
+stoichiometry are grounded in the reviewed Q88RA1 UniProtKB record.
+PMID:8808933 establishes the orthologous TauABC uptake system and subunit
+roles, while PMID:17203388 directly measures high-affinity taurine binding by
+TauA. The module uses the exact TauA, TauB, TauC, and TauD PANTHER subfamilies,
+and TauD is placed in `GO:0019529` taurine catabolic process rather than a
+generic sulfur-catabolism parent. The broad candidate inventory remains in
 [`ppu00430_taurine_uptake_and_desulfonation.tsv`](ppu00430_taurine_uptake_and_desulfonation.tsv).
 
 The completed TauD report recovered the exact taurine/2-oxoglutarate
