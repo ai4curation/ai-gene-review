@@ -215,17 +215,30 @@ Actl7b (`MGI:MGI:1343053`) is in fact already a WITH/FROM donor on ACTL7A's `GO:
 cytoplasm IBA row. So the pair was checked on every axis where this review makes a claim, rather
 than assumed to behave alike. They are separable on all four.
 
+ACTL7B has since been reviewed independently and merged, so the comparison below is against that
+review (`genes/human/ACTL7B/ACTL7B-ai-review.yaml`) as well as against the primary literature.
+
 | axis | ACTL7A | ACTL7B |
 |---|---|---|
 | ATP-hydrolysis catalytic set (D11/Q137/D154/V159/H161) | `DQEVY` — **His161 lost** | `DQEVH` — **His161 retained** |
 | nucleotide cleft identity to actin | 63.2% | 68.4% |
 | phosphate-contact identity | 66.7% | 75.0% |
 | F-actin protomer interface identity | 42.3% | 36.4% |
-| expression | broad by Northern; testis-enriched | testis and prostate only [PMID:10373328] |
-| localisation, mouse germ cells | nucleus; present in sperm heads **and** tails | cytoplasm; **not** in sperm |
-| N-terminal extension | binds TES LIM2-3 (PDB 2XQN) | "distinct" from ACTL7A's |
+| expression | broad by Northern; HPA testis-enriched | "almost exclusively in the testis"; testis and prostate only by Northern [PMID:10373328] |
+| localisation in spermatids | nucleus, subacrosomal space, later postacrosomal | cytoplasm, developing acrosome, head-tail connecting region, and a lower-abundance nuclear pool |
+| retention in mature sperm | present in sperm heads **and** tails | not detected [PMID:12672658] |
+| specific compartment annotated in GO | GO:0033011 perinuclear theca — **is** a GO:0005856 descendant | GO:0001669 acrosomal vesicle — **is not** |
+| best-supported partners | TES/ENAH (PDB 2XQN), ACTL9, CYLC1 | DYNLL1, DYNLL2 |
+| N-terminal extension | binds TES LIM2-3 | "distinct" from ACTL7A's |
 
-Three consequences.
+Two corrections this cross-check forced on an earlier draft of these notes, both from overstating the
+contrast. ACTL7B is **not** purely cytoplasmic — the merged review gives it a low-abundance nuclear
+pool in early spermatids and spermatocytes, so PMID:12672658's nucleus-versus-cytoplasm split is a
+statement about the *dominant* pool in haploid germ cells, not an absolute presence/absence
+difference. And "not in sperm" is specifically about **mature** sperm; ACTL7B is on the developing
+acrosome during spermiogenesis.
+
+Four consequences.
 
 1. **The `GO:0005737` cytoplasm IBA rests partly on the paralogue's half of the experiment.**
    PMID:12672658's localisation sentence — [PMID:12672658 "Although the cellular locations of
@@ -244,7 +257,32 @@ Three consequences.
 3. **The His161 split is the sharpest single discriminator in the family.** ACTL7B keeps actin's
    hydrolysis trigger; ACTL7A and ACTL9 replace it with tyrosine. That is a within-paralogue
    functional difference, not shared drift, and it means a "cannot run actin's hydrolysis cycle"
-   argument made for ACTL7A does **not** carry over to ACTL7B.
+   argument made for ACTL7A does **not** carry over to ACTL7B. Note that the two independent
+   analyses agree on the *filament* conclusion by different routes: the ACTL7B review finds "the
+   surface actin uses for filament formation is not conserved, with the DNase-I-binding loop
+   entirely replaced", and this review's contact-based audit puts ACTL7B's protomer interface at
+   36.4% — the lowest of the two paralogues.
+4. **The two reviews reach opposite verdicts on `GO:0005200`, and the divergence is the finding.**
+   ACTL7B's review **removes** the `GO:0005200` TAS row; this review **accepts** it and makes it
+   the core MF. Same term, same 1999 citation, same family — because a name-derived annotation is
+   applied per *family* while its correctness is per *gene*. The asymmetry that decides it is
+   ontological and checkable: ACTL7A's specific compartment `GO:0033011` **is** a `GO:0005856`
+   descendant and its integrity demonstrably fails in the knock-out, so ACTL7A is a structural
+   constituent of a cytoskeletal structure; ACTL7B's specific compartment `GO:0001669` **is not** a
+   `GO:0005856` descendant (verified by QuickGO ancestors on both terms), so for ACTL7B there is no
+   annotated cytoskeletal structure to be a constituent of. The sibling review also reads the
+   clade's `GO:0005198` IBA as PAINT having *declined* to specialise to `GO:0005200`; that reading
+   is respected for ACTL7B and answered here, since a family-level generalisation cannot see a
+   gene-specific knock-out published years afterwards. Both rows now state this explicitly so a
+   curator meeting the pair does not have to reconstruct why they differ.
+
+One further cross-gene note. ACTL7B's review **adds** `GO:0001669 acrosomal vesicle` as a NEW
+annotation on the strength of the protein being on the developing acrosome, whereas this review
+argues the same term *away* from ACTL7A because a cytosolic protein cannot be inside the
+hydrolase-containing vesicle. These are not necessarily in conflict — different evidence, different
+gene — but "on the developing acrosome" is exactly the description that the missing **acroplaxome**
+term would disambiguate. The proposed term therefore has at least two immediate users in this
+paralogue pair alone, which strengthens the case for it.
 
 ## 7. Human disease genetics, and the GO gap it exposes
 
@@ -284,8 +322,8 @@ by the wrong route.
 | action | n | rows |
 |---|---|---|
 | ACCEPT | 10 | **GO:0005200 TAS** (the core MF); acrosome assembly ×2; spermatid development ×2; fertilization ×2; perinuclear theca ×2; protein-containing complex IDA |
-| KEEP_AS_NON_CORE | 15 | nucleus IBA/IEA/ISS/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; **GO:0005198 IBA** (parent of the core MF); protein binding (CYLC1, ACTL9) |
-| MODIFY | 5 | acrosomal vesicle IEA/IMP/IDA → perinuclear theca; cytoskeleton organization → actin cytoskeleton organization; protein binding (TES) → LIM domain binding |
+| KEEP_AS_NON_CORE | 14 | nucleus IBA/IEA/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; **GO:0005198 IBA** (parent of the core MF); protein binding (CYLC1, ACTL9) |
+| MODIFY | 6 | acrosomal vesicle IEA/IMP/IDA → perinuclear theca; cytoskeleton organization → actin cytoskeleton organization; protein binding (TES) → LIM domain binding; **nucleus ISS → male germ cell nucleus** |
 | NEW | 1 | GO:0007343 egg activation, IMP |
 | MARK_AS_OVER_ANNOTATED | 0 | — |
 | REMOVE | 0 | — |
@@ -324,19 +362,23 @@ with the provenance criticism inside `reason` (`GO:0005200`) and `KEEP_AS_NON_CO
 parent (`GO:0005198`). Nothing on this gene overshoots its term, so `MARK_AS_OVER_ANNOTATED` is
 unused; the defects were the citation and the inference chain.
 
-Why the four `nucleus` rows are all `KEEP_AS_NON_CORE` rather than refined to `GO:0001673`. The
-mouse source of the ISS row carries `GO:0001673 male germ cell nucleus` by IDA, so refining is
-tempting and is recorded as a suggested question. Two things held it back, and neither is the 1999
-Northern survey — an mRNA tissue distribution says nothing about where the protein sits, and citing
-it as a hedge was a first-draft error, corrected in round 2. The actual reasons: on the
-phylogenetic row the donor set spans a yeast SWI/SNF subunit, a *Candida* homologue and a
+Why the `nucleus` rows are treated differently from each other. Only the **ISS** row is refined to
+`GO:0001673 male germ cell nucleus`, and it is refined because its *sole* donor, mouse Actl7a,
+already carries that specific term by IDA. A propagated annotation that is less precise than the
+evidence its own donor holds throws information away for nothing, and refining downward is the fix —
+the same pattern found on ACRV1, where a mouse donor's specific acrosomal IDAs propagated three
+levels up. The other three rows are `KEEP_AS_NON_CORE` for reasons specific to each: the
+**phylogenetic** row's donor set spans a yeast SWI/SNF subunit, a *Candida* homologue and a
 trypanosome protein, for which a germ-cell term is meaningless, so `GO:0005634` genuinely is the
-correct least common ancestor there; and no study has looked for ACTL7A protein in a somatic
-nucleus, so the germ-cell restriction rests on where the protein has been observed rather than on
-exclusion elsewhere. Refining only the ortholog-derived rows would also split the four rows'
-actions, which is a curator call rather than one to make unilaterally. The substantive point about
-the nucleus is not its granularity but that **no nuclear activity has been demonstrated**, which
-`KEEP_AS_NON_CORE` states directly.
+correct least common ancestor there — a broad term can be right precisely because its donors are
+heterogeneous; the **GO_REF:0000120** row's WITH/FROM mixes the ortholog with a generic
+subcellular-location keyword; and the **HDA** row is a human experimental observation best left as
+the curator recorded it. This produces a per-term action split and a validator warning, which is
+accepted rather than smoothed over, because the routes genuinely differ and the row-level reasons say
+so. Note what is *not* a reason: the 1999 Northern survey. An mRNA tissue distribution says nothing
+about where the protein sits, and citing it as a hedge was a first-draft error corrected in round 2.
+The substantive point about the nucleus remains that **no nuclear activity has been demonstrated**,
+which is why nothing nuclear appears in `core_functions`.
 
 Two evidence-code observations, recorded here rather than in row summaries. `GO:0001669` /
 **IMP** / PMID:34727571 uses an IMP code for a *location*; the underlying data are
@@ -386,3 +428,30 @@ That was worth doing independently of the review: it turned up the paralogue-don
 cytoplasm row from the other direction, and it establishes that `GO:0030274 LIM domain binding`
 should **not** be assumed to transfer to ACTL7B, whose N-terminal extension is a different
 sequence.
+
+**Round 3.** One stale machine-readable field: the `GO:0005198` row had become
+`KEEP_AS_NON_CORE` while its `propagation_review.root_cause` still read `NO_FAILURE_CORE`, i.e. the
+exact claim round 2 retracted, in the field an aggregator would read. Fixed, and then checked
+mechanically across all 31 rows rather than by eye, since no validation rule cross-checks `action`
+against `root_cause`. Two notes paragraphs in §9 that still argued the superseded decisions were
+rewritten (see above).
+
+**Round 4.** Approved by the reviewer at the end of round 3; this round takes the two remaining
+non-blocking items and acts on a cross-gene comparison that only became possible once the paralogue
+was merged.
+
+- `SOURCE_EVIDENCE_WEAK` added to the `GO:0005198` row's `failure_modes`. Its other propagation
+  defect — both WITH/FROM tokens being PANTHER internal nodes with no protein-level evidence — was
+  argued in prose but absent from the machine-readable field, which is the same aggregator argument
+  accepted for `root_cause` a round earlier.
+- The **ISS** nucleus row refined to `GO:0001673` (see §9), applying the ACRV1 rule that an IBA or
+  ISS can be *less* precise than its own donor.
+- §6b rewritten against the now-merged ACTL7B review rather than against the primary literature
+  alone. This corrected two overstatements in the previous draft — ACTL7B does have a nuclear pool,
+  and "not in sperm" is about mature sperm only — and surfaced the fact that the two reviews reach
+  **opposite** verdicts on `GO:0005200`. That divergence is now argued explicitly on both the
+  `GO:0005200` and `GO:0005198` rows, resting on a checkable ontological asymmetry (`GO:0033011` is
+  a `GO:0005856` descendant; `GO:0001669` is not) rather than on either reviewer's preference.
+- The `core_functions[0]` description now states that the constituency claim is about the acroplaxome
+  plate and not about the actin filaments inside it, so it no longer appears to presuppose the answer
+  to its own knowledge gap.
