@@ -88,3 +88,51 @@ everywhere and the affinage `reference_review` is marked `MISCITED` for that cla
 2. **Viral 3A uses a different surface from the host kinase** — GOLD, not Q. That explains how
    picornaviral 3A can clamp ACBD3 onto replication organelles *without* displacing PI4KB, which
    is the whole point of the hijack.
+
+## The PKA regulatory subunit: UniProt and the primary literature disagree
+
+This is unresolved in the sources, not just in this review, and it is worth stating plainly
+because the disagreement is about a negative claim.
+
+| Source | Evidence | Claim |
+|---|---|---|
+| GOA `GO:0034237` IPI, WITH/FROM `UniProtKB:P10644` | IPI | binds PRKAR1A, i.e. **RIα** |
+| UniProt SUBUNIT line | **(By similarity)**, ECO:0000250 | binds RI-alpha; does **not** bind RI-beta or **RII-alpha** |
+| PMID:37044218 (2023, human) | experimental | GOLD domain binds **RII**; ACBD3 binds RII but **not RI** |
+
+[PMID:37044218 "Our results indicate that ACBD3 interacts specifically with the RII, but not RI subunit."]
+directly contradicts UniProt's by-similarity negation of RII-alpha. Per the project rule about
+not overruling curators, the curated RIα IPI stands — I have not read PMID:17911601's full text,
+which is abstract-only in the cache and whose title is about ezrin. But a by-similarity negative
+is the weakest kind of statement to leave standing against a 2023 human experimental positive,
+so this is recorded as a UniProt discrepancy to report rather than resolved in either direction.
+
+`GO:0034237` is unaffected either way: the term is agnostic about which R subunit binds.
+
+**Why this matters beyond the isoform.** The 2023 paper places the RII interaction in the **GOLD
+domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the regulatory subunit II
+(RII) of PKA and effectively recruits PKA holoenzyme to the Golgi"]. Combined with the Q-domain
+correction above, the domain map becomes clean and non-overlapping:
+
+- **Q domain (241–308)** — PI4KB *or* TBC1D22A/B, mutually exclusively
+- **GOLD domain (384–526)** — PKA RII, and picornaviral 3A proteins
+
+So GOLD is not a viral-only surface, as the previous version of these notes implied. It has a
+host partner, and the same reasoning that made 3A-vs-PI4KB non-competitive predicts that a virus
+clamping GOLD would displace PKA — a testable consequence, added to `suggested_experiments`.
+
+## A gap the GOA record has, found by reading the paper the record cites
+
+ACBD3 has **no retrograde-transport annotation at all**. The `GO:0006888` IMP cites
+PMID:37044218, but that paper's subject is Golgi-to-ER retrograde recycling: anterograde cargo
+arrival is the *trigger*, and what ACBD3 controls is whether retrograde transport runs
+constitutively [PMID:37044218 "depletion of ACBD3 reduces the Golgi fraction of RII, resulting in
+moderate, but constitutive activation of PKA and KDELR retrograde transport, independent of cargo
+influx from the ER"].
+
+So the record captured the trigger and missed the regulated process. `GO:2000156` *regulation of
+retrograde vesicle-mediated transport, Golgi to ER* is proposed as a `NEW` IMP — it has no
+children, so it is the most specific term available, and the regulation parent is right because
+ACBD3 is not transport machinery: it sets whether the pathway is cargo-gated. The existing
+`GO:0006888` IMP is left `ACCEPT`, since the addition is additive rather than a correction to a
+curator's experimental call.
