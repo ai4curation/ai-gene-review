@@ -18,14 +18,32 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 import yaml
 
+# A model id is a bare token. The resolved value is written to $GITHUB_ENV as
+# `AGENT_MODEL=<value>` (no heredoc delimiter) and then interpolated into
+# `--model ${{ env.AGENT_MODEL }}`, so an embedded newline would inject extra
+# environment variables and an embedded space would inject extra CLI flags.
+# Reject anything that is not a plain token, at the one place both paths pass
+# through.
+MODEL_ID_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
 
 class ConfigError(RuntimeError):
     """Raised when the config cannot satisfy the request."""
+
+
+def _validate_model(model: str, source: str) -> str:
+    if not MODEL_ID_RE.match(model):
+        raise ConfigError(
+            f"{source} is not a valid model id: {model!r} (expected only "
+            f"letters, digits, '.', '_' and '-')"
+        )
+    return model
 
 
 def load_config(path: Path) -> dict:
@@ -52,11 +70,16 @@ def _workflow_entry(config: dict, workflow: str) -> dict:
 def resolve_model(config: dict, workflow: str, override: str | None = None) -> str:
     """Return the effective single model id for ``workflow``."""
     if override and override.strip():
-        return override.strip()
+        return _validate_model(override.strip(), "model override")
     entry = _workflow_entry(config, workflow)
     model = entry.get("model")
+    if model and entry.get("matrix"):
+        raise ConfigError(
+            f"workflow '{workflow}' defines both 'model:' and 'matrix:'; "
+            f"exactly one is allowed"
+        )
     if model:
-        return str(model)
+        return _validate_model(str(model), f"workflow '{workflow}' model")
     if entry.get("matrix"):
         raise ConfigError(
             f"workflow '{workflow}' defines a 'matrix:', not a single 'model:'; "
@@ -68,7 +91,7 @@ def resolve_model(config: dict, workflow: str, override: str | None = None) -> s
             f"workflow '{workflow}' has no 'model:' and no top-level "
             f"'default_model' is set"
         )
-    return str(default)
+    return _validate_model(str(default), "default_model")
 
 
 def resolve_matrix(config: dict, workflow: str) -> list[dict]:
@@ -86,6 +109,8 @@ def resolve_matrix(config: dict, workflow: str) -> list[dict]:
     if not isinstance(matrix, list) or not matrix:
         raise ConfigError(f"workflow '{workflow}' 'matrix:' must be a non-empty list")
     for item in matrix:
+        if isinstance(item, dict) and item.get("model"):
+            _validate_model(str(item["model"]), f"workflow '{workflow}' matrix model")
         if not isinstance(item, dict) or not item.get("model"):
             raise ConfigError(
                 f"workflow '{workflow}' matrix entries must be mappings with a "

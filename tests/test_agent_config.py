@@ -101,40 +101,75 @@ def _workflow_texts() -> dict[str, str]:
 
 # Workflows not yet migrated onto the central config. Delete an entry when its
 # workflow starts resolving its model from .github/agent-config.yaml; the list
-# must only ever shrink. Anything NOT listed here that hardcodes a model fails.
-UNMIGRATED_MODEL_HARDCODES = {
+# must only ever shrink, and the test fails if an entry becomes stale. Anything
+# NOT listed here that pins a model fails.
+UNMIGRATED_MODEL_PINS = {
+    "claude",
+    "claude-code-review",
+    "curation-scanner",
     "go-annotation-scanner",
+    "litscan-module-member",
     "weekly-compliance",
 }
 
+# Model families, plus the bare aliases the CLI also accepts (`--model opus`).
+_MODEL_VALUE = (
+    r"(?:claude-(?:haiku|sonnet|opus|fable)[\w.-]*|\b(?:opus|sonnet|haiku|fable)\b)"
+)
+# A `--model` flag resolved from anything other than AGENT_MODEL. Matching the
+# whole line (not just the token after the flag) catches the common
+# `--model ${{ inputs.model || 'claude-opus-4-7' }}` shape.
+_CLI_PIN = re.compile(rf"--model\b(?!.*env\.AGENT_MODEL).*{_MODEL_VALUE}")
+# A YAML `*model:` key pinned to a literal model. Catches the action's `model:`
+# input, `strategy.matrix` entries, and `env:` indirection such as
+# `ISSUE_HANDOFF_MODEL: ${{ inputs.model || 'claude-haiku-...' }}`.
+_YAML_PIN = re.compile(rf"^\s*[\w-]*model:\s*.*{_MODEL_VALUE}", re.IGNORECASE)
+# A workflow_dispatch input whose `default:` is a model: a dispatch default is
+# always sent, so it silently overrides the central config on every manual run.
+_DEFAULT_PIN = re.compile(rf"^\s*default:\s*['\"]?{_MODEL_VALUE}")
 
-def test_no_workflow_hardcodes_a_model_inline():
-    """No workflow should pin a claude-* model on a `--model` invocation line;
-    models must come from the resolve-agent-config action. A stale hardcoded ID
-    silently no-ops a run into a phantom green check.
 
-    A workflow_dispatch `model:` dropdown may still *list* models as choices, so
-    only `--model` lines are flagged.
+def _model_pins(text: str) -> list[str]:
+    """Lines that pin a model, ignoring `choice` option lists and comments.
+
+    A dispatch dropdown may legitimately *list* models as `- claude-...`
+    options; only the effective value is a pin.
     """
-    offenders = {}
-    # Covers every current and anticipated Claude model family (haiku/sonnet/
-    # opus/fable) so a future hardcoded model is also caught.
-    model_family = re.compile(r"claude-(haiku|sonnet|opus|fable)-")
-    for stem, text in _workflow_texts().items():
-        for line in text.splitlines():
-            if "--model" in line and model_family.search(line):
-                offenders.setdefault(stem, []).append(line.strip())
+    pins = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("- claude-") or stripped.startswith("#"):
+            continue
+        if _CLI_PIN.search(line) or _YAML_PIN.match(line) or _DEFAULT_PIN.match(line):
+            pins.append(stripped)
+    return pins
 
-    new = {stem: lines for stem, lines in offenders.items()
-           if stem not in UNMIGRATED_MODEL_HARDCODES}
-    assert not new, "hardcoded --model found (should use AGENT_MODEL):\n" + "\n".join(
-        f"{stem}: {line}" for stem, lines in new.items() for line in lines
+
+def test_no_workflow_pins_a_model_inline():
+    """No workflow should pin a model; models must come from the config.
+
+    A stale or retired model id silently no-ops an agent run into a phantom
+    green check, which is exactly why this lives in one file.
+    """
+    offenders = {
+        stem: pins
+        for stem, text in _workflow_texts().items()
+        if (pins := _model_pins(text))
+    }
+
+    new = {
+        stem: pins
+        for stem, pins in offenders.items()
+        if stem not in UNMIGRATED_MODEL_PINS
+    }
+    assert not new, "pinned model found (should use AGENT_MODEL):\n" + "\n".join(
+        f"{stem}: {line}" for stem, pins in new.items() for line in pins
     )
 
-    stale = UNMIGRATED_MODEL_HARDCODES - set(offenders)
+    stale = UNMIGRATED_MODEL_PINS - set(offenders)
     assert not stale, (
-        "these workflows no longer hardcode a model; drop them from "
-        f"UNMIGRATED_MODEL_HARDCODES: {sorted(stale)}"
+        "these workflows no longer pin a model; drop them from "
+        f"UNMIGRATED_MODEL_PINS: {sorted(stale)}"
     )
 
 
