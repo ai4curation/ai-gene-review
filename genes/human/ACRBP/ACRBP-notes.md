@@ -208,9 +208,12 @@ recorded elsewhere in it.
 Two further points from that table. The mouse `GO:0005515` IPI (PMID:11164898) cites Q08279
 (guinea-pig IGF2) and Q6UW60 (human PCSK4) as partners, neither of which is proacrosin; PCSK4 is
 the convertase of PMID:22357636, and the IGF2 entry looks like a with/from artefact. Neither was
-used here. And rat and guinea pig carry `GO:0002080 acrosomal membrane` by the same ISS route as
-human, all tracing to the single pig IDA — so the MODIFY argued below applies to four entries,
-not one.
+used here. And the single pig `GO:0002080` IDA has propagated by ISS
+(`GO_REF:0000024`, with/from `UniProtKB:Q29016`) to **four** entries — human Q8NEB7, mouse Q3V140,
+rat Q6AY33 and guinea pig Q60485 — plus a further rat ISO row (`GO_REF:0000121`, with/from
+`RGD:14255780`). So the MODIFY argued below is not a one-gene correction: one
+resolution-limited immunofluorescence call is currently the sole basis for acrosomal-membrane
+localisation across the whole reviewed family.
 
 ## Annotations that do not survive review
 
