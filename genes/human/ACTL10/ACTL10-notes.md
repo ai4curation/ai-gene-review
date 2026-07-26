@@ -403,6 +403,77 @@ different evidence code) — and unlike the AADACL trio, each is pinned to a sta
 gene-specific fact rather than to a differing judgement about the same evidence. That is the
 outcome the trio rule is asking for: not uniformity, but a reason per gene.
 
+## 7e. The reconciliation covered one of the *two* rows shared with ACTRT3
+
+The ACTRT3 reconciliation above fixed `GO:0005200` and left the derived `GO:0007010` row alone,
+which the reviewer caught. ACTRT3 carries that row byte-identically too, and merged with a **fourth**
+verdict on it — `KEEP_AS_NON_CORE`. Having just spent a paragraph arguing that a reader should not
+have to notice a divergence themselves, stopping at one row was an oversight rather than a decision.
+
+**Why ACTL10 does not follow ACTRT3 there.** ACTRT3's reason holds that the term "is true at this
+level of generality and should not be removed", because ACTRT3 is a perinuclear-theca scaffold
+component required for acrosome assembly. Truth *at that level of generality* is exactly what is
+unestablished for ACTL10, which has no demonstrated involvement in organising anything. So for
+ACTR10 and ACTRT3 the row is true-but-uninformative; for ACTL10 it is unsupported — a difference
+`MARK_AS_OVER_ANNOTATED` records and `KEEP_AS_NON_CORE` would hide.
+
+**The substantive half: my coded diagnosis said the opposite of my own prose.** The row was coded
+`root_cause: PROPAGATION_BAD`, `failure_modes: [SOURCE_EVIDENCE_WEAK]`,
+`source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET`. Checking the schema rather than taking the
+reviewer's word: `SUPPORTS_SOURCE_BUT_NOT_TARGET` is *"Source evidence supports the source
+annotation…"* — which presupposes source evidence, while the comment on that very entity says the
+source is a GO term carrying none. And `SOURCE_EVIDENCE_WEAK` (*"Source evidence is inferred,
+statement-level, stale…"*) contradicts **this review's own finding one row above**, that every
+donor carries its own experimental annotation. I had criticised exactly that inconsistency in the
+`GO:0005200` row and then committed it here.
+
+The schema has precise values for a transfer-from-a-transfer, and the merged siblings already use
+them. Verified independently:
+
+| review | action | root_cause | modes | source_status |
+|---|---|---|---|---|
+| ACTR10 | KEEP_AS_NON_CORE | NO_FAILURE_NON_CORE | – | `CIRCULAR_OR_REDUNDANT` |
+| ACTRT3 | KEEP_AS_NON_CORE | `EVIDENCE_CIRCULAR_OR_REDUNDANT` | `CIRCULAR_PROPAGATION` | `CIRCULAR_OR_REDUNDANT` |
+| ACTL7A | MODIFY | TERM_SCOPING_PROBLEM | GRANULARITY_MISMATCH, SOURCE_EVIDENCE_WEAK | SOURCE_WEAK_OR_INFERRED |
+| ACTL7B | REMOVE | SOURCE_WEAK_OR_INFERRED | SOURCE_EVIDENCE_WEAK, FUNCTIONAL_DIVERGENCE | SOURCE_WEAK_OR_INFERRED |
+
+ACTL10 was the only one of the four using `SUPPORTS_SOURCE_BUT_NOT_TARGET`, and the worst fit. Now
+`EVIDENCE_CIRCULAR_OR_REDUNDANT` / `CIRCULAR_PROPAGATION` / `CIRCULAR_OR_REDUNDANT`, matching ACTRT3
+exactly. ACTL7A/7B's weak-source values are right *for them*, because their source row is a 1999 TAS
+with genuinely weak evidence — the distinction is real, not a house style.
+
+**Generalisable:** the action was correct throughout and only the machine-readable fields were
+wrong, so nothing in the prose flagged it. These fields are the output the failure-mode taxonomy
+exists to produce, and prose agreeing with itself is no evidence that the codes agree with the
+prose. Worth diffing coded metadata against sibling reviews on identical rows as a matter of course,
+not just actions.
+
+Also fixed: a sentence saying substituting `GO:0005198` "would newly place a molecular function on a
+gene that currently has none" — literally false, since `GO:0005200` *is* an MF row on ACTL10. It now
+says "for which none is supported". The one sentence in that paragraph a curator could check against
+the GOA file and find wrong.
+
+## 7f. Gate defect worth carrying forward: diff terms.csv against the MERGE BASE, not the tip
+
+`git diff origin/main HEAD -- cache/go/terms.csv | grep '^-GO:'` reported a deletion twice on this
+branch — `GO:0031011` and later `GO:0070005` — and **neither was a deletion**. Both were rows *added
+to `main`* by sibling PRs (ACTR5/ACTR8, then ACTMAP #2295) after this branch's base. Diffing against
+a moving tip attributes another branch's addition to your branch as a removal.
+
+The form that does not misfire:
+
+```
+MB=$(git merge-base origin/main HEAD)
+git diff $MB HEAD -- cache/go/terms.csv | grep '^-GO:'     # this branch's own deletions
+git show origin/main:cache/go/terms.csv | cut -d, -f1 | sort | uniq -d   # duplicates in the merged result
+```
+
+The first answers "did I delete anything", the second "will the merge carry a duplicate". The tip
+diff answers neither cleanly while siblings are in flight, and three were. This branch changes
+`cache/go/terms.csv` not at all, so both are trivially satisfied — but the first pass spent a cycle
+"fixing" a deletion that never happened, and `git checkout origin/main -- cache/go/terms.csv` at
+that moment would have silently pulled another branch's row into this PR.
+
 ## 8. Negative results, recorded because a null from a check is still a finding
 
 - **IntAct**: `findInteractions/Q5JWF8` returns `totalElements: 0`. No interaction data at all, so

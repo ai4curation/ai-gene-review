@@ -224,7 +224,6 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False,
     total = d.get("numberOfHits")
     if total is None:
         raise RuntimeError(f"QuickGO returned no numberOfHits for {what}; cannot verify coverage")
-    got = len(d.get("results", []))
     if count_only:
         # No rows are read, so completeness of the row set is not a property this caller depends
         # on. The zero check below still applies, because the count itself is what it wants.
@@ -236,6 +235,7 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False,
         # same hole the name-based guard above closes one level up. Stripping the rows makes the
         # contract mechanical rather than a promise in a docstring.
         return {"numberOfHits": total}
+    got = len(d.get("results", []))
     if got != total:
         # Equality, not `got < total`: an over-count would be just as much a sign that the
         # response does not mean what this function assumes, and the previous commit message
