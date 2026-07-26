@@ -44,7 +44,8 @@ type 1 GshA already satisfies step 1.
 - [x] Resolve whether `PP_3253` merits a step-1 variant after research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open one non-draft PR for this module.
+- [x] Open one non-draft PR for this module:
+  [#2240](https://github.com/ai4curation/ai-gene-review/pull/2240).
 - [ ] Shepherd the PR through review and CI.
 
 ## Focused Genes
