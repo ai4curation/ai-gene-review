@@ -35,7 +35,8 @@ the broad TSV for later pathway batches.
 - [x] Attempt OpenScientist gene-level research; DavT and DavD reports
   completed, while the corrected DavA and DavB requests each exhausted the
   7,200-second provider timeout without a report.
-- [ ] Complete generic module OpenScientist research.
+- [x] Attempt generic module OpenScientist research; the corrected request
+  exhausted its 7,200-second provider timeout without returning a report.
 - [x] Complete module + `ppu00310` + PSEPK OpenScientist research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
@@ -64,7 +65,13 @@ discrepancy. The broad candidate inventory is retained in
 
 The completed DavT report corroborated the 5-aminovalerate aminotransferase
 role. The DavD report generalized an NAD-dependent ortholog, whereas the exact
-  Q88RC0 record assigns the NADP-dependent RHEA:57832 reaction represented by
+Q88RC0 record assigns the NADP-dependent RHEA:57832 reaction represented by
 GO:0102810; that overgeneralization was not imported. DavA and DavB were each
 allowed the full configured provider timeout, so their missing reports are
 recorded as retrieval failures rather than unfinished curation.
+
+The generic module request was also allowed the full configured timeout with
+three iterations but returned no report. No generic report is cited or
+represented as evidence; the completed species-aware module/pathway/taxon
+report was retained as retrieval context and checked against the primary
+evidence above.
