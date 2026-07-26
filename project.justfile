@@ -2312,3 +2312,20 @@ gogpt-compare-all:
         done
     done
     echo "Total: compared $total genes"
+
+# ============== Scheduled-workflow cron profiles ==============
+
+# List the available cron cadence profiles and show the active one.
+cron-profiles:
+    uv run python scripts/apply_cron_profile.py --list
+
+# Show what a profile would change without writing anything.
+# Example: just cron-profile-preview fast
+cron-profile-preview name:
+    uv run python scripts/apply_cron_profile.py {{name}} --dry-run
+
+# Apply a cron cadence profile to the scheduled agent workflows and commit.
+# `just cron-profile off` is the kill switch: it removes every managed
+# `on.schedule` block, leaving workflow_dispatch intact.
+cron-profile name:
+    uv run python scripts/apply_cron_profile.py {{name}}
