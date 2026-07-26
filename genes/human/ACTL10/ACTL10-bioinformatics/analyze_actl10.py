@@ -26,6 +26,7 @@ Out:  results.json, RESULTS.md   (both regenerated in full; diff them to verify)
 
 from __future__ import annotations
 
+import ast
 import io
 import json
 import re
@@ -110,15 +111,74 @@ def get_json(url: str, params: dict | None = None) -> dict:
     return r.json()
 
 
-def quickgo_all(params: dict, what: str) -> dict:
+QUICKGO_SEARCH = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+
+
+def assert_quickgo_calls_are_guarded() -> int:
+    """Every QuickGO search in this file must go through `quickgo_all`.
+
+    The commit that introduced `quickgo_all` claimed "an assertion confirms no unguarded QuickGO
+    call remains". That assertion lived in the one-off script that made the edit, not in this file,
+    so the claim was true of the moment and not of the artefact - and it did not close the
+    future-edit case it appeared to close. The reviewer caught it. This is that assertion, made
+    part of the program so it runs on every invocation.
+    """
+    src = Path(__file__).read_text()
+    lines = src.splitlines()
+    # Two independent things must hold. (1) The endpoint URL is written literally exactly once,
+    # in the constant - a second literal would be a call site that bypassed the constant.
+    literal = [ln for ln in lines if QUICKGO_SEARCH in ln]
+    defining = [ln for ln in literal if ln.strip().startswith("QUICKGO_SEARCH =")]
+    if len(literal) != 1 or len(defining) != 1:
+        raise RuntimeError(
+            f"the QuickGO endpoint URL must be written literally exactly once (the QUICKGO_SEARCH "
+            f"constant) but appears on {len(literal)} line(s): "
+            f"{[h.strip()[:70] for h in literal]}. A new call site must go through quickgo_all().")
+    # (2) The constant is fetched exactly once, and that call sits inside quickgo_all.
+    #
+    # Done over the AST, not the text. A textual search for the call matched this function's own
+    # error-message strings and reported four call sites where there is one - a checker whose
+    # pattern matches its own diagnostics. The AST sees code only.
+    tree = ast.parse(src)
+    guard = next((n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == "quickgo_all"), None)
+    if guard is None:
+        raise RuntimeError("quickgo_all() is gone; the QuickGO coverage guard no longer exists")
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+             and n.func.id == "get_json" and n.args
+             and isinstance(n.args[0], ast.Name) and n.args[0].id == "QUICKGO_SEARCH"]
+    if len(calls) != 1:
+        raise RuntimeError(
+            f"expected exactly one QuickGO fetch through the constant but the AST shows "
+            f"{len(calls)} at line(s) {[c.lineno for c in calls]}; every QuickGO search must go "
+            "through quickgo_all()")
+    if not (guard.lineno <= calls[0].lineno <= (guard.end_lineno or guard.lineno)):
+        raise RuntimeError(
+            f"the QuickGO fetch at line {calls[0].lineno} is outside quickgo_all() "
+            f"(lines {guard.lineno}-{guard.end_lineno}); the coverage assertions are bypassed")
+    return len(calls)
+
+
+def quickgo_all(params: dict, what: str, allow_zero: bool = False) -> dict:
     """QuickGO search whose result set is asserted to be complete.
 
     QuickGO reports the true total in `numberOfHits` while returning at most `limit` rows, so
     `len(results)` cannot detect its own truncation. Every conclusion drawn here is an enumeration
     or a per-donor tally, so a silently short page would understate a count rather than error -
     the same failure shape as the UniProt page-size trap. Assert instead of assuming.
+
+    `allow_zero` distinguishes the two meanings an empty result can have, which is why a blanket
+    "zero is an error" rule would be wrong here. For the census, zero rows means the query broke
+    and must abort. For a per-donor evidence lookup, a donor that carries no annotation for the
+    term it donated is a genuine and interesting **finding** - aborting would destroy it rather
+    than surface it, the same reasoning that keeps an ambiguous cross-reference as data.
     """
-    d = get_json("https://www.ebi.ac.uk/QuickGO/services/annotation/search", params)
+    if "limit" not in params:
+        raise RuntimeError(
+            f"quickgo_all needs an explicit limit in params for {what}; without it the page size "
+            "is the server default and coverage cannot be verified")
+    d = get_json(QUICKGO_SEARCH, params)
     limit = int(params["limit"])
     total = d.get("numberOfHits")
     if total is None:
@@ -131,6 +191,10 @@ def quickgo_all(params: dict, what: str) -> dict:
     if got >= limit:
         raise RuntimeError(
             f"QuickGO returned a full page ({limit}) for {what}; the result set may be truncated")
+    if total == 0 and not allow_zero:
+        raise RuntimeError(
+            f"QuickGO returned zero rows for {what}; this query underwrites an enumeration, so an "
+            "empty result is a broken query rather than a finding")
     return d
 
 
@@ -603,9 +667,11 @@ def resolve_token(token: str) -> dict:
 
 
 def quickgo_evidence(gene_product: str, go_id: str) -> dict:
+    # allow_zero: a donor carrying no evidence for the term it donated is a reportable finding
+    # (it would weaken the propagation), so it must not abort the run.
     d = quickgo_all({"geneProductId": gene_product, "goId": go_id, "goUsage": "descendants",
                      "goUsageRelationships": "is_a,part_of", "limit": "100"},
-                    f"own-evidence query for {gene_product} / {go_id}")
+                    f"own-evidence query for {gene_product} / {go_id}", allow_zero=True)
     codes = Counter()
     terms = Counter()
     for r in d.get("results", []):
@@ -650,6 +716,7 @@ def paint_record() -> dict:
 
 def main() -> None:
     res: dict = {}
+    assert_quickgo_calls_are_guarded()
     al62 = aligner()
 
     print("Q1  orthologue length distribution ...", file=sys.stderr)
