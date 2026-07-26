@@ -68,6 +68,15 @@ mypy:
 format:
 	uv run ruff check .
 
+# Check the committed term-validator caches are sorted by CURIE and deduplicated
+# (drift makes git merges silently duplicate rows). Use `just fix-caches` to repair.
+lint-caches:
+	uv run python -m ai_gene_review.tools.cache_lint
+
+# Re-sort + dedup any drifted term-validator caches in place.
+fix-caches:
+	uv run python -m ai_gene_review.tools.cache_lint --fix
+
 # Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
 # (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
 # linkml-term-validator on the regenerated nested term-tuple file.
