@@ -26,7 +26,7 @@ claim rather than a safe hedge - and the table below is what settles it.
 | WITH/FROM | protein | UniProt status | organism | own evidence for the propagated terms |
 |---|---|---|---|---|
 | `AGI_LocusCode:AT4G24160` | O22975 (LPAAT_ARATH) — 1-acylglycerol-3-phosphate O-acyltransferase | Swiss-Prot (reviewed) | Arabidopsis thaliana | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA/IDA/IEA; 0052689=IBA/IDA; 0055088=IBA/IMP |
-| `FB:FBgn0033226` | Q5U191 (puml) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | **TrEMBL (UNREVIEWED)**; **2 entries for this id** - also A1Z753 "Pummelig, isoform A" | Drosophila melanogaster | 0004620=IBA/IMP; 0006654=IBA; 0042171=IBA/IEA; 0052689=IBA/IDA; 0055088=IBA |
+| `FB:FBgn0033226` | Q5U191 (puml) — 1-acylglycerol-3-phosphate O-acyltransferase ABHD5 | **TrEMBL (UNREVIEWED)**; **4 entries for this id** - including A1Z753 "Pummelig, isoform A" | Drosophila melanogaster | 0004620=IBA/IMP; 0006654=IBA; 0042171=IBA/IEA; 0052689=IBA/IDA; 0055088=IBA |
 | `MGI:MGI:1915938` | Q8VD66 (Abhd4) — (Lyso)-N-acylphosphatidylethanolamine lipase | Swiss-Prot (reviewed) | Mus musculus | 0004620=IBA/IDA; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA; 0055088=IBA |
 | `PANTHER:PTN008676419` | *PANTHER family/subfamily node - an internal tree node, not a protein* | — | — | not applicable |
 | `SGD:S000003342` | P53264 (CLD1) — Cardiolipin-specific deacylase 1, mitochondrial | Swiss-Prot (reviewed) | Saccharomyces cerevisiae (strain ATCC 204508 / S288c) | 0004620=IBA/IDA/IMP; 0006654=IBA; 0042171=IBA; 0052689=IBA/IDA/IMP; 0055088=IBA |

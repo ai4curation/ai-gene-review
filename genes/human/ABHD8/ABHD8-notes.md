@@ -54,16 +54,27 @@ is sound, but the term should not propagate to this target") rather than any `SO
 Classifying these as weak sources would now contradict the evidence table.
 
 **Evidence provenance and name provenance are different questions, and only one is settled for
-all six.** The Drosophila source has no reviewed UniProt entry, and its FlyBase id maps to *two*
-TrEMBL accessions for the same gene, carrying different names — Q5U191 *"1-acylglycerol-3-phosphate
-O-acyltransferase ABHD5"* and A1Z753 *"Pummelig, isoform A"*. Its curated GO annotations are real,
-but that first name is an automatic by-similarity label. Listing it beside `LPAAT_ARATH` and
-`CLD1` made an uncharacterised protein look characterised, and inflated the count of independent
-characterisations from three to four. **So: 6 sources with their own experimental evidence, but 3
-independently *characterised* proteins** (Arabidopsis, mouse, yeast).
+all six.** The Drosophila source has no reviewed UniProt entry, and its FlyBase id maps to **four**
+UniProt entries carrying different names — Q5U191 *"1-acylglycerol-3-phosphate O-acyltransferase
+ABHD5"* and A1Z753 *"Pummelig, isoform A"* among them. Its curated GO annotations are real, but
+that first name is an automatic by-similarity label. Listing it beside `LPAAT_ARATH` and `CLD1`
+made an uncharacterised protein look characterised.
 
-That ambiguity was found only because the resolver was changed to fetch two hits and refuse to
-pick silently. The generalisable point: **`size=1` on an identifier lookup converts an ambiguity
+Two counts, at two scopes, and they must not be conflated:
+
+| scope | sources with own experimental evidence | independently *characterised* proteins |
+|---|---|---|
+| all five IBA rows | 6 of 7 (only the PANTHER node lacks it) | 5 of 6 protein sources are reviewed |
+| the two **hydrolase** rows (`GO:0004620`, `GO:0052689`) | 4 of 4 protein sources | **3** — the fourth is the unreviewed fly entry |
+
+The 3 is what matters for the hydrolase rows' `MARK_AS_OVER_ANNOTATED` reasoning, since those are
+the rows whose sources include the fly entry. Stated globally it would be wrong.
+
+That ambiguity was found only because the resolver was changed to fetch more than one hit and
+refuse to pick silently — and the first version of this note then said "two entries" when the
+authoritative `x-total-results` count is **four**. Inferring a total from a `size=2` response is
+the very error the check was added to prevent, committed one step further down. The generalisable
+point: **a size-capped lookup converts an ambiguity
 into a confident wrong answer**, and it did so here on the one source whose name was doing
 argumentative work.
 

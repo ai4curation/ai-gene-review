@@ -36,9 +36,22 @@ GOA = HERE.parent / "ABHD8-goa.tsv"
 
 def get(url: str) -> dict:
     """GET JSON from the UniProt REST API."""
+    return get_with_total(url)[0]
+
+
+def get_with_total(url: str) -> tuple[dict, int | None]:
+    """GET JSON plus the server's x-total-results count.
+
+    The count matters because these searches are capped (size=2). Reporting "2 entries for this
+    id" from a size-2 response would be inferring a total from a truncated result - the exact
+    error this script exists to catch elsewhere. x-total-results is authoritative; None means the
+    server did not send it, which must be reported as unknown rather than guessed.
+    """
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=120) as fh:
-        return json.load(fh)
+        payload = json.load(fh)
+        raw = fh.headers.get("x-total-results")
+    return payload, (int(raw) if raw is not None and raw.isdigit() else None)
 
 
 def iba_sources(path: Path) -> dict[str, list[str]]:
@@ -125,12 +138,12 @@ def resolve_xref(token: str) -> dict:
         # size=2 rather than 1: these lookups overturned two of this review's claims, so a
         # silently-truncated multi-hit result would be a bad way to be wrong.
         url = f"https://rest.uniprot.org/uniprotkb/search?query={{q}}&fields={fields}&format=json&size=2"
-        d = get(url.format(q=f"{query}+AND+reviewed:true"))
+        d, total = get_with_total(url.format(q=f"{query}+AND+reviewed:true"))
         if not d.get("results"):
             # Some sources (the Drosophila member here) have no reviewed entry at all. Falling
             # back is right, but the distinction has to be reported rather than hidden: an
             # unreviewed source is weaker support than a reviewed one.
-            d = get(url.format(q=query))
+            d, total = get_with_total(url.format(q=query))
             reviewed = False
         else:
             reviewed = True
@@ -143,7 +156,7 @@ def resolve_xref(token: str) -> dict:
             alternatives = [{"acc": h["primaryAccession"],
                              "name": entry_fields(h)["name"]} for h in hits[1:]]
             return {**entry_fields(hits[0]), "token": token, "kind": "protein",
-                    "reviewed": reviewed, "alternatives": alternatives}
+                    "reviewed": reviewed, "alternatives": alternatives, "n_entries": total}
     else:
         raise LookupError(f"no resolver for WITH/FROM database {db!r} in token {token!r}")
     if not d.get("results"):
@@ -226,7 +239,11 @@ def main() -> None:
         alts = info.get("alternatives") or []
         if alts:
             listed = ", ".join(f"{a['acc']} \"{a['name']}\"" for a in alts)
-            status += f"; **{len(alts) + 1} entries for this id** - also {listed}"
+            total = info.get("n_entries")
+            # Never infer the total from a size-capped response; x-total-results or nothing.
+            count = (f"**{total} entries for this id**" if total is not None
+                     else "**more than one entry for this id** (server sent no total)")
+            status += f"; {count} - including {listed}"
         L.append(f"| `{token}` | {info['acc']} ({genes or info['id']}) — {info['name']} | {status} | "
                  f"{info['organism']} | {'; '.join(cells) or '**none**'} |")
     L.append("")
