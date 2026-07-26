@@ -24,9 +24,11 @@ PAINT no-IBA project review, using the `affinage` deep-research provider
 - **The ACB domain is experimentally dispensable.** Reconstituting ACBD3 domain-deletion
   mutants in ACBD3-knockout cells shows [PMID:30755512 "we show that acyl-coenzyme A binding
   (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
-  recruitment and efficient enterovirus replication"]. This is the strongest point and it is
-  *positive* evidence — the domain the gene is named for is not needed for the activity the
-  gene is known for.
+  recruitment and efficient enterovirus replication"]. The assay is the viral one, but what it
+  scores is the ACBD3–PI4KB interaction (the same paper: a PI4KB-binding-deficient ACBD3 restores
+  3A localisation but not replication), which PMID:27009356 maps to the **Q domain**. So this is
+  the strongest point and it is *positive* evidence — the domain the gene is named for is not
+  needed for the recruitment the gene is known for.
 
 That last point was found late, by filling in `findings` for the six references that had full
 text cached and an empty `findings` list — the campaign's own "an empty `findings:` on a
