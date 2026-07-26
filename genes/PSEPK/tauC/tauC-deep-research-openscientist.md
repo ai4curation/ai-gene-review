@@ -2,9 +2,9 @@
 provider: openscientist
 model: openscientist-autonomous
 cached: false
-start_time: '2026-07-25T13:40:05.652726'
-end_time: '2026-07-25T13:59:51.904618'
-duration_seconds: 1186.25
+start_time: '2026-07-25T16:45:15.102659'
+end_time: '2026-07-25T17:45:21.287178'
+duration_seconds: 3606.18
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: PSEPK
@@ -24,14 +24,13 @@ provider_config:
   max_retries: 3
   parameters:
     allowed_domains: []
-    max_iterations: 5
+    max_iterations: 3
     use_hypotheses: false
     investigation_mode: autonomous
     poll_interval: 30
-    timeout: 3600
+    timeout: 7200
     save_artifacts: true
     artifact_max_bytes: 5242880
-citation_count: 13
 artifact_count: 2
 artifact_sources:
   openscientist_artifacts_zip: 2
@@ -100,195 +99,157 @@ Include evidence where possible. We are interested in both experimental evidence
 
 ## Output
 
-# Functional Annotation Report: **tauC** (Q88RA2, PP_0231) — Taurine ABC Transporter Permease Subunit of *Pseudomonas putida* KT2440
-
-## Summary
-
-**tauC** (UniProt **Q88RA2**; ordered locus **PP_0231**) of *Pseudomonas putida* KT2440 encodes the **integral inner-membrane permease (transmembrane) subunit of the taurine-specific ATP-binding cassette (ABC) importer, TauABC**. Its primary function is to form the polytopic membrane channel through which **taurine (2-aminoethanesulfonate)** is translocated across the cytoplasmic membrane from the periplasm into the cytoplasm. TauC is not itself an enzyme: it is a **non-catalytic transport protein**. Substrate translocation is powered by ATP hydrolysis carried out by the partner nucleotide-binding domain **TauB** (PP_0232), and substrate is delivered to the permease by the periplasmic **substrate-binding protein TauA** (PP_0233). The EC number (EC 3.6.3.36) and "hydrolase activity" terms that appear on the Q88RA2 record are properties of the transporter complex as a whole (specifically the ATPase TauB), not of the TauC permease.
-
-Biologically, TauC-mediated taurine import is the committed uptake step of an **organosulfur-scavenging (sulfate-starvation) pathway**. Under conditions of sulfate and cysteine limitation, *P. putida* induces the **tauDCBA** operon; taurine imported by TauABC is handed to the co-operonic **α-ketoglutarate–dependent taurine dioxygenase TauD** (PP_0230), which oxygenolytically releases **sulfite** from taurine, feeding sulfur into cysteine biosynthesis and general sulfur assimilation. Expression of the operon is governed by the **CysB/Cbl LysR-type regulatory network** that controls the sulfate-starvation response in enteric bacteria and, via CysB, in *Pseudomonas*.
-
-The annotation rests on multiple convergent lines of evidence: (1) conserved domain architecture (MetI-like transmembrane fold, InterPro IPR000515/IPR035906; Pfam PF00528 BPD_transp_1); (2) a complete, syntenic **tauDCBA** gene cluster in *P. putida* KT2440 that mirrors the experimentally characterized *Escherichia coli* system; (3) **64.7% amino-acid identity** to the biochemically/genetically validated *E. coli* TauC; and (4) a de novo hydropathy analysis reproducing the canonical **six-transmembrane-helix (6-TM)** Type I importer topology. The organism, gene symbol, protein family, and domain content in the literature all agree with the UniProt target identity — this is a genuine, well-supported ortholog of the *E. coli* taurine transporter permease.
+# Functional Annotation Report: tauC (PP_0231, UniProt Q88RA2)
+### Taurine/alkanesulfonate ABC transporter permease subunit — *Pseudomonas putida* KT2440
 
 ---
 
-## Key Findings
+## 1. Summary (Answer to the Research Question)
 
-### Finding 1 — TauC is the transmembrane permease subunit of the TauABC taurine ABC importer
+**tauC** (locus *PP_0231*; UniProt **Q88RA2**) of *Pseudomonas putida* KT2440 encodes the **integral inner-membrane permease (transmembrane) subunit of the taurine/alkanesulfonate ABC importer TauABC**. Its primary function is **membrane transport, not catalysis**: TauC forms the substrate-translocation channel through which **taurine (2-aminoethanesulfonate)** and related aliphatic (alkane)sulfonates are pumped from the periplasm into the cytoplasm, driven by ATP hydrolysis at the associated ABC ATPase subunit TauB. The physiological purpose is **sulfur scavenging**: under sulfate/cysteine starvation the cell imports organosulfonates and releases their sulfur intracellularly (via the α-ketoglutarate–dependent taurine dioxygenase TauD), feeding the sulfur-assimilation (cys) pathway.
 
-UniProt Q88RA2 is annotated "Taurine ABC transporter permease subunit" (gene *tauC*, locus PP_0231) in *P. putida* KT2440 and is a member of the binding-protein-dependent transport-system permease family (InterPro IPR000515 "MetI-like"; Pfam PF00528 "BPD_transp_1"). This database assignment is anchored to direct genetic and biochemical characterization of the *tauABCD* cluster in *E. coli*, where the founding study established the division of labor among the subunits: *"the TauB and TauC proteins showed sequence similarity to ATP-binding proteins and membrane proteins, respectively, of ABC-type transport systems"* ([PMID: 8808933](https://pubmed.ncbi.nlm.nih.gov/8808933/)). Disruption of the *tau* genes abolished the ability to use taurine as a sulfur source, confirming their functional necessity. Subsequent deletion analysis of the *E. coli* taurine and alkanesulfonate systems reinforced that **TauABC forms a dedicated taurine uptake system** ([PMID: 10781534](https://pubmed.ncbi.nlm.nih.gov/10781534/)): *"The amino acid sequences of SsuABC and TauABC exhibit similarity to those of components of the ATP-binding cassette transporter superfamily, suggesting that two uptake systems for alkanesulfonates are present in E. coli."* Within this architecture, TauC is unambiguously the **membrane-embedded permease component**.
-
-### Finding 2 — The transported substrate is taurine; the system feeds sulfonate-sulfur assimilation
-
-The specificity of the transporter is defined by its periplasmic binding protein, TauA, which binds taurine with high affinity and selectivity — a dissociation constant of ~**11.3 nM** was measured for the *E. coli* TauA–taurine interaction: *"Measurement of K(d) value (mean 11.3 nM) by binding/dialysis studies revealed high affinity and specificity with taurine"* ([PMID: 17203388](https://pubmed.ncbi.nlm.nih.gov/17203388/)). This binding protein delivers taurine to the TauBC membrane machinery, of which TauC is the translocation channel. The physiological purpose of import is sulfur scavenging: the *tauABCD* operon is expressed only under sulfate/cysteine starvation, and imported taurine is then desulfonated. As summarized for *E. coli*: *"The TauD protein is an alpha-ketoglutarate-dependent dioxygenase that preferentially liberates sulfite from taurine (2-aminoethanesulfonic acid)"* ([PMID: 11479697](https://pubmed.ncbi.nlm.nih.gov/11479697/)). Loss of the transporter genes abolishes growth on taurine as a sulfur source ([PMID: 8808933](https://pubmed.ncbi.nlm.nih.gov/8808933/)). Thus TauC's substrate is **taurine**, and its transport activity is the gateway to sulfur release by TauD.
-
-### Finding 3 — TauC is an inner-membrane MetI-like permease operating by ATP-driven alternating access
-
-Q88RA2 carries the **MetI-like transmembrane fold** (InterPro IPR000515/IPR035906) and Pfam **PF00528 (BPD_transp_1)**, the diagnostic signature of binding-protein-dependent (Type I) ABC-importer permeases. In canonical bacterial ABC importers, the transmembrane subunits span the cytoplasmic membrane and, driven by ATP hydrolysis at the coupled nucleotide-binding domain (here TauB), cycle between inward- and outward-facing conformations: *"ATP hydrolysis on the NBD drives conformational changes in the TMD, resulting in alternating access from inside and outside of the cell for unidirectional transport across the lipid bilayer"* ([PMID: 25750732](https://pubmed.ncbi.nlm.nih.gov/25750732/)). Structural studies of homologous importers (ModBC, BtuCD, MetNI) show the periplasmic binding protein docking onto the transmembrane domains to deliver substrate: *"the attached binding protein aligns the substrate-binding cleft with the entrance to the presumed translocation pathway"* ([PMID: 17322901](https://pubmed.ncbi.nlm.nih.gov/17322901/)). TauC is therefore the moving-parts component that opens alternately to periplasm and cytoplasm, coupled mechanically to TauB's ATPase cycle and primed by TauA docking.
-
-### Finding 4 — *tauABC* expression is controlled by the CysB/Cbl sulfate-starvation network, conserved in *Pseudomonas*
-
-In *E. coli*, transcription of *tauABCD* requires the LysR-type regulators **CysB** (the master regulator) and **Cbl**, and is induced under sulfate starvation: *"Expression of the tau and ssu genes requires the LysR-type transcriptional regulatory proteins CysB and Cbl"* ([PMID: 11479697](https://pubmed.ncbi.nlm.nih.gov/11479697/)). Both regulators bind directly to the *tauABCD* promoter; DNase I footprinting and gel-shift experiments showed CysB occupying multiple sites while Cbl occupies a single upstream site (from –112 to –68 bp relative to the transcription start), with the CysB inducer *N*-acetylserine stimulating CysB binding ([PMID: 9401024](https://pubmed.ncbi.nlm.nih.gov/9401024/)). In *P. putida*, the same regulatory logic applies: CysB is the master regulator of the sulfate-starvation response controlling sulfonate-utilization operons — *"CysB is a master regulator that controls the sulfate starvation response of the sfn operons, as is the case for the sulfonate utilization genes of Escherichia coli"* ([PMID: 18456803](https://pubmed.ncbi.nlm.nih.gov/18456803/)). This places PP_0231/*tauC* within a conserved, sulfur-responsive regulon rather than a constitutive housekeeping context.
-
-### Finding 5 — PP_0231/*tauC* sits in a complete, syntenic *tauDCBA* operon in *P. putida* KT2440
-
-Genome analysis reveals four contiguous, co-oriented (complement-strand) genes constituting a complete taurine utilization module:
-
-| Locus | Gene | KEGG Ortholog | Function | Coordinates |
-|-------|------|---------------|----------|-------------|
-| PP_0233 | *tauA* | K15551 | Taurine substrate-binding protein (periplasmic) | 287,136–288,107 |
-| PP_0232 | *tauB* | K10831 | Taurine transport ATP-binding protein (EC 7.6.2.7) | 286,334–287,122 |
-| **PP_0231** | ***tauC*** | **K15552** | **Taurine transport permease** | **285,498–286,337** |
-| PP_0230 | *tauD* | K03119 | Taurine dioxygenase (EC 1.14.11.17) | 284,616–285,449 |
-
-This module — a complete **transporter (TauABC) plus desulfonation enzyme (TauD)** unit — mirrors the experimentally characterized *E. coli* *tauABCD* cluster ([PMID: 8808933](https://pubmed.ncbi.nlm.nih.gov/8808933/), [PMID: 11479697](https://pubmed.ncbi.nlm.nih.gov/11479697/)). TauC receives the dedicated KEGG Ortholog assignment **K15552** ("taurine transport system permease protein"). The founding *E. coli* study articulated exactly this organization: *"we suggest that the proteins encoded by tauABC constitute an uptake system for taurine and that the product of tauD is involved in the oxygenolytic release of sulfite from taurine."* The syntenic conservation is strong evidence of orthology and conserved function.
-
-### Finding 6 — Canonical 6-TM MetI-like Type I importer topology; the EC 3.6.3.36 / hydrolase annotation is mis-propagated onto the permease
-
-UniProt Q88RA2 is a **279-residue polytopic membrane protein** with six annotated helical transmembrane segments (approximately residues 30–52, 91–113, 125–144, 150–169, 213–234, and 240–260) and a single ABC transmembrane type-1 domain (residues 84–264), matching the MetI-like fold. Its subcellular location is the **cell (cytoplasmic/plasma) membrane**; its eggNOG ortholog is **COG0600** (ABC-type nitrate/sulfonate/taurine permease); and its GO annotations include alkanesulfonate transmembrane transport (GO:0042918) and cellular response to sulfur starvation (GO:0010438). Critically, the **EC 3.6.3.36** and GO "hydrolase activity" (GO:0016787) terms carried on the permease record derive from the whole transporter-complex EC number; the actual ATP-hydrolysis chemistry resides in the partner nucleotide-binding domain **TauB** (PP_0232, EC 7.6.2.7), **not** in the TauC permease. This is consistent with the canonical ABC-transporter division of labor: *"ABC transporters are widespread in all forms of life and are characterized by two nucleotide-binding domains (NBD) and two transmembrane domains (TMDs)"* ([PMID: 25750732](https://pubmed.ncbi.nlm.nih.gov/25750732/)). TauC is a TMD; it is a channel, not a catalyst.
-
-### Finding 7 — 64.7% amino-acid identity to experimentally characterized *E. coli* TauC confirms functional orthology
-
-Global pairwise alignment of *P. putida* KT2440 TauC (Q88RA2, 279 aa) against *E. coli* K-12 TauC (Q47539/TAUC_ECOLI, 275 aa) yields **176/272 identical residues = 64.7% identity** over the aligned length. This far exceeds the ~30% identity threshold above which conserved three-dimensional fold and function can be confidently inferred for membrane transporters. Both proteins share identical domain architecture (six TM helices, MetI-like/BPD_transp_1 fold) and equivalent operonic context (*tauABCD*). Because the *E. coli* protein is directly validated by gene-disruption and transport phenotypes, this high sequence identity transfers functional confidence to the *P. putida* ortholog.
-
-### Finding 8 — TauC-mediated taurine uptake is part of *P. putida*'s ABC-based organosulfur scavenging, ecologically important in soil/rhizosphere
-
-Authoritative reviews establish that in aerobic bacteria all identified sulfonate/sulfate-ester transporters are ABC-type systems whose synthesis is CysB/LysR-regulated by sulfur supply: *"the sulfonate and sulfate ester transporters identified to date are all ABC-type systems, whose synthesis is tightly regulated by the sulfur supply to the cell, mediated by the CysB protein and other transcriptional regulators of the LysR-family"* ([PMID: 11421275](https://pubmed.ncbi.nlm.nih.gov/11421275/)). Imported sulfonates are desulfonated oxygenolytically: *"Desulfonation of aromatic and aliphatic sulfonates as sulfur sources by aerobic bacteria is oxygen-dependent, carried out by the alpha-ketoglutarate-dependent taurine dioxygenase"* ([PMID: 10717312](https://pubmed.ncbi.nlm.nih.gov/10717312/)) — precisely the enzyme (TauD, PP_0230) encoded beside *tauC*. This organosulfur-mobilization capacity has demonstrated ecological significance for *P. putida* in plant–microbe interactions: *"P. putida S-313 mutants that cannot metabolize sulphonate-sulphur do not promote the growth of tomato plants as the wild-type strain does"* ([PMID: 15181108](https://pubmed.ncbi.nlm.nih.gov/15181108/)). TauC-mediated taurine uptake is one contributor to this broader sulfur-scavenging repertoire.
-
-### Finding 9 — Independent hydropathy analysis corroborates the 6-TM inner-membrane topology
-
-A de novo Kyte–Doolittle hydropathy scan (19-residue window, threshold 1.6) of the Q88RA2 sequence recovers roughly five strong hydrophobic, membrane-spanning regions (approximately residues 30–57, 87–111, 134–170, and 230–268), where the broad 134–170 and 230–268 peaks each encompass two closely spaced annotated helices. This first-principles result independently reproduces the six UniProt-annotated TM helices (30–52, 91–113, 125–144, 150–169, 213–234, 240–260) and confirms the MetI-like 6-TM architecture **without relying on the database annotation** — an internal cross-validation that the protein is a genuine polytopic inner-membrane permease.
+> **Note on the EC number.** UniProt lists "EC 3.6.3.36" (taurine-transporting ATPase) for the whole transport system. This ATP-hydrolysis activity resides in the **TauB** nucleotide-binding subunit; **TauC itself is the non-catalytic membrane channel**. Assigning the EC to the permease is a system-level annotation, not evidence that TauC hydrolyzes ATP.
 
 ---
 
-## Mechanistic Model / Interpretation
+## 2. Gene/Protein Identity — Verification
 
-TauC functions as one of two transmembrane domains of a **Type I ABC importer**. The complete transport unit and its metabolic connection can be summarized as follows:
+| Attribute | Value | Consistency check |
+|---|---|---|
+| UniProt | Q88RA2 | ✔ |
+| Gene / locus | *tauC* / PP_0231 | ✔ matches *tau* operon nomenclature |
+| Organism | *Pseudomonas putida* KT2440 | ✔ |
+| Description | Taurine ABC transporter permease subunit | ✔ |
+| Family | Binding-protein-dependent transport system | ✔ ABC importer |
+| Domains | MetI-like (IPR000515; IPR035906); Pfam **PF00528 (BPD_transp_1)** | ✔ canonical ABC-importer permease fold |
 
-```
-              PERIPLASM
-                 │
-          taurine (2-aminoethanesulfonate)
-                 │
-                 ▼
-           ┌────────────┐
-           │   TauA      │  periplasmic binding protein (PP_0233)
-           │ (Kd ~11 nM) │  captures taurine, docks onto permease
-           └─────┬───────┘
-                 │ delivers substrate
-   ══════════════▼══════════════  CYTOPLASMIC (INNER) MEMBRANE
-   ┌───────────────────────────┐
-   │        TauC  (PP_0231)     │  6-TM MetI-like permease — THIS PROTEIN
-   │   alternating-access gate  │  forms translocation channel
-   └─────────────┬─────────────┘
-                 │  mechanically coupled
-   ┌─────────────▼─────────────┐
-   │        TauB  (PP_0232)     │  nucleotide-binding domain (ATPase,
-   │   ATP → ADP + Pi           │  EC 7.6.2.7) powers transport
-   └───────────────────────────┘
-                 │
-              CYTOPLASM
-                 │
-          taurine (imported)
-                 │
-                 ▼
-           ┌───────────┐
-           │  TauD      │  α-ketoglutarate-dependent dioxygenase
-           │ (PP_0230)  │  EC 1.14.11.17
-           └─────┬──────┘
-                 │  O2, α-ketoglutarate
-                 ▼
-        sulfite (SO3²⁻) + aminoacetaldehyde + succinate + CO2
-                 │
-                 ▼
-       sulfur assimilation → cysteine biosynthesis
-```
-
-**Transport cycle.** In the resting inward-facing (or nucleotide-free) state, TauC presents its translocation pathway toward the cytoplasm. Substrate-loaded TauA docks onto the periplasmic face of TauC. ATP binding and hydrolysis at the TauB nucleotide-binding domains drive rigid-body rotations of the TauC transmembrane helices, switching the permease to an outward-facing conformation that accepts taurine from TauA, then resetting to release taurine into the cytoplasm — the "alternating access" mechanism established structurally for homologous importers (BtuCD, HI1470/1, MetNI, ModBC) ([PMID: 25750732](https://pubmed.ncbi.nlm.nih.gov/25750732/); [PMID: 18948194](https://pubmed.ncbi.nlm.nih.gov/18948194/); [PMID: 17158291](https://pubmed.ncbi.nlm.nih.gov/17158291/); [PMID: 17322901](https://pubmed.ncbi.nlm.nih.gov/17322901/)).
-
-**Regulatory logic.** The *tauDCBA* operon is silent when sulfate or cysteine is abundant. Sulfur limitation activates the LysR-type master regulator CysB (with Cbl in enterics), which binds the operon promoter and induces transcription. This ensures TauC is produced only when the cell needs to scavenge alternative (organosulfur) sulfur sources ([PMID: 11479697](https://pubmed.ncbi.nlm.nih.gov/11479697/); [PMID: 9401024](https://pubmed.ncbi.nlm.nih.gov/9401024/); [PMID: 18456803](https://pubmed.ncbi.nlm.nih.gov/18456803/)).
-
-**Metabolic role.** TauC's transport activity has no value on its own; it is the committed uptake step that supplies taurine to TauD. TauD then cleaves the C–S bond oxygenolytically to release sulfite, which enters cysteine biosynthesis. TauC is thus the **membrane gateway of a sulfur-scavenging module**, not a metabolic enzyme.
-
-**Localization.** TauC carries out its function embedded in the **cytoplasmic (inner) membrane**, spanning it six times, with its function exerted at the membrane interface between periplasm (substrate reception) and cytoplasm (substrate release).
+**Identity is confirmed.** The MetI-like transmembrane fold (PF00528, "binding-protein-dependent transport, inner membrane component") is the hallmark of ABC-importer permeases, and the *tauC* symbol/organism/family/domain set is internally consistent with the well-characterized bacterial **tauABCD** taurine-uptake system. The literature cited below describes this exact system (in *E. coli* as the paradigm, with the *Pseudomonas putida* sulfur regulon explicitly addressed by Kertesz 2000).
 
 ---
 
-## Evidence Base
+## 3. Molecular Function — What TauC Does
 
-| PMID | Title (abbrev.) | Contribution |
-|------|-----------------|--------------|
-| [8808933](https://pubmed.ncbi.nlm.nih.gov/8808933/) | Sulfate starvation-regulated *tau* cluster in *E. coli* | **Foundational.** Identifies TauC as the membrane permease of the taurine ABC transporter; defines *tauABCD* operon; disruption abolishes taurine-sulfur utilization. |
-| [10781534](https://pubmed.ncbi.nlm.nih.gov/10781534/) | Deletion analysis of *E. coli* taurine/alkanesulfonate transport | Confirms TauABC as a dedicated ABC-type taurine uptake system. |
-| [17203388](https://pubmed.ncbi.nlm.nih.gov/17203388/) | Functional characterization of TauA binding protein | Establishes taurine as the specific substrate (Kd ~11.3 nM); defines substrate delivered to the TauBC membrane machinery. |
-| [11479697](https://pubmed.ncbi.nlm.nih.gov/11479697/) | Sulfonate-sulfur metabolism and regulation in *E. coli* | Links import to TauD desulfonation (sulfite release); establishes CysB/Cbl regulatory control. |
-| [9401024](https://pubmed.ncbi.nlm.nih.gov/9401024/) | CysB and Cbl in *tauABCD* expression | Direct promoter binding (footprinting/gel-shift) by CysB and Cbl; sulfate-starvation induction. |
-| [18456803](https://pubmed.ncbi.nlm.nih.gov/18456803/) | CysB and SfnR hierarchy in *P. putida* | Shows the same CysB-centered regulatory logic operates in *Pseudomonas putida*. |
-| [25750732](https://pubmed.ncbi.nlm.nih.gov/25750732/) | Structure and mechanism of ABC transporters | Establishes TMD/NBD division of labor and the alternating-access transport mechanism relevant to TauC/TauB. |
-| [17322901](https://pubmed.ncbi.nlm.nih.gov/17322901/) | Structure of an ABC transporter with its binding protein | Model for periplasmic binding protein (TauA) delivering substrate to the permease (TauC). |
-| [18948194](https://pubmed.ncbi.nlm.nih.gov/18948194/) | Structural insights into ABC transporter mechanism | Rigid-body TMD rotations couple ATP hydrolysis to substrate translocation. |
-| [17158291](https://pubmed.ncbi.nlm.nih.gov/17158291/) | Inward-facing metal-chelate ABC transporter | Structural model for inward/outward-facing conformations of Type I importer TMDs. |
-| [11421275](https://pubmed.ncbi.nlm.nih.gov/11421275/) | Bacterial transporters for sulfate/organosulfur | Places TauC in the class of CysB-regulated ABC sulfonate transporters. |
-| [10717312](https://pubmed.ncbi.nlm.nih.gov/10717312/) | Metabolism of sulfonates/sulfate esters in gram-negative bacteria | Identifies α-KG-dependent taurine dioxygenase (TauD) as the desulfonation enzyme downstream of import. |
-| [15181108](https://pubmed.ncbi.nlm.nih.gov/15181108/) | Role of soil microbes in plant sulphur nutrition | Demonstrates ecological importance of *P. putida* sulfonate mobilization (plant growth promotion). |
-| [10781557](https://pubmed.ncbi.nlm.nih.gov/10781557/) | *ssu* locus in *P. putida* S-313 | Context for parallel organosulfur (alkanesulfonate) ABC transport in *Pseudomonas*. |
+### 3.1 A subunit of a multi-component ABC importer
+Bacterial organosulfonate uptake is mediated by **binding-protein-dependent (ABC-type) transporters**. In the paradigmatic *E. coli* **tauABCD** operon the division of labor is:
 
-**How the evidence fits together.** The direct experimental foundation is in *E. coli* (gene disruption, transport phenotypes, binding-protein affinity, promoter footprinting). The transfer to *P. putida* Q88RA2 is supported by (a) 64.7% sequence identity to the validated *E. coli* TauC, (b) an identical, complete, syntenic *tauDCBA* operon, (c) conserved domain architecture and a de novo hydropathy analysis reproducing 6-TM topology, and (d) evidence that the same CysB-centered sulfur-starvation regulon operates in *Pseudomonas*. No paper contradicts the annotation; all convergent lines support it.
+- **TauA** — periplasmic **substrate-binding protein (SBP)**; captures taurine and delivers it to the membrane complex.
+- **TauC** — **transmembrane permease** (MetI-like); forms the translocation pathway across the inner membrane. *(This protein, Q88RA2.)*
+- **TauB** — cytoplasmic **ABC ATPase** (nucleotide-binding domain); ATP binding/hydrolysis powers the conformational cycle.
+- **TauD** — cytoplasmic **desulfonation enzyme** (not part of the transporter; processes the imported substrate).
 
----
+> "The amino acid sequences of SsuABC and TauABC exhibit similarity to those of components of the ATP-binding cassette transporter superfamily, suggesting that two uptake systems for alkanesulfonates are present in *E. coli*." — Eichhorn, van der Ploeg & Leisinger, 2000 (PMID 10781534)
 
-## Limitations and Knowledge Gaps
+Because TauC lacks a periplasmic capture domain and lacks the ABC nucleotide-binding cassette, it functions **only in complex** — as the membrane channel that receives substrate from TauA and is gated by conformational signals from TauB. Deletion analysis in *E. coli* showed that **all three of TauA, TauB and TauC are required** for taurine uptake as a sulfur source, and that non-productive "hybrid" transporters cannot support growth on sulfonates (Eichhorn et al. 2000, PMID 10781534).
 
-1. **No direct experimental characterization of the *P. putida* KT2440 TauC protein.** The functional assignment for Q88RA2 is an inference by orthology (sequence identity, synteny, domain conservation, regulatory context). There is no published transport assay, knockout, or structure specifically for PP_0231. The confidence is high but not experimentally direct for this exact protein.
+### 3.2 Substrate and specificity
+The transported substrate is **taurine (2-aminoethanesulfonate)** and, more broadly, **aliphatic/alkanesulfonates**. Substrate selectivity is largely set by the **periplasmic binding protein (TauA)** rather than by the permease:
 
-2. **Substrate specificity has not been tested for the *P. putida* ortholog.** While *E. coli* TauABC is taurine-specific (via TauA's ~11 nM Kd), whether the *P. putida* system imports only taurine or also accepts related aminosulfonates (e.g., cysteate, *N*-methyltaurine) has not been directly measured. Given *P. putida*'s broad organosulfur repertoire (overlapping *ssu* systems), some functional redundancy or broader specificity is possible.
+> "TauA and SsuA are substrate-binding proteins (SBPs) that bind and bring the alkanesulfonates to the ABC importer for transport… the different levels of hydration of the binding site contributed to the selectivity for taurine over the other alkanesulfonates." — Qu et al., 2019 (PMID 31802112)
 
-3. **The EC 3.6.3.36 / hydrolase annotation on the permease record is misleading.** As noted, the ATPase chemistry belongs to TauB, not TauC. Automated pipelines that read the permease EC number literally could mis-classify TauC as an enzyme; this report explicitly corrects that.
+Thus the TauABC system is characterized as a **taurine-preferring** importer, while the paralogous **SsuABC** system handles a broader range of alkanesulfonates; the two systems overlap but are not redundant (Eichhorn et al. 2000, PMID 10781534; van der Ploeg et al. 2001, PMID 11479697).
 
-4. **Stoichiometry and quaternary structure unconfirmed for this system.** By analogy to canonical Type I importers, the functional complex is expected to be TauA·TauC₂·TauB₂ (or a TauC-plus-a-second-TMD arrangement), but the exact assembly for the taurine transporter has not been structurally resolved.
+### 3.3 Strain-specific genomic evidence (KT2440)
+Genomic analysis of the KT2440 chromosome confirms that PP_0231 is embedded in a **complete, co-directional (complement-strand) taurine transport-and-desulfonation operon** — direct strain-specific evidence rather than *E. coli* homology alone:
 
-5. **Regulatory fine detail in *P. putida* is inferred.** CysB is confirmed as master regulator of the sulfate-starvation response in *P. putida*, but direct footprinting of the *tauDCBA* promoter in KT2440 (analogous to the *E. coli* Cbl/CysB study) has not been reported here.
+| Locus | Gene | Product | KO / EC | Position |
+|---|---|---|---|---|
+| PP_0230 | *atsK* | α-ketoglutarate–dependent taurine/sulfonate **dioxygenase** | K03119 / EC 1.14.11.17 | 284616–285449 |
+| **PP_0231** | ***tauC*** | **ABC transporter permease** *(this gene)* | K15552 | 285498–286337 |
+| PP_0232 | *tauB-II* | ABC transporter **ATP-binding** subunit | K10831 / EC 7.6.2.7 | 286334–287122 |
+| PP_0233 | *tauA* | periplasmic **substrate-binding** protein | K15551 | 287136–288107 |
 
----
+All four genes are contiguous and on the same strand, forming the functional module: **capture (TauA) → translocation (TauC) → energization (TauB) → intracellular desulfonation (AtsK/TauD)**. KEGG assigns PP_0231 to **Sulfur metabolism (ppu00920)** and **ABC transporters (ppu02010)**. Notably, the modern EC number for the ATP-hydrolysis step, **EC 7.6.2.7 (taurine-transporting ATPase)**, is annotated to **TauB (PP_0232)** — directly confirming that catalysis resides in the ATPase, and that the "Hydrolase/EC 3.6.3.36" tag on TauC is a spurious carry-over onto the non-catalytic permease.
 
-## Proposed Follow-up Experiments / Actions
+**Protein-level features (UniProt Q88RA2):** 279 aa, 29.9 kDa, **multi-pass inner-membrane protein with 6 predicted transmembrane α-helices** (res. 30–52, 91–113, 125–144, 150–169, 213–234, 240–260) and an ABC transmembrane type-1 domain (PROSITE PS50928, res. 84–264). Family/clustering evidence: eggNOG **COG0600**, CDD **TM_PBP2**, PANTHER **PTHR30151:SF25 "Taurine transport system permease protein TauC"**. GO annotations: *alkanesulfonate transmembrane transport* (GO:0042918), *cellular response to sulfur starvation* (GO:0010438), *plasma membrane* (GO:0005886).
 
-1. **Targeted gene knockout / complementation.** Construct a clean PP_0231 (*tauC*) deletion in *P. putida* KT2440 and test growth on taurine as the sole sulfur source (sulfate-free minimal medium). Complementation with wild-type *tauC* should restore growth — the definitive functional test.
+### 3.4 Orthology to experimentally characterized E. coli TauC
+A global (Needleman–Wunsch) alignment computed here shows that P. putida TauC (Q88RA2, 279 aa) is **64.7% identical (176/272 aligned residues, near full-length coverage)** to *E. coli* K-12 **TauC (Q47539, "Taurine transport system permease protein TauC," 275 aa)**. This far exceeds the ~30–40% threshold used to infer orthology for membrane transporters (unrelated *E. coli* permeases score much lower, e.g. PerM 36.5%). Such high, full-length identity establishes Q88RA2 as a **true ortholog** of the experimentally defined *E. coli* taurine permease — justifying direct transfer of the substrate specificity, subunit-cooperation, mechanism, and physiological-role data below to the *P. putida* protein.
 
-2. **Radiolabeled transport assay.** Measure [³⁵S]- or [¹⁴C]-taurine uptake in whole cells or right-side-out membrane vesicles, comparing wild-type, Δ*tauC*, and complemented strains to directly demonstrate TauC-dependent transport and determine kinetic parameters (Km, Vmax).
-
-3. **Substrate-specificity profiling.** Test competition/uptake with candidate alternative substrates (cysteate, *N*-methyltaurine, isethionate, sulfoacetate) to define whether the *P. putida* transporter is taurine-specific or broader.
-
-4. **Reconstitution and ATPase coupling.** Purify TauB, TauC, and TauA; reconstitute into proteoliposomes; and measure taurine-stimulated ATP hydrolysis to confirm that transport is coupled to TauB ATPase activity (and that TauC itself is catalytically inert).
-
-5. **Promoter analysis in *P. putida*.** Perform RT-qPCR or reporter fusions across a sulfate→taurine shift, plus CysB binding assays (EMSA/footprinting) on the *tauDCBA* promoter, to confirm sulfate-starvation induction and CysB control in KT2440 directly.
-
-6. **Structural modeling / cryo-EM.** Generate an AlphaFold model of the TauABC complex and, ideally, a cryo-EM structure to visualize the 6-TM permease fold, the TauA docking interface, and inward/outward-facing states — validating the alternating-access mechanism for this specific transporter.
+### 3.5 Mechanism (structural/evolutionary inference)
+The **MetI-like** annotation places TauC in the same mechanistic class as the *E. coli* methionine-importer permease MetI. These importers operate by an **alternating-access** mechanism: two permease subunits form a translocation cavity that switches between outward- and inward-facing states, driven by the ATP-hydrolysis cycle of the ABC ATPase subunits. This is a **structure/evolution-based inference** from the conserved MetI-like fold (IPR000515/IPR035906, PF00528) rather than a direct experimental determination for Q88RA2 itself.
 
 ---
 
-## Conclusion
+## 4. Subcellular Localization — Where It Acts
 
-**tauC (Q88RA2, PP_0231)** encodes the **integral inner-membrane permease subunit of the taurine-specific ABC importer TauABC** in *Pseudomonas putida* KT2440. It forms the six-transmembrane-helix (MetI-like) translocation channel through which **taurine** is imported across the cytoplasmic membrane, powered by the partner ATPase TauB and primed by the periplasmic binding protein TauA. Imported taurine is desulfonated by the co-operonic dioxygenase TauD (PP_0230) to release sulfite, making TauC the uptake gateway of a **CysB-regulated organosulfur-scavenging (sulfate-starvation) pathway** that lets the bacterium use taurine as a sulfur source when inorganic sulfate is scarce. TauC is a **non-catalytic membrane transport protein** — the EC 3.6.3.36/hydrolase annotation reflects the whole complex's ATPase (TauB), not the permease itself. The assignment is robustly supported by conserved domains, a complete syntenic *tauDCBA* operon, 64.7% identity to the experimentally validated *E. coli* TauC, and de novo hydropathy confirmation of the 6-TM topology.
+TauC is an **integral protein of the cytoplasmic (inner) membrane** (UniProt: "Cell membrane; Multi-pass membrane protein"; GO:0005886 plasma membrane). Consistent with the MetI-like fold, it comprises **six predicted membrane-spanning α-helices** that build the substrate channel. Its two functional interfaces are:
+- **Periplasmic face** — docks the substrate-loaded periplasmic binding protein TauA;
+- **Cytoplasmic face** — couples to the ABC ATPase TauB.
+
+Transport therefore occurs **across the inner membrane** (periplasm → cytoplasm), and the downstream desulfonation of the imported taurine takes place **in the cytoplasm** (TauD).
+
+---
+
+## 5. Biological Process / Pathway Context
+
+### 5.1 Organosulfur scavenging under sulfur limitation
+In aerobic soil bacteria such as *Pseudomonas*, **sulfonates and sulfate esters constitute >95% of soil sulfur**, and organisms scavenge this sulfur when inorganic sulfate/cysteine are unavailable (Kertesz 2000, PMID 10717312). TauABC is the **uptake gateway** for this pathway:
+
+1. **Uptake** — TauA (periplasm) → **TauC permease** → cytoplasm, energized by TauB (ATP). *(TauC step.)*
+2. **Desulfonation** — cytoplasmic **TauD**, an Fe(II)/α-ketoglutarate–dependent dioxygenase, "preferentially liberates sulfite from taurine (2-aminoethanesulfonic acid)" (van der Ploeg et al. 2001, PMID 11479697).
+3. **Assimilation** — released sulfite/sulfur enters cysteine/methionine biosynthesis.
+
+> Note: An SsuD-dependent, TauD-independent route for taurine sulfur assimilation also exists (Nishikawa et al. 2018, PMID 30277858), underscoring that the **transport step (TauABC) and the desulfonation step are genetically separable**; TauC's role is strictly transport.
+
+### 5.2 Regulation
+The *tau* genes are part of the **extended cys (sulfur-starvation) regulon**: they are **expressed only under sulfate/cysteine starvation** and repressed by sulfate. Control is exerted by the **LysR-type regulators CysB (master regulator) and Cbl** in *E. coli*:
+
+> "Starvation for sulfate leads to the expression of the tauABCD and ssuEADCB genes… Expression of the tau and ssu genes requires the LysR-type transcriptional regulatory proteins CysB and Cbl." — van der Ploeg et al., 2001 (PMID 11479697)
+
+In *Pseudomonas putida* specifically, an **additional regulator, AsfR**, is required for sulfonate desulfonation (Kertesz 2000, PMID 10717312), placing PP_0231 within a *Pseudomonas*-specific sulfur-limitation regulatory network. The re-annotated KT2440 genome (Belda et al. 2016, PMID 26913973) affirms the breadth of catabolic/nutrient-scavenging capacity encoded in this strain.
+
+---
+
+## 6. Evidence Summary
+
+| Claim | Evidence type | Source |
+|---|---|---|
+| tauC is the transmembrane permease of an ABC importer | Sequence/domain annotation (MetI-like, PF00528); operon architecture | UniProt Q88RA2; InterPro; Eichhorn 2000 (10781534) |
+| Q88RA2 is a true ortholog of E. coli TauC | Global alignment: 64.7% identity, full-length | This work vs UniProt Q47539 |
+| Complete tau operon (atsK–tauC–tauB–tauA) in KT2440 | Genome/KEGG neighborhood analysis | This work; KEGG ppu:PP_0230–0233 |
+| Substrate = taurine / alkanesulfonates | Genetic deletion + transport phenotypes; SBP binding thermodynamics | Eichhorn 2000 (10781534); Qu 2019 (31802112) |
+| All of TauA/B/C required for uptake | In-frame deletion & complementation | Eichhorn 2000 (10781534) |
+| Specificity set by binding protein TauA | Crystal structure + ITC + MD | Qu 2019 (31802112) |
+| Function = sulfur scavenging under sulfate starvation | Expression/regulation studies | van der Ploeg 2001 (11479697); Kertesz 2000 (10717312) |
+| Downstream desulfonation by TauD (α-KG dioxygenase) | Enzymology / genetics | van der Ploeg 2001 (11479697); Nishikawa 2018 (30277858) |
+| *P. putida*-specific regulator AsfR | Review of Pseudomonas sulfur metabolism | Kertesz 2000 (10717312) |
+| Mechanism (alternating access) | Structural inference from MetI-like fold | InterPro IPR000515/IPR035906 |
+
+**Evidence caveat:** Direct biochemical/structural characterization of the *P. putida* KT2440 TauC protein (Q88RA2) itself was not found; the functional assignment rests on (i) unambiguous domain/family membership and a 6-TM MetI-like topology, (ii) **strain-specific operon context in KT2440** (contiguous *atsK*–*tauC*–*tauB*–*tauA* cluster, verified here from the genome/KEGG), and (iii) detailed experimental work on the orthologous *E. coli* TauABC system and the *Pseudomonas* sulfur regulon. This is a high-confidence annotation supported by convergent bioinformatic, genomic, and comparative-experimental evidence.
+
+---
+
+## 7. Supported vs. Refuted Hypotheses
+
+**Supported**
+- TauC is the membrane permease subunit of an ABC-type importer (not an enzyme). ✔
+- The imported substrate is taurine/alkanesulfonates. ✔
+- It localizes to the inner (cytoplasmic) membrane. ✔
+- It functions in sulfur scavenging under sulfate/cysteine limitation, within the CysB/Cbl (AsfR in Pseudomonas) regulon. ✔
+
+**Refuted / corrected**
+- That TauC itself catalyzes ATP hydrolysis (EC 3.6.3.36): the ATPase activity belongs to TauB; the EC is a system-level label. ✘ for the permease.
+- That taurine sulfur assimilation strictly requires TauD downstream: an SsuD-dependent bypass exists (Nishikawa 2018), though this does not change TauC's transport role. ✘ (as an obligatory single route)
+
+---
+
+## 8. Limitations and Future Directions
+- **No direct structural or biochemical data** exist for Q88RA2 specifically; an experimental structure (e.g., cryo-EM of the *P. putida* TauB₂C₂ complex) or an AlphaFold model would confirm the predicted membrane topology and TauA/TauB interfaces.
+- **Substrate range in *P. putida*** (beyond taurine) has not been directly measured for this transporter; transport assays with defined alkanesulfonates would resolve overlap with the SsuABC system.
+- **Regulatory wiring** (CysB/Cbl/AsfR control of PP_0231) is inferred from *E. coli* and general *Pseudomonas* studies; strain-specific transcriptomics under sulfate starvation would confirm induction.
+
+---
+
+### References (PMIDs)
+- Eichhorn, van der Ploeg & Leisinger, 2000 — Deletion analysis of *E. coli* taurine and alkanesulfonate transport (10781534)
+- van der Ploeg, Eichhorn & Leisinger, 2001 — Sulfonate-sulfur metabolism and its regulation in *E. coli* (11479697)
+- Qu, ElOmari, Wagner, De Simone & Beis, 2019 — TauA desolvation dictates ligand specificity of TauABC (31802112)
+- Kertesz, 2000 — Sulfonate/sulfate ester metabolism in gram-negative bacteria (incl. *P. putida* AsfR) (10717312)
+- Nishikawa, Shen & Ogawa, 2018 — TauD-independent taurine assimilation in *E. coli* (30277858)
+- Belda et al., 2016 — Revisited genome of *P. putida* KT2440 (26913973)
 
 
 ## Artifacts
 
 - [OpenScientist final report](tauC-deep-research-openscientist_artifacts/final_report.html)
 - [OpenScientist final report](tauC-deep-research-openscientist_artifacts/final_report.pdf)
-
-## Citations
-
-1. PMID:8808933
-2. PMID:10781534
-3. PMID:17203388
-4. PMID:11479697
-5. PMID:25750732
-6. PMID:17322901
-7. PMID:9401024
-8. PMID:18456803
-9. PMID:11421275
-10. PMID:10717312
-11. PMID:15181108
-12. PMID:18948194
-13. PMID:17158291
