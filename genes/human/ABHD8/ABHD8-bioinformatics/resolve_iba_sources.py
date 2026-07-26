@@ -74,20 +74,94 @@ def describe_uniprot(acc: str) -> dict:
 
 def resolve_sgd(sgd_id: str) -> dict:
     """Resolve an SGD locus id to its reviewed UniProt entry."""
-    d = get("https://rest.uniprot.org/uniprotkb/search"
-            f"?query=xref:sgd-{sgd_id}+AND+reviewed:true"
-            "&fields=accession,id,protein_name,organism_name,gene_names&format=json&size=1")
-    if not d.get("results"):
-        raise LookupError(f"no reviewed UniProt entry cross-references SGD:{sgd_id}")
-    r = d["results"][0]
+    return resolve_xref(f"SGD:{sgd_id}")
+
+
+# Each WITH/FROM database maps to the UniProt cross-reference name used in query syntax.
+XREF_DB = {"SGD": "sgd", "MGI": "mgi", "FB": "flybase", "AGI_LocusCode": "araport"}
+
+
+def entry_fields(r: dict) -> dict:
+    """Pull the identifying fields out of one UniProt search hit.
+
+    Falls back to the submitted name when there is no recommended name, which is the usual case
+    for unreviewed entries - reporting an empty name would read as a missing protein.
+    """
+    desc = r.get("proteinDescription", {})
+    name = desc.get("recommendedName", {}).get("fullName", {}).get("value", "")
+    if not name:
+        submitted = desc.get("submissionNames") or []
+        if submitted:
+            name = submitted[0].get("fullName", {}).get("value", "")
     return {
-        "sgd": sgd_id,
         "acc": r["primaryAccession"],
         "id": r.get("uniProtkbId", ""),
-        "name": (r.get("proteinDescription", {}).get("recommendedName", {})
-                 .get("fullName", {}).get("value", "")),
+        "organism": r.get("organism", {}).get("scientificName", ""),
+        "name": name,
         "genes": [g.get("geneName", {}).get("value") for g in r.get("genes", [])],
     }
+
+
+def resolve_xref(token: str) -> dict:
+    """Resolve one WITH/FROM token to a reviewed UniProt entry.
+
+    Handles every database that appears in this gene's WITH/FROM fields. PANTHER nodes are not
+    proteins and are reported as such rather than being silently dropped, since 'unresolvable'
+    and 'internal tree node' are different facts.
+    """
+    db, _, local = token.partition(":")
+    if db == "UniProtKB":
+        d = get(f"https://rest.uniprot.org/uniprotkb/search?query=accession:{local}"
+                "&fields=accession,id,protein_name,organism_name,gene_names&format=json&size=1")
+    elif db == "PANTHER":
+        return {"token": token, "kind": "panther_node", "acc": None,
+                "name": "PANTHER family/subfamily node - an internal tree node, not a protein"}
+    elif db in XREF_DB:
+        # MGI tokens arrive as "MGI:MGI:1915938"; UniProt's xref query wants the bare number,
+        # and a query containing the inner colon is rejected with HTTP 400.
+        local = local.removeprefix("MGI:")
+        query = f"xref:{XREF_DB[db]}-{local}"
+        fields = "accession,id,protein_name,organism_name,gene_names"
+        url = f"https://rest.uniprot.org/uniprotkb/search?query={{q}}&fields={fields}&format=json&size=1"
+        d = get(url.format(q=f"{query}+AND+reviewed:true"))
+        if not d.get("results"):
+            # Some sources (the Drosophila member here) have no reviewed entry at all. Falling
+            # back is right, but the distinction has to be reported rather than hidden: an
+            # unreviewed source is weaker support than a reviewed one.
+            d = get(url.format(q=query))
+            reviewed = False
+        else:
+            reviewed = True
+        if d.get("results"):
+            return {**entry_fields(d["results"][0]), "token": token, "kind": "protein",
+                    "reviewed": reviewed}
+    else:
+        raise LookupError(f"no resolver for WITH/FROM database {db!r} in token {token!r}")
+    if not d.get("results"):
+        return {"token": token, "kind": "unresolved", "acc": None,
+                "name": f"no UniProt entry cross-references {token}"}
+    return {**entry_fields(d["results"][0]), "token": token, "kind": "protein", "reviewed": True}
+
+
+# Evidence codes that represent a direct experimental result, as opposed to an inference.
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+
+
+def source_evidence(acc: str, go_ids: list[str]) -> dict[str, list[str]]:
+    """What evidence does this source protein itself carry for the propagated GO terms?
+
+    This is the check that decides whether calling a WITH/FROM entry 'the same family-level
+    inference rather than independent experimental support' is true or false. IBA WITH/FROM is
+    supposed to list experimentally-annotated members, so the claim is testable, and asserting it
+    without running this query is exactly the kind of confident dismissal that needs evidence.
+    """
+    out: dict[str, list[str]] = {}
+    for go_id in go_ids:
+        d = get("https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+                f"?geneProductId=UniProtKB:{acc}&goId={go_id}&goUsage=descendants"
+                "&goUsageRelationships=is_a,part_of&limit=100")
+        out[go_id] = sorted({a.get("goEvidence", "?") for a in d.get("results", [])})
+    return out
 
 
 def main() -> None:
@@ -112,6 +186,41 @@ def main() -> None:
     L.append("|---|---|")
     for go, toks in sorted(srcs.items()):
         L.append(f"| {go} | {', '.join(f'`{t}`' for t in toks)} |")
+    L.append("")
+
+    all_tokens = sorted({t for toks in srcs.values() for t in toks})
+    L.append(f"## Every WITH/FROM source resolved ({len(all_tokens)} distinct), with its own evidence")
+    L.append("")
+    L.append("For each source: what protein it is, and what evidence **it** carries for the terms")
+    L.append("propagated to ABHD8. IBA WITH/FROM is supposed to list experimentally-annotated")
+    L.append("members, so 'this source only carries the same family-level inference' is a testable")
+    L.append("claim rather than a safe hedge - and the table below is what settles it.")
+    L.append("")
+    L.append("| WITH/FROM | protein | organism | own evidence for the propagated terms |")
+    L.append("|---|---|---|---|")
+    go_ids = sorted(srcs)
+    resolved: dict[str, dict] = {}
+    for token in all_tokens:
+        info = resolve_xref(token)
+        resolved[token] = info
+        if info["kind"] != "protein":
+            L.append(f"| `{token}` | *{info['name']}* | — | not applicable |")
+            continue
+        ev = source_evidence(info["acc"], go_ids)
+        info["evidence"] = ev
+        cells = [f"{g.split(':')[1]}={'/'.join(v)}" for g, v in ev.items() if v]
+        genes = ", ".join(g for g in info["genes"] if g)
+        L.append(f"| `{token}` | {info['acc']} ({genes or info['id']}) — {info['name']} | "
+                 f"{info['organism']} | {'; '.join(cells) or '**none**'} |")
+    L.append("")
+    L.append("Term ids are abbreviated to their digits; each entry lists the evidence codes that")
+    L.append("source carries for that term or any of its descendants.")
+    L.append("")
+    exp_sources = [t for t, i in resolved.items()
+                   if i["kind"] == "protein"
+                   and any(c in EXPERIMENTAL for v in i.get("evidence", {}).values() for c in v)]
+    L.append(f"**{len(exp_sources)} of the {len(all_tokens)} sources carry experimental evidence of")
+    L.append(f"their own** for at least one propagated term: {', '.join(f'`{t}`' for t in exp_sources) or 'none'}.")
     L.append("")
 
     L.append("## The two identifications the review depends on")

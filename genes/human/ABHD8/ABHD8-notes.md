@@ -41,19 +41,43 @@ the signature of a protein placed in an enzyme family with nothing measured.
 
 All six are `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`, and it took a bioinformatics check
 to establish that this is the right call rather than a hedge. `ABHD8-bioinformatics/`
-resolves every WITH/FROM accession against UniProt at run time
-([file:human/ABHD8/ABHD8-bioinformatics/RESULTS.md]). Two results decided it:
+resolves all seven distinct WITH/FROM accessions against UniProt and queries each one's own GO
+evidence via QuickGO, at run time
+([file:human/ABHD8/ABHD8-bioinformatics/RESULTS.md]).
 
-- **`SGD:S000004089` is a real enzyme, not a mis-transfer.** It resolves to ICT1_YEAST
-  (Q12385), recommended name *1-acylglycerol-3-phosphate O-acyltransferase ICT1*. So the
-  acyltransferase-branch IBAs propagate from a named, reviewed family member that genuinely
-  carries the activity. What is missing is a demonstration **in ABHD8**, not an activity in
-  the family — which is exactly the distinction between over-annotation and error.
+**The single most important result: 6 of the 7 sources carry their own experimental evidence**
+for at least one propagated term — only the PANTHER node does not. These IBAs are propagating
+from genuinely characterised enzymes in four organisms, not from a family-level guess. That is
+what makes over-annotation the right verdict and `REMOVE` the wrong one.
+
+Two source identities were **misdescribed** in an earlier draft, and both errors ran the same
+way — dismissing a source without resolving it:
+
+- **`MGI:MGI:1915938` is not ABHD8's mouse ortholog.** It is Q8VD66, mouse **ABHD4**, a
+  (lyso)-N-acylphosphatidylethanolamine lipase — a *paralog*. This is perfectly legitimate for
+  IBA, because WITH/FROM lists experimentally-annotated **members**, not orthologs. But it means
+  no ortholog-strength inference exists anywhere on these rows, and the earlier claim that this
+  entry "carries the same family-level inference rather than independent experimental support"
+  was wrong twice over: wrong protein, and it carries IDA.
+- **`SGD:S000003342` is CLD1**, P53264, yeast mitochondrial cardiolipin-specific deacylase, with
+  both IDA and IMP. It had been waved away as a distant family member — which is exactly the
+  mistake already made and corrected for `SGD:S000004089`/ICT1, repeated on the row next door.
+
+The generalisable rule: **an unresolved WITH/FROM accession cannot be dismissed, only deferred.**
+Every confident sentence about a source needs the lookup behind it, and "this source is just the
+same inference" is a *testable* claim about that source's own evidence codes, not a safe hedge.
+
+The other two facts that decided the verdict:
+
+- **`SGD:S000004089` is a real enzyme, not a mis-transfer** — ICT1_YEAST (Q12385), recommended
+  name *1-acylglycerol-3-phosphate O-acyltransferase ICT1*. What is missing is a demonstration
+  **in ABHD8**, not an activity in the family.
 - **ABHD8 retains a complete catalytic triad.** UniProt annotates three active-site residues
   ([file:human/ABHD8/ABHD8-uniprot.txt "FT   ACT_SITE        252"], plus 370 and 398) and
   places it in MEROPS S33
   ([file:human/ABHD8/ABHD8-uniprot.txt "DR   MEROPS; S33.011; -."]). A protein with an intact
-  charge relay system cannot be called a pseudoenzyme.
+  charge relay system cannot be called a pseudoenzyme — though note those residues are
+  themselves `ECO:0000250`, transferred by similarity.
 
 The defensible position is therefore narrow and slightly unsatisfying: ABHD8's triad is
 **intact and untested**. The fold-derived annotations are premature, not refuted.
