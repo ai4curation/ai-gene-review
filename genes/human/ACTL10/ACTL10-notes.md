@@ -1,0 +1,309 @@
+# ACTL10 (human, Q5JWF8) — review notes
+
+Journal for the PAINT + affinage review. Provenance is inline; every quote below was
+checked as a verbatim substring of the cited file before being used.
+
+## 1. Where this gene starts from: a genuinely dark gene, and how dark
+
+ACTL10 has **three GOA rows** — two IBA and one IEA derived from one of them. There is no
+experimental annotation of any kind, in any aspect.
+
+UniProt's record is almost empty of function. The only `CC` line in the whole entry is
+
+> `CC   -!- SIMILARITY: Belongs to the actin family. {ECO:0000305}.`
+> [file:human/ACTL10/ACTL10-uniprot.txt]
+
+`ECO:0000305` is curator inference, not even similarity to a named entry. There is **no
+FUNCTION line, no SUBCELLULAR LOCATION line and no SUBUNIT line**. This is worth
+contrasting with the reviewed sibling ACTL8, which at least carries a
+`Cytoplasm, cytoskeleton {ECO:0000250}` location — ACTL10 has nothing to place it anywhere.
+The only `FT` feature is `FT   CHAIN           1..245`: no nucleotide-binding site, no
+active site, no modified residue.
+
+Corroborating how dark it is:
+
+- `DR   Pharos; Q5JWF8; Tdark.` — Pharos' own "dark protein" classification.
+- `DR   PAN-GO; Q5JWF8; 2 GO annotations based on evolutionary models.` — i.e. GO's
+  curated set for this gene is two phylogenetic inferences and nothing else.
+- All three UniProt `RN` references are large-scale sequencing submissions (the chromosome
+  20 paper, the Celera submission, the MGC cDNA collection). **Not one functional paper.**
+
+But it is not undetected: `PE   1: Evidence at protein level;` with
+`KW   Proteomics identification; Reference proteome.` So the correct statement is that
+there is no *functional or biochemical* characterisation — not that there is no data at
+all. It is expressed and detected: `DR   HPA; ENSG00000288649; Tissue enriched (testis).`
+[all four from file:human/ACTL10/ACTL10-uniprot.txt]
+
+## 2. The affinage record is empty — and that is not evidence
+
+`ACTL10-deep-research-affinage.md` came back with `gates_passed: True`, `n_discoveries: 0`,
+`citation_count: 0`, and the body "No mechanistic discoveries found in literature."
+
+Per the campaign rule (burned on ACP7), an empty provider record is **not** evidence that
+literature is absent. Searching Europe PMC independently found 43 hits for `ACTL10` and 31
+for the old symbol `C20orf134`, and among them **one paper carries ACTL10 in its title**,
+which affinage missed entirely:
+
+- **PMID:32742462** *Prognostic role of ACTL10 in Cytogenetic Normal Acute Myeloid
+  Leukemia* (J Cancer 2020, full text cached). This is a TCGA correlative study of RNA
+  expression and DNA methylation against survival — **no functional experiment,
+  no localisation, no biochemistry**. Its own framing confirms the darkness rather than
+  relieving it: [PMID:32742462 "Actin-like 10 (ACTL10) is a member of the actin family;
+  however, to the best of our knowledge, there are very few studies on the ACTL10 gene."]
+  and it closes by saying [PMID:32742462 "future research should focus on investigating the
+  molecular mechanisms"]. It supports **no GO annotation**: a survival correlation is not a
+  function.
+- **PMID:35180326** *The Wnt1-Cre2 transgene is active in the male germline* (Genesis 2022).
+  Mouse `Actl10` appears only because it sits near the transgene insertion site. Reading the
+  whole paragraph (not just the sentence naming the gene) is what makes it usable: it gives
+  expression, and explicitly withholds function —
+  [PMID:35180326 "Actl10 and 1700003F12Rik were both enriched in testis at the tissue
+  level"], [PMID:35180326 "Necab3 and Actl10 were moderately expressed"] in spermatids, and
+  [PMID:35180326 "Actl10 and 1700003F12Rik mutant mice have not been linked to germline
+  biology"]. That last is the authors' own statement about the state of knowledge, which is
+  a legitimate thing to cite; it is *not* me inferring an absence.
+- PMID:36160324 (a computational study of actin variation) turned out to contain **no
+  ACTL10 mention at all** and is not cited.
+
+Retraction check (the ACTL8 trap): PubMed `pubtype` for 32742462, 35180326, 36160324,
+11780052 and 15489334 is plain `Journal Article` / `Comparative Study` — **no retraction or
+erratum** on anything relied on here.
+
+Everything else in those search results is ACTL10 appearing as a row in a methylation-array
+or RNA-seq table. There is no functional literature.
+
+## 3. The central finding: Q5JWF8 begins in the middle of the actin fold
+
+This started as a suspicion from a single number and ended as the main result of the review.
+Full reproducible detail in `ACTL10-bioinformatics/RESULTS.md`.
+
+Human ACTL10 is **245 aa**; mouse Actl10 is **346 aa** and several other mammals are 366–368.
+Two things then fell out.
+
+**(a) The length variation does not follow the phylogeny.** Across 87 mammalian entries whose
+gene name is exactly ACTL10, lengths run 169–487 aa, and in **4 of 4** sister-taxon pairs
+tested the two members of one family disagree — *Sapajus apella* 368 aa vs *Cebus imitator*
+245 aa (sister genera in Cebidae), *Marmota* 346 vs *Sciurus* 245, *Urocitellus* 346 vs
+*Ictidomys* 245. Sister genera cannot differ by 120 residues for phylogenetic reasons. That
+points at the annotation pipeline, but on its own it does not say which class is wrong.
+
+**(b) The human genome encodes the missing region, in frame.** The MANE transcript
+`ENST00000677665` is a **single exon** with 555 nt of annotated 5′ leader contiguous with the
+CDS. Translating that leader in the CDS reading frame — with the frame *proven* by first
+asserting the CDS translates to the Swiss-Prot sequence — gives 185 codons containing exactly
+one in-frame stop, after which there are **167 uninterrupted codons** running straight into
+the annotated initiator. Their translation is unmistakably actin, including
+`IAVVVDQGSGFTKAGFAGEN`, which is actin's **phosphate-binding loop 1** (`DNGSGMCK` in
+β-actin — the motif that grips the nucleotide β-phosphate).
+
+The extended 412-aa ORF is not a spurious read-through:
+
+| compared with | %id vs 245 aa | score | %id vs extended | score |
+|---|---|---|---|---|
+| *Sapajus apella* ACTL10 (368 aa) | 96.3 | 1117 | 96.5 | **1835** |
+| *Callithrix jacchus* ACTL10 (368 aa) | 93.5 | 1082 | 93.2 | **1772** |
+| mouse Actl10 (346 aa) | 78.0 | 868 | 80.6 | **1383** |
+| human β-actin | 33.9 | 244 | 34.7 | **553** |
+
+A 123-codon stretch cannot be 96% identical to a sister primate's annotated protein by
+accident. **And the ancestral initiator is identifiable:** the Met1 of both *Sapajus* and
+*Callithrix* ACTL10 aligns to position 45 of the extended human ORF, where the human genomic
+codon is **CTG** (chr20:33667129), not ATG. The human locus has lost the initiator its
+orthologues use; the next in-frame ATG lies ~120 codons downstream, and that is exactly where
+Swiss-Prot, RefSeq and MANE all begin the protein.
+
+**Scoping this correctly matters.** What is established: the sequence in Q5JWF8 is not the
+whole of ACTL10's actin homology, so any residue tally computed from Q5JWF8 measures the
+annotation boundary as much as the protein. What is **not** established: which product the
+human cell makes. A lost initiator with a conserved downstream reading frame is compatible
+both with a genuinely shortened human protein and with initiation at a non-AUG codon or an
+unannotated upstream exon. Settling it needs N-terminal proteomics, not sequence analysis.
+I have deliberately not asserted a length for the human protein.
+
+## 4. Consequence: ACTL8's committed panel mis-scores ACTL10, and the correction flips the sign
+
+The reviewed sibling ACTL8 built a residue panel (PDB 2BTF nucleotide site, PDB 6DJO filament
+protomer interface) that **already included ACTL10**, and ranked it **last of fourteen** — 5 of
+38 chemically compatible interface positions, below even Arp3. That reads as the most degraded
+actin-like protein in the family.
+
+My script recomputes the same contacts with the same structures and cutoffs, and **asserts that
+it reproduces ACTL8's committed numbers** before going further; it reproduces all three shared
+rows exactly (ACTB 37/1/0/0, ACTL8 8/3/24/3, ACTL10 3/2/13/20). I then split the single `gap`
+column by cause — *outside span* (the query never reaches the position) versus *internal gap*
+(a real deletion). The result:
+
+| ACTL10 sequence used | interface: id/cons/non-cons/int-gap/**outside** | positions present | compatible |
+|---|---|---|---|
+| Q5JWF8, 245 aa as annotated | 3/2/13/0/**20** | 18 | **5/18** |
+| extended ORF, 412 aa | 7/4/23/4/**0** | 38 | **11/38** |
+
+**20 of ACTL10's 38 "interface" positions were not substitutions at all — they were positions the
+annotated sequence does not reach.** Repaired, ACTL10 scores **11/38, exactly ACTL8's own
+11/38**, and *Sapajus* ACTL10 independently gives 11/38 too. ACTL10 is an ordinary member of the
+divergent-actin band, not an outlier below Arp3.
+
+The nucleotide site moves the same way, and this is the sharpest version of the point. The five
+positions Q5JWF8 fails to reach are **13, 14, 15, 16, 18 — precisely phosphate-binding loop 1**.
+In the extended ORF they read G/S/G/F(conservative)/K: **four identical and one conservative, an
+intact P-loop 1**. Overall the extended ORF scores **15/19 compatible**, which is *better* than
+ACTL8 (14/19) and ACTL7A (14/19). The extended human ORF and *Sapajus* ACTL10 give **identical
+calls at all 19 positions**, which is independent corroboration that the extended sequence is
+the real one.
+
+So the mirror error the brief warns about (ABHD8) was live here and the measurement refuses it:
+**ACTL10 is not a fold that has lost actin's residues.** The one feature that looked lost is
+present. This is why nothing in this review is a REMOVE on structural grounds, and why no
+nucleotide-binding term is proposed either — residues being present is a *possibility*, not a
+measurement, exactly as ACTL8 concluded for its own ATP site ("untested, not refuted").
+
+## 5. Sibling cross-check: all three rows are byte-identical to already-merged reviews
+
+Every one of ACTL10's three rows has a byte-identical WITH/FROM counterpart in a merged sibling
+review, so the AADACL trio hazard (same row, three different verdicts) is live. Checked
+programmatically, not by eye:
+
+| ACTL10 row | identical row in | that review's verdict |
+|---|---|---|
+| `GO:0015629` IBA, node PTN002631484, 25 tokens | **ACTL8** | KEEP_AS_NON_CORE |
+| `GO:0005200` IBA, node PTN000940351, 11 tokens | **ACTR10** | ACCEPT (core) |
+| `GO:0007010` IEA from `GO:0005200` | ACTL7A / ACTL7B / **ACTR10** | MODIFY→GO:0030036 / REMOVE / KEEP_AS_NON_CORE |
+
+The siblings disagree with each other, so I cannot simply copy one. The disagreements are
+principled once the grounds are read rather than the verdicts:
+
+- **ACTR10 ACCEPTed `GO:0005200` on gene-specific experimental grounds** — it is a bona fide
+  dynactin subunit and "ACTR10's own contribution to dynactin's structural integrity is exactly
+  what this MF expresses". ACTL10 has no complex, no localisation, no phenotype, no biochemistry.
+  So ACTR10's ACCEPT does not transfer.
+- **ACTL7A and ACTL7B REMOVEd `GO:0005200`** on two grounds that are both *absent* for ACTL10:
+  their row was **TAS** citing a paper containing no functional data (ACTL10's is a live IBA from
+  ten experimentally-annotated donors), and PAINT had **explicitly IRD-negated** the term at their
+  node PTN008986528 (PAINT has *not* negated it on ACTL10's branch). So their REMOVE does not
+  transfer either.
+- **ACTL8's KEEP_AS_NON_CORE on `GO:0015629`** rests on the donating node being the correct LCA
+  of a heterogeneous clade — which is a property of the node, and ACTL10 sits on the *same* node
+  with the *same* 25 tokens. That one does transfer, and I follow it.
+
+## 6. WITH/FROM resolution, and what it rules out
+
+Built from the GOA field programmatically with the count asserted, never by hand (this drifted on
+3 of 6 rows on ACTR10 and on 2 of 2 genes that tried it by hand).
+
+- `GO:0015629`: 25 tokens, 24 protein → **24/24 resolved, 24/24 carry their own
+  experimental-code annotation** for the term or a descendant, across 12 organisms. Two resolve
+  only to unreviewed (TrEMBL) entries — reported rather than hidden; both still carry their own
+  IDA, so evidence provenance and name provenance are separate numbers here.
+- `GO:0005200`: 11 tokens, 10 protein → **10/10 resolved, 10/10 carry their own experimental
+  evidence** (mouse/rat Actg1 IDA, yeast ACT1 IDA, yeast ARP1 IDA, yeast ARP10 IPI×3, human ACTB
+  EXP+IDA+IMP, human ACTR2 IDA, human ACTR3 IDA, Dicty act1/act10 IDA).
+- Resolver gotcha fixed: WormBase tokens need bare `xref:WBGene…`; the documented
+  `xref:wormbase-…` form returns **zero hits**, which reads as "no such source" rather than
+  "wrong query". Four *C. elegans* actins were briefly and wrongly logged as unresolvable.
+
+**Consequence for classification:** because every protein donor on both rows carries its own
+experimental evidence, `SOURCE_WEAK_OR_INFERRED` / `SOURCE_EVIDENCE_WEAK` would be *contradicted
+by my own analysis*. The correct value is `PROPAGATION_BAD` — sound source annotations that should
+not transfer to this target.
+
+## 7. PAINT has already ruled against `GO:0005200` for divergent actins — eight times
+
+From the repo's cached `interpro/panther/PTHR11937/PTHR11937-paint.tsv`. `GO:0005200` is asserted
+by **IBD at one node, PTN000940351**, from 10 experimentally-annotated seeds. It is then **negated
+by IRD (`negated: true`) at eight nodes descending from it** — dated 2025-08-05 to 2026-04-16, so
+current, not stale:
+
+| node | clade (identified from that node's other IBD rows) |
+|---|---|
+| PTN000233596 | Arp2 (seeds include P61160, plus `GO:0005885` Arp2/3 complex) |
+| PTN000233796 | Arp3 (seeds include P61158) |
+| PTN000233752 | Arp5 / INO80 (`GO:0031011`, seed Q9H9F9) |
+| PTN000233887 | Arp6 (`GO:0000812` Swr1 complex, seed Q9GZN1) |
+| PTN000234048 | Arp8 (`GO:0031011`, seed Q9H981) |
+| PTN001732543 | ACTL6A/B (`GO:0035267` NuA4, `GO:0016514` SWI/SNF) |
+| PTN007551901 | ACTR1A/B (`GO:0106006`) |
+| PTN008986528 | ACTL7A/7B (also given parent `GO:0005198` by IBA instead) |
+
+So GO's own phylogenetic pipeline has decided, repeatedly, that "structural constituent of
+cytoskeleton" does **not** transfer to divergent actin relatives — and where it wanted to keep
+something, it dropped to the parent `GO:0005198` rather than keeping `GO:0005200`.
+
+**Which genes are left holding it?** QuickGO: 43 human `GO:0005200` IBA annotations, of which
+exactly **10 come from PTN000940351**: the four conventional muscle actins **ACTA1, ACTA2, ACTC1,
+ACTG2** — where it is plainly right — plus six divergent proteins **ACTL9, ACTL10, ACTR10,
+ACTRT1, ACTRT2, ACTRT3**. ACTL10 is in the residual set purely because PAINT has not yet visited
+its branch. Of those six, only ACTR10 has independent evidence for the term (dynactin).
+
+That is a single, node-level fix that would correct five genes at once, and it belongs in
+`suggested_questions` stated **once with all affected genes named** — not repeated per gene.
+
+**Independent convergence, found after rebasing onto a main that had moved.** ACTR5 and ACTR8
+merged while this review was in progress. ACTR8's review reaches the *identical* tally from the
+same cached file — "PTHR11937 carries 9 GO:0005200 rows in total: 8 IRD negatives at divergent
+nodes and 1 IBD positive at the actin node" — and already asks whether "the IRD discipline
+applied here be extended to the divergent actin-like nodes that currently lack it". Two agents
+arriving at the same 8-plus-1 count from the same file is good corroboration. It also means my
+PAINT question must not be a near-duplicate: what ACTR8's question lacks is the **target list**,
+so mine now supplies the enumeration (which ten genes still receive the term, which five would be
+fixed, and that ACTR10 must be spared because it has its own dynactin evidence) and explicitly
+credits ACTR8's for the proposal. Neither ACTR5 nor ACTR8 has a GO:0005200 GOA row at all, which
+is exactly what the IRD negations at their nodes PTN000233752 and PTN000234048 predict — a small
+confirmation that the mechanism I am describing does what I say it does.
+
+ACTR8 adds one fact worth recording because it validates the *form* of the recommendation: the
+ARP8 IRD block is "exactly right - the human crystal structure shows loop insertions that explain
+ARP8's inability to polymerise". So IRD is the established, evidence-backed device for exactly
+this situation, which is why extending it is the right ask rather than deleting annotations
+gene-by-gene.
+
+**A separate tension worth reporting, not asserting.** Arp2 (P61160) and Arp3 (P61158) are among
+the ten seeds of the ancestral `GO:0005200` IBD at PTN000940351, and QuickGO confirms each holds
+its own IDA for the term — yet PAINT negates the term by IRD at Arp2's and Arp3's own clade nodes.
+IRD blocks propagation rather than deleting the direct annotation, so this is not strictly
+contradictory; but the ancestral state is being supported by proteins whose own clades have been
+excluded from it, and it is worth asking PAINT whether that is intended.
+
+## 8. Negative results, recorded because a null from a check is still a finding
+
+- **IntAct**: `findInteractions/Q5JWF8` returns `totalElements: 0`. No interaction data at all, so
+  the ACRV1-derived "is `NbExp=3` really one screen" and "resolve the partner accessions" checks
+  have nothing to run on. Consistent with ACTL10 having no `GO:0005515` row.
+- **GO-CAM**: no entry for ACTL10 or Q5JWF8 in `gocams/index.tsv`.
+- **Downward-MODIFY check** (from ACRV1): asked whether either IBA lands *above* its donors' own
+  terms. It does not — the donors' experimental annotations are to `GO:0015629` and `GO:0005200`
+  themselves, the same terms propagated. No downward MODIFY is warranted on either row.
+- **CRISPR screens**: `DR   BioGRID-ORCS; 170487; 21 hits in 1141 CRISPR screens.`
+  [file:human/ACTL10/ACTL10-uniprot.txt] — 21/1141 is unremarkable and I draw nothing from it.
+
+## 9. Verdicts and why
+
+- **`GO:0015629` actin cytoskeleton (IBA) → KEEP_AS_NON_CORE.** Same node, same 25 tokens, same
+  reasoning as merged ACTL8: PTN002631484 spans conventional actins, the POTE genes and the
+  divergent actin-likes, so the generic compartment term is the true **LCA** of a heterogeneous
+  donor set and there is no granularity defect to fix. Non-core because no experiment has placed
+  ACTL10 in any compartment — and unlike ACTL8, UniProt does not even offer a by-similarity
+  location. Kept because ACTL10 *is* a real divergent actin (34.7% to β-actin over the extended
+  ORF, intact P-loop 1), so the term asserts nothing the sequence contradicts.
+- **`GO:0005200` structural constituent of cytoskeleton (IBA) → MARK_AS_OVER_ANNOTATED.** The
+  route by which real actins earn this term is filament formation, and ACTL10's protomer interface
+  — measured on the *repaired* sequence, so the argument does not rest on the annotation artefact
+  — is 11/38 compatible against β-actin 38/38 and Arp53D 33/38 (a divergent actin that *does*
+  polymerise). PAINT has negated this exact term at eight sibling divergent nodes and dropped to
+  the parent where it wanted to keep anything. But **REMOVE is not earned**, and the control that
+  refuses it is one I computed myself: **Arp3 scores 8/38, below ACTL10, and Arp3 genuinely does
+  make actin-like protomer contacts** at an Arp2/3 branch. So the interface metric bounds
+  *canonical two-stranded filament incorporation*, not all protomer contact — the caveat ACTL8's
+  analysis raised against itself, which applies with equal force here. `MARK_AS_OVER_ANNOTATED`
+  needs no positive argument; `REMOVE` does, and mine is unavailable.
+- **`GO:0007010` cytoskeleton organization (IEA) → MARK_AS_OVER_ANNOTATED.** Its literal WITH/FROM
+  is the GO term `GO:0005200`, so it is exactly as strong as the row above and no stronger. It is
+  marked at the same level rather than removed (ACTL7B's route) because its basis is being marked,
+  not removed; and it cannot follow ACTL7A's MODIFY to `GO:0030036`, because that was earned by a
+  knock-out phenotype and ACTL10 has none —
+  [PMID:35180326 "Actl10 and 1700003F12Rik mutant mice have not been linked to germline biology"].
+
+**`core_functions` is left empty.** Per the brief, that claim had to be *tested* rather than
+asserted, and section 4 is the test: the nucleotide site is well enough preserved that no
+loss-of-function call is available, and the interface is degraded enough that no polymerisation
+call is available either. Neither supports authoring a molecular function, and inventing one to
+silence the validator's "No core functions defined" warning would be exactly the wrong move.
