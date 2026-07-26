@@ -124,7 +124,8 @@ carries for the propagated term.
 | IBA | GO:0005737 | `MGI:MGI:1343053` | Q9QY83, mouse **Actl7b** (paralogue) | cytoplasm **IDA** PMID:12672658 |
 | IBA | GO:0005737 | `RGD:1304697` | Q641W9, rat **Actl7a** | cytoplasm **EXP** PMID:21278383 |
 | IBA | GO:0005737 | `UniProtKB:Q9Y615` | **ACTL7A itself** — self-referential IBA, a PAINT curator judging the function core | valid by construction |
-| IBA | GO:0005198 structural molecule activity | `PANTHER:PTN000940351`, `PANTHER:PTN008986528` | both PANTHER internal tree nodes — **neither is a protein** | n/a |
+| IBA | GO:0005198 structural molecule activity | `PANTHER:PTN000940351` | ancestral actin node of PTHR11937 — a tree node, not a protein | carries **GO:0005200 by IBD**, seeded from experimentally annotated conventional actins and Arp2/Arp3 (`UniProtKB:P60709`, `P61160`, `P61158`, …) |
+| IBA | GO:0005198 structural molecule activity | `PANTHER:PTN008986528` | the PANTHER node that **carries ACTL7A** — a tree node, not a protein | carries GO:0005198 by IBA **and GO:0005200 as an IRD with `negated=true`**, both dated 2025-08-05: an explicit rejection of the specific child for this clade |
 | IEA/ISS (all) | acrosome, nucleus, cytoplasm, Golgi, PT, acrosome assembly, spermatid development, fertilization | `UniProtKB:Q9QY84` (+ `ensembl:ENSMUSP00000092692`) | mouse Actl7a, the true ortholog | acrosome assembly **IMP** PMID:32923619 + PMID:36734600; spermatid development **IMP** PMID:37667331; fertilization **IMP** PMID:32923619 + PMID:35921706; perinuclear theca **IDA** PMID:41169243; Golgi **IDA** PMID:21278383 |
 | IEA | GO:0007010 | `GO:0005200` | not a gene product — an **inter-ontology MF→BP link** from the gene's own TAS MF row | inherits whatever GO:0005200 rests on, i.e. PMID:10373328 |
 | IPI | GO:0005515 | `UniProtKB:Q9UGI8` | **TES** (testin), human | structurally characterised, PDB 2XQN, mutagenesis |
@@ -138,10 +139,17 @@ Two things fall out of this table.
    nucleus evidence, and even a specific term (`GO:0001673 male germ cell nucleus`) from the same
    1999–2003 T-actin work. So the term is right; what is not established is any nuclear
    *activity*, which is what `is_active_in` asserts.
-2. **The `structural molecule activity` IBA has no protein source at all.** Both WITH/FROM tokens
-   are internal PANTHER nodes, and across the whole ACTL7 orthologue set (human ACTL7A, mouse
-   Actl7a/Actl7b, rat Actl7a) the *only* non-IBA support for GO:0005198 or any descendant is the
-   human gene's own `GO:0005200` **TAS** row — which cites the 1999 cloning paper.
+2. **The `structural molecule activity` IBA has no *protein* source — but its tree nodes turned out
+   to be the most informative sources in the whole review.** Both WITH/FROM tokens are internal
+   PANTHER nodes, and across the ACTL7 orthologue set (human ACTL7A, mouse Actl7a/Actl7b, rat
+   Actl7a) the *only* non-IBA support for GO:0005198 or any descendant is the human gene's own
+   `GO:0005200` **TAS** row, citing the 1999 cloning paper. It was easy to stop at "not a protein,
+   therefore carries nothing" — an earlier draft of these notes recorded both tokens' evidence as
+   `n/a`, and in doing so dropped the fact that decided the molecular function. Opening the cached
+   PAINT table for the family shows those nodes encode a deliberate curatorial decision:
+   `GO:0005200` is IBD-supported at the ancestral node from real actins and **negated by IRD** on
+   descent to the node carrying ACTL7A, with `GO:0005198` substituted the same day. See §9.
+   **An unresolvable WITH/FROM token is not the same as an uninformative one.**
 
 ## 5. The 1999 TAS row is a name-derived annotation
 
@@ -262,19 +270,19 @@ Four consequences.
    surface actin uses for filament formation is not conserved, with the DNase-I-binding loop
    entirely replaced", and this review's contact-based audit puts ACTL7B's protomer interface at
    36.4% — the lowest of the two paralogues.
-4. **The two reviews reach opposite verdicts on `GO:0005200`, and the divergence is the finding.**
-   ACTL7B's review **removes** the `GO:0005200` TAS row; this review **accepts** it and makes it
-   the core MF. Same term, same 1999 citation, same family — because a name-derived annotation is
-   applied per *family* while its correctness is per *gene*. The asymmetry that decides it is
-   ontological and checkable: ACTL7A's specific compartment `GO:0033011` **is** a `GO:0005856`
-   descendant and its integrity demonstrably fails in the knock-out, so ACTL7A is a structural
-   constituent of a cytoskeletal structure; ACTL7B's specific compartment `GO:0001669` **is not** a
-   `GO:0005856` descendant (verified by QuickGO ancestors on both terms), so for ACTL7B there is no
-   annotated cytoskeletal structure to be a constituent of. The sibling review also reads the
-   clade's `GO:0005198` IBA as PAINT having *declined* to specialise to `GO:0005200`; that reading
-   is respected for ACTL7B and answered here, since a family-level generalisation cannot see a
-   gene-specific knock-out published years afterwards. Both rows now state this explicitly so a
-   curator meeting the pair does not have to reconstruct why they differ.
+4. **The two reviews initially reached opposite verdicts on `GO:0005200`; they now agree, and how
+   that resolved is the finding.** ACTL7B's review **removed** the `GO:0005200` TAS row; drafts 1-2
+   of this review kept it, and draft 2 promoted it to the core MF, arguing the pair could diverge
+   because ACTL7A's `GO:0033011` **is** a `GO:0005856` descendant while ACTL7B's `GO:0001669` is
+   not. That ontological asymmetry is real (verified via QuickGO ancestors on both terms) but it is
+   not sufficient, because *residing* in a cytoskeletal structure is not *being a structural
+   constituent of* one. What settled it is a record neither the asymmetry argument nor the sibling
+   review's reasoning needed: GO's own pipeline has explicitly **negated** `GO:0005200` for the
+   PANTHER node that carries ACTL7A, dated after all the knock-out and patient literature (§9).
+   Both reviews now remove the row, for the same reasons. The general lesson survives intact and is
+   in fact sharpened: a name-derived annotation is applied per *family*, so when it is wrong it is
+   wrong for the whole family — and GO's phylogenetic pipeline had already worked that out, in a
+   file sitting in this repository.
 
 One further cross-gene note. ACTL7B's review **adds** `GO:0001669 acrosomal vesicle` as a NEW
 annotation on the strength of the protein being on the developing acrosome, whereas this review
@@ -321,27 +329,61 @@ by the wrong route.
 
 | action | n | rows |
 |---|---|---|
-| ACCEPT | 10 | **GO:0005200 TAS** (the core MF); acrosome assembly ×2; spermatid development ×2; fertilization ×2; perinuclear theca ×2; protein-containing complex IDA |
-| KEEP_AS_NON_CORE | 14 | nucleus IBA/IEA/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; **GO:0005198 IBA** (parent of the core MF); protein binding (CYLC1, ACTL9) |
-| MODIFY | 6 | acrosomal vesicle IEA/IMP/IDA → perinuclear theca; cytoskeleton organization → actin cytoskeleton organization; protein binding (TES) → LIM domain binding; **nucleus ISS → male germ cell nucleus** |
+| ACCEPT | 10 | **GO:0005198 IBA** (the core MF); acrosome assembly ×2; spermatid development ×2; fertilization ×2; perinuclear theca ×2; protein-containing complex IDA |
+| KEEP_AS_NON_CORE | 13 | nucleus IBA/IEA/HDA; cytoplasm IBA/IEA/ISS; Golgi IEA/ISS ×2; cytoskeleton IEA + TAS; protein binding (CYLC1, ACTL9) |
+| MODIFY | 6 | acrosomal vesicle IEA/IMP/IDA → perinuclear theca; cytoskeleton organization → actin cytoskeleton organization; protein binding (TES) → LIM domain binding; nucleus ISS → male germ cell nucleus |
+| REMOVE | 1 | **GO:0005200 structural constituent of cytoskeleton, TAS, PMID:10373328** |
 | NEW | 1 | GO:0007343 egg activation, IMP |
 | MARK_AS_OVER_ANNOTATED | 0 | — |
-| REMOVE | 0 | — |
 
-**How the two structural MF rows were resolved (revised after review).** The first draft flagged
-`GO:0005200` as over-annotated on provenance grounds while `ACCEPT`ing its vaguer parent
-`GO:0005198` and promoting *that* to the core molecular function — which is incoherent, since the
+**How the two structural MF rows were resolved (settled in round 5, after two wrong turns).** This
+was the hardest call in the review and it took three attempts, so the reasoning is recorded in full.
+
+*Draft 1* flagged `GO:0005200` as over-annotated on provenance grounds while `ACCEPT`ing its vaguer
+parent `GO:0005198` and promoting *that* to the core molecular function — incoherent, because the
 draft's own reason argued GO:0005200's term was defensible and needed only re-sourcing, and
-`core_functions[0].description` literally began "Structural constituent of the acroplaxome". The
-provenance criticism and the term's correctness are separable judgements and are now recorded
-separately: **`GO:0005200` is `ACCEPT`ed and is the core MF** (the acroplaxome is an F-actin and
-keratin plate; GO:0033011 is a GO:0005856 descendant; the KO loses subacrosomal F-actin; the
-structure audit finds a structural, non-polymerising profile), with the inadequate 1999 TAS
-citation and its GO_REF:0000108 knock-on argued inside `reason`. **`GO:0005198` is
-`KEEP_AS_NON_CORE`**, as a true but redundant parent — the same treatment given to the `cytoplasm`
-and `cytoskeleton` parents. Nothing now carries `MARK_AS_OVER_ANNOTATED`: on inspection no term on
-this gene actually overshoots, and the defect was always the *citation* and the *inference chain*,
-not the terms.
+`core_functions[0].description` began "Structural constituent of the acroplaxome".
+
+*Draft 2* over-corrected: it `ACCEPT`ed `GO:0005200`, made it the core MF, and argued that the
+paralogues could legitimately diverge because ACTL7A is annotated to `GO:0033011` (a `GO:0005856`
+descendant) while ACTL7B's `GO:0001669` is not. It also dismissed the possibility that PAINT had
+declined the child deliberately, on the grounds that a family-level generalisation "cannot see a
+gene-specific knock-out published years later".
+
+*That second argument was factually wrong, and the record is in this repo.*
+`interpro/panther/PTHR11937/PTHR11937-paint.tsv` shows GO's pipeline did not omit the child — it
+**negated** it, for the node that carries ACTL7A, with the parent substituted on the same date:
+
+```
+PTHR11937  PTN000940351  GO:0005200  F  IBD  false  SGD:...|UniProtKB:P61160|...|UniProtKB:P60709|...  20250805
+PTHR11937  PTN008986528  GO:0005198  F  IBA  false  PANTHER:PTN000940351   20250805
+PTHR11937  PTN008986528  GO:0005200  F  IRD  true   PANTHER:PTN000940351   20250805
+```
+
+So `GO:0005200` is IBD-supported at the ancestral actin node from conventional actins and
+Arp2/Arp3, and rejected on descent into the divergent-ARP branches (8 IRD rows, PTN008986528 among
+them). `GO:0005198` appears **nowhere else** in the family table — it exists at this node only as
+the deliberate generalisation that replaced the rejected child. `Q9Y615` is in
+`PTHR11937-entries.csv`, so the rejection covers ACTL7A directly. Dates vary per row in that file
+(20190301 … 20260528), so 2025-08-05 is a per-annotation date, and it postdates the 2023 knock-out
+and the 2020–2021 patient papers. The "cannot see" rebuttal therefore fails on dates as well as on
+substance.
+
+*Draft 3, final.* Defer to the IRD, which is also where this review's own bioinformatics points:
+- **`GO:0005200` → `REMOVE`.** Three converging arguments, each independent: the cited reference
+  contains no functional data of any kind (TAS from a gene name, so removal overrules no curator
+  who read data); GO's pipeline has explicitly and currently negated the term for this clade; and
+  the filament interface by which real actins earn the term is not conserved (42.3% vs 93–100%).
+- **`GO:0005198` → `ACCEPT`, and it is the core MF.** Not a fallback but the level GO chose on
+  purpose, and the level the phenotypes actually support — "structural integrity of a complex" is
+  what a knock-out that loses subacrosomal F-actin and sheds its acrosome demonstrates.
+- `core_functions[0]` reworded from "Structural constituent of the acroplaxome" to "Architectural
+  component", and it now says why the weaker MF is the right one.
+
+The withdrawn argument is left on the record rather than deleted: residing in a cytoskeletal
+structure is not the same as being a structural constituent of it, and that distinction is the whole
+of the mistake. This also brings the pair into agreement — ACTL7B's review removed the same row on
+the same reasoning.
 
 Why the three `GO:0001669` rows get the same MODIFY, including the two experimental ones. The
 argument is definitional rather than a challenge to anyone's data. GO:0001669 is "A structure in
@@ -455,3 +497,23 @@ was merged.
 - The `core_functions[0]` description now states that the constituency claim is about the acroplaxome
   plate and not about the actin filaments inside it, so it no longer appears to presuppose the answer
   to its own knowledge gap.
+
+**Round 5.** The reviewer found the thing that made two earlier rounds wrong, and it was cached in
+this repository the whole time: `interpro/panther/PTHR11937/PTHR11937-paint.tsv` records GO's
+pipeline **negating** `GO:0005200` for the node that carries ACTL7A, not merely omitting it, dated
+after the knock-out and patient literature. §9 documents the three-draft path to the settled
+position. Consequences: `GO:0005200` TAS → `REMOVE`; `GO:0005198` IBA → `ACCEPT` and core MF;
+`core_functions[0]` reworded to "Architectural component"; the two PANTHER nodes moved off
+`NOT_RELEVANT` to `SUPPORTS_TRANSFER` with the IBA/IRD pair recorded on each; the PAINT table added
+as a cited reference with the two rows as verbatim findings; §4's table corrected, since it had
+recorded both tokens' evidence as `n/a`; and the round-4 `SOURCE_EVIDENCE_WEAK` failure mode dropped,
+because a deliberate curatorial generalisation seeded from an IBD over real actins is not weak
+evidence. Two of my own arguments are withdrawn on the record rather than deleted: that PAINT "cannot
+see" a later knock-out (false on dates), and that residence in a `GO:0005856` descendant establishes
+constituency of it (a category error).
+
+The durable methodological lesson, and the reason this took five rounds: **"PANTHER:PTN… is a tree
+node, not a protein" is a true statement that invites you to stop looking.** The campaign rule says
+an unresolved WITH/FROM cannot be dismissed, only deferred — the same applies to an *unresolvable*
+one. A PANTHER node cannot be resolved to a protein, but it can be looked up in the family's PAINT
+table, where it may carry an explicit negation of exactly the term under discussion.
