@@ -118,6 +118,24 @@ def _walk_supporting(node, path=""):
             yield from _walk_supporting(e, f"{path}[{i}]")
 
 
+def _count_file_reference_ids(node) -> int:
+    """Count every `reference_id: file:...` that survives parsing.
+
+    Counts by reference_id and NOT by the presence of supporting_text: the schema makes
+    supporting_text optional, so keying on it would report a bare file: provenance entry
+    as a discarded entry when nothing had been discarded.
+    """
+    if isinstance(node, dict):
+        n = 0
+        ref = node.get("reference_id")
+        if isinstance(ref, str) and ref.startswith("file:"):
+            n += 1
+        return n + sum(_count_file_reference_ids(v) for v in node.values())
+    if isinstance(node, list):
+        return sum(_count_file_reference_ids(e) for e in node)
+    return 0
+
+
 def check_retracted(path: Path, text: str) -> list[str]:
     problems = []
     for phrase in RETRACTED:
@@ -212,9 +230,7 @@ def check_structural() -> list[str]:
     # Cross-check parsed against raw: a quote lost to a duplicate key would show as a
     # mismatch here even if the strict loader were somehow bypassed.
     raw_file_refs = raw.count("reference_id: file:")
-    parsed_file_refs = sum(
-        1 for _, ref, _ in _walk_supporting(doc) if str(ref).startswith("file:")
-    )
+    parsed_file_refs = _count_file_reference_ids(doc)
     if raw_file_refs != parsed_file_refs:
         out.append(
             f"{review.name}: {raw_file_refs} 'reference_id: file:' lines in the text but "

@@ -158,7 +158,7 @@ def source_evidence(acc: str, go_id: str) -> dict:
         f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{acc}&goId={go_id}"
         "&goUsage=descendants&goUsageRelationships=is_a,part_of&limit=100"
     )
-    data = get_json(url)
+    data = assert_complete_page(get_json(url), url)
     anns, points_back = [], []
     for r in data.get("results", []):
         wf = []
@@ -261,6 +261,9 @@ def census(go_id: str, family: dict[str, str]) -> dict:
         f"&taxonId={','.join(CENSUS_TAXA)}&limit=200"
     )
     data = assert_complete_page(get_json(url), url)
+    # Deliberately NOT wrapped in assert_complete_page: this call asks for limit=1
+    # purely to read numberOfHits, so results is expected to be shorter than the total
+    # and the guard would (correctly) abort. No breakdown is derived from it.
     total_all_taxa = get_json(
         f"{QUICKGO}/annotation/search?goId={go_id}&goUsage=exact&limit=1"
     ).get("numberOfHits")
@@ -335,10 +338,11 @@ def process_branch_audit() -> dict:
     out["proteolysis_and_modification_are_disjoint"] = (
         a["GO:0006508"] and not a["GO:0036211"] and b["GO:0036211"] and not b["GO:0006508"]
     )
-    naa80 = get_json(
+    naa80_url = (
         f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{NAA80}"
         "&goId=GO:0030047&goUsage=exact&limit=100"
     )
+    naa80 = assert_complete_page(get_json(naa80_url), naa80_url)
     out["naa80_GO_0030047"] = {
         "accession": NAA80,
         "n": naa80.get("numberOfHits"),
@@ -348,9 +352,8 @@ def process_branch_audit() -> dict:
             for r in naa80.get("results", [])
         ],
     }
-    fly = get_json(
-        f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{FLY_ORTHOLOG}&limit=100"
-    )
+    fly_url = f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{FLY_ORTHOLOG}&limit=100"
+    fly = assert_complete_page(get_json(fly_url), fly_url)
     out["fly_ortholog"] = {
         "accession": FLY_ORTHOLOG,
         "n": fly.get("numberOfHits"),
@@ -377,7 +380,7 @@ def process_branch_audit() -> dict:
 # --------------------------------------------------------------------------- #
 def curation_state() -> dict:
     url = f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{MOUSE_ORTHOLOG}&limit=200"
-    data = get_json(url)
+    data = assert_complete_page(get_json(url), url)
     rows = [
         {
             "go_id": r.get("goId"),

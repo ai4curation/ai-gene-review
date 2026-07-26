@@ -372,7 +372,30 @@ Two further reviewer suggestions, both taken:
   if the test ever fails.
 - **`census()` and `family_wide_usage()` read `numberOfHits` for a total but derived their breakdowns
   from a capped `results` page.** Nothing was truncated at 86 and 6 hits, but the script's contract is
-  to fail loudly, so `assert_complete_page()` now refuses any response where
+  to fail loudly, so `assert_complete_page()` refuses any response where
   `len(results) != numberOfHits` and names the fix. Verified by feeding it a synthetic truncated
   response. Fitting, since the error this review corrected on itself was also a denominator set by a
-  query rather than by the biology.
+  query rather than by the biology. **Round 4 widened it to all six `/annotation/search` call sites**
+  (`source_evidence()`, the NAA80 probe, the fly-ortholog query and `curation_state()` were still
+  bare), which matters most for `source_evidence()` because that is what backs the
+  `CIRCULAR_PROPAGATION` disposition. The one deliberately unguarded call is the `limit=1` probe that
+  exists only to read `numberOfHits`, where the guard would correctly abort; it is commented as such.
+
+## 16. Round 4: three non-blocking items from the approving review
+
+Approved in round 3, with three suggestions. Two were accuracy defects in committed files rather than
+polish, so they were fixed rather than deferred.
+
+1. **The truncation guard covered 2 of 6 call sites while §15 described it in general terms.** That is
+   an overclaim in a committed file, and the uncovered `source_evidence()` is precisely what the
+   `CIRCULAR_PROPAGATION` disposition rests on. All six `/annotation/search` calls now go through
+   `assert_complete_page()`; §15 states the coverage and names the single deliberate exception.
+2. **The raw-vs-parsed cross-check counted parsed entries only when `supporting_text` was truthy,
+   while the raw side counted every `reference_id: file:` line.** All 27 currently carry a quote, but
+   `supporting_text` is optional in the schema, so a future bare `file:` provenance entry would have
+   been reported as a discarded entry when nothing was discarded — a false positive in a guard, which
+   is worse than no guard because it trains you to ignore it. The count is now keyed on
+   `reference_id` alone (`_count_file_reference_ids`), verified on a synthetic document mixing an
+   entry with and without a quote.
+3. **The PR description's Gates section still carried the round-1 figures** (41 quotes, 26 `file:`
+   quotes) where round 3 reports 40 and 27. Description-only; patched.
