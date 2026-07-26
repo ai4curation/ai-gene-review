@@ -180,6 +180,17 @@ routine event in the repo into a red X.
   prompt-level untrusted-input guardrail and the App token's scope, not tool
   restriction. Enumerating `--allowedTools` per scanner (as
   `litscan-module-member` does) would be a real tightening.
+- **`.github/actions/claude-code-action` is an unmanaged agent path.** It is an
+  older composite — `npm install -g` plus a CBORG endpoint — sitting behind
+  `claude-issue-summarize` and `claude-issue-triage`. None of the guards here
+  can see it: it does not call `anthropics/claude-code-action`, so the pinned-SHA,
+  input-vocabulary and central-model tests all skip it, and it is not in
+  `agent-config.yaml`. Migrating it is its own change.
+- **`weekly-compliance` has no post-run assertion that it opened a PR.** The
+  missing token that made it a no-op is fixed and its output is captured, but
+  "the agent ran cleanly and produced nothing" is still indistinguishable from
+  "there was nothing to fix." Closing that needs a decision about what should
+  happen on a week with no low-scoring files, not just a check.
 
 ## Not adopted
 
