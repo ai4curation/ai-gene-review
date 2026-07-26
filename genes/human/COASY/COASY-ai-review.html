@@ -1,0 +1,4517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COASY - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COASY</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q13057" target="_blank" class="term-link">
+                        Q13057
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COASY";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q13057" data-a="DESCRIPTION: COASY is the human bifunctional coenzyme A synthas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COASY is the human bifunctional coenzyme A synthase, a single polypeptide that carries out the last two of the five steps of de novo coenzyme A (CoA) biosynthesis from pantothenate (vitamin B5). Its N-terminal/central phosphopantetheine adenylyltransferase (PPAT) domain adenylylates (R)-4&#39;-phosphopantetheine using ATP to form 3&#39;-dephospho-CoA, and its C-terminal dephospho-CoA kinase (DPCK) domain then phosphorylates 3&#39;-dephospho-CoA using ATP to generate CoA. CoA and its acyl-CoA thioesters are ubiquitous acyl-group carriers essential for fatty acid metabolism, the TCA cycle, and many other pathways. The enzyme functions predominantly in the cytosol, where the bulk of de novo CoA synthesis occurs, with a minor pool associated with mitochondria. It is expressed in essentially all tissues, with a brain-enriched splice isoform. Loss-of-function mutations in COASY cause neurodegeneration with brain iron accumulation (COASY protein-associated neurodegeneration, CoPAN/NBIA6) and pontocerebellar hypoplasia type 12.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dephospho-CoA kinase (DPCK) is one of the two well-established catalytic activities of COASY, corresponding to the fifth/final step of CoA biosynthesis (EC 2.7.1.24). The phylogenetic (IBA) inference is fully consistent with direct experimental evidence for the human protein. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Dephospho-CoA kinase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0015937" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Coenzyme A biosynthetic process is the core biological process for COASY, which catalyzes the last two steps of this pathway. IBA inference is consistent with experimental evidence. Core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Bifunctional enzyme that catalyzes the fourth step of the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The biosynthesis of CoA from pantothenic acid (vitamin B5) is an essential</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pantetheine-phosphate (phosphopantetheine) adenylyltransferase (PPAT) is the second of COASY&#39;s two catalytic activities, corresponding to the fourth step of CoA biosynthesis (EC 2.7.7.3). The IBA inference matches direct experimental evidence. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Phosphopantetheine adenylyltransferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level &#34;catalytic activity&#34; is an uninformative parent of the two specific catalytic activities (PPAT, GO:0004595 and DPCK, GO:0004140) that are already annotated with experimental evidence. Redundant generalization.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/RHEA/EC) inference of the DPCK activity. Correct and consistent with the experimental annotations; redundant with the IDA/EXP evidence for the same term but not wrong. Core molecular function captured by better evidence elsewhere.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/RHEA/EC) inference of the PPAT activity. Correct and consistent with the experimental annotations; redundant with the IDA/EXP evidence for the same term. Core molecular function captured by better evidence elsewhere.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Both catalytic domains use ATP as a co-substrate (ATP -&gt; AMP/PPi transfer in PPAT; ATP -&gt; ADP transfer in DPCK), and UniProt annotates an ATP-binding P-loop in the DPCK domain. ATP binding is a real molecular feature but is a supporting activity of the two catalytic functions rather than an independent core function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;ATP&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt &#34;Mitochondrion matrix&#34; subcellular-location term. A minor mitochondrial pool of COASY exists, but recent evidence shows de novo CoA biosynthesis is primarily cytosolic; the matrix location is a genuine but non-core minor localization. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt &#34;Cytoplasm, cytosol&#34; subcellular-location term. The cytosol is the primary site of COASY function (bulk of de novo CoA synthesis). Consistent with the experimental is_active_in cytosol annotation. Core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0015937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic inference of the core CoA biosynthetic process, redundant with the experimental (IDA) annotation to the same term. Correct. Core process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22982864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22982864
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    EDC4 interacts with and regulates the dephospho-CoA kinase a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005515" data-r="PMID:22982864" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI to EDC4 (enhancer of mRNA-decapping protein 4). This is a real, functionally meaningful interaction — EDC4 forms a complex with CoAsy and inhibits its dephospho-CoA kinase activity in vitro — but the bare &#34;protein binding&#34; term is uninformative about COASY&#39;s own molecular function. A more informative capture would describe COASY as the target of EDC4-mediated negative regulation of its DPCK activity. Over-annotated at the &#34;protein binding&#34; level.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22982864" target="_blank" class="term-link">
+                                        PMID:22982864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">EDC4 strongly inhibits the dephospho-CoA kinase activity of CoAsy in vitro.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35156780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35156780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CFTR interactome mapping using the mammalian membrane two-hy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005515" data-r="PMID:35156780" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI to CFTR from a high-throughput mammalian membrane two-hybrid CFTR-interactome screen. Bare &#34;protein binding&#34; is uninformative, and the biological significance of a COASY-CFTR interaction for COASY&#39;s own function is unclear. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36012204" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36012204
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential CFTR-Interactome Proximity Labeling Procedures ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005515" data-r="PMID:36012204" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI to CFTR from a CFTR-interactome proximity-labeling study. As with the other CFTR hit, this bare &#34;protein binding&#34; annotation is uninformative and of uncertain relevance to COASY function. Over-annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196783
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0015937" data-r="Reactome:R-HSA-196783" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway &#34;Coenzyme A biosynthesis&#34; — the core biological process, supported by authoritative pathway curation. Core process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196773
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="Reactome:R-HSA-196773" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;COASY phosphorylates DP-CoA&#34; captures the DPCK activity by authoritative pathway curation. Consistent with the experimental evidence. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196754
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="Reactome:R-HSA-196754" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;COASY transfers an adenylyl group from ATP to PPANT&#34; captures the PPAT activity by authoritative pathway curation. Consistent with the experimental evidence. Core molecular function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localizes COASY to mitochondria. A minor mitochondrial pool is well documented, though the primary functional site is the cytosol. Kept as a real but non-core localization (experimental evidence, not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24360804
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exome sequence reveals mutations in CoA synthase as a cause ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="PMID:24360804" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (EXP) evidence for the DPCK activity; the R499C NBIA6 variant specifically abolishes dephospho-CoA kinase activity. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link">
+                                        PMID:24360804
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">coupling phosphopantetheine with ATP to form dephospho-CoA and its subsequent phosphorylation to generate CoA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24360804
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exome sequence reveals mutations in CoA synthase as a cause ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="PMID:24360804" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (EXP) evidence for the PPAT activity from the NBIA6 disease study, which characterized the bifunctional enzyme and its loss-of-function variants. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link">
+                                        PMID:24360804
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">coupling phosphopantetheine with ATP to form dephospho-CoA and its subsequent phosphorylation to generate CoA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40925986" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40925986
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cellular pan-chain acyl-CoA profiling reveals SLC25A42/SLC25...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005829" data-r="PMID:40925986" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that COASY is active in the cytosol: Liu et al. show that despite a small mitochondria-localized fraction, de novo CoA biosynthesis is primarily cytosolic. This is the core functional location, with the correct is_active_in qualifier. Core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40925986" target="_blank" class="term-link">
+                                        PMID:40925986
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">de novo CoA biosynthesis is primarily cytosolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome localization to mitochondrion. Corroborates the minor mitochondrial pool documented by other methods. Non-core localization; not the primary functional site.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24360804
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Exome sequence reveals mutations in CoA synthase as a cause ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005759" data-r="PMID:24360804" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA localization of COASY to the mitochondrial matrix (probably anchored to the inner mitochondrial membrane per UniProt). Represents the minor mitochondrial pool; the exact submitochondrial placement is disputed across sources (Reactome places COASY at the outer membrane). Kept as a real but non-core localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/COASY/COASY-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">probably anchored to the inner mitochondrial</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected by large-scale mass spectrometry of urinary exosomes. This is a proteome-wide catch typical of abundant cytosolic enzymes and does not reflect a site of COASY function. Non-core; retained per policy (experimental HDA, not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of the DPCK activity of the purified recombinant human bifunctional enzyme, which was kinetically characterized. Foundational experimental evidence for this core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human recombinant bifunctional phosphopantetheine adenylyltransferase/dephospho-CoA kinase was kinetically characterized.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of the PPAT activity of the purified recombinant human bifunctional enzyme. Foundational experimental evidence for this core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human recombinant bifunctional phosphopantetheine adenylyltransferase/dephospho-CoA kinase was kinetically characterized.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11923312
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete reconstitution of the human coenzyme A biosynthetic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0015937" data-r="PMID:11923312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The whole CoA biosynthetic pathway from phosphopantothenate to CoA was reconstituted in vitro using the purified recombinant enzymes, including this bifunctional protein. Direct experimental support for the core process. Core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                        PMID:11923312
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the entire pathway from phosphopantothenate to CoA was successfully reconstituted in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196754
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005741" data-r="Reactome:R-HSA-196754" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the PPAT reaction of COASY at the mitochondrial outer membrane, citing Zhyvoloup et al. 2003. This submitochondrial assignment conflicts with the newer matrix/inner-membrane (UniProt) and predominantly-cytosolic (Liu et al. 2025) data, so it is not treated as a core location; retained as experimentally-sourced non-core (TAS, not removed).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-196773
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0005741" data-r="Reactome:R-HSA-196773" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places the DPCK reaction of COASY at the mitochondrial outer membrane, citing Zhyvoloup et al. 2003. As with the PPAT-reaction annotation, this conflicts with the matrix/cytosol evidence and is retained as non-core rather than removed.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                                    GO:0004140
+                                </a>
+                            </span>
+                            <span class="term-label">dephospho-CoA kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11994049
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of the gene encoding the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004140" data-r="PMID:11994049" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The recombinant 564-aa human protein was shown to possess the associated kinase (DPCK) activity, with kinetics similar to the wild-type pig enzyme. Direct experimental support for this core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link">
+                                        PMID:11994049
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant 564-amino-acid human protein confirmed the associated transferase and kinase activities</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                                    GO:0004595
+                                </a>
+                            </span>
+                            <span class="term-label">pantetheine-phosphate adenylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11994049
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of the gene encoding the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0004595" data-r="PMID:11994049" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The recombinant human protein was shown to possess the associated transferase (PPAT) activity, confirming the bifunctional PPAT/DPCK enzyme. Direct experimental support for this core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link">
+                                        PMID:11994049
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant 564-amino-acid human protein confirmed the associated transferase and kinase activities</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                    GO:0015937
+                                </a>
+                            </span>
+                            <span class="term-label">coenzyme A biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11994049
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of the gene encoding the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13057" data-a="GO:0015937" data-r="PMID:11994049" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> COASY encodes the bifunctional enzyme catalyzing the final two enzymes of the CoA biosynthetic pathway. Author-statement (TAS) support for the core process. Core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link">
+                                        PMID:11994049
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The final two enzymes in the CoA biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphopantetheine adenylyltransferase (PPAT) activity: adenylylates (R)-4&#39;-phosphopantetheine with ATP to form 3&#39;-dephospho-CoA, the fourth step of de novo CoA biosynthesis (EC 2.7.7.3), acting predominantly in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q13057" data-a="FUNCTION: Phosphopantetheine adenylyltransferase (PPAT) acti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004595" target="_blank" class="term-link">
+                            pantetheine-phosphate adenylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                                PMID:11923312
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Human recombinant bifunctional phosphopantetheine adenylyltransferase/dephospho-CoA kinase was kinetically characterized.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/COASY/COASY-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Phosphopantetheine adenylyltransferase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Dephospho-CoA kinase (DPCK) activity: phosphorylates 3&#39;-dephospho-CoA with ATP to form coenzyme A, the fifth and final step of de novo CoA biosynthesis (EC 2.7.1.24), acting predominantly in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q13057" data-a="FUNCTION: Dephospho-CoA kinase (DPCK) activity: phosphorylat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004140" target="_blank" class="term-link">
+                            dephospho-CoA kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015937" target="_blank" class="term-link">
+                                coenzyme A biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link">
+                                PMID:11994049
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The recombinant 564-amino-acid human protein confirmed the associated transferase and kinase activities</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link">
+                                PMID:24360804
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">coupling phosphopantetheine with ATP to form dephospho-CoA and its subsequent phosphorylation to generate CoA.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11923312" target="_blank" class="term-link">
+                            PMID:11923312
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete reconstitution of the human coenzyme A biosynthetic pathway via comparative genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11994049" target="_blank" class="term-link">
+                            PMID:11994049
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of the gene encoding the human phosphopantetheine adenylyltransferase and dephospho-CoA kinase bifunctional enzyme (CoA synthase).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22982864" target="_blank" class="term-link">
+                            PMID:22982864
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">EDC4 interacts with and regulates the dephospho-CoA kinase activity of CoA synthase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24360804" target="_blank" class="term-link">
+                            PMID:24360804
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exome sequence reveals mutations in CoA synthase as a cause of neurodegeneration with brain iron accumulation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35156780" target="_blank" class="term-link">
+                            PMID:35156780
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CFTR interactome mapping using the mammalian membrane two-hybrid high-throughput screening system.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36012204" target="_blank" class="term-link">
+                            PMID:36012204
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Differential CFTR-Interactome Proximity Labeling Procedures Identify Enrichment in Multiple SLC Transporters.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40925986" target="_blank" class="term-link">
+                            PMID:40925986
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cellular pan-chain acyl-CoA profiling reveals SLC25A42/SLC25A16 in mitochondrial CoA import and metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196754
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COASY transfers an adenylyl group from ATP to PPANT</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196773
+
+                    </span>
+                </div>
+
+                <div class="reference-title">COASY phosphorylates DP-CoA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-196783
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Coenzyme A biosynthesis</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the definitive subcellular distribution and submitochondrial topology of COASY (cytosol vs mitochondrial matrix vs inner/outer membrane), and does the mitochondrial pool perform local de novo CoA synthesis or serve another role?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q13057" data-a="Q: What is the definitive subcellular distribution an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does EDC4 binding regulate COASY dephospho-CoA kinase activity in vivo, and what is the physiological role of processing-body-associated CoA synthesis regulation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q13057" data-a="Q: How does EDC4 binding regulate COASY dephospho-CoA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compartment-resolved metabolic flux analysis (e.g. isotope-labeled pantothenate) combined with organelle fractionation and split-reporter/APEX proximity labeling to quantify the relative contribution of cytosolic vs mitochondrial COASY to the CoA pool.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q13057" data-a="EXPERIMENT: Compartment-resolved metabolic flux analysis (e.g...." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-function analysis of disease variants (e.g. R499C, A214V) measuring PPAT and DPCK activities separately and protein stability, to dissect how NBIA6/PCH12 mutations impair CoA biosynthesis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q13057" data-a="EXPERIMENT: Structure-function analysis of disease variants (e..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COASY-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q13057" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="coasy-q13057-gene-review-notes">COASY (Q13057) — gene review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q13057, HGNC:29932, human, 564 aa, chromosome 17q21.2.</li>
+<li>Names: Bifunctional coenzyme A synthase / CoA synthase; NBP; POV-2.</li>
+<li>Two enzymatic activities are captured in the UniProt "Includes:" blocks:</li>
+<li>Phosphopantetheine adenylyltransferase (PPAT), EC 2.7.7.3<br />
+    [file:human/COASY/COASY-uniprot.txt "RecName: Full=Phosphopantetheine adenylyltransferase"]</li>
+<li>Dephospho-CoA kinase (DPCK), EC 2.7.1.24<br />
+    [file:human/COASY/COASY-uniprot.txt "RecName: Full=Dephospho-CoA kinase"]</li>
+</ul>
+<h2 id="core-biology">Core biology</h2>
+<p>COASY catalyses the last two (fourth and fifth) steps of the five-step coenzyme A<br />
+biosynthetic pathway that converts pantothenate (vitamin B5) into CoA:<br />
+- Step 4 (PPAT domain): (R)-4'-phosphopantetheine + ATP -&gt; 3'-dephospho-CoA + diphosphate<br />
+  [file:human/COASY/COASY-uniprot.txt "Reaction=(R)-4'-phosphopantetheine + ATP + H(+) = 3'-dephospho-CoA +"]<br />
+- Step 5 (DPCK domain): 3'-dephospho-CoA + ATP -&gt; CoA + ADP<br />
+  [file:human/COASY/COASY-uniprot.txt "Reaction=3'-dephospho-CoA + ATP = ADP + CoA + H(+);"]</p>
+<p>UniProt FUNCTION: "Bifunctional enzyme that catalyzes the fourth step of the coenzyme A<br />
+biosynthetic pathway, the adenylation of 4'-phosphopantetheine, and the fifth step, the<br />
+phosphorylation of dephospho-CoA to CoA."<br />
+[file:human/COASY/COASY-uniprot.txt]</p>
+<p>Domain architecture (from UniProt FT lines): the PPAT (adenylyltransferase) domain sits in<br />
+the central region (~180-358) and the DPCK domain in the C-terminus (~360-563). Both<br />
+domains and both catalytic activities were reconstituted / verified biochemically for the<br />
+recombinant human protein.</p>
+<h2 id="key-primary-experimental-support-for-the-two-mfs">Key primary experimental support for the two MFs</h2>
+<ul>
+<li>Daugherty et al. 2002 (PMID:11923312): identified the human genes for the last four CoA<br />
+  pathway steps by comparative genomics; overexpressed and purified the recombinant human<br />
+  bifunctional PPAT/DPCK, kinetically characterized it, and reconstituted the whole pathway<br />
+  in vitro. "Human recombinant bifunctional phosphopantetheine<br />
+  adenylyltransferase/dephospho-CoA kinase was kinetically characterized."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11923312">PMID:11923312</a> — GOA uses this for IDA on GO:0004595, GO:0004140, GO:0015937.</li>
+<li>Aghajanian &amp; Worrall 2002 (PMID:11994049): cloned the human gene; "The recombinant<br />
+  564-amino-acid human protein confirmed the associated transferase and kinase activities,<br />
+  and gave similar kinetic properties to the wild-type pig enzyme."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11994049">PMID:11994049</a> — GOA uses this for IDA on GO:0004595 and GO:0004140; also SUBUNIT=Monomer.</li>
+<li>Dusi et al. 2014 (PMID:24360804): NBIA disease paper; also re-verified both catalytic<br />
+  activities (EXP on GO:0004595 and GO:0004140) and characterized loss-of-function disease<br />
+  variants. The R499C variant causes "loss of dephospho-CoA kinase activity"<br />
+  [file:human/COASY/COASY-uniprot.txt].<br />
+  Abstract: "CoA synthase is a bifunctional enzyme catalyzing the final steps of CoA<br />
+  biosynthesis by coupling phosphopantetheine with ATP to form dephospho-CoA and its<br />
+  subsequent phosphorylation to generate CoA." <a href="https://pubmed.ncbi.nlm.nih.gov/24360804">PMID:24360804</a></li>
+</ul>
+<p>Both catalytic MFs therefore have multiple independent experimental (IDA/EXP) supports and<br />
+are unambiguously CORE.</p>
+<h2 id="localization-genuinely-unsettled-in-the-literature">Localization — genuinely unsettled in the literature</h2>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION: "Cytoplasm, cytosol ... Mitochondrion matrix ... Note=The<br />
+  protein is mainly cytosolic and active in the cytosol (PubMed:40925986). Present in the<br />
+  mitochondrial matrix, probably anchored to the inner mitochondrial membrane<br />
+  (PubMed:24360804)." [file:human/COASY/COASY-uniprot.txt]</li>
+<li>Reactome (R-HSA-196754, R-HSA-196773): places the enzyme at the "mitochondrial outer<br />
+  membrane (Zhyvoloup et al. 2003)." So GOA carries mitochondrial outer membrane (TAS,<br />
+  Reactome), mitochondrial matrix (IDA, PMID:24360804 and IEA SubCell), mitochondrion (IDA,<br />
+  HPA / HTP), and cytosol (IDA/IEA). The exact membrane/compartment (outer membrane vs inner<br />
+  membrane vs matrix) is not consistent across sources.</li>
+<li>Liu et al. 2025 (PMID:40925986): pan-chain acyl-CoA profiling. Concludes "Despite a small<br />
+  fraction of the mitochondria-localized CoA synthase COASY, de novo CoA biosynthesis is<br />
+  primarily cytosolic and supports cytosolic lipid anabolism." <a href="https://pubmed.ncbi.nlm.nih.gov/40925986">PMID:40925986</a><br />
+  So the dominant, functionally-active pool is CYTOSOLIC; a minor pool is mitochondrial.<br />
+  This paper is the basis for the is_active_in cytosol (IDA) annotation.</li>
+</ul>
+<p>Interpretation for the review: the cytosol is where the bulk of de novo CoA synthesis<br />
+occurs (core location); a minor mitochondrial pool exists. The mitochondrial annotations are<br />
+kept but not all treated as core; the mitochondrial-outer-membrane Reactome placement is<br />
+inconsistent with the newer matrix/cytosol data but comes from experimental TAS and is<br />
+retained (KEEP_AS_NON_CORE), not removed.</p>
+<h2 id="interactions-protein-binding-ipiiea">Interactions (protein binding IPI/IEA)</h2>
+<ul>
+<li>EDC4 (PMID:22982864): "CoAsy forms a complex with enhancer of mRNA-decapping protein 4<br />
+  (EDC4) ... EDC4 strongly inhibits the dephospho-CoA kinase activity of CoAsy in vitro."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22982864">PMID:22982864</a> Regulatory interaction — a real, functionally meaningful partner, but the<br />
+  bare GO:0005515 "protein binding" term is uninformative; kept as MARK_AS_OVER_ANNOTATED<br />
+  (never removed per policy; more informative would be an enzyme-regulator / negative<br />
+  regulation of kinase activity relationship).</li>
+<li>CFTR (PMID:35156780 membrane two-hybrid screen; PMID:36012204 proximity-labeling): COASY<br />
+  appears as a CFTR interactor in high-throughput CFTR interactome screens. These are<br />
+  bare "protein binding" IPI annotations of uncertain biological significance for COASY's<br />
+  own function; MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Neurodegeneration with brain iron accumulation 6 (NBIA6) / COASY protein-associated<br />
+  neurodegeneration (CoPAN); MIM 615643. Dusi et al. 2014 (PMID:24360804); Evers et al. 2017<br />
+  (PMID:28489334). [file:human/COASY/COASY-uniprot.txt]</li>
+<li>Pontocerebellar hypoplasia 12 (PCH12); MIM 618266. van Dijk et al. 2018 (PMID:30089828);<br />
+  biallelic loss-of-function. [file:human/COASY/COASY-uniprot.txt]<br />
+These are downstream phenotypes of impaired CoA biosynthesis, not separate molecular<br />
+functions.</li>
+</ul>
+<h2 id="other">Other</h2>
+<ul>
+<li>Monomer (SUBUNIT, PMID:11994049). [file:human/COASY/COASY-uniprot.txt]</li>
+<li>Phosphoserine at S178 and S183 (large-scale phosphoproteomics) — regulatory PTMs, no GO<br />
+  annotation implication here.</li>
+<li>Extracellular exosome (GO:0070062, HDA, PMID:19056867): urinary-exosome mass-spec catch;<br />
+  not a site of function. KEEP_AS_NON_CORE (large-scale HDA localization, standard for the<br />
+  proteome; not removed).</li>
+</ul>
+<h2 id="core-function-conclusion">Core function conclusion</h2>
+<p>Two catalytic molecular functions, both experimentally established, both core:<br />
+- GO:0004595 pantetheine-phosphate adenylyltransferase activity (PPAT / step 4)<br />
+- GO:0004140 dephospho-CoA kinase activity (DPCK / step 5)<br />
+Core biological process: GO:0015937 coenzyme A biosynthetic process.<br />
+Primary location: cytosol (GO:0005829), with a minor mitochondrial pool.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q13057
+gene_symbol: COASY
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  COASY is the human bifunctional coenzyme A synthase, a single polypeptide that
+  carries out the last two of the five steps of de novo coenzyme A (CoA) biosynthesis
+  from pantothenate (vitamin B5). Its N-terminal/central phosphopantetheine
+  adenylyltransferase (PPAT) domain adenylylates (R)-4&#39;-phosphopantetheine using ATP
+  to form 3&#39;-dephospho-CoA, and its C-terminal dephospho-CoA kinase (DPCK) domain then
+  phosphorylates 3&#39;-dephospho-CoA using ATP to generate CoA. CoA and its acyl-CoA
+  thioesters are ubiquitous acyl-group carriers essential for fatty acid metabolism,
+  the TCA cycle, and many other pathways. The enzyme functions predominantly in the
+  cytosol, where the bulk of de novo CoA synthesis occurs, with a minor pool associated
+  with mitochondria. It is expressed in essentially all tissues, with a brain-enriched
+  splice isoform. Loss-of-function mutations in COASY cause neurodegeneration with brain
+  iron accumulation (COASY protein-associated neurodegeneration, CoPAN/NBIA6) and
+  pontocerebellar hypoplasia type 12.
+alternative_products:
+- name: 1 (CoASy alpha {ECO:0000303|PubMed:16460672})
+  id: Q13057-1
+- name: 2 (CoASy beta {ECO:0000303|PubMed:16460672})
+  id: Q13057-2
+  sequence_note: VSP_036404
+existing_annotations:
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Dephospho-CoA kinase (DPCK) is one of the two well-established catalytic activities
+      of COASY, corresponding to the fifth/final step of CoA biosynthesis (EC 2.7.1.24).
+      The phylogenetic (IBA) inference is fully consistent with direct experimental
+      evidence for the human protein. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: &#34;RecName: Full=Dephospho-CoA kinase&#34;
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Coenzyme A biosynthetic process is the core biological process for COASY, which
+      catalyzes the last two steps of this pathway. IBA inference is consistent with
+      experimental evidence. Core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: &gt;-
+        Bifunctional enzyme that catalyzes the fourth step of the
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        The biosynthesis of CoA from pantothenic acid (vitamin B5) is an
+        essential
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Pantetheine-phosphate (phosphopantetheine) adenylyltransferase (PPAT) is the second
+      of COASY&#39;s two catalytic activities, corresponding to the fourth step of CoA
+      biosynthesis (EC 2.7.7.3). The IBA inference matches direct experimental evidence.
+      Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: &#34;RecName: Full=Phosphopantetheine adenylyltransferase&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level &#34;catalytic activity&#34; is an uninformative parent of the two specific
+      catalytic activities (PPAT, GO:0004595 and DPCK, GO:0004140) that are already
+      annotated with experimental evidence. Redundant generalization.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/RHEA/EC) inference of the DPCK activity. Correct and consistent
+      with the experimental annotations; redundant with the IDA/EXP evidence for the
+      same term but not wrong. Core molecular function captured by better evidence
+      elsewhere.
+    action: ACCEPT
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/RHEA/EC) inference of the PPAT activity. Correct and consistent
+      with the experimental annotations; redundant with the IDA/EXP evidence for the same
+      term. Core molecular function captured by better evidence elsewhere.
+    action: ACCEPT
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Both catalytic domains use ATP as a co-substrate (ATP -&gt; AMP/PPi transfer in PPAT;
+      ATP -&gt; ADP transfer in DPCK), and UniProt annotates an ATP-binding P-loop in the
+      DPCK domain. ATP binding is a real molecular feature but is a supporting activity
+      of the two catalytic functions rather than an independent core function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: /ligand=&#34;ATP&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt &#34;Mitochondrion matrix&#34; subcellular-location term.
+      A minor mitochondrial pool of COASY exists, but recent evidence shows de novo CoA
+      biosynthesis is primarily cytosolic; the matrix location is a genuine but non-core
+      minor localization. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: Mitochondrion matrix
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt &#34;Cytoplasm, cytosol&#34; subcellular-location term.
+      The cytosol is the primary site of COASY function (bulk of de novo CoA synthesis).
+      Consistent with the experimental is_active_in cytosol annotation. Core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: Cytoplasm, cytosol
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic inference of the core CoA biosynthetic process, redundant with the
+      experimental (IDA) annotation to the same term. Correct. Core process.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22982864
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI to EDC4 (enhancer of mRNA-decapping protein 4). This is a real, functionally
+      meaningful interaction — EDC4 forms a complex with CoAsy and inhibits its
+      dephospho-CoA kinase activity in vitro — but the bare &#34;protein binding&#34; term is
+      uninformative about COASY&#39;s own molecular function. A more informative capture would
+      describe COASY as the target of EDC4-mediated negative regulation of its DPCK
+      activity. Over-annotated at the &#34;protein binding&#34; level.
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:22982864
+      supporting_text: &gt;-
+        EDC4 strongly inhibits the dephospho-CoA kinase activity of CoAsy in
+        vitro.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35156780
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI to CFTR from a high-throughput mammalian membrane two-hybrid CFTR-interactome
+      screen. Bare &#34;protein binding&#34; is uninformative, and the biological significance of a
+      COASY-CFTR interaction for COASY&#39;s own function is unclear. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36012204
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI to CFTR from a CFTR-interactome proximity-labeling study. As with the other CFTR
+      hit, this bare &#34;protein binding&#34; annotation is uninformative and of uncertain
+      relevance to COASY function. Over-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196783
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome pathway &#34;Coenzyme A biosynthesis&#34; — the core biological process, supported
+      by authoritative pathway curation. Core process.
+    action: ACCEPT
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196773
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome reaction &#34;COASY phosphorylates DP-CoA&#34; captures the DPCK activity by
+      authoritative pathway curation. Consistent with the experimental evidence. Core
+      molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196754
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome reaction &#34;COASY transfers an adenylyl group from ATP to PPANT&#34; captures the
+      PPAT activity by authoritative pathway curation. Consistent with the experimental
+      evidence. Core molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localizes COASY to mitochondria. A minor mitochondrial pool is
+      well documented, though the primary functional site is the cytosol. Kept as a real
+      but non-core localization (experimental evidence, not removed).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:24360804
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (EXP) evidence for the DPCK activity; the R499C NBIA6 variant
+      specifically abolishes dephospho-CoA kinase activity. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24360804
+      supporting_text: &gt;-
+        coupling phosphopantetheine with ATP to form dephospho-CoA and its
+        subsequent phosphorylation to generate CoA.
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:24360804
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental (EXP) evidence for the PPAT activity from the NBIA6 disease study,
+      which characterized the bifunctional enzyme and its loss-of-function variants. Core
+      molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24360804
+      supporting_text: &gt;-
+        coupling phosphopantetheine with ATP to form dephospho-CoA and its
+        subsequent phosphorylation to generate CoA.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:40925986
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Direct evidence that COASY is active in the cytosol: Liu et al. show that despite a
+      small mitochondria-localized fraction, de novo CoA biosynthesis is primarily
+      cytosolic. This is the core functional location, with the correct is_active_in
+      qualifier. Core location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:40925986
+      supporting_text: de novo CoA biosynthesis is primarily cytosolic
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome localization to mitochondrion. Corroborates the
+      minor mitochondrial pool documented by other methods. Non-core localization; not the
+      primary functional site.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:24360804
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA localization of COASY to the mitochondrial matrix (probably anchored to the inner
+      mitochondrial membrane per UniProt). Represents the minor mitochondrial pool; the
+      exact submitochondrial placement is disputed across sources (Reactome places COASY at
+      the outer membrane). Kept as a real but non-core localization.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/COASY/COASY-uniprot.txt
+      supporting_text: probably anchored to the inner mitochondrial
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Detected by large-scale mass spectrometry of urinary exosomes. This is a proteome-wide
+      catch typical of abundant cytosolic enzymes and does not reflect a site of COASY
+      function. Non-core; retained per policy (experimental HDA, not removed).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of the DPCK activity of the purified recombinant human bifunctional
+      enzyme, which was kinetically characterized. Foundational experimental evidence for
+      this core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        Human recombinant bifunctional phosphopantetheine
+        adenylyltransferase/dephospho-CoA kinase was kinetically
+        characterized.
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of the PPAT activity of the purified recombinant human bifunctional
+      enzyme. Foundational experimental evidence for this core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        Human recombinant bifunctional phosphopantetheine
+        adenylyltransferase/dephospho-CoA kinase was kinetically
+        characterized.
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11923312
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The whole CoA biosynthetic pathway from phosphopantothenate to CoA was reconstituted
+      in vitro using the purified recombinant enzymes, including this bifunctional protein.
+      Direct experimental support for the core process. Core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11923312
+      supporting_text: &gt;-
+        the entire pathway from
+        phosphopantothenate to CoA was successfully reconstituted in vitro
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196754
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places the PPAT reaction of COASY at the mitochondrial outer membrane, citing
+      Zhyvoloup et al. 2003. This submitochondrial assignment conflicts with the newer
+      matrix/inner-membrane (UniProt) and predominantly-cytosolic (Liu et al. 2025) data, so
+      it is not treated as a core location; retained as experimentally-sourced non-core
+      (TAS, not removed).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-196773
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome places the DPCK reaction of COASY at the mitochondrial outer membrane, citing
+      Zhyvoloup et al. 2003. As with the PPAT-reaction annotation, this conflicts with the
+      matrix/cytosol evidence and is retained as non-core rather than removed.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11994049
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The recombinant 564-aa human protein was shown to possess the associated kinase
+      (DPCK) activity, with kinetics similar to the wild-type pig enzyme. Direct experimental
+      support for this core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11994049
+      supporting_text: &gt;-
+        The recombinant 564-amino-acid human protein confirmed the associated
+        transferase and kinase activities
+- term:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11994049
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The recombinant human protein was shown to possess the associated transferase (PPAT)
+      activity, confirming the bifunctional PPAT/DPCK enzyme. Direct experimental support for
+      this core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11994049
+      supporting_text: &gt;-
+        The recombinant 564-amino-acid human protein confirmed the associated
+        transferase and kinase activities
+- term:
+    id: GO:0015937
+    label: coenzyme A biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:11994049
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      COASY encodes the bifunctional enzyme catalyzing the final two enzymes of the CoA
+      biosynthetic pathway. Author-statement (TAS) support for the core process. Core process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11994049
+      supporting_text: &gt;-
+        The final two enzymes in the CoA biosynthetic pathway
+core_functions:
+- description: &gt;-
+    Phosphopantetheine adenylyltransferase (PPAT) activity: adenylylates
+    (R)-4&#39;-phosphopantetheine with ATP to form 3&#39;-dephospho-CoA, the fourth step of de novo
+    CoA biosynthesis (EC 2.7.7.3), acting predominantly in the cytosol.
+  molecular_function:
+    id: GO:0004595
+    label: pantetheine-phosphate adenylyltransferase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:11923312
+    supporting_text: &gt;-
+      Human recombinant bifunctional phosphopantetheine
+      adenylyltransferase/dephospho-CoA kinase was kinetically
+      characterized.
+  - reference_id: file:human/COASY/COASY-uniprot.txt
+    supporting_text: &#34;RecName: Full=Phosphopantetheine adenylyltransferase&#34;
+- description: &gt;-
+    Dephospho-CoA kinase (DPCK) activity: phosphorylates 3&#39;-dephospho-CoA with ATP to form
+    coenzyme A, the fifth and final step of de novo CoA biosynthesis (EC 2.7.1.24), acting
+    predominantly in the cytosol.
+  molecular_function:
+    id: GO:0004140
+    label: dephospho-CoA kinase activity
+  directly_involved_in:
+  - id: GO:0015937
+    label: coenzyme A biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:11994049
+    supporting_text: &gt;-
+      The recombinant 564-amino-acid human protein confirmed the associated
+      transferase and kinase activities
+  - reference_id: PMID:24360804
+    supporting_text: &gt;-
+      coupling phosphopantetheine with ATP to form dephospho-CoA and its
+      subsequent phosphorylation to generate CoA.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11923312
+  title: Complete reconstitution of the human coenzyme A biosynthetic pathway via
+    comparative genomics.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational study identifying human COASY and directly assaying the purified
+      recombinant bifunctional PPAT/DPCK enzyme with kinetic characterization and full
+      in vitro pathway reconstitution. Directly supports both catalytic MFs and the CoA
+      biosynthetic process.
+- id: PMID:11994049
+  title: Identification and characterization of the gene encoding the human phosphopantetheine
+    adenylyltransferase and dephospho-CoA kinase bifunctional enzyme (CoA synthase).
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloned the human gene and confirmed the associated transferase and kinase activities
+      of the recombinant 564-aa protein; established the monomeric bifunctional enzyme.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-wide urinary exosome catalog; source of the extracellular exosome
+      localization, which is not a site of COASY function.
+- id: PMID:22982864
+  title: EDC4 interacts with and regulates the dephospho-CoA kinase activity of CoA
+    synthase.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the COASY-EDC4 interaction and EDC4-mediated inhibition of COASY DPCK
+      activity; supports a regulatory interaction but only a bare protein-binding GO term.
+- id: PMID:24360804
+  title: Exome sequence reveals mutations in CoA synthase as a cause of neurodegeneration
+    with brain iron accumulation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      NBIA6/CoPAN disease gene identification; re-verifies both catalytic activities and
+      characterizes loss-of-function variants (e.g. R499C loss of DPCK activity); source of
+      mitochondrial matrix localization.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial proteome; corroborates the minor mitochondrial COASY
+      pool.
+- id: PMID:35156780
+  title: CFTR interactome mapping using the mammalian membrane two-hybrid high-throughput
+    screening system.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput CFTR-interactome screen; COASY appears as a CFTR interactor of
+      uncertain significance to its own function.
+- id: PMID:36012204
+  title: Differential CFTR-Interactome Proximity Labeling Procedures Identify Enrichment
+    in Multiple SLC Transporters.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      CFTR-interactome proximity-labeling study; COASY appears as a CFTR interactor of
+      uncertain significance to its own function.
+- id: PMID:40925986
+  title: Cellular pan-chain acyl-CoA profiling reveals SLC25A42/SLC25A16 in mitochondrial
+    CoA import and metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows de novo CoA biosynthesis by COASY is primarily cytosolic with only a small
+      mitochondria-localized fraction; basis for the is_active_in cytosol annotation and the
+      cytosol-as-core-location conclusion.
+- id: Reactome:R-HSA-196754
+  title: COASY transfers an adenylyl group from ATP to PPANT
+  findings: []
+- id: Reactome:R-HSA-196773
+  title: COASY phosphorylates DP-CoA
+  findings: []
+- id: Reactome:R-HSA-196783
+  title: Coenzyme A biosynthesis
+  findings: []
+suggested_questions:
+- question: &gt;-
+    What is the definitive subcellular distribution and submitochondrial topology of COASY
+    (cytosol vs mitochondrial matrix vs inner/outer membrane), and does the mitochondrial
+    pool perform local de novo CoA synthesis or serve another role?
+- question: &gt;-
+    How does EDC4 binding regulate COASY dephospho-CoA kinase activity in vivo, and what is
+    the physiological role of processing-body-associated CoA synthesis regulation?
+suggested_experiments:
+- description: &gt;-
+    Compartment-resolved metabolic flux analysis (e.g. isotope-labeled pantothenate) combined
+    with organelle fractionation and split-reporter/APEX proximity labeling to quantify the
+    relative contribution of cytosolic vs mitochondrial COASY to the CoA pool.
+- description: &gt;-
+    Structure-function analysis of disease variants (e.g. R499C, A214V) measuring PPAT and
+    DPCK activities separately and protein stability, to dissect how NBIA6/PCH12 mutations
+    impair CoA biosynthesis.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

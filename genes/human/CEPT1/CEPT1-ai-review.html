@@ -1,0 +1,4442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEPT1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CEPT1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y6K0" target="_blank" class="term-link">
+                        Q9Y6K0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CEPT1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y6K0" data-a="DESCRIPTION: CEPT1 (choline/ethanolamine phosphotransferase 1) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CEPT1 (choline/ethanolamine phosphotransferase 1) is a dual-specificity, polytopic integral membrane enzyme of the CDP-alcohol phosphatidyltransferase class-I family that catalyzes the final, committed step of both the CDP-choline and CDP-ethanolamine (Kennedy) branches of glycerophospholipid biosynthesis. It transfers a phosphobase group from a CDP-linked donor to the sn-3 hydroxyl of 1,2-diacyl-sn-glycerol (DAG): using CDP-choline it produces phosphatidylcholine plus CMP (diacylglycerol cholinephosphotransferase activity, EC 2.7.8.2), and using CDP-ethanolamine it produces phosphatidylethanolamine plus CMP (ethanolaminephosphotransferase activity, EC 2.7.8.1). Catalysis requires a divalent metal cofactor, preferring Mg2+ (Mn2+ supports roughly half-maximal activity), coordinated by a conserved di-aspartate CDP-binding motif; the enzyme also has a minor 1-alkenyl/1-alkyl-2-acylglycerol choline phosphotransferase side activity that yields ether (plasmenyl/plasmanyl) choline phospholipids and platelet-activating-factor precursors. CEPT1 is a homodimer with ten transmembrane helices per protomer and a hydrophobic chamber that accommodates the DAG acyl tails during catalysis. It resides in the endoplasmic reticulum membrane and the nuclear (inner) membrane, where channeling of CDP-choline generated by the upstream rate-limiting enzyme CCTalpha drives de novo phosphatidylcholine synthesis. CEPT1 is ubiquitously expressed.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                                    GO:0004142
+                                </a>
+                            </span>
+                            <span class="term-label">diacylglycerol cholinephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004142" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. CEPT1 transfers phosphocholine from CDP-choline to DAG to make phosphatidylcholine; this phylogenetic inference is fully consistent with direct experimental assays in human/yeast systems.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is corroborated by direct experimental characterization of the human enzyme (IDA, PMID:10191259, PMID:37137909) and the UniProt catalytic-activity record (EC 2.7.8.2).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                                    GO:0004307
+                                </a>
+                            </span>
+                            <span class="term-label">ethanolaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004307" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. CEPT1 also uses CDP-ethanolamine as phosphobase donor to make phosphatidylethanolamine; this is the second arm of its dual specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Corroborated by direct experimental assay of the human enzyme (IDA, PMID:10191259; TAS PMID:10191259) and the UniProt catalytic-activity record (EC 2.7.8.1).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization. CEPT1 is an integral ER membrane enzyme; this IBA agrees with the direct human localization study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by immunofluorescence/subcellular fractionation of human CEPT1 (IDA, PMID:12221122) and UniProt subcellular location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005794" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi localization is a phylogenetic inference (driven in part by fly and mouse orthologs) that is contradicted for the human enzyme. The definitive human study shows CEPT1 is NOT relocalized by brefeldin A (unlike the Golgi-resident paralog CPT1) and localizes to the ER and nuclear membranes, not the Golgi.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained (an experimental IBA reflecting ortholog behavior) but marked non-core because direct human evidence places CEPT1 in the ER and nuclear membrane, explicitly excluding the Golgi (PMID:12221122).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" target="_blank" class="term-link">
+                                        PMID:12221122
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">brefeldin A treatment relocalizes CPT1, but not CEPT1, implying CPT1 is found in the Golgi.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006646" target="_blank" class="term-link">
+                                    GO:0006646
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylethanolamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006646" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. CEPT1 catalyzes the last step of the CDP-ethanolamine (Kennedy) branch producing PE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with direct experimental annotation of the human enzyme (IDA, PMID:10191259) and the UniProt PE-biosynthesis pathway record.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                                    GO:0004142
+                                </a>
+                            </span>
+                            <span class="term-label">diacylglycerol cholinephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004142" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC/RHEA-based) assertion of the core cholinephosphotransferase activity; redundant with the experimental IDA annotations of the same term but correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 2.7.8.2 / RHEA mappings correctly capture the experimentally established activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                                    GO:0004307
+                                </a>
+                            </span>
+                            <span class="term-label">ethanolaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004307" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC/RHEA-based) assertion of the core ethanolaminephosphotransferase activity; redundant with the experimental annotations but correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> EC 2.7.8.1 / RHEA mappings correctly capture the experimentally established activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-general and imprecise. CEPT1 is a multi-pass integral membrane protein of the ER and nuclear membrane; a bare cytoplasm assertion (ARBA machine-learning) does not capture its membrane-embedded localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific ER-membrane / nuclear-membrane localizations supersede this generic term, which mislocalizes an integral membrane enzyme to the soluble cytoplasm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization, derived electronically from the UniProt Subcellular Location vocabulary.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Agrees with direct experimental localization of human CEPT1 (IDA, PMID:12221122).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008654" target="_blank" class="term-link">
+                                    GO:0008654
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0008654" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but over-general. CEPT1&#39;s role is specifically in phosphatidylcholine and phosphatidylethanolamine biosynthesis, which are more informative child terms already annotated experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generalizes over the specific PC/PE biosynthetic processes; replace with the specific children that are experimentally supported.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006656" target="_blank" class="term-link">
+                                    phosphatidylcholine biosynthetic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006646" target="_blank" class="term-link">
+                                    phosphatidylethanolamine biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012505" target="_blank" class="term-link">
+                                    GO:0012505
+                                </a>
+                            </span>
+                            <span class="term-label">endomembrane system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0012505" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-general (ARBA machine-learning). CEPT1 has a specific, experimentally determined ER-membrane and nuclear-membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific ER/nuclear membrane annotations supersede this broad grouping term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct that CEPT1 is membrane-integral, but far too general given the specific ER-membrane / nuclear-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative parent of the specific membrane-location annotations already present.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016780" target="_blank" class="term-link">
+                                    GO:0016780
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, for other substituted phosphate groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0016780" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but over-general parent term. This is the direct GO parent of the specific diacylglycerol cholinephosphotransferase (GO:0004142) and ethanolaminephosphotransferase (GO:0004307) activities that are experimentally established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generalizes over the specific activities; replace with the experimentally supported children.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                                    diacylglycerol cholinephosphotransferase activity
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                                    ethanolaminephosphotransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0031965" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct secondary localization. CEPT1 resides in the nuclear (inner) membrane in addition to the ER, where substrate channeling from nuclear CCTalpha drives de novo PC synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Electronic assertion (UniProt Subcellular Location) that is directly supported by the human localization study (PMID:12221122).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" target="_blank" class="term-link">
+                                        PMID:12221122
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic reticulum and nuclear membranes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047359" target="_blank" class="term-link">
+                                    GO:0047359
+                                </a>
+                            </span>
+                            <span class="term-label">1-alkenyl-2-acylglycerol choline phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0047359" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Real but minor side activity. In addition to using diacylglycerol, CEPT1 can transfer phosphocholine to ether-linked (1-O-alkyl / 1-O-alkenyl) 2-acylglycerols, yielding plasmanyl/plasmenyl choline phospholipids and platelet-activating-factor precursors.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine activity (EC 2.7.8.22; characterized in PMID:10893425 and EXP PMID:10191259) but quantitatively minor relative to PC/PE synthesis on diacylglycerol; retained as a non-core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotations from a genome-scale binary (Y2H) interactome map (HuRI). Two partners are recorded via IntAct/UniProt: TMEM14B (Q9NUH8) and SPG21 (Q9NZD8). The interactions are not disputed, but the generic GO:0005515 term conveys no specific molecular function and no functional consequence has been established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation policy, uninformative bare &#34;protein binding&#34; IPI is retained but flagged as over-annotation; no adapter/scaffold function is defined by the high-throughput data.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006646" target="_blank" class="term-link">
+                                    GO:0006646
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylethanolamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006646" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process, derived electronically from the UniPathway PE-synthesis mapping; redundant with the experimental IDA of the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the experimentally established role in PE biosynthesis (PMID:10191259).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006656" target="_blank" class="term-link">
+                                    GO:0006656
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylcholine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006656" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process, derived electronically from the UniPathway PC-synthesis mapping; redundant with the experimental IDA of the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the experimentally established role in PC biosynthesis (PMID:10191259, PMID:37137909).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047359" target="_blank" class="term-link">
+                                    GO:0047359
+                                </a>
+                            </span>
+                            <span class="term-label">1-alkenyl-2-acylglycerol choline phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0047359" data-r="PMID:10191259" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported minor side activity (ether-lipid / PAF-precursor choline phosphotransferase). CEPT1 displays broad diradylglycerol specificity and can use alkenyl/alkyl-acylglycerol acceptors.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real activity but minor relative to the core PC/PE synthesis on diacylglycerol; kept as a non-core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro, hCEPT1p displayed broad substrate specificity, utilizing both CDP-choline and CDP-ethanolamine as phosphobase donors to a broad range of diacylglycerols</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                                    GO:0004142
+                                </a>
+                            </span>
+                            <span class="term-label">diacylglycerol cholinephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004142" data-r="PMID:10191259" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, directly demonstrated. Recombinant human CEPT1 expressed in a yeast strain lacking endogenous phosphotransferases synthesizes PC from CDP-choline and diacylglycerol in vitro and in vivo.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay of the human enzyme; the defining catalytic activity of CEPT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cholinephosphotransferase catalyses the final step in the synthesis of phosphatidylcholine (PtdCho) via the Kennedy pathway by the transfer of phosphocholine from CDP-choline to diacylglycerol.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                                    GO:0004142
+                                </a>
+                            </span>
+                            <span class="term-label">diacylglycerol cholinephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37137909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for catalysis of human choline/ethanolamine...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004142" data-r="PMID:37137909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function confirmed structurally and biochemically. The cryo-EM study established an in vitro CMP-release assay showing DAG- and Mg2+-dependent PC synthesis from CDP-choline, with the catalytic aspartate D154 essential.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct in vitro assay of purified human CEPT1 with structural mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" target="_blank" class="term-link">
+                                        PMID:37137909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Choline/ethanolamine phosphotransferase 1 (CEPT1) catalyzes the last step of the biosynthesis of PC and PE in the Kennedy pathway by transferring the substituted phosphate group from CDP-choline/ethanolamine to diacylglycerol.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                                    GO:0004307
+                                </a>
+                            </span>
+                            <span class="term-label">ethanolaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004307" data-r="PMID:10191259" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function, directly demonstrated. CEPT1 uses CDP-ethanolamine as phosphobase donor to synthesize PE, the second arm of its dual specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay of the human enzyme establishing PE synthesis from CDP-ethanolamine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12221122
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The major sites of cellular phospholipid synthesis and molec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005789" data-r="PMID:12221122" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization, directly determined. Coimmunofluorescence and subcellular fractionation with ER, Golgi and nuclear markers place CEPT1 in the ER (and nuclear) membrane and specifically exclude the Golgi.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization of human CEPT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" target="_blank" class="term-link">
+                                        PMID:12221122
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic reticulum and nuclear membranes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006646" target="_blank" class="term-link">
+                                    GO:0006646
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylethanolamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006646" data-r="PMID:10191259" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, directly demonstrated. Yeast expressing hCEPT1 incorporate radiolabelled ethanolamine into phospholipids, reconstituting PE synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay establishing CEPT1&#39;s role in de novo PE biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">efficiently incorporated both radiolabelled choline and ethanolamine into phospholipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006656" target="_blank" class="term-link">
+                                    GO:0006656
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylcholine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006656" data-r="PMID:10191259" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, directly demonstrated. Yeast expressing hCEPT1 incorporate radiolabelled choline into phospholipids, reconstituting PC synthesis in vivo.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay establishing CEPT1&#39;s role in de novo PC biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">efficiently incorporated both radiolabelled choline and ethanolamine into phospholipids</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006656" target="_blank" class="term-link">
+                                    GO:0006656
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylcholine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37137909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for catalysis of human choline/ethanolamine...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006656" data-r="PMID:37137909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, supported by the structural/biochemical study, which measures DAG-dependent PC production (CMP release) by purified human CEPT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct in vitro reconstitution of PC synthesis by purified human CEPT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" target="_blank" class="term-link">
+                                        PMID:37137909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">No CMP release was detected in the absence of DAG, confirming that CMP was not produced by the hydrolysis of CDP-choline</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1482961
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005789" data-r="Reactome:R-HSA-1482961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization. Reactome places the CEPT1-catalyzed conversion of CDP-choline and DAG to PC at the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with direct experimental ER localization (PMID:12221122).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1482962
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0005789" data-r="Reactome:R-HSA-1482962" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization. Reactome places the CEPT1/EPT1-catalyzed conversion of CDP-ethanolamine and DAG to PE at the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with direct experimental ER localization (PMID:12221122).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                                    GO:0004307
+                                </a>
+                            </span>
+                            <span class="term-label">ethanolaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0004307" data-r="PMID:10191259" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function (author statement). Independently supported by the direct assay in the same paper demonstrating CDP-ethanolamine-dependent PE synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with, and corroborated by, the IDA of the same activity from this paper.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                        PMID:10191259
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0006629" data-r="PMID:10191259" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but far too general. CEPT1&#39;s role is specifically in phosphatidylcholine and phosphatidylethanolamine biosynthesis (already annotated with the specific child terms).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level parent superseded by the specific PC/PE biosynthetic-process annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191259
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of a human choline/ethanolaminephosph...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y6K0" data-a="GO:0016020" data-r="PMID:10191259" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct that CEPT1 is a polytopic membrane protein (the paper notes multiple membrane-spanning domains), but the term is far too general given the specific ER/nuclear membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative parent of the specific membrane-location annotations already present.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the final step of the CDP-choline (Kennedy) pathway, transferring phosphocholine from CDP-choline to diacylglycerol to produce phosphatidylcholine and CMP, at the ER and nuclear membrane.</h3>
+                <span class="vote-buttons" data-g="Q9Y6K0" data-a="FUNCTION: Catalyzes the final step of the CDP-choline (Kenne..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004142" target="_blank" class="term-link">
+                            diacylglycerol cholinephosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006656" target="_blank" class="term-link">
+                                phosphatidylcholine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                nuclear membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                PMID:10191259
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Cholinephosphotransferase catalyses the final step in the synthesis of phosphatidylcholine (PtdCho) via the Kennedy pathway by the transfer of phosphocholine from CDP-choline to diacylglycerol.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the final step of the CDP-ethanolamine (Kennedy) pathway, transferring phosphoethanolamine from CDP-ethanolamine to diacylglycerol to produce phosphatidylethanolamine and CMP, at the ER and nuclear membrane.</h3>
+                <span class="vote-buttons" data-g="Q9Y6K0" data-a="FUNCTION: Catalyzes the final step of the CDP-ethanolamine (..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004307" target="_blank" class="term-link">
+                            ethanolaminephosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006646" target="_blank" class="term-link">
+                                phosphatidylethanolamine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                nuclear membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                                PMID:10191259
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" target="_blank" class="term-link">
+                            PMID:10191259
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of a human choline/ethanolaminephosphotransferase: synthesis of phosphatidylcholine and phosphatidylethanolamine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CEPT1 (hCEPT1p, 416 aa) is a dual-specificity phosphotransferase that uses both CDP-choline and CDP-ethanolamine as phosphobase donors to diacylglycerol, synthesizing both PC and PE in vitro and in vivo; it catalyzes the final step of the Kennedy pathway.</div>
+
+                        <div class="finding-text">"In vitro, hCEPT1p displayed broad substrate specificity, utilizing both CDP-choline and CDP-ethanolamine as phosphobase donors to a broad range of diacylglycerols, resulting in the synthesis of both PtdCho and PtdEtn."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" target="_blank" class="term-link">
+                            PMID:12221122
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The major sites of cellular phospholipid synthesis and molecular determinants of Fatty Acid and lipid head group specificity.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human CEPT1 localizes to the ER and nuclear membranes (not the Golgi, unlike the paralog CPT1); Gly156 governs its dual CDP-alcohol specificity.</div>
+
+                        <div class="finding-text">"confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic reticulum and nuclear membranes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-scale binary (Y2H) interactome (HuRI) reporting CEPT1 physical interactions with TMEM14B (Q9NUH8) and SPG21 (Q9NZD8); no specific molecular function assigned.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" target="_blank" class="term-link">
+                            PMID:37137909
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for catalysis of human choline/ethanolamine phosphotransferase 1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM structures of human CEPT1 (dimer, 10 TMs per protomer) with CDP-choline; CEPT1 catalyzes the last step of PC and PE synthesis in the Kennedy pathway, prefers Mg2+ (Mn2+ ~50%), requires DAG, and depends on the catalytic aspartate D154.</div>
+
+                        <div class="finding-text">"Choline/ethanolamine phosphotransferase 1 (CEPT1) catalyzes the last step of the biosynthesis of PC and PE in the Kennedy pathway by transferring the substituted phosphate group from CDP-choline/ethanolamine to diacylglycerol."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1482961
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CDP-Cho and DAG are converted to PC by CEPT1 at the ER membrane</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1482962
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CDP-ETA and DAG are converted to PE by CEPT1/EPT1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10893425" target="_blank" class="term-link">
+                            PMID:10893425
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning, genomic organization, and characterization of a human cholinephosphotransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Distinguishes CEPT1 (dual choline/ethanolamine specificity) from the choline-specific paralog CPT1; source characterizing the ether-lipid / platelet-activating-factor precursor choline phosphotransferase side activity.</div>
+
+                        <div class="finding-text">"This contrasted with our previously cloned human choline/ethanolaminephosphotransferase cDNA that was demonstrated to code for a dual specificity choline/ethanolaminephosphotransferase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CEPT1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y6K0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cept1-human-gene-review-notes">CEPT1 (human) — gene review notes</h1>
+<p>UniProt: Q9Y6K0 (CEPT1_HUMAN), 416 aa. HGNC:24289. Gene on chromosome 1.</p>
+<h2 id="summary-of-function">Summary of function</h2>
+<p>CEPT1 is <strong>choline/ethanolamine phosphotransferase 1</strong>, the dual-specificity enzyme<br />
+that catalyzes the <strong>final (committed) step of both the CDP-choline and CDP-ethanolamine<br />
+(Kennedy) branches</strong> of glycerophospholipid synthesis. It transfers a phosphobase from a<br />
+CDP-linked donor to diacylglycerol (DAG):</p>
+<ul>
+<li>CDP-choline + DAG → phosphatidylcholine (PC) + CMP  (EC 2.7.8.2; GO:0004142 diacylglycerol cholinephosphotransferase activity)</li>
+<li>CDP-ethanolamine + DAG → phosphatidylethanolamine (PE) + CMP  (EC 2.7.8.1; GO:0004307 ethanolaminephosphotransferase activity)</li>
+</ul>
+<p>It is a polytopic integral membrane enzyme of the CDP-alcohol phosphatidyltransferase<br />
+class-I family, resident in the ER and nuclear (inner) membrane, requiring Mg2+ (or, less<br />
+efficiently, Mn2+) as cofactor.</p>
+<h2 id="key-provenance-verbatim-quotes">Key provenance (verbatim quotes)</h2>
+<h3 id="dual-specificity-final-kennedy-step-pmid10191259-henneberry-mcmaster-1999-abstract-only">Dual specificity / final Kennedy step (PMID:10191259, Henneberry &amp; McMaster 1999; abstract-only)</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10191259" title="Cholinephosphotransferase catalyses the final step in the synthesis of phosphatidylcholine (PtdCho) via the Kennedy pathway by the transfer of phosphocholine from CDP-choline to diacylglycerol.">PMID:10191259</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10191259" title="Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).">PMID:10191259</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10191259" title="In vitro, hCEPT1p displayed broad substrate specificity, utilizing both CDP-choline and CDP-ethanolamine as phosphobase donors to a broad range of diacylglycerols, resulting in the synthesis of both PtdCho and PtdEtn.">PMID:10191259</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10191259" title="In vivo, S. cerevisiae cells (HJ091, cpt1::LEU2 ept1-) expressing hCEPT1 efficiently incorporated both radiolabelled choline and ethanolamine into phospholipids">PMID:10191259</a></li>
+<li>416 aa; ubiquitously expressed: <a href="https://pubmed.ncbi.nlm.nih.gov/10191259" title="Northern blot analysis revealed one hCEPT1 2.3 kb transcript that was ubiquitous">PMID:10191259</a></li>
+<li>Note: this abstract states "seven membrane-spanning domains" (the 2023 cryo-EM structure PMID:37137909 revises this to 10 TMs per protomer).</li>
+</ul>
+<h3 id="cept1-vs-cpt1-dual-vs-choline-only-pmid10893425-henneberry-et-al-2000-abstract-only">CEPT1 vs CPT1 (dual vs choline-only) (PMID:10893425, Henneberry et al. 2000; abstract-only)</h3>
+<ul>
+<li>CPT1 (a paralog) is choline-specific; CEPT1 is dual-specificity: <a href="https://pubmed.ncbi.nlm.nih.gov/10893425" title="This contrasted with our previously cloned human choline/ethanolaminephosphotransferase cDNA that was demonstrated to code for a dual specificity choline/ethanolaminephosphotransferase.">PMID:10893425</a></li>
+<li>This paper is the primary source for the 1-alkenyl/alkyl-acylglycerol choline phosphotransferase (platelet-activating-factor precursor) activities: <a href="https://pubmed.ncbi.nlm.nih.gov/10893425" title="their capacity to synthesize platelet-activating factor and platelet-activating factor precursor.">PMID:10893425</a></li>
+</ul>
+<h3 id="subcellular-localization-er-nuclear-membrane-not-golgi-pmid12221122-henneberry-et-al-2002-abstract-only">Subcellular localization — ER + nuclear membrane, NOT Golgi (PMID:12221122, Henneberry et al. 2002; abstract-only)</h3>
+<ul>
+<li>CEPT1 makes both PC and PE; CPT1 is Golgi and choline-only: <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" title="CEPT1 transfers a phosphobase from either CDP-choline or CDP-ethanolamine to diacylglycerol to synthesize both phosphatidylcholine and phosphatidylethanolamine, whereas CPT1 synthesizes phosphatidylcholine exclusively.">PMID:12221122</a></li>
+<li>Localization: <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" title="brefeldin A treatment relocalizes CPT1, but not CEPT1, implying CPT1 is found in the Golgi.">PMID:12221122</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12221122" title="confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic reticulum and nuclear membranes.">PMID:12221122</a></li>
+<li>Residue Gly156 governs dual specificity; residues 214–228 helix positions the catalytic site: <a href="https://pubmed.ncbi.nlm.nih.gov/12221122" title="This pinpointed glycine 156 within the catalytic motif as being responsible for the dual CDP-alcohol specificity of CEPT1">PMID:12221122</a></li>
+<li>UniProt confirms location: [file:human/CEPT1/CEPT1-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic reticulum membrane"] and "Nucleus membrane ... Multi-pass membrane protein".</li>
+</ul>
+<p><strong>Interpretation for the Golgi IBA annotation (GO:0005794):</strong> the definitive human localization<br />
+study (PMID:12221122) explicitly shows CEPT1 is NOT in the Golgi (brefeldin A does not<br />
+relocalize it) and localizes it to ER + nuclear membrane. The Golgi IBA is a<br />
+phylogenetic/orthology inference driven partly by fly (FBgn0031948) and mouse orthologs; it<br />
+is retained as non-core, flagged as contradicted for human by direct evidence.</p>
+<h3 id="cryo-em-structure-mechanism-pmid37137909-wang-et-al-2023-full-text-available">Cryo-EM structure &amp; mechanism (PMID:37137909, Wang et al. 2023; FULL TEXT available)</h3>
+<ul>
+<li>Final step of PC/PE synthesis, dual specificity: <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="Choline/ethanolamine phosphotransferase 1 (CEPT1) catalyzes the last step of the biosynthesis of PC and PE in the Kennedy pathway by transferring the substituted phosphate group from CDP-choline/ethanolamine to diacylglycerol.">PMID:37137909</a></li>
+<li>Dimer, 10 TMs per protomer: <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="CEPT1 is a dimer with 10 transmembrane segments (TMs) in each protomer.">PMID:37137909</a></li>
+<li>Cofactor Mg2+ (Mn2+ ~50%): <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="the enzymatic activity was nearly abolished when other divalent cations were added instead of Mg2+, except Mn2+; with the addition of Mn2+, the enzyme maintained approximately 50% of the activity">PMID:37137909</a></li>
+<li>CDP-choline preferred over CDP-ethanolamine (~2x): <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="CMP release was approximately doubled when CDP-choline was used as the substrate compared with CDP-ethanolamine">PMID:37137909</a></li>
+<li>Catalytic aspartate D154 essential: <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="Substitution of one conserved aspartate in the CDP-binding motif with alanine (D154A) completely abolished the enzymatic activity.">PMID:37137909</a></li>
+<li>DAG required (no CMP release without it): <a href="https://pubmed.ncbi.nlm.nih.gov/37137909" title="No CMP release was detected in the absence of DAG, confirming that CMP was not produced by the hydrolysis of CDP-choline">PMID:37137909</a></li>
+<li>Note: the paper's title/abstract foreground PC (CDP-choline) because CDP-choline was used in all assays; both PC and PE production are established here and by PMID:10191259. Hence GO:0004307 (ethanolaminephosphotransferase) IDA is separately from PMID:10191259.</li>
+</ul>
+<h3 id="cofactor-uniprot">Cofactor (UniProt)</h3>
+<ul>
+<li>[file:human/CEPT1/CEPT1-uniprot.txt "Name=Mg(2+); Xref=ChEBI:CHEBI:18420;"] and Mn(2+) alternative — supports metal ion binding (GO:0046872, present in UniProt DR but not in GOA TSV; not among the 31 GOA annotations).</li>
+</ul>
+<h2 id="interactions-pmid32296183-huri-reference-interactome">Interactions (PMID:32296183 — HuRI reference interactome)</h2>
+<ul>
+<li>GOA seeds two IPI "protein binding" (GO:0005515) annotations from the HuRI binary<br />
+  interactome (Luck et al. 2020), with SPG21 (Q9NZD8) and TMEM14B (Q9NUH8) as partners.<br />
+  UniProt INTERACTION block confirms both (NbExp=3, IntAct EBI-1237183).</li>
+<li>The HuRI paper is a genome-scale Y2H map; it establishes physical binary interactions but<br />
+  assigns no specific molecular function. Per policy, bare "protein binding" IPI is kept but<br />
+  MARK_AS_OVER_ANNOTATED (uninformative MF); the interactions themselves are not disputed.<br />
+  TMEM14B and SPG21 are both membrane-associated proteins, consistent with CEPT1 being a<br />
+  polytopic ER membrane protein, but no functional consequence is established.</li>
+</ul>
+<h2 id="core-functions-author-supplied-validated-against-godb">Core functions (author-supplied, validated against go.db)</h2>
+<ol>
+<li>GO:0004142 diacylglycerol cholinephosphotransferase activity (EC 2.7.8.2) — PC synthesis. IDA PMID:10191259, PMID:37137909.</li>
+<li>GO:0004307 ethanolaminephosphotransferase activity (EC 2.7.8.1) — PE synthesis. IDA PMID:10191259.<br />
+   Both are descendants of GO:0016780 (verified) and of molecular_function GO:0003674.<br />
+Associated core BP: GO:0006656 (PC biosynthetic process) and GO:0006646 (PE biosynthetic process);<br />
+location GO:0005789 (ER membrane) [+ nuclear membrane GO:0031965].</li>
+</ol>
+<h2 id="annotation-action-rationale-high-level">Annotation action rationale (high level)</h2>
+<ul>
+<li>ACCEPT the experimental (IDA/EXP) MF and BP annotations for PC/PE synthesis and the ER-membrane<br />
+  localization (IDA PMID:12221122) — these are the core, well-supported functions.</li>
+<li>IBA MF/BP (GO:0004142, GO:0004307, GO:0006646) ACCEPT (consistent with experimental).</li>
+<li>IBA Golgi (GO:0005794): KEEP_AS_NON_CORE — contradicted for human by PMID:12221122 (ER+nuclear, not Golgi).</li>
+<li>IEA duplicates of the specific MF (GO:0004142/GO:0004307/GO:0047359 from EC/RHEA) ACCEPT (redundant but correct).</li>
+<li>IEA general terms: GO:0008654 phospholipid biosynthetic process, GO:0016780 phosphotransferase activity<br />
+  (parents of the specific terms) — MARK_AS_OVER_ANNOTATED / MODIFY toward the specific children.</li>
+<li>IEA/general cellular locations GO:0005737 cytoplasm, GO:0012505 endomembrane system, GO:0016020 membrane —<br />
+  MARK_AS_OVER_ANNOTATED (too general / cytoplasm imprecise for an integral membrane enzyme).</li>
+<li>IEA nuclear membrane GO:0031965 (UniProt-SubCell) ACCEPT — supported by PMID:12221122.</li>
+<li>TAS Reactome ER-membrane and PMID:10191259 MF/BP annotations ACCEPT.</li>
+<li>TAS GO:0006629 lipid metabolic process (ProtInc) — MARK_AS_OVER_ANNOTATED (too general vs specific PC/PE BPs).</li>
+<li>TAS GO:0016020 membrane (ProtInc) — MARK_AS_OVER_ANNOTATED (too general).</li>
+<li>1-alkenyl-2-acylglycerol choline phosphotransferase (GO:0047359, EXP PMID:10191259 / IEA): KEEP_AS_NON_CORE —<br />
+  a real but minor side activity (plasmenylcholine/PAF-precursor synthesis), primarily characterized in PMID:10893425.</li>
+<li>protein binding IPI (GO:0005515) x2: MARK_AS_OVER_ANNOTATED (uninformative MF).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y6K0
+gene_symbol: CEPT1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CEPT1 (choline/ethanolamine phosphotransferase 1) is a dual-specificity, polytopic
+  integral membrane enzyme of the CDP-alcohol phosphatidyltransferase class-I family that
+  catalyzes the final, committed step of both the CDP-choline and CDP-ethanolamine (Kennedy)
+  branches of glycerophospholipid biosynthesis. It transfers a phosphobase group from a
+  CDP-linked donor to the sn-3 hydroxyl of 1,2-diacyl-sn-glycerol (DAG): using CDP-choline it
+  produces phosphatidylcholine plus CMP (diacylglycerol cholinephosphotransferase activity,
+  EC 2.7.8.2), and using CDP-ethanolamine it produces phosphatidylethanolamine plus CMP
+  (ethanolaminephosphotransferase activity, EC 2.7.8.1). Catalysis requires a divalent metal
+  cofactor, preferring Mg2+ (Mn2+ supports roughly half-maximal activity), coordinated by a
+  conserved di-aspartate CDP-binding motif; the enzyme also has a minor
+  1-alkenyl/1-alkyl-2-acylglycerol choline phosphotransferase side activity that yields ether
+  (plasmenyl/plasmanyl) choline phospholipids and platelet-activating-factor precursors. CEPT1
+  is a homodimer with ten transmembrane helices per protomer and a hydrophobic chamber that
+  accommodates the DAG acyl tails during catalysis. It resides in the endoplasmic reticulum
+  membrane and the nuclear (inner) membrane, where channeling of CDP-choline generated by the
+  upstream rate-limiting enzyme CCTalpha drives de novo phosphatidylcholine synthesis. CEPT1
+  is ubiquitously expressed.
+existing_annotations:
+- term:
+    id: GO:0004142
+    label: diacylglycerol cholinephosphotransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. CEPT1 transfers phosphocholine from CDP-choline to DAG to make
+      phosphatidylcholine; this phylogenetic inference is fully consistent with direct
+      experimental assays in human/yeast systems.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA is corroborated by direct experimental characterization of the human enzyme
+      (IDA, PMID:10191259, PMID:37137909) and the UniProt catalytic-activity record (EC 2.7.8.2).
+- term:
+    id: GO:0004307
+    label: ethanolaminephosphotransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. CEPT1 also uses CDP-ethanolamine as phosphobase donor to make
+      phosphatidylethanolamine; this is the second arm of its dual specificity.
+    action: ACCEPT
+    reason: &gt;-
+      Corroborated by direct experimental assay of the human enzyme (IDA, PMID:10191259;
+      TAS PMID:10191259) and the UniProt catalytic-activity record (EC 2.7.8.1).
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Core localization. CEPT1 is an integral ER membrane enzyme; this IBA agrees with the
+      direct human localization study.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by immunofluorescence/subcellular fractionation of human CEPT1
+      (IDA, PMID:12221122) and UniProt subcellular location.
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Golgi localization is a phylogenetic inference (driven in part by fly and mouse
+      orthologs) that is contradicted for the human enzyme. The definitive human study shows
+      CEPT1 is NOT relocalized by brefeldin A (unlike the Golgi-resident paralog CPT1) and
+      localizes to the ER and nuclear membranes, not the Golgi.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retained (an experimental IBA reflecting ortholog behavior) but marked non-core because
+      direct human evidence places CEPT1 in the ER and nuclear membrane, explicitly excluding
+      the Golgi (PMID:12221122).
+    supported_by:
+    - reference_id: PMID:12221122
+      supporting_text: &gt;-
+        brefeldin A treatment relocalizes CPT1, but not CEPT1, implying CPT1 is found in the
+        Golgi.
+- term:
+    id: GO:0006646
+    label: phosphatidylethanolamine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. CEPT1 catalyzes the last step of the CDP-ethanolamine (Kennedy)
+      branch producing PE.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with direct experimental annotation of the human enzyme (IDA, PMID:10191259)
+      and the UniProt PE-biosynthesis pathway record.
+- term:
+    id: GO:0004142
+    label: diacylglycerol cholinephosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (EC/RHEA-based) assertion of the core cholinephosphotransferase activity;
+      redundant with the experimental IDA annotations of the same term but correct.
+    action: ACCEPT
+    reason: &gt;-
+      EC 2.7.8.2 / RHEA mappings correctly capture the experimentally established activity.
+- term:
+    id: GO:0004307
+    label: ethanolaminephosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (EC/RHEA-based) assertion of the core ethanolaminephosphotransferase
+      activity; redundant with the experimental annotations but correct.
+    action: ACCEPT
+    reason: &gt;-
+      EC 2.7.8.1 / RHEA mappings correctly capture the experimentally established activity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Over-general and imprecise. CEPT1 is a multi-pass integral membrane protein of the ER
+      and nuclear membrane; a bare cytoplasm assertion (ARBA machine-learning) does not
+      capture its membrane-embedded localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific ER-membrane / nuclear-membrane localizations supersede this generic term,
+      which mislocalizes an integral membrane enzyme to the soluble cytoplasm.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core localization, derived electronically from the UniProt Subcellular Location
+      vocabulary.
+    action: ACCEPT
+    reason: &gt;-
+      Agrees with direct experimental localization of human CEPT1 (IDA, PMID:12221122).
+- term:
+    id: GO:0008654
+    label: phospholipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but over-general. CEPT1&#39;s role is specifically in phosphatidylcholine and
+      phosphatidylethanolamine biosynthesis, which are more informative child terms already
+      annotated experimentally.
+    action: MODIFY
+    reason: &gt;-
+      Generalizes over the specific PC/PE biosynthetic processes; replace with the specific
+      children that are experimentally supported.
+    proposed_replacement_terms:
+    - id: GO:0006656
+      label: phosphatidylcholine biosynthetic process
+    - id: GO:0006646
+      label: phosphatidylethanolamine biosynthetic process
+- term:
+    id: GO:0012505
+    label: endomembrane system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Over-general (ARBA machine-learning). CEPT1 has a specific, experimentally determined
+      ER-membrane and nuclear-membrane localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific ER/nuclear membrane annotations supersede this broad grouping term.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct that CEPT1 is membrane-integral, but far too general given the specific
+      ER-membrane / nuclear-membrane annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative parent of the specific membrane-location annotations already present.
+- term:
+    id: GO:0016780
+    label: phosphotransferase activity, for other substituted phosphate groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but over-general parent term. This is the direct GO parent of the specific
+      diacylglycerol cholinephosphotransferase (GO:0004142) and ethanolaminephosphotransferase
+      (GO:0004307) activities that are experimentally established.
+    action: MODIFY
+    reason: &gt;-
+      Generalizes over the specific activities; replace with the experimentally supported
+      children.
+    proposed_replacement_terms:
+    - id: GO:0004142
+      label: diacylglycerol cholinephosphotransferase activity
+    - id: GO:0004307
+      label: ethanolaminephosphotransferase activity
+- term:
+    id: GO:0031965
+    label: nuclear membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct secondary localization. CEPT1 resides in the nuclear (inner) membrane in
+      addition to the ER, where substrate channeling from nuclear CCTalpha drives de novo PC
+      synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Electronic assertion (UniProt Subcellular Location) that is directly supported by the
+      human localization study (PMID:12221122).
+    supported_by:
+    - reference_id: PMID:12221122
+      supporting_text: &gt;-
+        confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic
+        reticulum and nuclear membranes.
+- term:
+    id: GO:0047359
+    label: 1-alkenyl-2-acylglycerol choline phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Real but minor side activity. In addition to using diacylglycerol, CEPT1 can transfer
+      phosphocholine to ether-linked (1-O-alkyl / 1-O-alkenyl) 2-acylglycerols, yielding
+      plasmanyl/plasmenyl choline phospholipids and platelet-activating-factor precursors.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine activity (EC 2.7.8.22; characterized in PMID:10893425 and EXP PMID:10191259) but
+      quantitatively minor relative to PC/PE synthesis on diacylglycerol; retained as a
+      non-core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9NUH8
+  - UniProtKB:Q9NZD8
+  review:
+    summary: &gt;-
+      Bare protein-binding annotations from a genome-scale binary (Y2H) interactome map
+      (HuRI). Two partners are recorded via IntAct/UniProt: TMEM14B (Q9NUH8) and SPG21
+      (Q9NZD8). The interactions are not disputed, but the generic GO:0005515 term conveys no
+      specific molecular function and no functional consequence has been established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation policy, uninformative bare &#34;protein binding&#34; IPI is retained but flagged as
+      over-annotation; no adapter/scaffold function is defined by the high-throughput data.
+- term:
+    id: GO:0006646
+    label: phosphatidylethanolamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process, derived electronically from the UniPathway PE-synthesis
+      mapping; redundant with the experimental IDA of the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the experimentally established role in PE biosynthesis (PMID:10191259).
+- term:
+    id: GO:0006656
+    label: phosphatidylcholine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process, derived electronically from the UniPathway PC-synthesis
+      mapping; redundant with the experimental IDA of the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the experimentally established role in PC biosynthesis (PMID:10191259,
+      PMID:37137909).
+- term:
+    id: GO:0047359
+    label: 1-alkenyl-2-acylglycerol choline phosphotransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10191259
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimentally supported minor side activity (ether-lipid / PAF-precursor choline
+      phosphotransferase). CEPT1 displays broad diradylglycerol specificity and can use
+      alkenyl/alkyl-acylglycerol acceptors.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real activity but minor relative to the core PC/PE synthesis on diacylglycerol; kept as
+      a non-core function.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        In vitro, hCEPT1p displayed broad substrate specificity, utilizing both CDP-choline
+        and CDP-ethanolamine as phosphobase donors to a broad range of diacylglycerols
+- term:
+    id: GO:0004142
+    label: diacylglycerol cholinephosphotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10191259
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, directly demonstrated. Recombinant human CEPT1 expressed in a
+      yeast strain lacking endogenous phosphotransferases synthesizes PC from CDP-choline and
+      diacylglycerol in vitro and in vivo.
+    action: ACCEPT
+    reason: Direct assay of the human enzyme; the defining catalytic activity of CEPT1.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        Cholinephosphotransferase catalyses the final step in the synthesis of
+        phosphatidylcholine (PtdCho) via the Kennedy pathway by the transfer of phosphocholine
+        from CDP-choline to diacylglycerol.
+- term:
+    id: GO:0004142
+    label: diacylglycerol cholinephosphotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:37137909
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function confirmed structurally and biochemically. The cryo-EM study
+      established an in vitro CMP-release assay showing DAG- and Mg2+-dependent PC synthesis
+      from CDP-choline, with the catalytic aspartate D154 essential.
+    action: ACCEPT
+    reason: Direct in vitro assay of purified human CEPT1 with structural mechanism.
+    supported_by:
+    - reference_id: PMID:37137909
+      supporting_text: &gt;-
+        Choline/ethanolamine phosphotransferase 1 (CEPT1) catalyzes the last step of the
+        biosynthesis of PC and PE in the Kennedy pathway by transferring the substituted
+        phosphate group from CDP-choline/ethanolamine to diacylglycerol.
+- term:
+    id: GO:0004307
+    label: ethanolaminephosphotransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10191259
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function, directly demonstrated. CEPT1 uses CDP-ethanolamine as
+      phosphobase donor to synthesize PE, the second arm of its dual specificity.
+    action: ACCEPT
+    reason: Direct assay of the human enzyme establishing PE synthesis from CDP-ethanolamine.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine
+        as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:12221122
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Core localization, directly determined. Coimmunofluorescence and subcellular
+      fractionation with ER, Golgi and nuclear markers place CEPT1 in the ER (and nuclear)
+      membrane and specifically exclude the Golgi.
+    action: ACCEPT
+    reason: Direct experimental localization of human CEPT1.
+    supported_by:
+    - reference_id: PMID:12221122
+      supporting_text: &gt;-
+        confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic
+        reticulum and nuclear membranes.
+- term:
+    id: GO:0006646
+    label: phosphatidylethanolamine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:10191259
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, directly demonstrated. Yeast expressing hCEPT1 incorporate
+      radiolabelled ethanolamine into phospholipids, reconstituting PE synthesis.
+    action: ACCEPT
+    reason: Direct assay establishing CEPT1&#39;s role in de novo PE biosynthesis.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        efficiently incorporated both radiolabelled choline and ethanolamine into
+        phospholipids
+- term:
+    id: GO:0006656
+    label: phosphatidylcholine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:10191259
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, directly demonstrated. Yeast expressing hCEPT1 incorporate
+      radiolabelled choline into phospholipids, reconstituting PC synthesis in vivo.
+    action: ACCEPT
+    reason: Direct assay establishing CEPT1&#39;s role in de novo PC biosynthesis.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        efficiently incorporated both radiolabelled choline and ethanolamine into
+        phospholipids
+- term:
+    id: GO:0006656
+    label: phosphatidylcholine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:37137909
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, supported by the structural/biochemical study, which measures
+      DAG-dependent PC production (CMP release) by purified human CEPT1.
+    action: ACCEPT
+    reason: Direct in vitro reconstitution of PC synthesis by purified human CEPT1.
+    supported_by:
+    - reference_id: PMID:37137909
+      supporting_text: &gt;-
+        No CMP release was detected in the absence of DAG, confirming that CMP was not
+        produced by the hydrolysis of CDP-choline
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1482961
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core localization. Reactome places the CEPT1-catalyzed conversion of CDP-choline
+      and DAG to PC at the ER membrane.
+    action: ACCEPT
+    reason: Consistent with direct experimental ER localization (PMID:12221122).
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1482962
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct core localization. Reactome places the CEPT1/EPT1-catalyzed conversion of
+      CDP-ethanolamine and DAG to PE at the ER membrane.
+    action: ACCEPT
+    reason: Consistent with direct experimental ER localization (PMID:12221122).
+- term:
+    id: GO:0004307
+    label: ethanolaminephosphotransferase activity
+  evidence_type: TAS
+  original_reference_id: PMID:10191259
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function (author statement). Independently supported by the direct assay
+      in the same paper demonstrating CDP-ethanolamine-dependent PE synthesis.
+    action: ACCEPT
+    reason: Redundant with, and corroborated by, the IDA of the same activity from this paper.
+    supported_by:
+    - reference_id: PMID:10191259
+      supporting_text: &gt;-
+        Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine
+        as the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:10191259
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but far too general. CEPT1&#39;s role is specifically in phosphatidylcholine and
+      phosphatidylethanolamine biosynthesis (already annotated with the specific child terms).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative high-level parent superseded by the specific PC/PE biosynthetic-process
+      annotations.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:10191259
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct that CEPT1 is a polytopic membrane protein (the paper notes multiple
+      membrane-spanning domains), but the term is far too general given the specific
+      ER/nuclear membrane annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative parent of the specific membrane-location annotations already present.
+core_functions:
+- description: &gt;-
+    Catalyzes the final step of the CDP-choline (Kennedy) pathway, transferring phosphocholine
+    from CDP-choline to diacylglycerol to produce phosphatidylcholine and CMP, at the ER and
+    nuclear membrane.
+  supported_by:
+  - reference_id: PMID:10191259
+    supporting_text: &gt;-
+      Cholinephosphotransferase catalyses the final step in the synthesis of
+      phosphatidylcholine (PtdCho) via the Kennedy pathway by the transfer of phosphocholine
+      from CDP-choline to diacylglycerol.
+  molecular_function:
+    id: GO:0004142
+    label: diacylglycerol cholinephosphotransferase activity
+  directly_involved_in:
+  - id: GO:0006656
+    label: phosphatidylcholine biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  - id: GO:0031965
+    label: nuclear membrane
+- description: &gt;-
+    Catalyzes the final step of the CDP-ethanolamine (Kennedy) pathway, transferring
+    phosphoethanolamine from CDP-ethanolamine to diacylglycerol to produce
+    phosphatidylethanolamine and CMP, at the ER and nuclear membrane.
+  supported_by:
+  - reference_id: PMID:10191259
+    supporting_text: &gt;-
+      Ethanolaminephosphotransferase catalyses an analogous reaction with CDP-ethanolamine as
+      the phosphobase donor for the synthesis of phosphatidylethanolamine (PtdEtn).
+  molecular_function:
+    id: GO:0004307
+    label: ethanolaminephosphotransferase activity
+  directly_involved_in:
+  - id: GO:0006646
+    label: phosphatidylethanolamine biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  - id: GO:0031965
+    label: nuclear membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10191259
+  title: &#39;Cloning and expression of a human choline/ethanolaminephosphotransferase:
+    synthesis of phosphatidylcholine and phosphatidylethanolamine.&#39;
+  findings:
+  - statement: &gt;-
+      Human CEPT1 (hCEPT1p, 416 aa) is a dual-specificity phosphotransferase that uses both
+      CDP-choline and CDP-ethanolamine as phosphobase donors to diacylglycerol, synthesizing
+      both PC and PE in vitro and in vivo; it catalyzes the final step of the Kennedy pathway.
+    supporting_text: &gt;-
+      In vitro, hCEPT1p displayed broad substrate specificity, utilizing both CDP-choline and
+      CDP-ethanolamine as phosphobase donors to a broad range of diacylglycerols, resulting in
+      the synthesis of both PtdCho and PtdEtn.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original cloning/characterization of human CEPT1; abstract-only in cache
+      but the abstract directly establishes dual specificity and the final Kennedy-pathway
+      step. Primary source for the MF, BP, and side-activity (EXP) annotations.
+- id: PMID:12221122
+  title: The major sites of cellular phospholipid synthesis and molecular determinants
+    of Fatty Acid and lipid head group specificity.
+  findings:
+  - statement: &gt;-
+      Human CEPT1 localizes to the ER and nuclear membranes (not the Golgi, unlike the paralog
+      CPT1); Gly156 governs its dual CDP-alcohol specificity.
+    supporting_text: &gt;-
+      confirmed that CPT1 was found in the Golgi and CEPT1 was found in both the endoplasmic
+      reticulum and nuclear membranes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Definitive human localization study; explicitly excludes Golgi for
+      CEPT1 (contradicts the Golgi IBA). Source for the ER-membrane IDA and nuclear-membrane
+      support.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      Genome-scale binary (Y2H) interactome (HuRI) reporting CEPT1 physical interactions with
+      TMEM14B (Q9NUH8) and SPG21 (Q9NZD8); no specific molecular function assigned.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput binary interactome; source of two bare &#34;protein binding&#34; IPI
+      annotations. Interactions confirmed in UniProt IntAct block but uninformative for
+      molecular function.
+- id: PMID:37137909
+  title: Structural basis for catalysis of human choline/ethanolamine phosphotransferase
+    1.
+  findings:
+  - statement: &gt;-
+      Cryo-EM structures of human CEPT1 (dimer, 10 TMs per protomer) with CDP-choline; CEPT1
+      catalyzes the last step of PC and PE synthesis in the Kennedy pathway, prefers Mg2+
+      (Mn2+ ~50%), requires DAG, and depends on the catalytic aspartate D154.
+    supporting_text: &gt;-
+      Choline/ethanolamine phosphotransferase 1 (CEPT1) catalyzes the last step of the
+      biosynthesis of PC and PE in the Kennedy pathway by transferring the substituted
+      phosphate group from CDP-choline/ethanolamine to diacylglycerol.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; full text available. Structural/mechanistic confirmation of the core
+      cholinephosphotransferase activity and Mg2+ cofactor dependence. Note the assay used
+      CDP-choline throughout, so the title emphasizes PC.
+- id: Reactome:R-HSA-1482961
+  title: CDP-Cho and DAG are converted to PC by CEPT1 at the ER membrane
+  findings: []
+- id: Reactome:R-HSA-1482962
+  title: CDP-ETA and DAG are converted to PE by CEPT1/EPT1
+  findings: []
+- id: PMID:10893425
+  title: Cloning, genomic organization, and characterization of a human cholinephosphotransferase.
+  findings:
+  - statement: &gt;-
+      Distinguishes CEPT1 (dual choline/ethanolamine specificity) from the choline-specific
+      paralog CPT1; source characterizing the ether-lipid / platelet-activating-factor
+      precursor choline phosphotransferase side activity.
+    supporting_text: &gt;-
+      This contrasted with our previously cloned human choline/ethanolaminephosphotransferase
+      cDNA that was demonstrated to code for a dual specificity choline/ethanolaminephosphotransferase.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; abstract-only. Primarily about the paralog CPT1 but explicitly
+      characterizes CEPT1&#39;s dual specificity and the alkenyl/alkyl-acylglycerol (EC 2.7.8.22)
+      side activity. Cited in UniProt for the 2.7.8.22 catalytic activity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

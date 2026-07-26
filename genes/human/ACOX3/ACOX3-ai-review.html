@@ -1,0 +1,4296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACOX3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACOX3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O15254" target="_blank" class="term-link">
+                        O15254
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ACOX3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O15254" data-a="DESCRIPTION: ACOX3 is a peroxisomal, FAD-dependent acyl-CoA oxi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ACOX3 is a peroxisomal, FAD-dependent acyl-CoA oxidase (EC 1.3.3.6) of the acyl-CoA oxidase family that catalyzes the first and rate-limiting dehydrogenation step of peroxisomal fatty-acid beta-oxidation, converting a 2,3-saturated acyl-CoA to the corresponding (2E)-enoyl-CoA while reducing O2 to H2O2. Its preferred physiological substrates are 2-methyl-branched (multi-methyl branched) fatty acyl-CoA esters, in particular (2S)-pristanoyl-CoA, which is derived from alpha-oxidation of dietary phytanic acid; ACOX3 thus functions as a pristanoyl-CoA / branched-chain acyl-CoA oxidase. It can also oxidize straight-chain and dicarboxylyl acyl-CoAs with lower efficiency. The mature protein is a soluble matrix enzyme imported into the peroxisome via a C-terminal PTS1 (SKL) targeting signal. In humans, branched-chain acyl-CoA oxidase activity is shared with the paralog ACOX2; ACOX3 was long thought to be nearly silent but is expressed at mRNA and protein level in several normal tissues including liver, kidney, lung, brain and heart.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005504" target="_blank" class="term-link">
+                                    GO:0005504
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005504" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-propagated generic MF. ACOX3 binds and oxidizes fatty acyl-CoA thioesters, not free fatty acids, so &#34;fatty acid binding&#34; does not capture its actual ligand or function; it is at best incidental to the catalytic activity captured by GO:0016402/GO:0003997.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The substrate is a fatty acyl-CoA ester, not a free fatty acid; the specific acyl-CoA oxidase MF terms already cover the real function. Generic &#34;fatty acid binding&#34; is an over-annotation for an acyl-CoA oxidase.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000097533</span>
+
+
+
+                                    <div class="propagation-comment">Acyl-CoA oxidase family node; &#34;fatty acid binding&#34; propagates across the family but conflates the acyl-CoA-ester substrate with free fatty acid.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033540" target="_blank" class="term-link">
+                                    GO:0033540
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation using acyl-CoA oxidase</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0033540" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process. ACOX3 catalyzes the initial, acyl-CoA-oxidase-dependent (H2O2-generating) step of peroxisomal fatty-acid beta-oxidation, consistent with UniProt PATHWAY and experimental substrate studies.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29287774" target="_blank" class="term-link">
+                                        PMID:29287774
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both ACOX2 and ACOX3 are involved in the degradation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005777" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core localization. ACOX3 is a peroxisomal enzyme with a C-terminal PTS1 (SKL) targeting signal, supported by UniProt SUBCELLULAR LOCATION and experimental IDA (PMID:8993592).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" target="_blank" class="term-link">
+                                        PMID:9271077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">harbouring a peroxisomal C-terminal-targeting</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0050660" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cofactor-binding function. ACOX3 is a flavoprotein oxidoreductase that uses FAD as prosthetic group; UniProt records the FAD cofactor. GO:0050660 and GO:0071949 are equivalent descriptions of FAD binding.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016402" target="_blank" class="term-link">
+                                    GO:0016402
+                                </a>
+                            </span>
+                            <span class="term-label">pristanoyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0016402" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function and the most specific well-supported MF for ACOX3. The enzyme oxidizes (2S)-pristanoyl-CoA and other 2-methyl-branched acyl-CoA esters; supported by the UniProt catalytic activity and by experimental substrate-specificity studies.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Oxidizes the CoA-esters of 2-methyl-branched fatty acids.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003997" target="_blank" class="term-link">
+                                    GO:0003997
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0003997" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent molecular function (EC 1.3.3.6). ACOX3 catalyzes a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2. Retained as core; the more specific GO:0016402 (pristanoyl-CoA oxidase activity) better captures the physiological substrate preference.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005504" target="_blank" class="term-link">
+                                    GO:0005504
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005504" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-propagated duplicate of the &#34;fatty acid binding&#34; annotation. Same reasoning: ACOX3 binds fatty acyl-CoA esters, not free fatty acids.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic InterPro2GO transfer that mischaracterizes the ligand; the acyl-CoA oxidase MF terms already describe the real substrate binding/turnover.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005777" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization, electronically inferred and consistent with the experimental IDA and UniProt SUBCELLULAR LOCATION. Redundant with the IBA and IDA peroxisome annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005782" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> More specific and correct localization. ACOX3 is a soluble matrix enzyme imported via its PTS1 signal; the peroxisomal matrix is the compartment where it acts. Consistent with Reactome TAS matrix annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" target="_blank" class="term-link">
+                                        PMID:9271077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">harbouring a peroxisomal C-terminal-targeting</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0006631" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but very general parent BP. The specific process (peroxisomal fatty-acid beta-oxidation) is captured by GO:0033540 / GO:0006635, which are the informative annotations to retain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-level parent of the more specific beta-oxidation terms already present; not wrong but uninformative as a standalone.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006635" target="_blank" class="term-link">
+                                    GO:0006635
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0006635" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core biological process describing the beta-oxidation pathway ACOX3 initiates. Consistent with the UniProt PATHWAY annotation and the peroxisomal acyl-CoA-oxidase branch (GO:0033540).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016402" target="_blank" class="term-link">
+                                    GO:0016402
+                                </a>
+                            </span>
+                            <span class="term-label">pristanoyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0016402" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-mapped duplicate of the core pristanoyl-CoA oxidase MF, mapped from RHEA:40459 ((2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2). Correct and core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016627" target="_blank" class="term-link">
+                                    GO:0016627
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0016627" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general grandparent MF. This is the EC-class-level description of an acyl-CoA oxidase/dehydrogenase; the specific acyl-CoA oxidase terms are the informative ones to retain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-level parent of GO:0003997/GO:0016402; not wrong but uninformative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033540" target="_blank" class="term-link">
+                                    GO:0033540
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid beta-oxidation using acyl-CoA oxidase</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0033540" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronically-inferred duplicate of the core IBA BP annotation. Correct and core: ACOX3 initiates the acyl-CoA-oxidase (H2O2-generating) branch of peroxisomal beta-oxidation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044535" target="_blank" class="term-link">
+                                    GO:0044535
+                                </a>
+                            </span>
+                            <span class="term-label">very-long-chain fatty acyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0044535" data-r="GO_REF:0000116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-mapped from a By-similarity straight-chain reaction (tetracosanoyl-CoA, RHEA:40319). ACOX3 can oxidize straight/very-long-chain acyl-CoAs but only with lower efficiency; this is not its physiological (branched-chain) role. Plausible but non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects lower-efficiency, By-similarity straight-chain activity, not the branched-chain specialization that defines ACOX3.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can oxidize straight-chain mono- and dicarboxylyl</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core cofactor-binding function; equivalent to the IBA GO:0050660 annotation. ACOX3 is a FAD-dependent flavoprotein oxidase.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120523" target="_blank" class="term-link">
+                                    GO:0120523
+                                </a>
+                            </span>
+                            <span class="term-label">medium-chain fatty acyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0120523" data-r="GO_REF:0000116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-mapped from a straight-chain reaction (decanoyl-CoA, RHEA:40179). Represents lower-efficiency straight-chain activity rather than the physiological branched-chain role; retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Lower-efficiency straight-chain activity; not the defining branched-chain function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can oxidize straight-chain mono- and dicarboxylyl</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120524" target="_blank" class="term-link">
+                                    GO:0120524
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty acyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0120524" data-r="GO_REF:0000116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-mapped from a straight-chain reaction (hexadecanoyl-CoA, RHEA:40167; ECO:0000305 in UniProt). Lower-efficiency straight-chain activity rather than the physiological branched-chain role; retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Lower-efficiency straight-chain activity; not the defining branched-chain function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Can oxidize straight-chain mono- and dicarboxylyl</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003997" target="_blank" class="term-link">
+                                    GO:0003997
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0003997" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function, transferred by sequence similarity from the rat ortholog (Q63448, pristanoyl-CoA oxidase). Consistent with the human catalytic-activity evidence; retained as core parent MF.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016402" target="_blank" class="term-link">
+                                    GO:0016402
+                                </a>
+                            </span>
+                            <span class="term-label">pristanoyl-CoA oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0016402" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function, transferred by sequence similarity from the rat pristanoyl-CoA oxidase ortholog (Q63448). Duplicate of the IBA/IEA/Rhea pristanoyl-CoA oxidase annotations; core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" target="_blank" class="term-link">
+                                        PMID:9271077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the human homologue of rat</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033235
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005829" data-r="Reactome:R-HSA-9033235" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation reflecting the transient cytosolic stage of PEX5-mediated peroxisomal matrix import (cargo translocates from the cytosol to the peroxisomal matrix), not a steady-state cytosolic localization. Keep as non-core; the steady-state compartment is the peroxisomal matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the import intermediate (newly synthesized enzyme in the cytosol before PEX5-dependent matrix translocation), not the functional location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033236
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005829" data-r="Reactome:R-HSA-9033236" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate Reactome cytosol annotation from the PEX5 docking/translocation step. As above, an import intermediate rather than the functional localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects PTS1-cargo binding to the docking module during import, not steady-state cytosolic residence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput membrane-proteome dataset from an NK-like cell line (YTS) that identified &gt;1800 proteins; ACOX3 is a soluble peroxisomal matrix enzyme, so this generic &#34;membrane&#34; localization is almost certainly non-specific co-purification rather than a genuine membrane association. Not removed (experimental HDA), but flagged as over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bulk membrane-proteome study; ACOX3 has no transmembrane domain and is a matrix-soluble enzyme, so &#34;membrane&#34; is not an informative or reliable localization for it.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-389891
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005782" data-r="Reactome:R-HSA-389891" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct, specific localization. Reactome models ACOX3 as the matrix enzyme catalyzing (2S)-pristanoyl-CoA oxidation. Consistent with the PTS1 import pathway and UniProt peroxisome localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033235
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005782" data-r="Reactome:R-HSA-9033235" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate peroxisomal-matrix annotation from the PEX5 import reaction (cargo released into the peroxisomal matrix). Correct steady-state localization.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8993592" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8993592
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian peroxisomal acyl-CoA oxidases. III. Molecular char...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O15254" data-a="GO:0005777" data-r="PMID:8993592" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) peroxisomal localization from the molecular characterization of human branched-chain fatty acyl-CoA oxidase. Correct core localization; consistent with the PTS1 (SKL) targeting signal and UniProt SUBCELLULAR LOCATION.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACOX3/ACOX3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" target="_blank" class="term-link">
+                                        PMID:9271077
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">harbouring a peroxisomal C-terminal-targeting</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent oxidation of 2-methyl-branched-chain fatty acyl-CoA esters, notably (2S)-pristanoyl-CoA, to the corresponding (2E)-enoyl-CoA with reduction of O2 to H2O2 — the first, rate-limiting step of peroxisomal beta-oxidation of branched-chain fatty acids.</h3>
+                <span class="vote-buttons" data-g="O15254" data-a="FUNCTION: FAD-dependent oxidation of 2-methyl-branched-chain..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016402" target="_blank" class="term-link">
+                            pristanoyl-CoA oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Oxidizes the CoA-esters of 2-methyl-branched fatty acids.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29287774" target="_blank" class="term-link">
+                                PMID:29287774
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">both ACOX2 and ACOX3 are involved in the degradation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>General acyl-CoA oxidase activity (EC 1.3.3.6): dehydrogenation of a 2,3-saturated acyl-CoA to a (2E)-enoyl-CoA coupled to reduction of O2 to H2O2, the parent catalytic activity that also encompasses lower-efficiency straight-chain acyl-CoA turnover.</h3>
+                <span class="vote-buttons" data-g="O15254" data-a="FUNCTION: General acyl-CoA oxidase activity (EC 1.3.3.6): de..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003997" target="_blank" class="term-link">
+                            acyl-CoA oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Involved in peroxisomal beta-oxidation of branched-chain</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds FAD as the prosthetic group required for the flavoprotein oxidase reaction.</h3>
+                <span class="vote-buttons" data-g="O15254" data-a="FUNCTION: Binds FAD as the prosthetic group required for the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                            FAD binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD; Xref=ChEBI:CHEBI:57692</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts in the peroxisomal matrix, initiating the acyl-CoA-oxidase (H2O2-generating) branch of peroxisomal fatty-acid beta-oxidation of branched-chain fatty acids such as pristanic acid.</h3>
+                <span class="vote-buttons" data-g="O15254" data-a="FUNCTION: Acts in the peroxisomal matrix, initiating the acy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016402" target="_blank" class="term-link">
+                            pristanoyl-CoA oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACOX3/ACOX3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" target="_blank" class="term-link">
+                            PMID:9271077
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Evidence for the existence of a pristanoyl-CoA oxidase gene in man.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned the human ACOX3 cDNA (700 aa) from liver, showing 75% identity with rat pristanoyl-CoA oxidase and a C-terminal PTS1 (SKL) peroxisomal targeting signal; the gene maps to 4p15.3 and is expressed at very low level in liver.</div>
+
+                        <div class="finding-text">"harbouring a peroxisomal C-terminal-targeting"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29287774" target="_blank" class="term-link">
+                            PMID:29287774
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A novel case of ACOX2 deficiency leads to recognition of a third human peroxisomal acyl-CoA oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Substrate-specificity studies of human ACOX1/2/3 showed ACOX1 oxidizes straight-chain fatty acids, ACOX2 handles bile-acid intermediates, and both ACOX2 and ACOX3 degrade branched-chain fatty acids; ACOX3 is expressed in normal human tissues at mRNA and protein level.</div>
+
+                        <div class="finding-text">"both ACOX2 and ACOX3 are involved in the degradation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8993592" target="_blank" class="term-link">
+                            PMID:8993592
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian peroxisomal acyl-CoA oxidases. III. Molecular characterization of human branched chain fatty acyl-CoA oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Molecular characterization of the human branched-chain fatty acyl-CoA oxidase; source of the experimental IDA peroxisome localization in GOA.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput mass-spectrometry membrane-proteome survey of an NK-like cell line (YTS) identifying &gt;1800 proteins; source of the HDA &#34;membrane&#34; annotation. Not specific to ACOX3 function.</div>
+
+                        <div class="finding-text">"membrane proteome of NK cells"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-389891
+
+                    </span>
+                </div>
+
+                <div class="reference-title">(2S)-pristanoyl-CoA + O2 =&gt; trans-2,3-dehydropristanoyl-CoA + H2O2 (ACOX3)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction modeling ACOX3 as the peroxisomal enzyme oxidizing (2S)-pristanoyl-CoA to trans-2,3-dehydropristanoyl-CoA and H2O2.</div>
+
+                        <div class="finding-text">"Peroxisomal ACOX3 catalyzes the reaction of (2S)-pristanoyl-CoA and O2 to form trans-2,3-dehydropristanoyl-CoA and H2O2"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-389887
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Beta-oxidation of pristanoyl-CoA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pathway context: pristanoyl-CoA (from alpha-oxidation of dietary phytanic acid) is degraded by three cycles of peroxisomal beta-oxidation, the first dehydrogenation of which is catalyzed by ACOX3.</div>
+
+                        <div class="finding-text">"further catabolized by three cycles of peroxisomal beta-oxidation"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033235
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cargo of PEX5S,L translocates from the cytosol to the peroxisomal matrix</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PEX5-mediated import step by which PTS1 cargo (including ACOX3) is translocated from the cytosol into the peroxisomal matrix; basis for the transient cytosol and matrix localization annotations.</div>
+
+                        <div class="finding-text">"the cargo protein is released into the peroxisomal matrix"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033236
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PEX5S,L:Cargo binds PEX13:PEX14:PEX2:PEX10:PEX12 (Docking and Translocation Module)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PEX5:cargo binding to the peroxisomal docking/translocation module; basis for a transient cytosol localization annotation of the imported cargo.</div>
+
+                        <div class="finding-text">"the Docking and Translocation Module (PEX13:PEX14:PEX2:PEX10:PEX12)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ACOX3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O15254" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acox3-peroxisomal-acyl-coenzyme-a-oxidase-3-review-notes">ACOX3 (Peroxisomal acyl-coenzyme A oxidase 3) — review notes</h1>
+<p>UniProt: O15254 (ACOX3_HUMAN). Gene: ACOX3; synonyms BRCOX, PRCOX. HGNC:121. Chromosome 4p15.3.<br />
+700 aa; EC 1.3.3.6. Belongs to the acyl-CoA oxidase family.</p>
+<h2 id="identity-naming">Identity / naming</h2>
+<ul>
+<li>RecName "Peroxisomal acyl-coenzyme A oxidase 3"; AltName "Branched-chain acyl-CoA oxidase"<br />
+  (Short "BRCACox"); AltName "Pristanoyl-CoA oxidase" [file:human/ACOX3/ACOX3-uniprot.txt<br />
+  "AltName: Full=Pristanoyl-CoA oxidase"].</li>
+<li>Historical note: an earlier human "branched-chain acyl-CoA oxidase" (BRCACox) was characterized<br />
+  as the human homologue of <em>rat trihydroxycoprostanoyl-CoA oxidase</em> — this is actually the gene now<br />
+  called ACOX2, not ACOX3. ACOX3 was first identified as a distinct <em>pristanoyl-CoA oxidase</em> gene<br />
+  [PMID:9271077 "these compounds are oxidized by a single enzyme, branched-chain acyl-CoA oxidase,<br />
+  which according to its amino acid sequence is the human homologue of rat<br />
+  trihydroxycoprostanoyl-CoA oxidase"; and "the gene for human pristanoyl-CoA oxidase was mapped at<br />
+  chromosome position 4p15.3"]. The GOA "BRCOX/branched-chain acyl-CoA oxidase" naming in UniProt<br />
+  reflects this tangled history; the modern, well-supported molecular activity is a<br />
+  2-methyl-branched-chain / pristanoyl-CoA oxidase.</li>
+</ul>
+<h2 id="molecular-function">Molecular function</h2>
+<ul>
+<li>FAD-dependent acyl-CoA oxidase; catalyzes the first, rate-limiting dehydrogenation of peroxisomal<br />
+  beta-oxidation: a 2,3-saturated acyl-CoA + O2 -&gt; a (2E)-enoyl-CoA + H2O2 (EC 1.3.3.6)<br />
+  [file:human/ACOX3/ACOX3-uniprot.txt "Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA +<br />
+  H2O2"]. FAD cofactor [file:human/ACOX3/ACOX3-uniprot.txt "Name=FAD; Xref=ChEBI:CHEBI:57692"].</li>
+<li>Preferred physiological substrates are multi-methyl-branched (2-methyl-branched) fatty acyl-CoAs,<br />
+  notably (2S)-pristanoyl-CoA [file:human/ACOX3/ACOX3-uniprot.txt "Metabolizes multi-methyl-branched<br />
+  fatty acyl-CoA esters such as (2S)-pristanoyl-CoA"; and "Oxidizes the CoA-esters of 2-methyl-branched<br />
+  fatty acids"]. Pristanoyl-CoA reaction: (2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2<br />
+  [file:human/ACOX3/ACOX3-uniprot.txt "Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2"].</li>
+<li>Can also oxidize straight-chain (mono- and dicarboxylyl) acyl-CoAs with lower efficiency; the<br />
+  straight-chain reactions in UniProt (decanoyl-, hexadecanoyl-, tetracosanoyl-, hexadecanedioyl-CoA)<br />
+  are largely By-similarity/inferred rather than the physiological role [file:human/ACOX3/ACOX3-uniprot.txt<br />
+  "Can oxidize straight-chain mono- and dicarboxylyl fatty acyl-CoAs with lower efficiency (By<br />
+  similarity)"].</li>
+<li>Substrate-specificity study of ACOX1/2/3 concluded ACOX1 handles straight-chain fatty acids, ACOX2<br />
+  handles bile-acid intermediates, and both ACOX2 and ACOX3 handle branched-chain fatty acids<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29287774" title="ACOX1 is responsible for the oxidation of straight-chain fatty acids with different   chain lengths, ACOX2 is the only human acyl-CoA oxidase involved in bile acid biosynthesis, and both   ACOX2 and ACOX3 are involved in the degradation of the branched-chain fatty acids">PMID:29287774</a>.</li>
+</ul>
+<h2 id="biological-process">Biological process</h2>
+<ul>
+<li>Peroxisomal fatty-acid beta-oxidation, specifically the acyl-CoA-oxidase-dependent branch (H2O2<br />
+  generated instead of feeding electrons to a respiratory chain) [file:human/ACOX3/ACOX3-uniprot.txt<br />
+  "PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation"]. Pristanoyl-CoA (from<br />
+  alpha-oxidation of dietary phytanic acid) is degraded by three cycles of peroxisomal beta-oxidation<br />
+  [reactome:R-HSA-389887 "Pristanoyl-CoA, generated in the peroxisome by alpha-oxidation of dietary<br />
+  phytanic acid, is further catabolized by three cycles of peroxisomal beta-oxidation"].</li>
+</ul>
+<h2 id="cellular-component">Cellular component</h2>
+<ul>
+<li>Peroxisomal matrix protein; C-terminal PTS1 (SKL) targeting signal<br />
+  [file:human/ACOX3/ACOX3-uniprot.txt "SUBCELLULAR LOCATION: Peroxisome"; "MOTIF 698..700<br />
+  /note=\"Microbody targeting signal\""; PMID:9271077 "harbouring a peroxisomal C-terminal-targeting<br />
+  signal (SKL)"]. Reactome models it as a matrix enzyme imported by the PEX5 pathway (hence transient<br />
+  cytosol/matrix-translocation TAS annotations).</li>
+</ul>
+<h2 id="expression-tissue-specificity">Expression / tissue specificity</h2>
+<ul>
+<li>Long believed nearly silent in human tissues (mRNA undetectable by routine Northern blot; protein<br />
+  undetectable by immunoblot) <a href="https://pubmed.ncbi.nlm.nih.gov/9271077" title="expressed to such a low extent in liver that its mRNA   cannot be detected by routine Northern-blot analysis and that its product remains undetected by   standard immunoblotting or by enzyme activity measurements">PMID:9271077</a>. Ferdinandusse et al. 2018 later<br />
+  demonstrated ACOX3 expression in normal human tissues at both mRNA and protein level<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29287774" title="We report for the first time expression of ACOX3 in normal human tissues at the mRNA   and protein level">PMID:29287774</a>. UniProt records protein-level expression in liver, kidney, lung, brain and heart<br />
+  [file:human/ACOX3/ACOX3-uniprot.txt "Expressed in liver, kidney, lung, brain (cortex and cerebellum)<br />
+  and heart (at protein level)"]. Reactome (older) notes ACOX3 protein/activity detectable in prostate<br />
+  tumors but historically undetectable in normal prostate, liver, kidney [reactome:R-HSA-389891<br />
+  "ACOX3 protein and enzyme activity have been observed in prostate tumors, but are undetectable in<br />
+  normal prostate tissue as well as in liver and kidney"].</li>
+</ul>
+<h2 id="annotation-review-reasoning">Annotation review reasoning</h2>
+<p>Core MF: pristanoyl-CoA oxidase activity (GO:0016402) and the parent acyl-CoA oxidase activity<br />
+(GO:0003997); FAD binding (GO:0071949 / GO:0050660). Core BP: fatty acid beta-oxidation using acyl-CoA<br />
+oxidase (GO:0033540) / fatty acid beta-oxidation (GO:0006635). Core CC: peroxisome (GO:0005777) /<br />
+peroxisomal matrix (GO:0005782).</p>
+<p>Over-annotations / caveats:<br />
+- "fatty acid binding" (GO:0005504, IBA + InterPro IEA): the enzyme binds fatty <strong>acyl-CoA</strong> thioesters,<br />
+  not free fatty acids; this is a generic family-propagated MF that does not describe ACOX3's actual<br />
+  ligand — MARK_AS_OVER_ANNOTATED.<br />
+- The Rhea-derived very-long-chain / long-chain / medium-chain acyl-CoA oxidase MF terms (GO:0044535,<br />
+  GO:0120524, GO:0120523) come from By-similarity straight-chain reactions and are lower-efficiency /<br />
+  non-physiological for this branched-chain-specialist enzyme — KEEP_AS_NON_CORE.<br />
+- GO:0016627 (oxidoreductase, CH-CH group of donors) is a correct but very general parent — KEEP_AS_NON_CORE.<br />
+- GO:0016020 "membrane" (HDA, PMID:19946888, NK-cell membrane proteome): ACOX3 is a soluble peroxisomal<br />
+  matrix protein; membrane co-purification is likely non-specific. Do not REMOVE (experimental HDA) —<br />
+  MARK_AS_OVER_ANNOTATED.<br />
+- GO:0005829 "cytosol" (Reactome TAS): reflects the transient cytosolic stage of PEX5-mediated matrix<br />
+  import, not a steady-state cytosolic localization — KEEP_AS_NON_CORE.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O15254
+gene_symbol: ACOX3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ACOX3 is a peroxisomal, FAD-dependent acyl-CoA oxidase (EC 1.3.3.6) of the
+  acyl-CoA oxidase family that catalyzes the first and rate-limiting
+  dehydrogenation step of peroxisomal fatty-acid beta-oxidation, converting a
+  2,3-saturated acyl-CoA to the corresponding (2E)-enoyl-CoA while reducing O2 to
+  H2O2. Its preferred physiological substrates are 2-methyl-branched (multi-methyl
+  branched) fatty acyl-CoA esters, in particular (2S)-pristanoyl-CoA, which is
+  derived from alpha-oxidation of dietary phytanic acid; ACOX3 thus functions as a
+  pristanoyl-CoA / branched-chain acyl-CoA oxidase. It can also oxidize
+  straight-chain and dicarboxylyl acyl-CoAs with lower efficiency. The mature
+  protein is a soluble matrix enzyme imported into the peroxisome via a C-terminal
+  PTS1 (SKL) targeting signal. In humans, branched-chain acyl-CoA oxidase activity
+  is shared with the paralog ACOX2; ACOX3 was long thought to be nearly silent but
+  is expressed at mRNA and protein level in several normal tissues including liver,
+  kidney, lung, brain and heart.
+alternative_products:
+- name: &#39;1&#39;
+  id: O15254-1
+- name: &#39;2&#39;
+  id: O15254-2
+  sequence_note: VSP_023355, VSP_023356
+existing_annotations:
+- term:
+    id: GO:0005504
+    label: fatty acid binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically-propagated generic MF. ACOX3 binds and oxidizes fatty
+      acyl-CoA thioesters, not free fatty acids, so &#34;fatty acid binding&#34; does not
+      capture its actual ligand or function; it is at best incidental to the
+      catalytic activity captured by GO:0016402/GO:0003997.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The substrate is a fatty acyl-CoA ester, not a free fatty acid; the specific
+      acyl-CoA oxidase MF terms already cover the real function. Generic
+      &#34;fatty acid binding&#34; is an over-annotation for an acyl-CoA oxidase.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: PANTHER:PTN000097533
+        comment: &gt;-
+          Acyl-CoA oxidase family node; &#34;fatty acid binding&#34; propagates across the
+          family but conflates the acyl-CoA-ester substrate with free fatty acid.
+- term:
+    id: GO:0033540
+    label: fatty acid beta-oxidation using acyl-CoA oxidase
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process. ACOX3 catalyzes the initial,
+      acyl-CoA-oxidase-dependent (H2O2-generating) step of peroxisomal fatty-acid
+      beta-oxidation, consistent with UniProt PATHWAY and experimental substrate
+      studies.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.&#34;
+    - reference_id: PMID:29287774
+      supporting_text: &#34;both ACOX2 and ACOX3 are involved in the degradation&#34;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Correct core localization. ACOX3 is a peroxisomal enzyme with a C-terminal
+      PTS1 (SKL) targeting signal, supported by UniProt SUBCELLULAR LOCATION and
+      experimental IDA (PMID:8993592).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+    - reference_id: PMID:9271077
+      supporting_text: &#34;harbouring a peroxisomal C-terminal-targeting&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core cofactor-binding function. ACOX3 is a flavoprotein
+      oxidoreductase that uses FAD as prosthetic group; UniProt records the FAD
+      cofactor. GO:0050660 and GO:0071949 are equivalent descriptions of FAD
+      binding.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+- term:
+    id: GO:0016402
+    label: pristanoyl-CoA oxidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core molecular function and the most specific well-supported MF for
+      ACOX3. The enzyme oxidizes (2S)-pristanoyl-CoA and other 2-methyl-branched
+      acyl-CoA esters; supported by the UniProt catalytic activity and by
+      experimental substrate-specificity studies.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2&#34;
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Oxidizes the CoA-esters of 2-methyl-branched fatty acids.&#34;
+- term:
+    id: GO:0003997
+    label: acyl-CoA oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct parent molecular function (EC 1.3.3.6). ACOX3 catalyzes
+      a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2. Retained as core;
+      the more specific GO:0016402 (pristanoyl-CoA oxidase activity) better
+      captures the physiological substrate preference.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2&#34;
+- term:
+    id: GO:0005504
+    label: fatty acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-propagated duplicate of the &#34;fatty acid binding&#34; annotation. Same
+      reasoning: ACOX3 binds fatty acyl-CoA esters, not free fatty acids.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic InterPro2GO transfer that mischaracterizes the ligand; the acyl-CoA
+      oxidase MF terms already describe the real substrate binding/turnover.
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct localization, electronically inferred and consistent with the
+      experimental IDA and UniProt SUBCELLULAR LOCATION. Redundant with the IBA
+      and IDA peroxisome annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      More specific and correct localization. ACOX3 is a soluble matrix enzyme
+      imported via its PTS1 signal; the peroxisomal matrix is the compartment where
+      it acts. Consistent with Reactome TAS matrix annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+    - reference_id: PMID:9271077
+      supporting_text: &#34;harbouring a peroxisomal C-terminal-targeting&#34;
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but very general parent BP. The specific process (peroxisomal
+      fatty-acid beta-oxidation) is captured by GO:0033540 / GO:0006635, which are
+      the informative annotations to retain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-level parent of the more specific beta-oxidation terms already present;
+      not wrong but uninformative as a standalone.
+- term:
+    id: GO:0006635
+    label: fatty acid beta-oxidation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct core biological process describing the beta-oxidation pathway ACOX3
+      initiates. Consistent with the UniProt PATHWAY annotation and the
+      peroxisomal acyl-CoA-oxidase branch (GO:0033540).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.&#34;
+- term:
+    id: GO:0016402
+    label: pristanoyl-CoA oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-mapped duplicate of the core pristanoyl-CoA oxidase MF, mapped from
+      RHEA:40459 ((2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2). Correct
+      and core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2&#34;
+- term:
+    id: GO:0016627
+    label: oxidoreductase activity, acting on the CH-CH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct but general grandparent MF. This is the EC-class-level description of
+      an acyl-CoA oxidase/dehydrogenase; the specific acyl-CoA oxidase terms are
+      the informative ones to retain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-level parent of GO:0003997/GO:0016402; not wrong but uninformative.
+- term:
+    id: GO:0033540
+    label: fatty acid beta-oxidation using acyl-CoA oxidase
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronically-inferred duplicate of the core IBA BP annotation. Correct and
+      core: ACOX3 initiates the acyl-CoA-oxidase (H2O2-generating) branch of
+      peroxisomal beta-oxidation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.&#34;
+- term:
+    id: GO:0044535
+    label: very-long-chain fatty acyl-CoA oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-mapped from a By-similarity straight-chain reaction (tetracosanoyl-CoA,
+      RHEA:40319). ACOX3 can oxidize straight/very-long-chain acyl-CoAs but only
+      with lower efficiency; this is not its physiological (branched-chain) role.
+      Plausible but non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reflects lower-efficiency, By-similarity straight-chain activity, not the
+      branched-chain specialization that defines ACOX3.
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Can oxidize straight-chain mono- and dicarboxylyl&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core cofactor-binding function; equivalent to the IBA
+      GO:0050660 annotation. ACOX3 is a FAD-dependent flavoprotein oxidase.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+- term:
+    id: GO:0120523
+    label: medium-chain fatty acyl-CoA oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-mapped from a straight-chain reaction (decanoyl-CoA, RHEA:40179).
+      Represents lower-efficiency straight-chain activity rather than the
+      physiological branched-chain role; retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Lower-efficiency straight-chain activity; not the defining branched-chain
+      function.
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Can oxidize straight-chain mono- and dicarboxylyl&#34;
+- term:
+    id: GO:0120524
+    label: long-chain fatty acyl-CoA oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-mapped from a straight-chain reaction (hexadecanoyl-CoA, RHEA:40167;
+      ECO:0000305 in UniProt). Lower-efficiency straight-chain activity rather than
+      the physiological branched-chain role; retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Lower-efficiency straight-chain activity; not the defining branched-chain
+      function.
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Can oxidize straight-chain mono- and dicarboxylyl&#34;
+- term:
+    id: GO:0003997
+    label: acyl-CoA oxidase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core molecular function, transferred by sequence similarity from the
+      rat ortholog (Q63448, pristanoyl-CoA oxidase). Consistent with the human
+      catalytic-activity evidence; retained as core parent MF.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2&#34;
+- term:
+    id: GO:0016402
+    label: pristanoyl-CoA oxidase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct core molecular function, transferred by sequence similarity from the
+      rat pristanoyl-CoA oxidase ortholog (Q63448). Duplicate of the IBA/IEA/Rhea
+      pristanoyl-CoA oxidase annotations; core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2&#34;
+    - reference_id: PMID:9271077
+      supporting_text: &#34;the human homologue of rat&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033235
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome annotation reflecting the transient cytosolic stage of PEX5-mediated
+      peroxisomal matrix import (cargo translocates from the cytosol to the
+      peroxisomal matrix), not a steady-state cytosolic localization. Keep as
+      non-core; the steady-state compartment is the peroxisomal matrix.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Captures the import intermediate (newly synthesized enzyme in the cytosol
+      before PEX5-dependent matrix translocation), not the functional location.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033236
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate Reactome cytosol annotation from the PEX5 docking/translocation
+      step. As above, an import intermediate rather than the functional
+      localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reflects PTS1-cargo binding to the docking module during import, not
+      steady-state cytosolic residence.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput membrane-proteome dataset from an NK-like cell line (YTS)
+      that identified &gt;1800 proteins; ACOX3 is a soluble peroxisomal matrix enzyme,
+      so this generic &#34;membrane&#34; localization is almost certainly non-specific
+      co-purification rather than a genuine membrane association. Not removed
+      (experimental HDA), but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bulk membrane-proteome study; ACOX3 has no transmembrane domain and is a
+      matrix-soluble enzyme, so &#34;membrane&#34; is not an informative or reliable
+      localization for it.
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-389891
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct, specific localization. Reactome models ACOX3 as the matrix enzyme
+      catalyzing (2S)-pristanoyl-CoA oxidation. Consistent with the PTS1 import
+      pathway and UniProt peroxisome localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033235
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate peroxisomal-matrix annotation from the PEX5 import reaction (cargo
+      released into the peroxisomal matrix). Correct steady-state localization.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:8993592
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) peroxisomal localization from the molecular
+      characterization of human branched-chain fatty acyl-CoA oxidase. Correct core
+      localization; consistent with the PTS1 (SKL) targeting signal and UniProt
+      SUBCELLULAR LOCATION.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+    - reference_id: PMID:9271077
+      supporting_text: &#34;harbouring a peroxisomal C-terminal-targeting&#34;
+core_functions:
+- description: &gt;-
+    FAD-dependent oxidation of 2-methyl-branched-chain fatty acyl-CoA esters,
+    notably (2S)-pristanoyl-CoA, to the corresponding (2E)-enoyl-CoA with reduction
+    of O2 to H2O2 — the first, rate-limiting step of peroxisomal beta-oxidation of
+    branched-chain fatty acids.
+  molecular_function:
+    id: GO:0016402
+    label: pristanoyl-CoA oxidase activity
+  supported_by:
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;Reaction=(2S)-pristanoyl-CoA + O2 = (2E)-pristenoyl-CoA + H2O2&#34;
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;Oxidizes the CoA-esters of 2-methyl-branched fatty acids.&#34;
+  - reference_id: PMID:29287774
+    supporting_text: &#34;both ACOX2 and ACOX3 are involved in the degradation&#34;
+- description: &gt;-
+    General acyl-CoA oxidase activity (EC 1.3.3.6): dehydrogenation of a
+    2,3-saturated acyl-CoA to a (2E)-enoyl-CoA coupled to reduction of O2 to H2O2,
+    the parent catalytic activity that also encompasses lower-efficiency
+    straight-chain acyl-CoA turnover.
+  molecular_function:
+    id: GO:0003997
+    label: acyl-CoA oxidase activity
+  supported_by:
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;Reaction=a 2,3-saturated acyl-CoA + O2 = a (2E)-enoyl-CoA + H2O2&#34;
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;Involved in peroxisomal beta-oxidation of branched-chain&#34;
+- description: &gt;-
+    Binds FAD as the prosthetic group required for the flavoprotein
+    oxidase reaction.
+  molecular_function:
+    id: GO:0071949
+    label: FAD binding
+  supported_by:
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;Name=FAD; Xref=ChEBI:CHEBI:57692&#34;
+- description: &gt;-
+    Acts in the peroxisomal matrix, initiating the acyl-CoA-oxidase (H2O2-generating)
+    branch of peroxisomal fatty-acid beta-oxidation of branched-chain fatty acids
+    such as pristanic acid.
+  molecular_function:
+    id: GO:0016402
+    label: pristanoyl-CoA oxidase activity
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+  supported_by:
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;PATHWAY: Lipid metabolism; peroxisomal fatty acid beta-oxidation.&#34;
+  - reference_id: file:human/ACOX3/ACOX3-uniprot.txt
+    supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9271077
+  title: Evidence for the existence of a pristanoyl-CoA oxidase gene in man.
+  findings:
+  - statement: &gt;-
+      Cloned the human ACOX3 cDNA (700 aa) from liver, showing 75% identity with rat
+      pristanoyl-CoA oxidase and a C-terminal PTS1 (SKL) peroxisomal targeting
+      signal; the gene maps to 4p15.3 and is expressed at very low level in liver.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;harbouring a peroxisomal C-terminal-targeting&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original characterization of the human ACOX3 (pristanoyl-CoA
+      oxidase) gene; establishes identity, PTS1 signal, and low baseline expression.
+      Abstract-only in cache.
+- id: PMID:29287774
+  title: A novel case of ACOX2 deficiency leads to recognition of a third human peroxisomal
+    acyl-CoA oxidase.
+  findings:
+  - statement: &gt;-
+      Substrate-specificity studies of human ACOX1/2/3 showed ACOX1 oxidizes
+      straight-chain fatty acids, ACOX2 handles bile-acid intermediates, and both
+      ACOX2 and ACOX3 degrade branched-chain fatty acids; ACOX3 is expressed in
+      normal human tissues at mRNA and protein level.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;both ACOX2 and ACOX3 are involved in the degradation&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; the primary FUNCTION/CATALYTIC ACTIVITY/TISSUE reference in
+      the UniProt record (EC 1.3.3.6 evidence). Establishes ACOX3&#39;s branched-chain
+      role and normal-tissue expression. Abstract-only in cache; detailed catalytic
+      claims anchored to the UniProt record.
+- id: PMID:8993592
+  title: Mammalian peroxisomal acyl-CoA oxidases. III. Molecular characterization
+    of human branched chain fatty acyl-CoA oxidase.
+  findings:
+  - statement: &gt;-
+      Molecular characterization of the human branched-chain fatty acyl-CoA oxidase;
+      source of the experimental IDA peroxisome localization in GOA.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified conference proceedings (abstract/title only in cache);
+      supports peroxisomal localization of the enzyme. Full text not available.
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings:
+  - statement: &gt;-
+      High-throughput mass-spectrometry membrane-proteome survey of an NK-like cell
+      line (YTS) identifying &gt;1800 proteins; source of the HDA &#34;membrane&#34;
+      annotation. Not specific to ACOX3 function.
+    reference_section_type: ABSTRACT
+    supporting_text: &#34;membrane proteome of NK cells&#34;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified proteomics survey; ACOX3 is a bulk hit. Does not inform ACOX3
+      molecular function and the &#34;membrane&#34; localization is non-specific for a
+      matrix-soluble enzyme.
+- id: Reactome:R-HSA-389891
+  title: (2S)-pristanoyl-CoA + O2 =&gt; trans-2,3-dehydropristanoyl-CoA + H2O2 (ACOX3)
+  findings:
+  - statement: &gt;-
+      Reactome reaction modeling ACOX3 as the peroxisomal enzyme oxidizing
+      (2S)-pristanoyl-CoA to trans-2,3-dehydropristanoyl-CoA and H2O2.
+    reference_section_type: OTHER
+    supporting_text: &#34;Peroxisomal ACOX3 catalyzes the reaction of (2S)-pristanoyl-CoA and O2 to form trans-2,3-dehydropristanoyl-CoA and H2O2&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome pathway entry directly modeling ACOX3&#39;s pristanoyl-CoA oxidase
+      reaction; consistent with UniProt catalytic activity.
+- id: Reactome:R-HSA-389887
+  title: Beta-oxidation of pristanoyl-CoA
+  findings:
+  - statement: &gt;-
+      Pathway context: pristanoyl-CoA (from alpha-oxidation of dietary phytanic
+      acid) is degraded by three cycles of peroxisomal beta-oxidation, the first
+      dehydrogenation of which is catalyzed by ACOX3.
+    reference_section_type: OTHER
+    supporting_text: &#34;further catabolized by three cycles of peroxisomal beta-oxidation&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome pathway providing the branched-chain beta-oxidation context for
+      ACOX3&#39;s substrate (pristanoyl-CoA).
+- id: Reactome:R-HSA-9033235
+  title: Cargo of PEX5S,L translocates from the cytosol to the peroxisomal matrix
+  findings:
+  - statement: &gt;-
+      PEX5-mediated import step by which PTS1 cargo (including ACOX3) is translocated
+      from the cytosol into the peroxisomal matrix; basis for the transient cytosol
+      and matrix localization annotations.
+    reference_section_type: OTHER
+    supporting_text: &#34;the cargo protein is released into the peroxisomal matrix&#34;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Generic peroxisomal import reaction; explains the transient cytosol/matrix
+      annotations rather than ACOX3-specific biology.
+- id: Reactome:R-HSA-9033236
+  title: PEX5S,L:Cargo binds PEX13:PEX14:PEX2:PEX10:PEX12 (Docking and Translocation
+    Module)
+  findings:
+  - statement: &gt;-
+      PEX5:cargo binding to the peroxisomal docking/translocation module; basis for
+      a transient cytosol localization annotation of the imported cargo.
+    reference_section_type: OTHER
+    supporting_text: &#34;the Docking and Translocation Module (PEX13:PEX14:PEX2:PEX10:PEX12)&#34;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Generic peroxisomal import docking reaction; not ACOX3-specific.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
