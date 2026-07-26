@@ -311,6 +311,22 @@ signalling, not adhesion of the cell to the matrix. Plain `GO:0005178` is the ho
   meet would have been self-defeating in front of a GO editor. Reworded positively: the defining
   feature is the cell-instructive action on a receptor, and the term now explicitly neither asserts
   nor excludes a structural contribution.
+
+  **That reword then went too far, and was tightened in a third pass.** Dropping the negative clause
+  left the definition with no differentia at all: "acts on cells by engaging cell-surface receptors,
+  thereby modulating their signalling, adhesion, proliferation or differentiation state" is satisfied
+  in full by `GO:0008083` growth factor activity, since plenty of growth factors are matrix-resident
+  (FGFs, HB-EGF, latent TGF-β complexes), and localization is a weak differentia for a molecular
+  function in any case. The criterion the siblings genuinely fail is **receptor class**: `GO:0005125`
+  cytokine activity is defined for a *soluble* extracellular product, growth factor activity for
+  *stimulation* of growth, whereas a matricellular protein signals through an adhesion receptor
+  (`GO:0004895`, whose own definition names integrins) and here *restrains* proliferation. The
+  definition now carries that, and the justification records all three rejected candidates — the
+  unmeasurable negative, matrix residence alone, and receptor class as the one that survives.
+
+  Sequence of three passes on one definition is worth noting as a pattern: an unmeasurable negative
+  was replaced by no differentia, which had to be replaced by a real one. The intermediate state was
+  a genuine regression even though the change producing it was correct.
 - Senescence, antiviral and blood-brain-barrier roles left unannotated and moved into
   `suggested_questions` / `suggested_experiments`. The senescence literature contradicts itself
   (§4) and no term should be asserted until that is resolved. Note the contrast with the neuronal
