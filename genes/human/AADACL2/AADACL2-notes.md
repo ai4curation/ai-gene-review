@@ -163,14 +163,95 @@ All five were taken:
 5. Added `PMID:16641997` (chromosome 3 sequencing, UniProt `RN[2]`) to `references:` so the
    "all three UniProt references are large-scale sequencing" claim is self-contained.
 
+> **Items 2 and 4 above are superseded** by the cross-gene adjudication section at the end of
+> this file. The reconciliation in item 2 was the wrong way round — `GO:0052689` is now the
+> recorded core function — and the "protein-level annotation on AADACL2" framing in item 4
+> proposed a term (`GO:0017171`) that one of the row's own donors refutes.
+
 ## Actions taken
 
 | term | evidence | action |
 |---|---|---|
-| GO:0016787 hydrolase activity | IBA | MODIFY → GO:0017171 serine hydrolase activity |
+| GO:0016787 hydrolase activity | IBA | MODIFY → GO:0052689 carboxylic ester hydrolase activity |
 | GO:0016020 membrane (`is_active_in`) | IBA | UNDECIDED |
-| GO:0003824 catalytic activity | IEA | MODIFY → GO:0017171 serine hydrolase activity |
+| GO:0003824 catalytic activity | IEA | MODIFY → GO:0052689 carboxylic ester hydrolase activity |
 | GO:0005576 extracellular region | IEA | UNDECIDED |
 | GO:0016020 membrane (`located_in`) | IEA | UNDECIDED |
-| GO:0016787 hydrolase activity | IEA | MODIFY → GO:0017171 serine hydrolase activity |
+| GO:0016787 hydrolase activity | IEA | MODIFY → GO:0052689 carboxylic ester hydrolase activity |
 | GO:0052689 carboxylic ester hydrolase activity | IEA | ACCEPT |
+
+(The three MODIFY rows originally proposed `GO:0017171 serine hydrolase activity`; see the
+cross-gene adjudication below for why they now all collapse onto `GO:0052689` instead.)
+
+## Cross-gene adjudication of the PTN009058710 `GO:0016787` row (AADACL2 / AADACL3 / AADACL4)
+
+**The defect.** AADACL2, AADACL3 and AADACL4 each carry one `GO:0016787 hydrolase activity`
+IBA row from `GO_REF:0000033`, transferred from PANTHER node `PTN009058710`, and the
+`WITH/FROM` fields are **byte-identical** across the three records — the same 17 tokens. Three
+separate reviews nevertheless reached three different verdicts on that one row:
+
+| gene | PR | verdict as merged |
+|---|---|---|
+| AADACL2 | #2266 | `MODIFY` → `GO:0017171`, `TERM_SCOPING_PROBLEM` + `GRANULARITY_MISMATCH` |
+| AADACL4 | #2263 | `MODIFY` → `GO:0052689`, `TERM_SCOPING_PROBLEM` + `GRANULARITY_MISMATCH` |
+| AADACL3 | #2264 (open) | keep `GO:0016787` as the genuine LCA; replace only as redundant, `EVIDENCE_CIRCULAR_OR_REDUNDANT` |
+
+**How it was settled.** By measurement, not by preference. The shared node audit
+`AADACL2-bioinformatics/audit_node_PTN009058710.py` resolves all 17 tokens (16 proteins plus
+the tree node itself) and reads each donor's chemistry off its own EC numbers *and* its own
+curated GO annotations classified by fetched ontology ancestry, and its nucleophile off its own
+`ACT_SITE` features. Results in `NODE_PTN009058710.md`:
+
+```
+GO:0016787 hydrolase activity:                  TRUE 16, FALSE 0, UNDETERMINED 0
+GO:0052689 carboxylic ester hydrolase activity: TRUE 14, FALSE 2, UNDETERMINED 0
+GO:0017171 serine hydrolase activity:           TRUE 15, FALSE 1, UNDETERMINED 0
+```
+
+Neither refinement is true of the whole node, and the two refutations lie on **different
+axes**, so neither can be rescued by choosing the other:
+
+- the bond-type axis is blocked by the two kynurenine formamidases, mouse Afmid (`Q8K4H1`,
+  `GO:0004061` by IMP) and yeast BNA7 (`Q04066`, `GO:0004061` by IDA), both EC 3.5.1.9. Their
+  term sits under `GO:0016810` (C–N bonds), a *sibling* of the ester branch.
+- the mechanism axis is blocked by soybean HIDH (`Q5NUF3`), whose nucleophile-elbow residue is
+  **Thr164**, against `GO:0017171`'s definition demanding "a catalytic triad consisting of a
+  serine nucleophile".
+
+Because `GO:0016788` and `GO:0016810` are siblings whose only common ancestor below
+`GO:0003824` is `GO:0016787`, the term PAINT chose is the **exact LCA** of its donor set.
+So **AADACL3's reading was the correct one**, and all three genes are now harmonised to it:
+`MODIFY` → `GO:0052689` on redundancy grounds only, `root_cause:
+EVIDENCE_CIRCULAR_OR_REDUNDANT`, and **no** `failure_modes`. `GRANULARITY_MISMATCH` is dropped
+because it presupposes donors that agree with a term still sitting above them; here the donors
+disagree and the parent is their LCA, so there is no granularity defect at all.
+
+**Two premises that were wrong and mattered.**
+
+1. Both merged reviews leaned on soybean HIDH being "not a hydrolase at all but a dehydratase",
+   which would have threatened even `GO:0016787`. It is bifunctional: `GO:0033987` dehydratase
+   by IDA **and** `GO:0106435 carboxylesterase activity` by IDA, EC 4.2.1.105 **and** EC
+   3.1.1.1. So it refutes the *serine* term only, and the ester term is blocked by the two
+   formamidases instead. This sentence in `RESULTS.md` was corrected.
+2. Yeast BNA7 does resolve — `xref:sgd-S000002836` → `Q04066`, `ACT_SITE 110` labelled
+   "Nucleophile" by UniProt and reading as Ser. The AADACL3 audit reached it through an
+   Alliance record and reported the nucleophile unresolved, undercounting the serine tally;
+   with BNA7 in, it is 15 of 16 serine, one threonine.
+
+**Where the mechanism term does belong.** `GO:0017171` is not wrong about this family, it is
+attached to the wrong node. At the *family* node `PTN009058713` — whose `WITH/FROM` names only
+human AADAC, mouse Aadac and mouse Nceh1 — the term is true of all three donors and held by
+**IDA** in two of them, and all three are `IPR017157` members. All three blockers at the deep
+node lie *outside* `IPR017157`. So the PAINT recommendation is a **node move**
+(`PTN002745055`/`PTN002745068` → `PTN009058713`), not a term change on the row, and it is now
+stated that way in `knowledge_gaps` and `suggested_questions` in AADACL2 and in
+`suggested_questions` in AADACL4.
+
+**Knock-on change to `core_functions`.** AADACL2's core molecular function moves from
+`GO:0017171` to `GO:0052689`, matching AADACL4 and AADACL3, which have identical catalytic
+registers and the same subfamily signature. `GO:0017171` remains true of AADACL2 on its own
+residues and is stated as such in the `core_functions` description, but no existing row carries
+it and it is pursued as the node move above rather than asserted as a second activity. The
+`GO:0003824` ARBA row's replacement was moved to `GO:0052689` for the same reason: all three
+general molecular-function rows on this record now collapse onto the one specific term the
+record actually has.
