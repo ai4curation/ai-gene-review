@@ -56,14 +56,16 @@ carboxylation.
   retained.
 - `purC` loses an unsupported cobalamin-process annotation propagated from a
   broad family mapping.
-- `purK` retains its specific N5-CAIR synthetase term; the broad direct
-  AIR-carboxylase term is treated as redundant for this half of the bacterial
-  two-enzyme route.
+- `purK` retains its specific N5-CAIR synthetase term; the direct
+  AIR-carboxylase annotation is modified to that specific activity because
+  bacterial PurK supplies N5-CAIR for the separate PurE reaction.
 - Both GAR transformylases remain in the pathway because they implement
   distinct one-carbon donor chemistries at the same reaction position.
-- Generic catalytic and broad purine-process annotations are replaced with
-  enzyme-specific activities and `GO:0006189`; valid ATP, nucleotide, magnesium,
-  and metal-binding annotations are retained as non-core.
+- Generic catalytic parents and valid broad purine-nucleotide process
+  annotations are modified to enzyme-specific activities and `GO:0006189`.
+  Purine nucleobase-process annotations are marked over-annotated because IMP
+  is a nucleotide, while valid ATP, nucleotide, magnesium, and metal-binding
+  annotations are retained as non-core.
 - Human PPAT, GART, PFAS, PAICS, ADSL, and ATIC reviews and exact UniProt
   exemplars ground the eukaryotic fusion architectures alongside the bacterial
   proteins. Primary studies ground the PurN/PurT and PurK/PurE alternative
