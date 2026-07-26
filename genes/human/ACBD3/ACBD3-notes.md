@@ -182,8 +182,13 @@ record, and that specific point remains a UniProt correction to report.
 **Why this matters beyond the isoform.** The 2023 paper places the RII interaction in the **GOLD
 domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the regulatory subunit II
 (RII) of PKA and effectively recruits PKA holoenzyme to the Golgi"]. Combined with the Q-domain
-correction above, the map collapses to **two** interaction surfaces, not three:
+correction above, the UR/GOLD split collapses — leaving **three** functional regions, not four:
 
+- **ACB domain (83–174)** — binds C18:1-CoA / C16:0-CoA and oligomerises on ligand; binds
+  SREBP1 (ACB-containing N-terminus); and is credited by PMID:38134218 with recruiting FAPP2,
+  citing PMID:29750412 — though that paper's own abstract maps nothing to the ACB domain and
+  models FAPP2 dispersal as a *consequence* of Golgi fragmentation. Treat the FAPP2 domain
+  assignment as PMID:38134218's, not as established.
 - **Q domain (241–308)** — PI4KB *or* TBC1D22A/B, mutually exclusively
 - **UR + GOLD** — one shared surface. UniProt places GOLD at **384–526**; the paper's
   Golgi-competent, SEC22B-binding fragment is **328–528**; and the 21-residue
@@ -393,3 +398,29 @@ from those facts, which is why it is written as "roughly" everywhere it appears.
    can support it. Search for X by name — and under the **paralog** names, since the paper
    carrying this gene's acyl-CoA data is titled for ACBD6 and never surfaced in an
    ACBD3-keyed search.
+
+## One sentence, three errors
+
+`publications/PMID_38134218.md:72` has produced a distinct error in each of rounds 4, 9 and 10:
+
+```
+The ACBD domain oligomerizes upon binding to C18:1-CoA or C16:0-CoA (Soupene and
+Kuypers, 2015)  and recruits the membrane-shaping protein FAPP2 (Liao et al., 2019),
+  ^-- round 9 missed this head       ^-- round 10 missed this middle
+the CAR-Q domain recruits PI4KIIIβ (Klima et al., 2016), and the GOLD domain and its
+extended UR interact with multiple different golgins ...
+                                  ^-- round 4 quoted only this tail
+```
+
+Round 4 quoted the tail for the domain map. Round 9 read the head and inverted the acyl-CoA
+call. Round 10 read the clause between them and found the ACB domain has a protein client.
+Each time the fix was correct and each time I stopped at the clause I needed.
+
+**Rule 1 restated, generally:** *quote the whole sentence, then decide what to use.* Not "to
+the end of the interpreting clause" — to **both** ends. A sentence that enumerates domains is
+a table in prose; reading one row of a table is not reading the table.
+
+It is also worth naming why this sentence in particular: it is a **secondary** sentence, an
+introduction compressing four primary papers into four clauses. High information density,
+each clause a lead worth a fetch, and no redundancy to catch a partial read. Reviews should
+treat an introduction's domain enumeration as a work list, not as a citation.
