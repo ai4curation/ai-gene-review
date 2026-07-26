@@ -259,11 +259,12 @@ rows are similarity transfers of a purification result. Stating this as "withdra
 would have been wrong, and the suggested question now says eight.
 | GO:0016020 membrane (IBA) | MARK_AS_OVER_ANNOTATED | Cortical-actin-derived; ACTL8 has no membrane-targeting feature and cannot form a cortical network |
 | GO:0019901 protein kinase binding (IBA) | MARK_AS_OVER_ANNOTATED | Promiscuous binding term, no gene-specific support |
-| GO:0048870 cell motility (IBA) | MODIFY → GO:0030335 | Human RNAi says ACTL8 *regulates* migration; nothing says it is part of the motility machinery |
-| GO:0005856 cytoskeleton (IEA) | MARK_AS_OVER_ANNOTATED | Traces to a UniProt `ECO:0000250` line with no cited source entry |
+| GO:0048870 cell motility (IBA) | REMOVE | Machinery term from the mis-placing node; MODIFY would have left it an IBA asserting a bad ancestral state (see §12) |
+| GO:0005856 cytoskeleton (IEA) | KEEP_AS_NON_CORE | Parent of the kept `GO:0015629`, so they must move together; the `ECO:0000250` provenance complaint is redundancy, not over-annotation (see §12) |
 | GO:0005515 protein binding ×2 (IPI) | MARK_AS_OVER_ANNOTATED | One Y2H pair, one pipeline, no orthogonal validation |
 | GO:0030855 epithelial cell differentiation (IEP) | MARK_AS_OVER_ANNOTATED | Differential abundance in a 2-D gel screen is expression, not involvement |
 | GO:0008284 positive regulation of cell population proliferation | NEW | Five studies, four tumour types, four independent labs, including a xenograft; non-core (ectopic context) |
+| GO:0030335 positive regulation of cell migration | NEW | The migration evidence, now on an IMP row rather than as a MODIFY replacement (see §12) |
 
 The affinage record is cited in `references:` as an explicitly-labelled **lead** source
 (`reference_review.correctness: LOW_QUALITY`), with the reason stated: it passed its own gates but
@@ -294,3 +295,94 @@ ACCEPT and is now `KEEP_AS_NON_CORE`, which is what its own reason had said all 
   single intentional "No core functions defined" warning; `cache/go/terms.csv` deletion check run as
   the last step before commit.
 - `origin/main` merged in cleanly (18 commits, no conflicts, no shared-publication add/add clashes).
+
+
+## 12. Round 2: what the PR review corrected
+
+`ai4c-reviewer` requested changes on three points. All three were checked against the data and all
+three were right; the actions below changed as a result. Recording them because each is a
+generalisable trap.
+
+### 12.1 MODIFY cannot move an annotation's evidence base
+
+I had marked `GO:0048870 cell motility` as MODIFY with `GO:0030335` as the replacement, and the
+reason claimed this "moves the evidence base from phylogeny to four independent human RNAi studies".
+It cannot. **MODIFY changes the term and leaves `evidence_type` and `original_reference_id`
+untouched**, so the replacement would still have been an IBA on GO_REF:0000033 with
+`PANTHER:PTN007551913` in WITH/FROM — i.e. a request that PAINT reconstruct *positive regulation of
+cell migration* as the ancestral state at the very node this review argues mis-places ACTL8. It is
+not even a defensible ancestral call: β-actin's own evidence for `GO:0048870` is that it *is* the
+motility machinery (IMP), not that it regulates migration.
+
+Worse, the file already contained the right shape: `GO:0008284` was a `NEW`/`IMP` row built from the
+same four papers. Migration and proliferation were being treated asymmetrically for no reason.
+
+Fix: `GO:0048870` → REMOVE on the same PTN007551913 grounds as its sibling rows, plus a second
+`NEW` row for `GO:0030335` with `evidence_type: IMP`, carrying the four quotes unchanged.
+
+**Rule: if the justification for a MODIFY is "this puts the annotation on better evidence", the
+action is wrong — MODIFY only swaps the term. Use REMOVE + NEW.**
+
+### 12.2 I quoted the favourable half of my own table
+
+The filament-interface argument cited exactly two comparators, ACTB (38/38) and Arp53D (33/38). My
+own `RESULTS.md` contained one that cuts the other way and appeared nowhere in the review:
+
+| protein | compatible / 38 |
+|---|---|
+| ACTB, ACTG1, ACTA1, ACTC1 | 38 |
+| Arp53D | 33 |
+| ACTR1A centractin | 28 |
+| ACTR2 (Arp2) | 22 |
+| ACTRT1 | 21 |
+| ACTL7B, ACTL9 | 16 |
+| ACTL7A | 14 |
+| **ACTL8** | **11** |
+| **ACTR3 (Arp3)** | **8** |
+| ACTL10 | 5 |
+
+**Arp3 scores below ACTL8** — and Arp2/Arp3 form the first protomer pair of a daughter filament at
+an Arp2/3 branch, so they demonstrably occupy protomer positions in an actin-containing structure.
+So the metric bounds *canonical incorporation into a conventional two-stranded filament*; it does
+**not** show that a protein cannot be part of any actin-containing assembly. Neither "Arp3" nor
+"ACTR3" appeared anywhere in the YAML or these notes.
+
+Fixed by adding the full ranking and this caveat to `RESULTS.md` (computed, not prose), citing
+`| ACTR3 (human Arp3) | 8 |` as supporting text on the two rows where the tally is load-bearing, and
+restating every claim built on it at the weaker strength. No action changed: the `GO:0098973` REMOVE
+rests on the postsynaptic/neuronal-evidence half, and `GO:0005884` was already only
+MARK_AS_OVER_ANNOTATED.
+
+**Rule: when a script produces a comparison table, cite the rows that hurt the argument, not just
+the ones that help. Selective quotation of your own output is the easiest error to miss.**
+
+### 12.3 A parent and its child cannot get opposite verdicts
+
+`GO:0005856 cytoskeleton` was MARK_AS_OVER_ANNOTATED while its descendant `GO:0015629 actin
+cytoskeleton` was KEEP_AS_NON_CORE. Verified via QuickGO's `ancestors` endpoint that `GO:0005856` is
+indeed an ancestor of `GO:0015629`, so that pair of verdicts asserts ACTL8 is in the actin
+cytoskeleton but that saying "cytoskeleton" overshoots — incoherent. My own `reason` text had
+already diagnosed the real problem correctly as *redundancy* ("Redundant with the GO:0015629 IBA
+rather than independent of it"), which is a provenance complaint, not an over-annotation.
+
+Fix: `GO:0005856` → KEEP_AS_NON_CORE with `root_cause: EVIDENCE_CIRCULAR_OR_REDUNDANT`, keeping the
+uncited-`ECO:0000250` criticism in the reason.
+
+**Rule: before assigning actions, check the subsumption relations among the annotated terms. Two
+rows on the same axis must move together.**
+
+### 12.4 The three non-blocking suggestions, all adopted
+
+- **Absolutes about neuronal expression.** "has never been detected in a neuron" hardened absence of
+  a report into absence of the protein — and UniProt's own reference list includes an MGC cDNA clone
+  isolated from *brain*, which I had read and not connected. Reworded to "no reported neuronal
+  expression or localisation", with the brain-clone caveat stated.
+- **NuA4 "include" vs "only".** GO definitions list subunits with "include", so naming β-actin does
+  not strictly exclude γ-actin. Reworded: the definition shows the complex's actin content is
+  recorded *per paralog from purification*, and no purification places ACTL8 there.
+- **`core_functions`.** `molecular_function` is not a required slot on `CoreFunction`, so a
+  description-only entry would validate. Kept empty on the view that a core function should assert
+  something, and the decision is now recorded as a `suggested_questions` entry so it is a project
+  convention question rather than a silent omission.
+
+Final actions: **7 REMOVE, 6 MARK_AS_OVER_ANNOTATED, 3 KEEP_AS_NON_CORE, 2 NEW, 0 MODIFY.**

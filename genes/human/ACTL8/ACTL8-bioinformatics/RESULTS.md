@@ -76,6 +76,37 @@ PDB **6DJO** contains 4 F-actin protomers (A, B, C, D). Chain **C** has the most
 | ACTRT1 (human actin-related protein T1) | 13 | 8 | 17 | 0 |
 | Arp53D (Drosophila actin-like 53D; IBA donor) | 29 | 4 | 5 | 0 |
 
+### What this metric does and does not bound
+
+Ranking the whole panel by chemically compatible positions (identical + conservative) out of
+38:
+
+| Protein | compatible / 38 |
+|---|---|
+| ACTB (human beta-actin; IBA donor) | 38 |
+| ACTG1 (human gamma-actin; IBA donor) | 38 |
+| ACTA1 (human alpha-skeletal actin; IBA donor) | 38 |
+| ACTC1 (human alpha-cardiac actin; IBA donor) | 38 |
+| Arp53D (Drosophila actin-like 53D; IBA donor) | 33 |
+| ACTR1A (human alpha-centractin) | 28 |
+| ACTR2 (human Arp2) | 22 |
+| ACTRT1 (human actin-related protein T1) | 21 |
+| ACTL7B (human actin-like 7B) | 16 |
+| ACTL9 (human actin-like 9) | 16 |
+| ACTL7A (human actin-like 7A) | 14 |
+| ACTL8 (human actin-like 8) | 11 **<-- ACTL8** |
+| ACTR3 (human Arp3) | 8 |
+| ACTL10 (human actin-like 10) | 5 |
+
+The ordering carries an important caveat, and it is one this analysis produces against itself.
+**Arp3 (ACTR3) scores below ACTL8**, and Arp2 only a little above, yet Arp2 and Arp3 form the
+first protomer pair of a daughter filament at an Arp2/3 branch - they do make actin-like
+protomer contacts. A low score on this metric therefore bounds *canonical protomer
+incorporation into a conventional two-stranded filament*; it does not show that a protein
+cannot occupy any position in an actin-containing structure. ACTL8 sits in a band with the
+other divergent actin-likes and Arp3, not uniquely below them, and any argument built on the
+tally should be stated at that strength.
+
 Per-residue detail for ACTL8 and two reference points:
 
 | Structure residue | Ligand/partner | min dist (Å) | Q9H568 | P60709 | Q9Y615 |

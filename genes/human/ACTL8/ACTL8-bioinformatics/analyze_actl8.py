@@ -907,6 +907,38 @@ def main() -> None:
         A(f"| {label} | {c.get('identical', 0)} | {c.get('conservative', 0)} | "
           f"{c.get('non-conservative', 0)} | {c.get('gap', 0)} |")
     A("")
+    A("### What this metric does and does not bound")
+    A("")
+    A("Ranking the whole panel by chemically compatible positions (identical + conservative) out of")
+    A(f"{results['filament_interface']['summary']['n_contacts']}:")
+    A("")
+    ranked = sorted(
+        (
+            (
+                acc,
+                results["filament_interface"]["summary"][acc].get("identical", 0)
+                + results["filament_interface"]["summary"][acc].get("conservative", 0),
+            )
+            for acc in panel_order
+        ),
+        key=lambda kv: -kv[1],
+    )
+    A("| Protein | compatible / %d |" % results["filament_interface"]["summary"]["n_contacts"])
+    A("|---|---|")
+    for acc, score in ranked:
+        label = PANEL.get(acc, "ACTL8 (human actin-like 8)")
+        mark = " **<-- ACTL8**" if acc == ACTL8 else ""
+        A(f"| {label} | {score}{mark} |")
+    A("")
+    A("The ordering carries an important caveat, and it is one this analysis produces against itself.")
+    A("**Arp3 (ACTR3) scores below ACTL8**, and Arp2 only a little above, yet Arp2 and Arp3 form the")
+    A("first protomer pair of a daughter filament at an Arp2/3 branch - they do make actin-like")
+    A("protomer contacts. A low score on this metric therefore bounds *canonical protomer")
+    A("incorporation into a conventional two-stranded filament*; it does not show that a protein")
+    A("cannot occupy any position in an actin-containing structure. ACTL8 sits in a band with the")
+    A("other divergent actin-likes and Arp3, not uniquely below them, and any argument built on the")
+    A("tally should be stated at that strength.")
+    A("")
     A("Per-residue detail for ACTL8 and two reference points:")
     A("")
     L.extend(fmt_residue_table(fil_hits, fil_maps, fil_ref_by_num, [ACTL8, "P60709", "Q9Y615"]))
