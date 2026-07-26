@@ -99,13 +99,11 @@ def _workflow_texts() -> dict[str, str]:
     return {path.stem: path.read_text() for path in WORKFLOW_DIR.glob("*.y*ml")}
 
 
-# Workflows not yet migrated onto the central config. Delete an entry when its
-# workflow starts resolving its model from .github/agent-config.yaml; the list
-# must only ever shrink, and the test fails if an entry becomes stale. Anything
-# NOT listed here that pins a model fails.
-UNMIGRATED_MODEL_PINS = {
-    "weekly-compliance",
-}
+# Escape hatch for a workflow not yet migrated onto the central config. Now
+# empty: every agentic workflow resolves its model from agent-config.yaml. An
+# entry here must correspond to a real pin (a stale entry fails the test), so
+# the list can only shrink.
+UNMIGRATED_MODEL_PINS: set[str] = set()
 
 # Model families, plus the bare aliases the CLI also accepts (`--model opus`).
 _MODEL_VALUE = (
@@ -186,3 +184,186 @@ def test_managed_workflows_use_the_resolver_action():
                 f"workflow '{stem}' is in agent-config.yaml but does not `uses:` "
                 f"the resolve-agent-config action"
             )
+
+
+# The SHA these input/output sets were read from. If a workflow bumps the pin,
+# the sets below may no longer describe the action —
+# test_claude_action_pin_matches_the_recorded_sets fails so the bump comes with
+# a refresh rather than silently invalidating both guards.
+CLAUDE_ACTION_PINNED_SHA = "be7b93b1907a4abad570368f3c74b6fe3807510b"
+
+# Inputs declared by anthropics/claude-code-action at that SHA. Refresh with:
+#   gh api "/repos/anthropics/claude-code-action/contents/action.yml?ref=<sha>" \
+#     --jq .content | base64 -d | python3 -c \
+#     "import sys,yaml;print(sorted(yaml.safe_load(sys.stdin)['inputs']))"
+# The v0 names `mode`, `direct_prompt`, `model`, `mcp_config`, `allowed_tools`
+# and `custom_instructions` are NOT here. GitHub only warns about an unexpected
+# input, so passing one silently drops it — arba-issue-monitor never delivered
+# its prompt and claude.yml never applied its model, MCP servers or tool
+# allowlist, both for months, both green the whole time.
+CLAUDE_ACTION_V1_INPUTS = {
+    "additional_permissions", "allowed_bots", "allowed_non_write_users",
+    "anthropic_api_key", "anthropic_federation_rule_id", "anthropic_oidc_audience",
+    "anthropic_organization_id", "anthropic_service_account_id",
+    "anthropic_workspace_id", "assignee_trigger", "base_branch", "bot_id",
+    "bot_name", "branch_name_template", "branch_prefix",
+    "classify_inline_comments", "claude_args", "claude_code_oauth_token",
+    "display_report", "exclude_comments_by_actor", "github_token",
+    "include_comments_by_actor", "include_fix_links", "label_trigger",
+    "path_to_bun_executable", "path_to_claude_code_executable",
+    "plugin_marketplaces", "plugins", "prompt", "settings", "show_full_output",
+    "ssh_signing_key", "track_progress", "trigger_phrase", "use_bedrock",
+    "use_commit_signing", "use_foundry", "use_sticky_comment", "use_vertex",
+}
+
+# Outputs it declares. Notably there is no `result`: workflows that wrote
+# `${{ steps.<id>.outputs.result }}` were emitting an empty string, which is why
+# run reports go through .github/actions/agent-run-summary instead.
+CLAUDE_ACTION_V1_OUTPUTS = {
+    "branch_name", "execution_file", "github_token", "session_id",
+    "structured_output",
+}
+
+
+def _action_definition_files():
+    """Every file that can invoke an action: workflows and composite actions."""
+    # Everything under .github/ that can declare steps. Deliberately broad: a
+    # step file in an unexpected place (.github/copilot-setup-steps.yml) is
+    # exactly the kind of thing a narrower glob misses. Files with no steps —
+    # agent-config.yaml, cron-profiles.yaml, dependabot.yml — simply yield none.
+    return sorted((REPO_ROOT / ".github").rglob("*.y*ml"))
+
+
+def _definition_name(path: Path) -> str:
+    """A composite action is named by its directory, a workflow by its stem."""
+    return path.parent.name if path.stem == "action" else path.stem
+
+
+def _steps(doc: dict):
+    """Yield steps from a workflow (jobs.*.steps) or a composite action (runs.steps)."""
+    for job in (doc.get("jobs") or {}).values():
+        yield from (job or {}).get("steps") or []
+    yield from ((doc.get("runs") or {}).get("steps") or [])
+
+
+def _claude_action_steps():
+    """Yield (file stem, step mapping) for every claude-code-action step."""
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
+        for step in _steps(doc):
+            if ((step or {}).get("uses") or "").startswith(
+                "anthropics/claude-code-action@"
+            ):
+                yield _definition_name(path), step
+
+
+def test_no_workflow_passes_an_undeclared_input_to_claude_code_action():
+    offenders = []
+    for stem, step in _claude_action_steps():
+        for key in (step.get("with") or {}):
+            if key not in CLAUDE_ACTION_V1_INPUTS:
+                offenders.append(f"{stem}: with.{key}")
+    assert not offenders, (
+        "input(s) not declared by the pinned claude-code-action; GitHub only "
+        "warns, so these are silently dropped:\n" + "\n".join(offenders)
+    )
+
+
+def test_no_workflow_reads_an_undeclared_claude_code_action_output():
+    """`steps.<id>.outputs.result` does not exist; it renders as empty."""
+    offenders = []
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
+        ids = {
+            step.get("id")
+            for step in _steps(doc)
+            if (step or {}).get("uses", "").startswith("anthropics/claude-code-action@")
+        }
+        text = path.read_text()
+        for step_id in filter(None, ids):
+            for ref in re.findall(
+                rf"steps\.{re.escape(step_id)}\.outputs\.([A-Za-z_][A-Za-z0-9_]*)", text
+            ):
+                if ref not in CLAUDE_ACTION_V1_OUTPUTS:
+                    offenders.append(f"{path.stem}: steps.{step_id}.outputs.{ref}")
+    assert not offenders, (
+        "claude-code-action output(s) that do not exist (these expand to an "
+        "empty string):\n" + "\n".join(offenders)
+    )
+
+
+def test_every_claude_code_action_workflow_is_in_the_agent_config():
+    """The reverse of test_managed_workflows_use_the_resolver_action.
+
+    An empty pin-allowlist does not by itself mean every agent is centrally
+    modelled: a workflow that pins no model AND is absent from the config is
+    invisible to both other tests.
+    """
+    config = yaml.safe_load(CONFIG_PATH.read_text())
+    managed = set(config["workflows"])
+    # Only workflows: agent-config keys are workflow stems, and
+    # test_every_config_workflow_file_exists requires a matching workflow file,
+    # so a composite action must not be demanded as a config key.
+    workflow_stems = {p.stem for p in WORKFLOW_DIR.glob("*.y*ml")}
+    using = {stem for stem, _ in _claude_action_steps()} & workflow_stems
+    assert not (using - managed), (
+        "workflow(s) run claude-code-action but are not in agent-config.yaml, so "
+        f"their model is not centrally configured: {sorted(using - managed)}"
+    )
+
+
+def test_claude_action_pin_matches_the_recorded_sets():
+    """Every workflow must pin the SHA the input/output sets were read from.
+
+    The two guards above are only as good as their hardcoded vocabulary. Tying
+    them to the pin means bumping the action forces a deliberate refresh instead
+    of quietly turning both tests into no-ops.
+    """
+    pins = set()
+    for path in _action_definition_files():
+        pins.update(
+            re.findall(r"anthropics/claude-code-action@([0-9a-f]{40})", path.read_text())
+        )
+    unexpected = pins - {CLAUDE_ACTION_PINNED_SHA}
+    assert not unexpected, (
+        "claude-code-action is pinned to a SHA the recorded input/output sets "
+        f"were not read from: {sorted(unexpected)}. Re-read them from that SHA "
+        "and update CLAUDE_ACTION_PINNED_SHA."
+    )
+
+
+def test_claude_code_action_is_always_sha_pinned():
+    """A moved tag could swap in code that exfiltrates the App token."""
+    floating = []
+    for path in _action_definition_files():
+        for ref in re.findall(r"anthropics/claude-code-action@(\S+)", path.read_text()):
+            if not re.fullmatch(r"[0-9a-f]{40}", ref):
+                floating.append(f"{path.stem}: @{ref}")
+    assert not floating, "claude-code-action must be SHA-pinned:\n" + "\n".join(floating)
+
+
+def test_every_checkout_is_non_persisting():
+    """No `actions/checkout` anywhere under .github/ may leave a token on disk.
+
+    `actions/checkout` writes an HTTP Basic `extraheader` into `.git/config`
+    unless told not to, which is the exact path by which the PAT was read out of
+    a runner and disclosed. A per-FILE grep is not enough — it passes a file
+    with two checkouts where only one is flagged, and it misses composite
+    actions entirely, which is how a second token-persisting checkout survived
+    inside claude-issue-{summarize,triage}-action.
+    """
+    offenders = []
+    for path in _action_definition_files():
+        doc = yaml.safe_load(path.read_text()) or {}
+        for i, step in enumerate(_steps(doc)):
+            uses = (step or {}).get("uses") or ""
+            if not uses.startswith("actions/checkout@"):
+                continue
+            with_ = (step or {}).get("with") or {}
+            if with_.get("persist-credentials") not in (False, "false"):
+                name = (step or {}).get("name") or f"step {i}"
+                offenders.append(f"{path.relative_to(REPO_ROOT)}: {name}")
+    assert not offenders, (
+        "checkout(s) that persist credentials into .git/config:\n"
+        + "\n".join(offenders)
+    )
