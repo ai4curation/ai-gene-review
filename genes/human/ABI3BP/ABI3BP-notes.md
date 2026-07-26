@@ -303,6 +303,14 @@ signalling, not adhesion of the cell to the matrix. Plain `GO:0005178` is the ho
   shows is only that Abi3bp is not a growth-factor-like ERK *agonist*. The proposal now rests on the
   ontology gap alone, which is where its weight always was, with the tethering question moved to
   `suggested_questions`.
+
+  **The proposed *definition* had the same flaw and was fixed in a second pass.** It originally read
+  "…without contributing appreciably to the mechanical integrity of the matrix" — an unmeasurable
+  negative, and one that this review's own position ("never tested") means ABI3BP cannot be shown to
+  satisfy. Proposing a term whose defining clause the motivating example cannot be demonstrated to
+  meet would have been self-defeating in front of a GO editor. Reworded positively: the defining
+  feature is the cell-instructive action on a receptor, and the term now explicitly neither asserts
+  nor excludes a structural contribution.
 - Senescence, antiviral and blood-brain-barrier roles left unannotated and moved into
   `suggested_questions` / `suggested_experiments`. The senescence literature contradicts itself
   (§4) and no term should be asserted until that is resolved. Note the contrast with the neuronal
