@@ -1,0 +1,4322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACADSB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACADSB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P45954" target="_blank" class="term-link">
+                        P45954
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ACADSB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P45954" data-a="DESCRIPTION: ACADSB encodes the mitochondrial short/branched-ch..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ACADSB encodes the mitochondrial short/branched-chain specific acyl-CoA dehydrogenase (SBCAD; also called 2-methylbutyryl-CoA dehydrogenase or 2-methyl branched-chain acyl-CoA dehydrogenase), an FAD-dependent flavoenzyme of the acyl-CoA dehydrogenase family. It is synthesized as a precursor with an N-terminal mitochondrial targeting peptide that is cleaved on import, and the mature enzyme assembles into a homotetramer in the mitochondrial matrix. SBCAD catalyzes the FAD-dependent, stereospecific alpha,beta-dehydrogenation of short and branched-chain acyl-CoA thioesters, passing electrons to the electron-transfer flavoprotein (ETF). Its principal physiological role is in L-isoleucine catabolism, where it dehydrogenates (S)-2-methylbutyryl-CoA to tiglyl-CoA. The enzyme is catalytically promiscuous within its class, also acting on short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA) and on the xenobiotic valproyl-CoA. It is expressed ubiquitously, with highest levels in heart, muscle and liver. Loss-of-function variants cause short/branched-chain acyl-CoA dehydrogenase deficiency (2-methylbutyryl-CoA dehydrogenase deficiency), an autosomal recessive inborn error of isoleucine metabolism characterized by elevated 2-methylbutyrylglycine and 2-methylbutyrylcarnitine (C5-acylcarnitine on newborn screening).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    GO:0003995
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003995" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General acyl-CoA dehydrogenase activity is the correct family-level function and is appropriately inferred from the phylogenetic tree. It is a valid parent of the more specific, experimentally supported activities (GO:0003853, GO:0016937) that better describe SBCAD&#39;s function, so keep it but treat it as non-core in favor of the specific children.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct general term but subsumed by experimentally supported, more specific short/branched-chain dehydrogenase activities that represent the core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SBCAD is a mitochondrial matrix enzyme, so mitochondrial localization is correct. The more specific compartment (mitochondrial matrix, GO:0005759) is separately annotated and is preferred; keep this as a valid but less specific location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than mitochondrial matrix, which is directly supported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                                    GO:0003853
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain 2-methyl fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003853" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific molecular function for the 2-methylbutyryl-CoA dehydrogenation step of isoleucine catabolism and the core activity of SBCAD. The Rhea/EC 1.3.8.5 electronic mapping is fully corroborated by direct experimental annotations to the same term (PMID:7698750, 10832746, 11013134, 21430231).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific core molecular function, independently supported by experimental annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003995" target="_blank" class="term-link">
+                                    GO:0003995
+                                </a>
+                            </span>
+                            <span class="term-label">acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003995" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct general acyl-CoA dehydrogenase activity inferred from InterPro domain membership. Redundant with, and less specific than, the experimentally supported GO:0003853/GO:0016937 children; retain as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct parent term but not the most specific description of the function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct mitochondrial localization (ARBA electronic annotation). Less specific than mitochondrial matrix, which is directly supported; keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less specific than the annotated mitochondrial matrix location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial matrix is the correct subcellular location for SBCAD, consistent with the cleaved N-terminal transit peptide and with UniProt SUBCELLULAR LOCATION (Mitochondrion matrix). This electronic SubCell mapping matches the direct experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific location supported by UniProt curation and experimental data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACADSB/ACADSB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0006631" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SBCAD also acts on short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA), so a role in fatty acid metabolism is defensible, and UniProt lists a mitochondrial fatty acid beta-oxidation pathway. However, the core biological role is isoleucine catabolism; keep this broad process as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine but secondary process relative to the core isoleucine catabolic role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016627" target="_blank" class="term-link">
+                                    GO:0016627
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0016627" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very general grandparent term for acyl-CoA dehydrogenase activity. It is not wrong, but it is far less informative than the specific dehydrogenase activities already annotated, and represents an over-annotation from InterPro.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but overly general; subsumed by the specific acyl-CoA dehydrogenase activities.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016937" target="_blank" class="term-link">
+                                    GO:0016937
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0016937" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SBCAD has genuine activity on short straight-chain acyl-CoAs such as butyryl-CoA, making this a valid molecular function. It is directly supported experimentally (PMID:7698750). This is a real secondary activity distinct from the branched-chain isoleucine role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct molecular function corroborated by direct experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046395" target="_blank" class="term-link">
+                                    GO:0046395
+                                </a>
+                            </span>
+                            <span class="term-label">carboxylic acid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0046395" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad catabolic-process term consistent with SBCAD&#39;s role in amino-acid/fatty-acid degradation, but far less specific than L-isoleucine catabolic process, which is directly supported. Retain as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but overly general parent of the specific isoleucine catabolic process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SBCAD is an FAD-dependent flavoenzyme; FAD binding is a core molecular function. UniProt records FAD as the cofactor and the 2JIF crystal structure defines multiple FAD-binding site residues. The InterPro electronic annotation is fully consistent with curated experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cofactor-binding function supported by structural and UniProt evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACADSB/ACADSB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=FAD</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070991" target="_blank" class="term-link">
+                                    GO:0070991
+                                </a>
+                            </span>
+                            <span class="term-label">medium-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0070991" data-r="GO_REF:0000116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This Rhea-derived electronic annotation stems from measured activity on hexanoyl-CoA (C6, RHEA:43464), a substrate at the short/medium-chain boundary. While the in vitro hexanoyl-CoA activity is real, SBCAD is a short/branched-chain enzyme whose biological role is isoleucine catabolism; classifying it as a medium-chain dehydrogenase over-annotates its substrate breadth and misrepresents its physiological function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derived from a single boundary substrate (hexanoyl-CoA); does not reflect the enzyme&#39;s short/branched-chain specificity or biological role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006550" target="_blank" class="term-link">
+                                    GO:0006550
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0006550" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> L-isoleucine catabolism is the core biological process of SBCAD, catalyzing the 2-methylbutyryl-CoA to tiglyl-CoA step. This UniPathway electronic mapping is fully corroborated by the experimental IMP annotation (PMID:11013134).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, independently supported by experimental evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization (HPA) to mitochondrion is consistent with the known mitochondrial matrix localization. Correct, though less specific than the matrix compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization but less specific than mitochondrial matrix.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                                    GO:0003853
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain 2-methyl fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10832746" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10832746
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    2-Methylbutyryl-coenzyme A dehydrogenase deficiency: a new i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003853" data-r="PMID:10832746" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The first documented case of isolated 2-methylbutyryl-CoA dehydrogenase deficiency demonstrated an isolated block in this activity, with an L-&gt;F variant abolishing enzyme activity in the recombinant protein. This directly supports the specific 2-methylbutyryl-CoA (short-chain 2-methyl fatty acyl-CoA) dehydrogenase activity as the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function directly supported by patient enzymology and a loss-of-activity variant.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10832746" target="_blank" class="term-link">
+                                        PMID:10832746
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an isolated block in
+2-methylbutyryl-CoA dehydrogenase (2-MBCDase)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                                    GO:0003853
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain 2-methyl fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21430231" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21430231
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of isovaleryl-CoA dehydrogenase and short branched-chai...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003853" data-r="PMID:21430231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SBCAD was characterized as an enzyme of the isoleucine degradation pathway that dehydrogenates 2-methylbutyryl-CoA; the same study used purified human SBCAD and confirmed its branched-chain acyl-CoA dehydrogenase activity. Supports the core 2-methylbutyryl-CoA dehydrogenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function supported by assays on purified human SBCAD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21430231" target="_blank" class="term-link">
+                                        PMID:21430231
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">short branched-chain acyl-CoA dehydrogenase (SBCAD), enzymes involved in the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACADSB/ACADSB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">one of the steps of the L-isoleucine catabolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome study placing ACADSB in the mitochondrion. Consistent with the established mitochondrial matrix localization; correct but less specific than the matrix compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization from proteomics but less specific than mitochondrial matrix.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                                    GO:0003853
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain 2-methyl fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11013134
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolated 2-methylbutyrylglycinuria caused by short/branched-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003853" data-r="PMID:11013134" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Enzyme assays of patient fibroblasts using 2-methylbutyryl-CoA as substrate confirmed the SBCAD-catalyzed defect, and expression of wild-type versus mutant SBCAD confirmed the disease-causing nature. Directly supports the core 2-methylbutyryl-CoA dehydrogenase molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function directly demonstrated by substrate-specific enzyme assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                                        PMID:11013134
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">using 2-methylbutyryl-CoA as substrate, confirmed the defect</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11013134
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolated 2-methylbutyrylglycinuria caused by short/branched-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="PMID:11013134" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The study showed that wild-type SBCAD protein is imported into mitochondria (and forms tetramers), directly supporting mitochondrial localization. Correct, though the matrix compartment (separately annotated) is the more specific location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization, but mitochondrial matrix is the more specific supported term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                                        PMID:11013134
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both wild-type proteins are imported into mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006550" target="_blank" class="term-link">
+                                    GO:0006550
+                                </a>
+                            </span>
+                            <span class="term-label">L-isoleucine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11013134
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolated 2-methylbutyrylglycinuria caused by short/branched-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0006550" data-r="PMID:11013134" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A homozygous SBCAD mutation caused exon-10 skipping and an isolated defect in isoleucine catabolism in the patient, providing direct genetic (mutant-phenotype) evidence that SBCAD functions in L-isoleucine catabolism. This is the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process directly supported by patient loss-of-function genetics.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                                        PMID:11013134
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">it results in an isolated defect in isoleucine catabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11013134
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolated 2-methylbutyrylglycinuria caused by short/branched-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0042802" data-r="PMID:11013134" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This reflects SBCAD self-association: the enzyme is a homotetramer, and the study showed the wild-type proteins form tetramers (also confirmed by the 2JIF structure). The identical-protein-binding annotation captures homo-oligomerization rather than an informative catalytic function, so it is retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects homotetramer self-association; a valid but non-core observation captured more informatively by the enzyme&#39;s catalytic function and homotetramer subunit structure.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                                        PMID:11013134
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both wild-type proteins are imported into mitochondria
+and form tetramers</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ACADSB/ACADSB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homotetramer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                                    GO:0003853
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain 2-methyl fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7698750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and expression of a cDNA encoding the precursor fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0003853" data-r="PMID:7698750" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant human ACADSB expressed in COS and E. coli cells had activity toward the short branched-chain acyl-CoA derivatives including (S)-2-methylbutyryl-CoA, directly supporting the core short-chain 2-methyl fatty acyl-CoA dehydrogenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function directly demonstrated with recombinant human enzyme on the physiological branched-chain substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                                        PMID:7698750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activity toward the short branched chain acyl-CoA derivatives
+((S)-2-methylbutyryl-CoA, isobutyryl-CoA, and 2-methylhexanoyl-CoA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7698750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and expression of a cDNA encoding the precursor fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0006631" data-r="PMID:7698750" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The recombinant enzyme was active toward short straight-chain acyl-CoAs (butyryl-CoA and hexanoyl-CoA) in addition to branched substrates, supporting a role in fatty acid metabolism. This is a genuine but secondary process relative to the core isoleucine catabolic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real but secondary process; the enzyme&#39;s primary biological role is isoleucine catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                                        PMID:7698750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">toward the short straight chain acyl-CoAs (butyryl-CoA and hexanoyl-CoA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016937" target="_blank" class="term-link">
+                                    GO:0016937
+                                </a>
+                            </span>
+                            <span class="term-label">short-chain fatty acyl-CoA dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7698750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and expression of a cDNA encoding the precursor fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0016937" data-r="PMID:7698750" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant human ACADSB showed activity toward short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA), directly supporting short-chain fatty acyl-CoA dehydrogenase activity. A genuine secondary molecular function alongside the branched-chain (isoleucine) activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real molecular function directly demonstrated with recombinant human enzyme on straight-chain substrates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                                        PMID:7698750
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">toward the short straight chain acyl-CoAs (butyryl-CoA and hexanoyl-CoA)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70800
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005759" data-r="Reactome:R-HSA-70800" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome curates ACADSB catalyzing alpha-methylbutyryl-CoA + FAD =&gt; tiglyl-CoA + FADH2 in the mitochondrial matrix. The matrix localization is correct and consistent with the experimental/UniProt evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific location from a curated Reactome reaction placing SBCAD in the matrix.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9838081
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005759" data-r="Reactome:R-HSA-9838081" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial matrix is the correct location for ACADSB. This Reactome event is &#34;LONP1 degrades mitochondrial matrix proteins&#34; and annotates ACADSB as a matrix protein/LONP1 substrate; the location call itself is accurate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific matrix localization; the term is right even though the source event concerns protein turnover rather than SBCAD catalysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9838093
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005759" data-r="Reactome:R-HSA-9838093" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As with R-HSA-9838081, the mitochondrial matrix location is correct. This Reactome event is &#34;LONP1 binds mitochondrial matrix proteins&#34; and places ACADSB in the matrix as a LONP1 substrate; the location call is accurate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific matrix localization; the source event concerns LONP1 binding rather than SBCAD catalysis, but the location is right.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7698750
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and expression of a cDNA encoding the precursor fo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P45954" data-a="GO:0005739" data-r="PMID:7698750" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated mitochondrial localization consistent with the acyl-CoA dehydrogenase family and the cleaved mitochondrial transit peptide. Correct but less specific than the mitochondrial matrix compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization but less specific than the annotated mitochondrial matrix.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent short/branched-chain acyl-CoA dehydrogenase that catalyzes the stereospecific alpha,beta-dehydrogenation of (S)-2-methylbutyryl-CoA to tiglyl-CoA, the committed dehydrogenation step of L-isoleucine catabolism, transferring electrons to the electron-transfer flavoprotein (ETF).</h3>
+                <span class="vote-buttons" data-g="P45954" data-a="FUNCTION: FAD-dependent short/branched-chain acyl-CoA dehydr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003853" target="_blank" class="term-link">
+                            short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006550" target="_blank" class="term-link">
+                                L-isoleucine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                                PMID:7698750
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">activity toward the short branched chain acyl-CoA derivatives
+((S)-2-methylbutyryl-CoA, isobutyryl-CoA, and 2-methylhexanoyl-CoA)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                                PMID:11013134
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">using 2-methylbutyryl-CoA as substrate, confirmed the defect</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACADSB/ACADSB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">one of the steps of the L-isoleucine catabolic</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds FAD as a prosthetic group; the flavin is required for the dehydrogenase catalytic cycle, being reduced during acyl-CoA dehydrogenation and reoxidized by ETF.</h3>
+                <span class="vote-buttons" data-g="P45954" data-a="FUNCTION: Binds FAD as a prosthetic group; the flavin is req..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ACADSB/ACADSB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=FAD</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Also dehydrogenates short straight-chain acyl-CoAs such as butyryl-CoA and hexanoyl-CoA, a secondary activity contributing to mitochondrial fatty acid oxidation.</h3>
+                <span class="vote-buttons" data-g="P45954" data-a="FUNCTION: Also dehydrogenates short straight-chain acyl-CoAs..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016937" target="_blank" class="term-link">
+                            short-chain fatty acyl-CoA dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                                PMID:7698750
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">toward the short straight chain
+acyl-CoAs (butyryl-CoA and hexanoyl-CoA)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10832746" target="_blank" class="term-link">
+                            PMID:10832746
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">2-Methylbutyryl-coenzyme A dehydrogenase deficiency: a new inborn error of L-isoleucine metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" target="_blank" class="term-link">
+                            PMID:11013134
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolated 2-methylbutyrylglycinuria caused by short/branched-chain acyl-CoA dehydrogenase deficiency: identification of a new enzyme defect, resolution of its molecular basis, and evidence for distinct acyl-CoA dehydrogenases in isoleucine and valine metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21430231" target="_blank" class="term-link">
+                            PMID:21430231
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role of isovaleryl-CoA dehydrogenase and short branched-chain acyl-CoA dehydrogenase in the metabolism of valproic acid: implications for the branched-chain amino acid oxidation pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" target="_blank" class="term-link">
+                            PMID:7698750
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation and expression of a cDNA encoding the precursor for a novel member (ACADSB) of the acyl-CoA dehydrogenase gene family.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70800
+
+                    </span>
+                </div>
+
+                <div class="reference-title">alpha-methylbutyryl-CoA + FAD =&gt; tiglyl-CoA + FADH2</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9838081
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LONP1 degrades mitochondrial matrix proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9838093
+
+                    </span>
+                </div>
+
+                <div class="reference-title">LONP1 binds mitochondrial matrix proteins</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ACADSB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P45954" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acadsb-p45954-curation-notes">ACADSB (P45954) — curation notes</h1>
+<p>Human short/branched-chain specific acyl-CoA dehydrogenase, mitochondrial (SBCAD;<br />
+2-methylbutyryl-CoA dehydrogenase; ACADSB). HGNC:91, gene ID 36, chromosome 10.<br />
+UniProt reviewed entry P45954; 432 aa precursor with an N-terminal mitochondrial<br />
+transit peptide (residues 1..33) cleaved to give the mature matrix enzyme.</p>
+<h2 id="identity-and-family">Identity and family</h2>
+<ul>
+<li>Member of the acyl-CoA dehydrogenase (ACAD) family: "Belongs to the acyl-CoA<br />
+  dehydrogenase family." [file:human/ACADSB/ACADSB-uniprot.txt "Belongs to the acyl-CoA dehydrogenase family."].</li>
+<li>FAD-dependent flavoprotein oxidoreductase; EC 1.3.8.1 (short-chain acyl-CoA:ETF<br />
+  oxidoreductase) and EC 1.3.8.5 (2-methylbutanoyl-CoA:ETF oxidoreductase). Recombinant<br />
+  human SBCAD was originally isolated as "a novel member (gene symbol ACADSB) of the ACD<br />
+  gene family" with "significant sequence similarity to other members of the acyl-CoA<br />
+  dehydrogenase family, with the greatest homology (38%) to the short chain acyl-CoA<br />
+  dehydrogenase" <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" title="with the greatest homology (38%) to the short">PMID:7698750</a>.</li>
+</ul>
+<h2 id="molecular-function-core">Molecular function (core)</h2>
+<ul>
+<li>Catalyzes the FAD-dependent, ETF-coupled alpha,beta-dehydrogenation of acyl-CoA<br />
+  thioesters. UniProt: "catalyzes the proR-proR stereospecific alpha,beta-dehydrogenation<br />
+  of fatty acyl-CoA thioesters using the electron transfer flavoprotein (ETF) as their<br />
+  physiologic electron acceptor" [file:human/ACADSB/ACADSB-uniprot.txt "physiologic electron acceptor"].</li>
+<li>Substrate specificity: short and branched chain acyl-CoAs. Recombinant human protein has<br />
+  "activity toward the short branched chain acyl-CoA derivatives ((S)-2-methylbutyryl-CoA,<br />
+  isobutyryl-CoA, and 2-methylhexanoyl-CoA), as well as toward the short straight chain<br />
+  acyl-CoAs (butyryl-CoA and hexanoyl-CoA)" <a href="https://pubmed.ncbi.nlm.nih.gov/7698750" title="((S)-2-methylbutyryl-CoA, isobutyryl-CoA, and 2-methylhexanoyl-CoA)">PMID:7698750</a>.</li>
+<li>The physiologically important reaction is dehydrogenation of (S)-2-methylbutyryl-CoA to<br />
+  tiglyl-CoA in isoleucine catabolism. Reactome: "Mitochondrial 2-methyl branched-chain<br />
+  acyl-CoA dehydrogenase (ACADSB) catalyzes the reaction of alpha-methylbutyryl-CoA and FAD<br />
+  to form 'tiglyl-CoA and FADH2" [file:reactome/R-HSA-70800.md].</li>
+<li>FAD cofactor: UniProt COFACTOR "Name=FAD" with multiple FAD-binding site features<br />
+  (BINDING 174..183, 207..209, 319, 330, 387..391, 416..418) established by the 2JIF crystal<br />
+  structure. FAD binding is a core molecular function (GO:0050660), consistent with the<br />
+  flavoprotein family assignment.</li>
+<li>Homotetramer: "Homotetramer." [file:human/ACADSB/ACADSB-uniprot.txt "Homotetramer."], confirmed<br />
+  by the crystal structure (2JIF; SGC) and by PMID:11013134 ("both wild-type proteins are<br />
+  imported into mitochondria and form tetramers"). This is the basis of the GO:0042802<br />
+  identical protein binding IDA annotation (self-association into the homotetramer).</li>
+</ul>
+<h2 id="substrate-breadth-promiscuity">Substrate breadth / promiscuity</h2>
+<ul>
+<li>SBCAD is catalytically promiscuous within the short/branched class: 2-methylbutanoyl-CoA<br />
+  (the physiological substrate), 2-methylpropanoyl-CoA (isobutyryl-CoA), 2-methylhexanoyl-CoA,<br />
+  butanoyl-CoA, hexanoyl-CoA, and the xenobiotic valproyl-CoA. Kinetics (UniProt): KM 2.7 uM<br />
+  for (2S)-2-methylbutanoyl-CoA vs 36 uM for hexanoyl-CoA vs 130 uM for 2-methylpropanoyl-CoA,<br />
+  i.e. the branched-chain isoleucine substrate is strongly preferred.</li>
+<li>Hexanoyl-CoA (C6) is a straight-chain substrate at the boundary between short and medium<br />
+  chain; GOA carries a RHEA-derived GO:0070991 "medium-chain fatty acyl-CoA dehydrogenase<br />
+  activity" IEA from the hexanoyl-CoA reaction (RHEA:43464). This is a real in vitro activity<br />
+  but not the biological role of the enzyme (over-annotation of substrate breadth).</li>
+<li>Valproyl-CoA: SBCAD is "the most probable candidate for the first dehydrogenation step of<br />
+  VPA beta-oxidation" and is competitively inhibited by valproyl-CoA [PMID:21430231 "the first<br />
+  dehydrogenation step of VPA"; "did inhibit SBCAD activity by a purely competitive mechanism"].<br />
+  Xenobiotic/drug metabolism, not a distinct GO function beyond the dehydrogenase activity.</li>
+</ul>
+<h2 id="biological-process-core">Biological process (core)</h2>
+<ul>
+<li>L-isoleucine catabolism. UniProt PATHWAY "Amino-acid degradation; L-isoleucine degradation"<br />
+  and FUNCTION: "Plays an important role in the metabolism of L-isoleucine by catalyzing the<br />
+  dehydrogenation of 2-methylbutyryl-CoA, one of the steps of the L-isoleucine catabolic<br />
+  pathway" [file:human/ACADSB/ACADSB-uniprot.txt "one of the steps of the L-isoleucine catabolic"].</li>
+<li>Genetic evidence for the isoleucine-specific role: a patient with isolated<br />
+  2-methylbutyrylglycinuria had a homozygous SBCAD exon-10-skipping mutation, and study showed<br />
+  "it results in an isolated defect in isoleucine catabolism" <a href="https://pubmed.ncbi.nlm.nih.gov/11013134" title="an isolated defect   in isoleucine catabolism">PMID:11013134</a>. This paper also distinguishes SBCAD (isoleucine) from ACAD8/IBD<br />
+  (valine): "indicate that ACAD-8 is a mitochondrial enzyme that functions in valine metabolism".</li>
+<li>Fatty acid metabolic process: SBCAD also acts on short straight-chain acyl-CoAs (butyryl-CoA,<br />
+  hexanoyl-CoA); UniProt also lists PATHWAY "Lipid metabolism; mitochondrial fatty acid<br />
+  beta-oxidation" [file:human/ACADSB/ACADSB-uniprot.txt "mitochondrial fatty acid beta-oxidation"].<br />
+  This is a genuine but secondary/non-core contribution relative to isoleucine catabolism.</li>
+</ul>
+<h2 id="cellular-location-core">Cellular location (core)</h2>
+<ul>
+<li>Mitochondrial matrix. UniProt SUBCELLULAR LOCATION "Mitochondrion matrix"<br />
+  [file:human/ACADSB/ACADSB-uniprot.txt "Mitochondrion matrix"]. Consistent with the cleaved<br />
+  N-terminal transit peptide (1..33) and with IDA mitochondrial localization (PMID:11013134),<br />
+  HPA IDA (GO_REF:0000052), and mitochondrial proteome MS (PMID:34800366). Reactome TAS<br />
+  annotations place it in the mitochondrial matrix (GO:0005759).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Short/branched-chain acyl-CoA dehydrogenase deficiency (SBCADD; 2-methylbutyryl-CoA<br />
+  dehydrogenase deficiency), MIM:610006, autosomal recessive. UniProt DISEASE: "a defect in<br />
+  catabolism of L-isoleucine which is characterized by an increase of 2-methylbutyrylglycine<br />
+  and 2-methylbutyrylcarnitine in blood and urine" [file:human/ACADSB/ACADSB-uniprot.txt<br />
+  "2-methylbutyrylglycine and 2-methylbutyrylcarnitine in"]. First case: PMID:10832746<br />
+  (L222F variant; "absence of enzyme activity for the 2-MBCDase protein expressed in<br />
+  Escherichia coli"). Molecular basis / first gene mutation: PMID:11013134. Detected on<br />
+  newborn screening as elevated C5 (2-methylbutyryl) acylcarnitine; frequently benign and<br />
+  notably common in Hmong populations (background, not in cached publications).</li>
+</ul>
+<h2 id="notes-on-the-annotation-set-goa">Notes on the annotation set (GOA)</h2>
+<ul>
+<li>Multiple redundant MF annotations to GO:0003853 (short-chain 2-methyl fatty acyl-CoA<br />
+  dehydrogenase activity) from EXP/IDA (PMID:7698750, 10832746, 11013134, 21430231) — this is<br />
+  the correctly specific term for the isoleucine step and is the primary core MF. IEA to the<br />
+  same term (GO_REF:0000120, Rhea/EC 1.3.8.5) corroborates.</li>
+<li>GO:0016937 (short-chain fatty acyl-CoA dehydrogenase activity) IDA (PMID:7698750) captures<br />
+  the straight-chain butyryl/hexanoyl activity — a genuine secondary MF.</li>
+<li>GO:0003995 (acyl-CoA dehydrogenase activity) IBA/IEA is the correct general parent; keep as<br />
+  non-core because more specific children are annotated.</li>
+<li>GO:0016627 (oxidoreductase, CH-CH group of donors) IEA is a very general grandparent —<br />
+  over-annotation.</li>
+<li>GO:0070991 (medium-chain fatty acyl-CoA dehydrogenase activity) IEA from the hexanoyl-CoA<br />
+  Rhea reaction — over-annotation of substrate breadth (C6 boundary), not the biological role.</li>
+<li>GO:0006631 (fatty acid metabolic process) IDA (PMID:7698750) / IEA and GO:0046395<br />
+  (carboxylic acid catabolic process) IEA are correct but non-core relative to isoleucine<br />
+  catabolism.</li>
+<li>Reactome TAS to GO:0005759 via R-HSA-9838081 / R-HSA-9838093 are "LONP1 degrades/binds<br />
+  mitochondrial matrix proteins" — these place ACADSB in the matrix only as a LONP1 substrate;<br />
+  the location call is correct but the process context is protein turnover, not SBCAD function.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P45954
+gene_symbol: ACADSB
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ACADSB encodes the mitochondrial short/branched-chain specific acyl-CoA dehydrogenase
+  (SBCAD; also called 2-methylbutyryl-CoA dehydrogenase or 2-methyl branched-chain
+  acyl-CoA dehydrogenase), an FAD-dependent flavoenzyme of the acyl-CoA dehydrogenase
+  family. It is synthesized as a precursor with an N-terminal mitochondrial targeting
+  peptide that is cleaved on import, and the mature enzyme assembles into a homotetramer
+  in the mitochondrial matrix. SBCAD catalyzes the FAD-dependent, stereospecific
+  alpha,beta-dehydrogenation of short and branched-chain acyl-CoA thioesters, passing
+  electrons to the electron-transfer flavoprotein (ETF). Its principal physiological role
+  is in L-isoleucine catabolism, where it dehydrogenates (S)-2-methylbutyryl-CoA to
+  tiglyl-CoA. The enzyme is catalytically promiscuous within its class, also acting on
+  short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA) and on the xenobiotic
+  valproyl-CoA. It is expressed ubiquitously, with highest levels in heart, muscle and
+  liver. Loss-of-function variants cause short/branched-chain acyl-CoA dehydrogenase
+  deficiency (2-methylbutyryl-CoA dehydrogenase deficiency), an autosomal recessive
+  inborn error of isoleucine metabolism characterized by elevated 2-methylbutyrylglycine
+  and 2-methylbutyrylcarnitine (C5-acylcarnitine on newborn screening).
+alternative_products:
+- name: &#39;1&#39;
+  id: P45954-1
+- name: &#39;2&#39;
+  id: P45954-2
+  sequence_note: VSP_055778
+existing_annotations:
+- term:
+    id: GO:0003995
+    label: acyl-CoA dehydrogenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General acyl-CoA dehydrogenase activity is the correct family-level function and is
+      appropriately inferred from the phylogenetic tree. It is a valid parent of the more
+      specific, experimentally supported activities (GO:0003853, GO:0016937) that better
+      describe SBCAD&#39;s function, so keep it but treat it as non-core in favor of the
+      specific children.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct general term but subsumed by experimentally supported, more specific
+      short/branched-chain dehydrogenase activities that represent the core function.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      SBCAD is a mitochondrial matrix enzyme, so mitochondrial localization is correct. The
+      more specific compartment (mitochondrial matrix, GO:0005759) is separately annotated
+      and is preferred; keep this as a valid but less specific location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but less specific than mitochondrial matrix, which is directly supported.
+- term:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the specific molecular function for the 2-methylbutyryl-CoA dehydrogenation
+      step of isoleucine catabolism and the core activity of SBCAD. The Rhea/EC 1.3.8.5
+      electronic mapping is fully corroborated by direct experimental annotations to the
+      same term (PMID:7698750, 10832746, 11013134, 21430231).
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific core molecular function, independently supported by experimental
+      annotations.
+- term:
+    id: GO:0003995
+    label: acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Correct general acyl-CoA dehydrogenase activity inferred from InterPro domain
+      membership. Redundant with, and less specific than, the experimentally supported
+      GO:0003853/GO:0016937 children; retain as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct parent term but not the most specific description of the function.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct mitochondrial localization (ARBA electronic annotation). Less specific than
+      mitochondrial matrix, which is directly supported; keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but less specific than the annotated mitochondrial matrix location.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial matrix is the correct subcellular location for SBCAD, consistent with
+      the cleaved N-terminal transit peptide and with UniProt SUBCELLULAR LOCATION
+      (Mitochondrion matrix). This electronic SubCell mapping matches the direct
+      experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific location supported by UniProt curation and experimental data.
+    supported_by:
+    - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+      supporting_text: &#34;Mitochondrion matrix&#34;
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SBCAD also acts on short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA), so a
+      role in fatty acid metabolism is defensible, and UniProt lists a mitochondrial fatty
+      acid beta-oxidation pathway. However, the core biological role is isoleucine
+      catabolism; keep this broad process as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine but secondary process relative to the core isoleucine catabolic role.
+- term:
+    id: GO:0016627
+    label: oxidoreductase activity, acting on the CH-CH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is a very general grandparent term for acyl-CoA dehydrogenase activity. It is not
+      wrong, but it is far less informative than the specific dehydrogenase activities
+      already annotated, and represents an over-annotation from InterPro.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct but overly general; subsumed by the specific acyl-CoA dehydrogenase activities.
+- term:
+    id: GO:0016937
+    label: short-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      SBCAD has genuine activity on short straight-chain acyl-CoAs such as butyryl-CoA,
+      making this a valid molecular function. It is directly supported experimentally
+      (PMID:7698750). This is a real secondary activity distinct from the branched-chain
+      isoleucine role.
+    action: ACCEPT
+    reason: &gt;-
+      Correct molecular function corroborated by direct experimental evidence.
+- term:
+    id: GO:0046395
+    label: carboxylic acid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A broad catabolic-process term consistent with SBCAD&#39;s role in amino-acid/fatty-acid
+      degradation, but far less specific than L-isoleucine catabolic process, which is
+      directly supported. Retain as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but overly general parent of the specific isoleucine catabolic process.
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      SBCAD is an FAD-dependent flavoenzyme; FAD binding is a core molecular function.
+      UniProt records FAD as the cofactor and the 2JIF crystal structure defines multiple
+      FAD-binding site residues. The InterPro electronic annotation is fully consistent with
+      curated experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core cofactor-binding function supported by structural and UniProt evidence.
+    supported_by:
+    - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+      supporting_text: &#34;Name=FAD&#34;
+- term:
+    id: GO:0070991
+    label: medium-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This Rhea-derived electronic annotation stems from measured activity on hexanoyl-CoA
+      (C6, RHEA:43464), a substrate at the short/medium-chain boundary. While the in vitro
+      hexanoyl-CoA activity is real, SBCAD is a short/branched-chain enzyme whose biological
+      role is isoleucine catabolism; classifying it as a medium-chain dehydrogenase
+      over-annotates its substrate breadth and misrepresents its physiological function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Derived from a single boundary substrate (hexanoyl-CoA); does not reflect the enzyme&#39;s
+      short/branched-chain specificity or biological role.
+- term:
+    id: GO:0006550
+    label: L-isoleucine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      L-isoleucine catabolism is the core biological process of SBCAD, catalyzing the
+      2-methylbutyryl-CoA to tiglyl-CoA step. This UniPathway electronic mapping is fully
+      corroborated by the experimental IMP annotation (PMID:11013134).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, independently supported by experimental evidence.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence localization (HPA) to mitochondrion is consistent with the
+      known mitochondrial matrix localization. Correct, though less specific than the matrix
+      compartment.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization but less specific than mitochondrial matrix.
+- term:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10832746
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The first documented case of isolated 2-methylbutyryl-CoA dehydrogenase deficiency
+      demonstrated an isolated block in this activity, with an L-&gt;F variant abolishing
+      enzyme activity in the recombinant protein. This directly supports the specific
+      2-methylbutyryl-CoA (short-chain 2-methyl fatty acyl-CoA) dehydrogenase activity as
+      the core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function directly supported by patient enzymology and a
+      loss-of-activity variant.
+    supported_by:
+    - reference_id: PMID:10832746
+      supporting_text: &#34;an isolated block in \n2-methylbutyryl-CoA dehydrogenase (2-MBCDase)&#34;
+- term:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  evidence_type: EXP
+  original_reference_id: PMID:21430231
+  qualifier: enables
+  review:
+    summary: &gt;-
+      SBCAD was characterized as an enzyme of the isoleucine degradation pathway that
+      dehydrogenates 2-methylbutyryl-CoA; the same study used purified human SBCAD and
+      confirmed its branched-chain acyl-CoA dehydrogenase activity. Supports the core
+      2-methylbutyryl-CoA dehydrogenase activity.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function supported by assays on purified human SBCAD.
+    supported_by:
+    - reference_id: PMID:21430231
+      supporting_text: &gt;-
+        short branched-chain acyl-CoA
+        dehydrogenase (SBCAD), enzymes involved in the
+    - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+      supporting_text: &#34;one of the steps of the L-isoleucine catabolic&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome study placing ACADSB in the mitochondrion.
+      Consistent with the established mitochondrial matrix localization; correct but less
+      specific than the matrix compartment.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization from proteomics but less specific than mitochondrial matrix.
+- term:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11013134
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Enzyme assays of patient fibroblasts using 2-methylbutyryl-CoA as substrate confirmed
+      the SBCAD-catalyzed defect, and expression of wild-type versus mutant SBCAD confirmed
+      the disease-causing nature. Directly supports the core 2-methylbutyryl-CoA
+      dehydrogenase molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function directly demonstrated by substrate-specific enzyme assay.
+    supported_by:
+    - reference_id: PMID:11013134
+      supporting_text: &#34;using 2-methylbutyryl-CoA as substrate, confirmed the defect&#34;
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:11013134
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The study showed that wild-type SBCAD protein is imported into mitochondria (and forms
+      tetramers), directly supporting mitochondrial localization. Correct, though the matrix
+      compartment (separately annotated) is the more specific location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization, but mitochondrial matrix is the more specific supported term.
+    supported_by:
+    - reference_id: PMID:11013134
+      supporting_text: &#34;both wild-type proteins are imported into mitochondria&#34;
+- term:
+    id: GO:0006550
+    label: L-isoleucine catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:11013134
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A homozygous SBCAD mutation caused exon-10 skipping and an isolated defect in
+      isoleucine catabolism in the patient, providing direct genetic (mutant-phenotype)
+      evidence that SBCAD functions in L-isoleucine catabolism. This is the core biological
+      process.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process directly supported by patient loss-of-function genetics.
+    supported_by:
+    - reference_id: PMID:11013134
+      supporting_text: &#34;it results in an isolated defect in isoleucine catabolism&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:11013134
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This reflects SBCAD self-association: the enzyme is a homotetramer, and the study
+      showed the wild-type proteins form tetramers (also confirmed by the 2JIF structure).
+      The identical-protein-binding annotation captures homo-oligomerization rather than an
+      informative catalytic function, so it is retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reflects homotetramer self-association; a valid but non-core observation captured more
+      informatively by the enzyme&#39;s catalytic function and homotetramer subunit structure.
+    supported_by:
+    - reference_id: PMID:11013134
+      supporting_text: &#34;both wild-type proteins are imported into mitochondria \nand form tetramers&#34;
+    - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+      supporting_text: &#34;Homotetramer.&#34;
+- term:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7698750
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Recombinant human ACADSB expressed in COS and E. coli cells had activity toward the
+      short branched-chain acyl-CoA derivatives including (S)-2-methylbutyryl-CoA, directly
+      supporting the core short-chain 2-methyl fatty acyl-CoA dehydrogenase activity.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function directly demonstrated with recombinant human enzyme on the
+      physiological branched-chain substrate.
+    supported_by:
+    - reference_id: PMID:7698750
+      supporting_text: &#34;activity toward the short branched chain acyl-CoA derivatives \n((S)-2-methylbutyryl-CoA, isobutyryl-CoA, and 2-methylhexanoyl-CoA)&#34;
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:7698750
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The recombinant enzyme was active toward short straight-chain acyl-CoAs (butyryl-CoA
+      and hexanoyl-CoA) in addition to branched substrates, supporting a role in fatty acid
+      metabolism. This is a genuine but secondary process relative to the core isoleucine
+      catabolic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real but secondary process; the enzyme&#39;s primary biological role is isoleucine
+      catabolism.
+    supported_by:
+    - reference_id: PMID:7698750
+      supporting_text: &#34;toward the short straight chain acyl-CoAs (butyryl-CoA and hexanoyl-CoA)&#34;
+- term:
+    id: GO:0016937
+    label: short-chain fatty acyl-CoA dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7698750
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Recombinant human ACADSB showed activity toward short straight-chain acyl-CoAs
+      (butyryl-CoA, hexanoyl-CoA), directly supporting short-chain fatty acyl-CoA
+      dehydrogenase activity. A genuine secondary molecular function alongside the
+      branched-chain (isoleucine) activity.
+    action: ACCEPT
+    reason: &gt;-
+      Real molecular function directly demonstrated with recombinant human enzyme on
+      straight-chain substrates.
+    supported_by:
+    - reference_id: PMID:7698750
+      supporting_text: &#34;toward the short straight chain acyl-CoAs (butyryl-CoA and hexanoyl-CoA)&#34;
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70800
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome curates ACADSB catalyzing alpha-methylbutyryl-CoA + FAD =&gt; tiglyl-CoA + FADH2
+      in the mitochondrial matrix. The matrix localization is correct and consistent with
+      the experimental/UniProt evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific location from a curated Reactome reaction placing SBCAD in the matrix.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9838081
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial matrix is the correct location for ACADSB. This Reactome event is
+      &#34;LONP1 degrades mitochondrial matrix proteins&#34; and annotates ACADSB as a matrix
+      protein/LONP1 substrate; the location call itself is accurate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific matrix localization; the term is right even though the source event
+      concerns protein turnover rather than SBCAD catalysis.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9838093
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      As with R-HSA-9838081, the mitochondrial matrix location is correct. This Reactome
+      event is &#34;LONP1 binds mitochondrial matrix proteins&#34; and places ACADSB in the matrix
+      as a LONP1 substrate; the location call is accurate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific matrix localization; the source event concerns LONP1 binding rather
+      than SBCAD catalysis, but the location is right.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: TAS
+  original_reference_id: PMID:7698750
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author-stated mitochondrial localization consistent with the acyl-CoA dehydrogenase
+      family and the cleaved mitochondrial transit peptide. Correct but less specific than
+      the mitochondrial matrix compartment.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization but less specific than the annotated mitochondrial matrix.
+core_functions:
+- description: &gt;-
+    FAD-dependent short/branched-chain acyl-CoA dehydrogenase that catalyzes the
+    stereospecific alpha,beta-dehydrogenation of (S)-2-methylbutyryl-CoA to tiglyl-CoA,
+    the committed dehydrogenation step of L-isoleucine catabolism, transferring electrons
+    to the electron-transfer flavoprotein (ETF).
+  molecular_function:
+    id: GO:0003853
+    label: short-chain 2-methyl fatty acyl-CoA dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0006550
+    label: L-isoleucine catabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:7698750
+    supporting_text: &#34;activity toward the short branched chain acyl-CoA derivatives \n((S)-2-methylbutyryl-CoA, isobutyryl-CoA, and 2-methylhexanoyl-CoA)&#34;
+  - reference_id: PMID:11013134
+    supporting_text: &#34;using 2-methylbutyryl-CoA as substrate, confirmed the defect&#34;
+  - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+    supporting_text: &#34;one of the steps of the L-isoleucine catabolic&#34;
+- description: &gt;-
+    Binds FAD as a prosthetic group; the flavin is required for the dehydrogenase
+    catalytic cycle, being reduced during acyl-CoA dehydrogenation and reoxidized by ETF.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: file:human/ACADSB/ACADSB-uniprot.txt
+    supporting_text: &#34;Name=FAD&#34;
+- description: &gt;-
+    Also dehydrogenates short straight-chain acyl-CoAs such as butyryl-CoA and
+    hexanoyl-CoA, a secondary activity contributing to mitochondrial fatty acid oxidation.
+  molecular_function:
+    id: GO:0016937
+    label: short-chain fatty acyl-CoA dehydrogenase activity
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:7698750
+    supporting_text: &#34;toward the short straight chain \nacyl-CoAs (butyryl-CoA and hexanoyl-CoA)&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10832746
+  title: &#39;2-Methylbutyryl-coenzyme A dehydrogenase deficiency: a new inborn error
+    of L-isoleucine metabolism.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. First documented case of isolated 2-methylbutyryl-CoA dehydrogenase
+      deficiency in humans; in vitro oxidation studies showed an isolated block in
+      2-methylbutyryl-CoA dehydrogenase and a variant abolishing enzyme activity in
+      recombinant protein. Directly supports the core molecular function and the isoleucine
+      catabolic role. Abstract-only in cache but the assayed enzyme is human SBCAD/ACADSB.
+- id: PMID:11013134
+  title: &#39;Isolated 2-methylbutyrylglycinuria caused by short/branched-chain acyl-CoA
+    dehydrogenase deficiency: identification of a new enzyme defect, resolution of
+    its molecular basis, and evidence for distinct acyl-CoA dehydrogenases in isoleucine
+    and valine metabolism.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Reports the first SBCAD gene mutation (exon-10 skipping) causing an
+      isolated defect in isoleucine catabolism, confirms substrate-specific enzyme assay with
+      2-methylbutyryl-CoA, mitochondrial import, and homotetramer formation, and distinguishes
+      SBCAD (isoleucine) from ACAD8/IBD (valine). Supports MF, BP, location and self-association
+      annotations. Cache is abstract + partial PDF.
+- id: PMID:21430231
+  title: &#39;Role of isovaleryl-CoA dehydrogenase and short branched-chain acyl-CoA dehydrogenase
+    in the metabolism of valproic acid: implications for the branched-chain amino
+    acid oxidation pathway.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, full text available. Characterizes purified human SBCAD as a
+      branched-chain acyl-CoA dehydrogenase of the isoleucine pathway and shows it is the most
+      likely enzyme for the first dehydrogenation step of valproyl-CoA and is competitively
+      inhibited by valproyl-CoA. Supports the core dehydrogenase activity; the valproate
+      angle is xenobiotic metabolism rather than a distinct core function.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial proteome dataset supporting mitochondrial localization of
+      ACADSB. Corroborates the (more specific) matrix localization but is not gene-specific
+      functional evidence.
+- id: PMID:7698750
+  title: Isolation and expression of a cDNA encoding the precursor for a novel member
+    (ACADSB) of the acyl-CoA dehydrogenase gene family.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Original isolation and heterologous expression of human ACADSB;
+      recombinant enzyme is active toward short branched-chain acyl-CoAs (including
+      (S)-2-methylbutyryl-CoA) and short straight-chain acyl-CoAs (butyryl-CoA, hexanoyl-CoA).
+      Establishes both the core branched-chain and secondary straight-chain dehydrogenase
+      activities. Abstract-only in cache.
+- id: Reactome:R-HSA-70800
+  title: alpha-methylbutyryl-CoA + FAD =&gt; tiglyl-CoA + FADH2
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Curated Reactome reaction placing ACADSB in the mitochondrial matrix catalyzing the
+      2-methylbutyryl-CoA to tiglyl-CoA dehydrogenation of isoleucine catabolism. Directly
+      supports the core function and matrix location.
+- id: Reactome:R-HSA-9838081
+  title: LONP1 degrades mitochondrial matrix proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome event about LONP1-mediated turnover of matrix proteins; annotates ACADSB only
+      as a mitochondrial matrix protein/LONP1 substrate. The matrix location is correct but
+      the context is protein degradation, not SBCAD catalytic function.
+- id: Reactome:R-HSA-9838093
+  title: LONP1 binds mitochondrial matrix proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome event about LONP1 binding matrix proteins; annotates ACADSB only as a matrix
+      protein bound by LONP1. Correct matrix location, but the context is protein turnover
+      rather than the enzyme&#39;s function.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

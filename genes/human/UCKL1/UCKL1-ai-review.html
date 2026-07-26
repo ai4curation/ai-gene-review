@@ -1,0 +1,4827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UCKL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UCKL1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NWZ5" target="_blank" class="term-link">
+                        Q9NWZ5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UCKL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NWZ5" data-a="DESCRIPTION: UCKL1 is a 548-amino-acid uridine-kinase-family en..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UCKL1 is a 548-amino-acid uridine-kinase-family enzyme that phosphorylates uridine and cytidine with ATP to generate UMP and CMP, respectively, thereby supporting pyrimidine nucleoside salvage. The protein is predominantly cytoplasmic under basal conditions, while the full-length form can accumulate in the nucleus after binding Epstein-Barr virus EBNA3. RNF19B/NKLAM binds, ubiquitinates, and promotes degradation of UCKL1. UCKL1 abundance influences proliferation, apoptosis, and susceptibility to natural-killer-cell-mediated killing in tumor models. A recent study also reports a kinase-independent, nuclear UCK2-UCKL1 scaffold that promotes TGF-beta/SMAD3-dependent cardiac fibroblast activation after myocardial infarction. The C-terminal half is structurally UPRT-like, but uracil phosphoribosyltransferase activity has not been demonstrated.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0004849" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The IBA assignment matches direct biochemical evidence that purified human UCKL1 phosphorylates uridine with ATP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uridine kinase activity is one of UCKL1&#39;s two directly demonstrated core molecular activities and is phylogenetically consistent with its uridine-kinase-family membership.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is the best-supported default location: full-length GFP-UCKL1 was cytoplasmic before EBNA3 expression and endogenous protein was cytoplasmic in EBV-negative lymphoma cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This broad location is supported by phylogenetic inference, direct imaging, UniProt curation, and cytosolic Reactome pathway placement. Nuclear localization is conditional and does not invalidate a cytoplasmic pool.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0004849" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The automated uridine kinase assignment agrees with the direct 2022 biochemical characterization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although this row duplicates stronger IBA and IDA evidence, it is accurate; independent annotations with different evidence codes are valid.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 contains a predicted ATP-binding P-loop and purified UCKL1 uses ATP as the phosphate donor in its kinase reactions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is mechanistically integral to the directly demonstrated nucleoside-kinase reaction and the InterPro mapping is consistent with experimental donor usage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We analyzed the phosphorylation of both uridine and cytidine with ATP as the phosphate donor.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear UCKL1 is experimentally observed, but the best-established 2002 localization is EBNA3-dependent and differs between full-length and C-terminally truncated forms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain nucleus as a real contextual location rather than a default core location. Full-length UCKL1 accumulates in the nucleus with EBNA3, while the truncated isoform remains cytoplasmic; a 2025 cardiac-fibroblast study also reports a nuclear UCK2-UCKL1 pool.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GFP-F538ΔC is not targeted to the nucleus by EBNA-3.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt subcellular-location mapping accurately captures the predominant basal localization observed for full-length and truncated UCKL1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct fluorescence and antibody staining support a cytoplasmic pool, and this location is compatible with cytosolic pyrimidine salvage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008655" target="_blank" class="term-link">
+                                    GO:0008655
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine-containing compound salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0008655" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 generates UMP and CMP from pyrimidine nucleosides, placing it directly in pyrimidine-containing compound salvage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ARBA-derived process is broad but biologically central and is supported by direct enzymology plus independent genetic evidence for uridine salvage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39592843" target="_blank" class="term-link">
+                                        PMID:39592843
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We therefore generated a cell line also lacking the predicted UCK, UCKL1 (UCK tKO), and observed that uridine was unable to rescue the effects of de novo pyrimidine synthesis inhibition on proliferation and Chk1 phosphorylation, confirming the absence of UCK activity (Fig. 3c and Extended Data Fig. 4d).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009224" target="_blank" class="term-link">
+                                    GO:0009224
+                                </a>
+                            </span>
+                            <span class="term-label">CMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0009224" data-r="GO_REF:0000108" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 does produce CMP from cytidine, but this broad logical-inference term obscures that the reaction is specifically the first step of CTP salvage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace the generic CMP biosynthetic-process assignment with the pathway-specific CTP salvage term already supported by the same cytidine-kinase reaction and UniPathway annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                    CTP salvage
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0016301" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 is a kinase, but this parent term is much less informative than the directly demonstrated uridine kinase and cytidine kinase activities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro mapping is technically correct but redundant and overly broad now that substrate-specific molecular-function terms are available.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                                    GO:0043771
+                                </a>
+                            </span>
+                            <span class="term-label">cytidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0043771" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea mapping correctly assigns cytidine kinase activity, which purified UCKL1 directly demonstrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytidine kinase activity is a core UCKL1 molecular function; this IEA row agrees with the IDA annotation and the curated Rhea reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055086" target="_blank" class="term-link">
+                                    GO:0055086
+                                </a>
+                            </span>
+                            <span class="term-label">nucleobase-containing small molecule metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0055086" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 participates in this very broad metabolic parent through pyrimidine nucleoside salvage, but the term does not identify its actual pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> More specific accepted terms for pyrimidine nucleoside, UMP, and CTP salvage capture the supported biology without the loss of information inherent in this ARBA parent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901137" target="_blank" class="term-link">
+                                    GO:1901137
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:1901137" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleotide synthesis falls under this extremely broad parent, but the term is not informative about UCKL1&#39;s direct salvage reactions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ARBA inference is not false, but UMP and CTP salvage terms describe the supported process at the appropriate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12199906
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Epstein-Barr virus encoded nuclear protein EBNA-3 binds a no...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005515" data-r="PMID:12199906" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1/F538 specifically binds EBV EBNA3, and the interaction drives conditional nuclear relocalization, but bare protein binding is uninformative as a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction is experimentally real and is retained in the review, but GO:0005515 does not communicate the host-virus context or functional consequence and should not be treated as a core UCKL1 activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have shown that F538 interacts specifically with EBNA-3 in the yeast two-hybrid system and in GST pull down assays.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16709802
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NK lytic-associated molecule, involved in NK cytotoxic funct...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005515" data-r="PMID:16709802" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNF19B/NKLAM binds UCKL1 as an E3-ligase substrate and promotes its ubiquitination and reduced abundance.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction is explicit in the abstract-only source and is more informatively represented by ubiquitin protein ligase binding than by generic protein binding.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    ubiquitin protein ligase binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" target="_blank" class="term-link">
+                                        PMID:16709802
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We confirmed that NKLAM and URKL-1 interact in mammalian cells by using both immunoprecipitation and confocal microscopy.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" target="_blank" class="term-link">
+                                        PMID:16709802
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrated decreased protein expression and enhanced ubiquitination of URKL-1 in the presence of NKLAM.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043097" target="_blank" class="term-link">
+                                    GO:0043097
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleoside salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73614
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0043097" data-r="Reactome:R-HSA-73614" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places UCKL1 in pyrimidine nucleoside salvage, consistent with direct uridine and cytidine phosphorylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the appropriate shared process for the two core kinase activities and is independently supported by direct biochemical and genetic evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73614
+
+                                </span>
+
+                                <div class="support-text">In pyrimidine salvage reactions, nucleosides and free bases generated by DNA and RNA breakdown are converted back to nucleotide monophosphates, allowing them to re-enter the pathways of pyrimidine biosynthesis and interconversion.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35583288
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of uridine-cytidine kinase like-1 nucleosid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0004849" data-r="PMID:35583288" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purified recombinant UCKL1 directly phosphorylated uridine with ATP and kinetic parameters were measured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is direct biochemical evidence for a core molecular function and is the strongest evidence supporting the uridine-kinase assignments.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                                    GO:0043771
+                                </a>
+                            </span>
+                            <span class="term-label">cytidine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35583288
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of uridine-cytidine kinase like-1 nucleosid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0043771" data-r="PMID:35583288" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purified recombinant UCKL1 directly phosphorylated cytidine with ATP and kinetic parameters were measured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is direct biochemical evidence for UCKL1&#39;s second core molecular function and supports its placement in CTP salvage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                    GO:0044206
+                                </a>
+                            </span>
+                            <span class="term-label">UMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0044206" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 converts uridine to UMP, the defining reaction of UMP salvage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniPathway mapping is mechanistically supported by direct uridine kinase activity and independent genetic evidence for UCK-dependent uridine rescue.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39592843" target="_blank" class="term-link">
+                                        PMID:39592843
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We therefore generated a cell line also lacking the predicted UCK, UCKL1 (UCK tKO), and observed that uridine was unable to rescue the effects of de novo pyrimidine synthesis inhibition on proliferation and Chk1 phosphorylation, confirming the absence of UCK activity (Fig. 3c and Extended Data Fig. 4d).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                    GO:0044211
+                                </a>
+                            </span>
+                            <span class="term-label">CTP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0044211" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UCKL1 converts cytidine to CMP, the first step in salvage of cytidine to CTP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniPathway mapping follows directly from experimentally demonstrated cytidine kinase activity and is the most informative process term for that reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                                    GO:0004849
+                                </a>
+                            </span>
+                            <span class="term-label">uridine kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8954327
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0004849" data-r="Reactome:R-HSA-8954327" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome&#39;s uridine-phosphorylation event predates direct UCKL1 enzymology but is now confirmed by the 2022 biochemical study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The event accurately captures a core activity. Its older sequence-based UPRT speculation should not be extended into a UPRT annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-8954327
+
+                                </span>
+
+                                <div class="support-text">Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1 (UCKL1 aka F538) is thought to function as a novel human uridine kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                        PMID:35583288
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12199906
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Epstein-Barr virus encoded nuclear protein EBNA-3 binds a no...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005634" data-r="PMID:12199906" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Full-length UCKL1/F538 accumulates in the nucleus when EBNA3 is expressed; endogenous protein is also predominantly nuclear in EBV-positive cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accept the experimental observation while classifying it as a host-virus-dependent, isoform-sensitive location rather than UCKL1&#39;s default functional compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GFP-F538ΔC is not targeted to the nucleus by EBNA-3.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12199906
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Epstein-Barr virus encoded nuclear protein EBNA-3 binds a no...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005737" data-r="PMID:12199906" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct fluorescence and antibody staining show cytoplasmic UCKL1 in the absence of EBNA3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is direct experimental support for UCKL1&#39;s predominant basal location and is compatible with its pyrimidine-salvage activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                                        PMID:12199906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-8954327
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NWZ5" data-a="GO:0005829" data-r="Reactome:R-HSA-8954327" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome models the UCKL1 phosphorylation event in the cytosol, a more specific location compatible with the experimentally observed cytoplasmic pool.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the TAS location because it is pathway-compatible and nested within the directly supported cytoplasm annotation, while recognizing that nuclear pools occur in specific contexts.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-8954327
+
+                                </span>
+
+                                <div class="support-text">Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1 (UCKL1 aka F538) is thought to function as a novel human uridine kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphorylates uridine with ATP to produce UMP, supporting pyrimidine nucleoside salvage and the complete UMP salvage reaction.</h3>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="FUNCTION: Phosphorylates uridine with ATP to produce UMP, su..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004849" target="_blank" class="term-link">
+                            uridine kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044206" target="_blank" class="term-link">
+                                UMP salvage
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043097" target="_blank" class="term-link">
+                                pyrimidine nucleoside salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16704" target="_blank" class="term-link">
+                                uridine
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                PMID:35583288
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39592843" target="_blank" class="term-link">
+                                PMID:39592843
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We therefore generated a cell line also lacking the predicted UCK, UCKL1 (UCK tKO), and observed that uridine was unable to rescue the effects of de novo pyrimidine synthesis inhibition on proliferation and Chk1 phosphorylation, confirming the absence of UCK activity (Fig. 3c and Extended Data Fig. 4d).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphorylates cytidine with ATP to produce CMP, providing the first step of CTP salvage from cytidine.</h3>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="FUNCTION: Phosphorylates cytidine with ATP to produce CMP, p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043771" target="_blank" class="term-link">
+                            cytidine kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044211" target="_blank" class="term-link">
+                                CTP salvage
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043097" target="_blank" class="term-link">
+                                pyrimidine nucleoside salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:17562" target="_blank" class="term-link">
+                                cytidine
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                                PMID:35583288
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" target="_blank" class="term-link">
+                            PMID:12199906
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Epstein-Barr virus encoded nuclear protein EBNA-3 binds a novel human uridine kinase/uracil phosphoribosyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1/F538 specifically binds EBV EBNA3.</div>
+
+                        <div class="finding-text">"We have shown that F538 interacts specifically with EBNA-3 in the yeast two-hybrid system and in GST pull down assays."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length UCKL1 is predominantly cytoplasmic and relocalizes to the nucleus with EBNA3.</div>
+
+                        <div class="finding-text">"The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminally truncated isoform does not undergo EBNA3-dependent nuclear targeting.</div>
+
+                        <div class="finding-text">"GFP-F538ΔC is not targeted to the nucleus by EBNA-3."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UPRT activity was proposed from sequence and structural modeling rather than measured.</div>
+
+                        <div class="finding-text">"On the basis of the high homology to UK and UK/UPRT and the similar 3D structure of the C-terminal part of F538 to the T. gondii UPRT, we propose that F538 is a novel uridine kinas/uracil phosphoribosyltransferase (UK/UPRT) – an enzyme with double catalytic activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" target="_blank" class="term-link">
+                            PMID:16709802
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NK lytic-associated molecule, involved in NK cytotoxic function, is an E3 ligase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF19B/NKLAM and UCKL1 interact in mammalian cells.</div>
+
+                        <div class="finding-text">"We confirmed that NKLAM and URKL-1 interact in mammalian cells by using both immunoprecipitation and confocal microscopy."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF19B/NKLAM promotes UCKL1 ubiquitination and lowers its abundance.</div>
+
+                        <div class="finding-text">"We demonstrated decreased protein expression and enhanced ubiquitination of URKL-1 in the presence of NKLAM."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" target="_blank" class="term-link">
+                            PMID:35583288
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of uridine-cytidine kinase like-1 nucleoside kinase activity and its role in tumor growth.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified UCKL1 phosphorylates uridine and cytidine.</div>
+
+                        <div class="finding-text">"Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP was used as the phosphate donor for both UCKL1 reactions.</div>
+
+                        <div class="finding-text">"We analyzed the phosphorylation of both uridine and cytidine with ATP as the phosphate donor."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UPRT activity remained under investigation and was not established.</div>
+
+                        <div class="finding-text">"We are also examining whether UCKL-1 has UPRT activity."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1 depletion in K562 tumor xenografts increased apoptosis and reduced tumor growth and dissemination.</div>
+
+                        <div class="finding-text">"These results indicate that decreasing UCKL-1 expression in tumor cells induces apoptosis and inhibits tumor growth, dissemination, and metastasis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19653100" target="_blank" class="term-link">
+                            PMID:19653100
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Downregulation of uridine-cytidine kinase like-1 decreases proliferation and enhances tumor susceptibility to lysis by apoptotic agents and natural killer cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1 RNAi in K562 cells induced apoptosis, slowed the cell cycle, and reduced growth.</div>
+
+                        <div class="finding-text">"It was seen that downregulation of UCKL-1 initiated apoptosis and slowed the cell cycle, resulting in lower growth in the small interfering UCKL-1 RNA treated K562 cell culture."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27090194" target="_blank" class="term-link">
+                            PMID:27090194
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chemical Screening Identifies EUrd as a Novel Inhibitor Against Temozolomide-Resistant Glioblastoma-Initiating Cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1 expression partly contributes to EUrd cytotoxicity and positively regulates UMP synthesis in resistant glioblastoma-initiating cells.</div>
+
+                        <div class="finding-text">"We demonstrate that the cytotoxic effect of EUrd on GICRs partly depended on the increased expression of uridine-cytidine kinase-like 1 (UCKL1) and the decreased one of 5&#39;-nucleotidase cytosolic III (NT5C3), which regulate uridine-monophosphate synthesis positively and negatively respectively."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32083188" target="_blank" class="term-link">
+                            PMID:32083188
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Uridine Cytidine Kinase Like-1 Enhances Tumor Cell Proliferation and Mediates Protection from Natural Killer-Mediated Killing.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1 overexpression increases proliferation and protects tumor cells from NK- and drug-induced apoptosis.</div>
+
+                        <div class="finding-text">"We show that UCKL-1 over-expression protects tumor cells from NK-mediated and drug-induced apoptosis, enhances tumor survival in vitro and in vivo and increases the rate of tumor cell proliferation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCKL1 abundance correlates with NF-kappaB activity in K562 cells.</div>
+
+                        <div class="finding-text">"UCKL-1 transfected K562 cells had significantly higher NF-κB activity than control transfected cells; siUCKL-1 treated K562 cells had less NF-κB activity (Figure 7a)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39592843" target="_blank" class="term-link">
+                            PMID:39592843
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glucose limitation protects cancer cells from apoptosis induced by pyrimidine restriction and replication inhibition.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deleting UCKL1 in UCK1/UCK2-deficient Jurkat cells eliminated residual uridine rescue, genetically supporting a contribution to uridine salvage.</div>
+
+                        <div class="finding-text">"We therefore generated a cell line also lacking the predicted UCK, UCKL1 (UCK tKO), and observed that uridine was unable to rescue the effects of de novo pyrimidine synthesis inhibition on proliferation and Chk1 phosphorylation, confirming the absence of UCK activity (Fig. 3c and Extended Data Fig. 4d)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41457201" target="_blank" class="term-link">
+                            PMID:41457201
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Uridine-Cytidine Kinase 2 (UCK2)/Uridine-Cytidine Kinase Like 1 (UCKL1) complex exacerbates the differentiation of myocardial fibroblasts via TRIM21/Smurf2/Smad3 pathway after myocardial infarction.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Endogenous UCK2 and UCKL1 associate in human cardiac fibroblasts and mouse myocardium.</div>
+
+                        <div class="finding-text">"To experimentally validate this putative interaction, we conducted co-immunoprecipitation (Co-IP) assays, confirming that endogenous UCK2 physically associates with UCKL1 in both HCFs and myocardial tissues (Fig. 2b, c)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UCK2 and UCKL1 cooperatively promote TGF-beta-mediated cardiac fibroblast differentiation.</div>
+
+                        <div class="finding-text">"Collectively, these results establish UCK2 and UCKL1 as critical, potentially cooperative drivers of TGF-β-mediated HCF differentiation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Kinase-dead UCK2/UCKL1 proteins retained the reported profibrotic activity.</div>
+
+                        <div class="finding-text">"Strikingly, the loss of kinase activity did not abolish their pro-fibrotic potential, as indicated by the sustained upregulation of fibrogenic markers and HCFs proliferation (Fig. S3)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73614
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pyrimidine salvage</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome defines the human pyrimidine-salvage pathway that contains the UCKL1 event.</div>
+
+                        <div class="finding-text">"In pyrimidine salvage reactions, nucleosides and free bases generated by DNA and RNA breakdown are converted back to nucleotide monophosphates, allowing them to re-enter the pathways of pyrimidine biosynthesis and interconversion."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-8954327
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UCKL1 phosphorylates urindine, cytidine</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome places UCKL1 in the cytosol and models uridine/cytidine phosphorylation.</div>
+
+                        <div class="finding-text">"Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1 (UCKL1 aka F538) is thought to function as a novel human uridine kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/UCKL1/UCKL1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for human UCKL1 (Q9NWZ5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviewed UniProt curates direct uridine and cytidine phosphorylation by UCKL1.</div>
+
+                        <div class="finding-text">"Phosphorylates uridine and cytidine to uridine monophosphate and cytidine monophosphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the C-terminal phosphoribosyltransferase-like domain of human UCKL1 catalyze PRPP-dependent uracil phosphoribosyltransferase activity under any physiological condition?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Elise C. Matchett, Elise C. Ambrose, Jacki Kornbluth, Elena Kashuba</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="Q: Does the C-terminal phosphoribosyltransferase-like..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are the tumor-cell survival, NF-kappaB, and nucleoside-analogue phenotypes caused by UCKL1 kinase activity, by a kinase-independent scaffold function, or by both?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Elise C. Ambrose, Jacki Kornbluth, Richard G. Hoover</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="Q: Are the tumor-cell survival, NF-kappaB, and nucleo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the reported kinase-independent nuclear UCK2-UCKL1-TRIM21 scaffold a reproducible endogenous mechanism in human post-infarction cardiac fibroblasts, and which UCKL1 interface is required?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Xiao Zhou, Yu Zhang, Yongyi Wang</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="Q: Is the reported kinase-independent nuclear UCK2-UC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which UCKL1 splice isoforms retain nucleoside kinase activity, and how do their C-terminal differences control EBNA3-, RNF19B-, or TGF-beta-dependent localization and turnover?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Elena Kashuba, Jacki Kornbluth</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="Q: Which UCKL1 splice isoforms retain nucleoside kina..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay full-length UCKL1 and isolated or active-site-mutated C-terminal domains for conversion of uracil plus PRPP to UMP using orthogonal LC-MS-based product detection and appropriate active UPRT controls.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The UPRT-like C-terminal domain is either catalytically active only under specific cofactor or oligomerization conditions, or is a catalytically inactive structural domain.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Purified-enzyme biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="EXPERIMENT: Assay full-length UCKL1 and isolated or active-sit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Create UCKL1-null human cells and rescue them at endogenous abundance with wild-type or kinase-dead UCKL1, then quantify labeled uridine and cytidine flux into UMP/CMP/UTP/CTP together with proliferation, apoptosis, NF-kappaB activity, and NK-cell killing.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Pyrimidine-salvage flux requires UCKL1 kinase activity, whereas some survival or signaling phenotypes persist with catalytically inactive UCKL1.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Catalytic-dead endogenous rescue and isotope tracing</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="EXPERIMENT: Create UCKL1-null human cells and rescue them at e..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Tag individual endogenous UCKL1 isoforms and follow their localization, interaction, ubiquitination, and half-life after EBNA3 expression, RNF19B induction, or TGF-beta activation without overexpression.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The C-terminal region controls partner-specific nuclear trafficking and degradation independently of the shared N-terminal nucleoside-kinase domain.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Isoform-resolved endogenous localization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="EXPERIMENT: Tag individual endogenous UCKL1 isoforms and follo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reproduce the UCK2-UCKL1-TRIM21-Smurf2/SMAD3 mechanism with orthogonal endogenous proximity labeling, separation-of-function interface mutants, kinase-dead knock-in rescue, and fibroblast-specific loss and rescue in a second myocardial-infarction model.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: UCKL1 has a genuine kinase-independent scaffold activity in activated cardiac fibroblasts that is separable from pyrimidine salvage.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Independent cardiac-fibroblast mechanism replication</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9NWZ5" data-a="EXPERIMENT: Reproduce the UCK2-UCKL1-TRIM21-Smurf2/SMAD3 mecha..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UCKL1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NWZ5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="uckl1-review-notes">UCKL1 review notes</h1>
+<h2 id="review-log-and-source-coverage">Review log and source coverage</h2>
+<ul>
+<li>2026-07-18: Seeded the gene directory with <code>just fetch-gene human UCKL1</code>; the GOA snapshot contained 23 annotations.</li>
+<li>2026-07-18: Ran <code>just deep-research-falcon human UCKL1 --fallback perplexity-lite</code>. Falcon failed with HTTP 402 and the automatic Perplexity-lite fallback failed with HTTP 401/quota exhaustion. No provider-named deep-research file was created. The review therefore relies on the reviewed UniProt record, GOA, cached primary publications, Reactome records, and a targeted PubMed/PMC freshness search.</li>
+<li>2026-07-18: <code>just fetch-gene-pmids human UCKL1</code> successfully cached every PMID cited by GOA. Additional direct UCKL1 papers found during the freshness search were cached and read.</li>
+</ul>
+<h2 id="molecular-function-and-pathway">Molecular function and pathway</h2>
+<p>Human UCKL1 is a 548-aa uridine-kinase-family protein with an N-terminal P-loop/uridine-kinase-like region and a C-terminal phosphoribosyltransferase-like region. The decisive biochemical evidence is the 2022 study of purified recombinant UCKL1: it reports that "Both enzymes efficiently phosphorylated uridine and cytidine" and that ATP was the phosphate donor <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" title="Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).">PMID:35583288</a>. The same paper measured UCKL1 kinetic parameters for both substrates and concluded that it is a pyrimidine kinase <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" title="We analyzed the phosphorylation of both uridine and cytidine with ATP as the phosphate donor.">PMID:35583288</a>. This directly supports uridine kinase activity (GO:0004849), cytidine kinase activity (GO:0043771), UMP salvage, CTP salvage, and the broader pyrimidine-nucleoside salvage process.</p>
+<p>A 2024 study provides independent genetic support in Jurkat cells. UCK1/UCK2 double-knockout cells retained uridine-rescue activity; deletion of UCKL1 to make a triple knockout eliminated uridine rescue of de novo pyrimidine-synthesis inhibition <a href="https://pubmed.ncbi.nlm.nih.gov/39592843" title="We therefore generated a cell line also lacking the predicted UCK, UCKL1 (UCK tKO), and observed that uridine was unable to rescue the effects of de novo pyrimidine synthesis inhibition on proliferation and Chk1 phosphorylation, confirming the absence of UCK activity (Fig. 3c and Extended Data Fig. 4d).">PMID:39592843</a>. Because this is a triple-knockout comparison rather than an isolated UCKL1 rescue, it corroborates but does not by itself quantify UCKL1-specific flux.</p>
+<p>The C-terminal region was originally modeled as UPRT-like, but the 2002 paper's dual UK/UPRT assignment was a sequence/structure-based proposal, not a direct enzymatic measurement <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" title="On the basis of the high homology to UK and UK/UPRT and the similar 3D structure of the C-terminal part of F538 to the T. gondii UPRT, we propose that F538 is a novel uridine kinas/uracil phosphoribosyltransferase (UK/UPRT) – an enzyme with double catalytic activity.">PMID:12199906</a>. The 2022 investigators explicitly stated that UPRT activity was still under examination <a href="https://pubmed.ncbi.nlm.nih.gov/35583288" title="We are also examining whether UCKL-1 has UPRT activity.">PMID:35583288</a>. No UPRT molecular-function annotation is therefore warranted from the available evidence.</p>
+<p>Reactome places UCKL1 in cytosolic pyrimidine salvage and describes uridine/cytidine phosphorylation, although its event text predates the direct 2022 biochemical demonstration and was initially based on sequence similarity [Reactome:R-HSA-8954327 "Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1 (UCKL1 aka F538) is thought to function as a novel human uridine kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002)."].</p>
+<h2 id="localization-and-isoforms">Localization and isoforms</h2>
+<p>The full-length protein was predominantly cytoplasmic when expressed in CV-1 cells, and endogenous UCKL1/F538 staining was almost exclusively cytoplasmic in EBV-negative Burkitt lymphoma cells <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" title="The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.">PMID:12199906</a>. EBV EBNA3 binds UCKL1 and induces nuclear accumulation of the full-length form; the C-terminally truncated isoform 3 remains cytoplasmic <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" title="GFP-F538ΔC is not targeted to the nucleus by EBNA-3.">PMID:12199906</a>. Thus cytoplasm/cytosol is the best-supported default functional location, whereas nucleus is a real but condition- and isoform-sensitive non-core location.</p>
+<p>UniProt lists four splice isoforms. Isoform 3 terminates after residue 395 and lacks most of the C-terminal phosphoribosyltransferase-like region. The 2002 study did not directly measure isoform-specific kinase activity, so the fact that this isoform retains the N-terminal kinase-like domain should be treated as a hypothesis rather than a demonstrated functional distinction.</p>
+<h2 id="protein-interactions-and-turnover">Protein interactions and turnover</h2>
+<p>UCKL1 directly interacts with EBV EBNA3 in yeast two-hybrid and GST pull-down assays <a href="https://pubmed.ncbi.nlm.nih.gov/12199906" title="We have shown that F538 interacts specifically with EBNA-3 in the yeast two-hybrid system and in GST pull down assays.">PMID:12199906</a>. The generic GO molecular-function term <code>protein binding</code> does not communicate the biological meaning of this host-virus interaction, so the corresponding annotation is retained only as an over-annotated interaction record.</p>
+<p>RNF19B/NKLAM is an E3 ubiquitin ligase that binds UCKL1, ubiquitinates it, and lowers its abundance. The abstract-only 2006 paper explicitly reports mammalian-cell interaction and enhanced UCKL1 ubiquitination <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" title="We confirmed that NKLAM and URKL-1 interact in mammalian cells by using both immunoprecipitation and confocal microscopy.">PMID:16709802</a> <a href="https://pubmed.ncbi.nlm.nih.gov/16709802" title="We demonstrated decreased protein expression and enhanced ubiquitination of URKL-1 in the presence of NKLAM.">PMID:16709802</a>. The RNF19B-derived generic protein-binding row can therefore be made more informative as ubiquitin protein ligase binding (GO:0031625). Full text is not available in the local cache, but the required interaction and substrate claims are explicit in the abstract.</p>
+<h2 id="cellular-phenotypes-and-context-specific-noncanonical-activity">Cellular phenotypes and context-specific noncanonical activity</h2>
+<p>UCKL1 dosage affects proliferation and apoptosis in tumor-cell models. RNAi in K562 erythroleukemia cells initiated apoptosis, slowed the cell cycle, reduced growth, and increased susceptibility to drug- and NK-mediated killing <a href="https://pubmed.ncbi.nlm.nih.gov/19653100" title="It was seen that downregulation of UCKL-1 initiated apoptosis and slowed the cell cycle, resulting in lower growth in the small interfering UCKL-1 RNA treated K562 cell culture.">PMID:19653100</a>. Conversely, overexpression protected tumor cells from NK-mediated and drug-induced apoptosis and increased proliferation <a href="https://pubmed.ncbi.nlm.nih.gov/32083188" title="We show that UCKL-1 over-expression protects tumor cells from NK-mediated and drug-induced apoptosis, enhances tumor survival in vitro and in vivo and increases the rate of tumor cell proliferation.">PMID:32083188</a>. UCKL1 expression also contributed to the cytotoxic action of the uridine analogue EUrd in temozolomide-resistant glioblastoma-initiating cells <a href="https://pubmed.ncbi.nlm.nih.gov/27090194" title="We demonstrate that the cytotoxic effect of EUrd on GICRs partly depended on the increased expression of uridine-cytidine kinase-like 1 (UCKL1) and the decreased one of 5'-nucleotidase cytosolic III (NT5C3), which regulate uridine-monophosphate synthesis positively and negatively respectively.">PMID:27090194</a>. These are strong disease-model phenotypes, but the available work does not establish whether they are caused by uridine/cytidine kinase activity, another domain, or both; they should not be converted directly into broad normal-process GO annotations.</p>
+<p>A 2025 study reports a distinct, context-specific role in TGF-β-activated human cardiac fibroblasts and post-infarction mouse hearts. Endogenous UCK2 and UCKL1 co-immunoprecipitated and colocalized predominantly in the nucleus <a href="https://pubmed.ncbi.nlm.nih.gov/41457201" title="To experimentally validate this putative interaction, we conducted co-immunoprecipitation (Co-IP) assays, confirming that endogenous UCK2 physically associates with UCKL1 in both HCFs and myocardial tissues (Fig. 2b, c).">PMID:41457201</a>. UCKL1 knockdown attenuated fibroblast differentiation, proliferation, and migration; the study proposes that a UCK2/UCKL1 complex recruits TRIM21 to regulate Smurf2/Smad3 signaling <a href="https://pubmed.ncbi.nlm.nih.gov/41457201" title="Collectively, these results establish UCK2 and UCKL1 as critical, potentially cooperative drivers of TGF-β-mediated HCF differentiation.">PMID:41457201</a>. Kinase-dead proteins retained the profibrotic phenotype <a href="https://pubmed.ncbi.nlm.nih.gov/41457201" title="Strikingly, the loss of kinase activity did not abolish their pro-fibrotic potential, as indicated by the sustained upregulation of fibrogenic markers and HCFs proliferation (Fig. S3).">PMID:41457201</a>. This recent single-study scaffold model is biologically important but is not treated as a second core evolved function until independently replicated and more precisely mapped.</p>
+<h2 id="curation-conclusions">Curation conclusions</h2>
+<ul>
+<li>Core functions: ATP-dependent uridine kinase and cytidine kinase activities in pyrimidine nucleoside salvage.</li>
+<li>Core/default location: cytoplasm, with Reactome supporting cytosol.</li>
+<li>Contextual location: nucleus after EBNA3 expression and in the recently reported UCK2/UCKL1 cardiac-fibroblast complex.</li>
+<li>Generic <code>protein binding</code> with EBNA3 is uninformative and marked over-annotated; generic binding with RNF19B is modified to ubiquitin protein ligase binding.</li>
+<li>Broad inferred parent terms (<code>kinase activity</code>, <code>nucleobase-containing small molecule metabolic process</code>, and <code>carbohydrate derivative biosynthetic process</code>) are technically compatible but over-annotated relative to the direct specific terms.</li>
+<li><code>CMP biosynthetic process</code> is modified to the more pathway-specific <code>CTP salvage</code> term.</li>
+<li>No annotation to UPRT activity is proposed because it remains untested.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NWZ5
+gene_symbol: UCKL1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UCKL1 is a 548-amino-acid uridine-kinase-family enzyme that phosphorylates
+  uridine and cytidine with ATP to generate UMP and CMP, respectively, thereby
+  supporting pyrimidine nucleoside salvage. The protein is predominantly
+  cytoplasmic under basal conditions, while the full-length form can accumulate
+  in the nucleus after binding Epstein-Barr virus EBNA3. RNF19B/NKLAM binds,
+  ubiquitinates, and promotes degradation of UCKL1. UCKL1 abundance influences
+  proliferation, apoptosis, and susceptibility to natural-killer-cell-mediated
+  killing in tumor models. A recent study also reports a kinase-independent,
+  nuclear UCK2-UCKL1 scaffold that promotes TGF-beta/SMAD3-dependent cardiac
+  fibroblast activation after myocardial infarction. The C-terminal half is
+  structurally UPRT-like, but uracil phosphoribosyltransferase activity has not
+  been demonstrated.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9NWZ5-1
+  description: Full-length canonical isoform used for the direct kinase assays
+    and capable of EBNA3-dependent nuclear relocalization.
+- name: &#39;2&#39;
+  id: Q9NWZ5-2
+  sequence_note: VSP_021802
+  description: Alternative C-terminal sequence after residue 302; no
+    isoform-specific biochemical function has been established.
+- name: &#39;3&#39;
+  id: Q9NWZ5-3
+  sequence_note: VSP_025641, VSP_025642
+  description: C-terminally truncated after residue 395; remains cytoplasmic in
+    the presence of EBNA3, unlike the full-length form.
+- name: &#39;4&#39;
+  id: Q9NWZ5-4
+  sequence_note: VSP_043171
+  description: Alternative N-terminal sequence; no isoform-specific biochemical
+    function has been established.
+existing_annotations:
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The IBA assignment matches direct biochemical evidence that purified human
+      UCKL1 phosphorylates uridine with ATP.
+    action: ACCEPT
+    reason: &gt;-
+      Uridine kinase activity is one of UCKL1&#39;s two directly demonstrated core
+      molecular activities and is phylogenetically consistent with its
+      uridine-kinase-family membership.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Cytoplasm is the best-supported default location: full-length GFP-UCKL1
+      was cytoplasmic before EBNA3 expression and endogenous protein was
+      cytoplasmic in EBV-negative lymphoma cells.
+    action: ACCEPT
+    reason: &gt;-
+      This broad location is supported by phylogenetic inference, direct imaging,
+      UniProt curation, and cytosolic Reactome pathway placement. Nuclear
+      localization is conditional and does not invalidate a cytoplasmic pool.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The automated uridine kinase assignment agrees with the direct 2022
+      biochemical characterization.
+    action: ACCEPT
+    reason: &gt;-
+      Although this row duplicates stronger IBA and IDA evidence, it is accurate;
+      independent annotations with different evidence codes are valid.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UCKL1 contains a predicted ATP-binding P-loop and purified UCKL1 uses ATP
+      as the phosphate donor in its kinase reactions.
+    action: ACCEPT
+    reason: &gt;-
+      ATP binding is mechanistically integral to the directly demonstrated
+      nucleoside-kinase reaction and the InterPro mapping is consistent with
+      experimental donor usage.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: We analyzed the phosphorylation of both uridine and cytidine with ATP as the phosphate donor.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear UCKL1 is experimentally observed, but the best-established 2002
+      localization is EBNA3-dependent and differs between full-length and
+      C-terminally truncated forms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain nucleus as a real contextual location rather than a default core
+      location. Full-length UCKL1 accumulates in the nucleus with EBNA3, while
+      the truncated isoform remains cytoplasmic; a 2025 cardiac-fibroblast study
+      also reports a nuclear UCK2-UCKL1 pool.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+      reference_section_type: DISCUSSION
+    - reference_id: PMID:12199906
+      supporting_text: GFP-F538ΔC is not targeted to the nucleus by EBNA-3.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt subcellular-location mapping accurately captures the predominant
+      basal localization observed for full-length and truncated UCKL1.
+    action: ACCEPT
+    reason: &gt;-
+      Direct fluorescence and antibody staining support a cytoplasmic pool, and
+      this location is compatible with cytosolic pyrimidine salvage.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0008655
+    label: pyrimidine-containing compound salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UCKL1 generates UMP and CMP from pyrimidine nucleosides, placing it
+      directly in pyrimidine-containing compound salvage.
+    action: ACCEPT
+    reason: &gt;-
+      The ARBA-derived process is broad but biologically central and is supported
+      by direct enzymology plus independent genetic evidence for uridine salvage.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+    - reference_id: PMID:39592843
+      supporting_text: &gt;-
+        We therefore generated a cell line also lacking the predicted UCK, UCKL1
+        (UCK tKO), and observed that uridine was unable to rescue the effects of
+        de novo pyrimidine synthesis inhibition on proliferation and Chk1
+        phosphorylation, confirming the absence of UCK activity (Fig. 3c and
+        Extended Data Fig. 4d).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0009224
+    label: CMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UCKL1 does produce CMP from cytidine, but this broad logical-inference term
+      obscures that the reaction is specifically the first step of CTP salvage.
+    action: MODIFY
+    reason: &gt;-
+      Replace the generic CMP biosynthetic-process assignment with the
+      pathway-specific CTP salvage term already supported by the same
+      cytidine-kinase reaction and UniPathway annotation.
+    proposed_replacement_terms:
+    - id: GO:0044211
+      label: CTP salvage
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UCKL1 is a kinase, but this parent term is much less informative than the
+      directly demonstrated uridine kinase and cytidine kinase activities.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The InterPro mapping is technically correct but redundant and overly broad
+      now that substrate-specific molecular-function terms are available.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0043771
+    label: cytidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea mapping correctly assigns cytidine kinase activity, which purified
+      UCKL1 directly demonstrates.
+    action: ACCEPT
+    reason: &gt;-
+      Cytidine kinase activity is a core UCKL1 molecular function; this IEA row
+      agrees with the IDA annotation and the curated Rhea reaction.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0055086
+    label: nucleobase-containing small molecule metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UCKL1 participates in this very broad metabolic parent through pyrimidine
+      nucleoside salvage, but the term does not identify its actual pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      More specific accepted terms for pyrimidine nucleoside, UMP, and CTP
+      salvage capture the supported biology without the loss of information
+      inherent in this ARBA parent.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:1901137
+    label: carbohydrate derivative biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Nucleotide synthesis falls under this extremely broad parent, but the term
+      is not informative about UCKL1&#39;s direct salvage reactions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The ARBA inference is not false, but UMP and CTP salvage terms describe the
+      supported process at the appropriate specificity.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12199906
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UCKL1/F538 specifically binds EBV EBNA3, and the interaction drives
+      conditional nuclear relocalization, but bare protein binding is
+      uninformative as a molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The interaction is experimentally real and is retained in the review, but
+      GO:0005515 does not communicate the host-virus context or functional
+      consequence and should not be treated as a core UCKL1 activity.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: We have shown that F538 interacts specifically with EBNA-3 in the yeast two-hybrid system and in GST pull down assays.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16709802
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RNF19B/NKLAM binds UCKL1 as an E3-ligase substrate and promotes its
+      ubiquitination and reduced abundance.
+    action: MODIFY
+    reason: &gt;-
+      The interaction is explicit in the abstract-only source and is more
+      informatively represented by ubiquitin protein ligase binding than by
+      generic protein binding.
+    proposed_replacement_terms:
+    - id: GO:0031625
+      label: ubiquitin protein ligase binding
+    supported_by:
+    - reference_id: PMID:16709802
+      supporting_text: We confirmed that NKLAM and URKL-1 interact in mammalian cells by using both immunoprecipitation and confocal microscopy.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+    - reference_id: PMID:16709802
+      supporting_text: We demonstrated decreased protein expression and enhanced ubiquitination of URKL-1 in the presence of NKLAM.
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- term:
+    id: GO:0043097
+    label: pyrimidine nucleoside salvage
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73614
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome places UCKL1 in pyrimidine nucleoside salvage, consistent with
+      direct uridine and cytidine phosphorylation.
+    action: ACCEPT
+    reason: &gt;-
+      This is the appropriate shared process for the two core kinase activities
+      and is independently supported by direct biochemical and genetic evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73614
+      supporting_text: &gt;-
+        In pyrimidine salvage reactions, nucleosides and free bases generated by
+        DNA and RNA breakdown are converted back to nucleotide monophosphates,
+        allowing them to re-enter the pathways of pyrimidine biosynthesis and
+        interconversion.
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:35583288
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Purified recombinant UCKL1 directly phosphorylated uridine with ATP and
+      kinetic parameters were measured.
+    action: ACCEPT
+    reason: &gt;-
+      This is direct biochemical evidence for a core molecular function and is
+      the strongest evidence supporting the uridine-kinase assignments.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0043771
+    label: cytidine kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:35583288
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Purified recombinant UCKL1 directly phosphorylated cytidine with ATP and
+      kinetic parameters were measured.
+    action: ACCEPT
+    reason: &gt;-
+      This is direct biochemical evidence for UCKL1&#39;s second core molecular
+      function and supports its placement in CTP salvage.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0044206
+    label: UMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UCKL1 converts uridine to UMP, the defining reaction of UMP salvage.
+    action: ACCEPT
+    reason: &gt;-
+      The UniPathway mapping is mechanistically supported by direct uridine
+      kinase activity and independent genetic evidence for UCK-dependent uridine
+      rescue.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+    - reference_id: PMID:39592843
+      supporting_text: &gt;-
+        We therefore generated a cell line also lacking the predicted UCK, UCKL1
+        (UCK tKO), and observed that uridine was unable to rescue the effects of
+        de novo pyrimidine synthesis inhibition on proliferation and Chk1
+        phosphorylation, confirming the absence of UCK activity (Fig. 3c and
+        Extended Data Fig. 4d).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0044211
+    label: CTP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UCKL1 converts cytidine to CMP, the first step in salvage of cytidine to
+      CTP.
+    action: ACCEPT
+    reason: &gt;-
+      The UniPathway mapping follows directly from experimentally demonstrated
+      cytidine kinase activity and is the most informative process term for that
+      reaction.
+    supported_by:
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0004849
+    label: uridine kinase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8954327
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome&#39;s uridine-phosphorylation event predates direct UCKL1 enzymology
+      but is now confirmed by the 2022 biochemical study.
+    action: ACCEPT
+    reason: &gt;-
+      The event accurately captures a core activity. Its older sequence-based
+      UPRT speculation should not be extended into a UPRT annotation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-8954327
+      supporting_text: &gt;-
+        Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1
+        (UCKL1 aka F538) is thought to function as a novel human uridine
+        kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002).
+    - reference_id: PMID:35583288
+      supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+      reference_section_type: RESULTS
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: EXP
+  original_reference_id: PMID:12199906
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Full-length UCKL1/F538 accumulates in the nucleus when EBNA3 is expressed;
+      endogenous protein is also predominantly nuclear in EBV-positive cells.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accept the experimental observation while classifying it as a
+      host-virus-dependent, isoform-sensitive location rather than UCKL1&#39;s
+      default functional compartment.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+      reference_section_type: DISCUSSION
+    - reference_id: PMID:12199906
+      supporting_text: GFP-F538ΔC is not targeted to the nucleus by EBNA-3.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:12199906
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct fluorescence and antibody staining show cytoplasmic UCKL1 in the
+      absence of EBNA3.
+    action: ACCEPT
+    reason: &gt;-
+      This is direct experimental support for UCKL1&#39;s predominant basal
+      location and is compatible with its pyrimidine-salvage activity.
+    supported_by:
+    - reference_id: PMID:12199906
+      supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8954327
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome models the UCKL1 phosphorylation event in the cytosol, a more
+      specific location compatible with the experimentally observed
+      cytoplasmic pool.
+    action: ACCEPT
+    reason: &gt;-
+      Retain the TAS location because it is pathway-compatible and nested within
+      the directly supported cytoplasm annotation, while recognizing that
+      nuclear pools occur in specific contexts.
+    supported_by:
+    - reference_id: Reactome:R-HSA-8954327
+      supporting_text: &gt;-
+        Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1
+        (UCKL1 aka F538) is thought to function as a novel human uridine
+        kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002).
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The UCKL1 GOA row explicitly cites this GO_REF for ATP binding and kinase
+      activity inferred from InterPro:IPR006083; both mappings were checked
+      against direct donor usage and the specific kinase annotations.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The two UCKL1 IBA rows explicitly cite this GO_REF and a PANTHER ancestral
+      node; the inferred uridine kinase activity and cytoplasm location agree
+      with direct evidence.
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The GOA rows explicitly map UniPathway UMP and CTP salvage entries to
+      UCKL1; both pathway assignments are consistent with direct enzymology.
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied
+    by UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The GOA nucleus and cytoplasm rows explicitly cite this UniProt
+      subcellular-location mapping; the underlying locations were checked
+      against PMID:12199906.
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The GOA CMP-biosynthetic-process row explicitly cites this inference
+      method. The inference is mechanistically compatible but less informative
+      than the pathway-specific CTP salvage term.
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The GOA row explicitly maps RHEA:24674 to cytidine kinase activity; the
+      same reaction is directly demonstrated in PMID:35583288 and curated in
+      UniProt.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The three ARBA-derived GOA rows were checked individually. Pyrimidine
+      salvage is retained, while the two generic metabolic parents are
+      classified as over-annotated.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The UCKL1 uridine-kinase IEA row explicitly cites this combined method and
+      agrees with direct biochemical evidence.
+- id: PMID:12199906
+  title: Epstein-Barr virus encoded nuclear protein EBNA-3 binds a novel human uridine kinase/uracil phosphoribosyltransferase.
+  findings:
+  - statement: UCKL1/F538 specifically binds EBV EBNA3.
+    supporting_text: We have shown that F538 interacts specifically with EBNA-3 in the yeast two-hybrid system and in GST pull down assays.
+    reference_section_type: DISCUSSION
+  - statement: Full-length UCKL1 is predominantly cytoplasmic and relocalizes to the nucleus with EBNA3.
+    supporting_text: The predominantly cytoplasmic GFP-F538 translocates to the nucleus when EBNA-3 is expressed.
+    reference_section_type: DISCUSSION
+  - statement: The C-terminally truncated isoform does not undergo EBNA3-dependent nuclear targeting.
+    supporting_text: GFP-F538ΔC is not targeted to the nucleus by EBNA-3.
+    reference_section_type: DISCUSSION
+  - statement: UPRT activity was proposed from sequence and structural modeling rather than measured.
+    supporting_text: &gt;-
+      On the basis of the high homology to UK and UK/UPRT and the similar 3D
+      structure of the C-terminal part of F538 to the T. gondii UPRT, we propose
+      that F538 is a novel uridine kinas/uracil phosphoribosyltransferase
+      (UK/UPRT) – an enzyme with double catalytic activity.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were checked. The interaction and localization
+      experiments directly support their uses. The dual UK/UPRT conclusion is
+      explicitly a modeling-based proposal; later direct work confirms kinase
+      activity but leaves UPRT activity untested.
+- id: PMID:16709802
+  title: NK lytic-associated molecule, involved in NK cytotoxic function, is an E3 ligase.
+  full_text_unavailable: true
+  findings:
+  - statement: RNF19B/NKLAM and UCKL1 interact in mammalian cells.
+    supporting_text: We confirmed that NKLAM and URKL-1 interact in mammalian cells by using both immunoprecipitation and confocal microscopy.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: RNF19B/NKLAM promotes UCKL1 ubiquitination and lowers its abundance.
+    supporting_text: We demonstrated decreased protein expression and enhanced ubiquitination of URKL-1 in the presence of NKLAM.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID and title were checked. Only the abstract is cached, but it explicitly
+      states the mammalian-cell interaction, ubiquitination, and reduced UCKL1
+      abundance used in this review.
+- id: PMID:35583288
+  title: Characterization of uridine-cytidine kinase like-1 nucleoside kinase activity and its role in tumor growth.
+  findings:
+  - statement: Purified UCKL1 phosphorylates uridine and cytidine.
+    supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+    reference_section_type: RESULTS
+  - statement: ATP was used as the phosphate donor for both UCKL1 reactions.
+    supporting_text: We analyzed the phosphorylation of both uridine and cytidine with ATP as the phosphate donor.
+    reference_section_type: DISCUSSION
+  - statement: UPRT activity remained under investigation and was not established.
+    supporting_text: We are also examining whether UCKL-1 has UPRT activity.
+    reference_section_type: DISCUSSION
+  - statement: UCKL1 depletion in K562 tumor xenografts increased apoptosis and reduced tumor growth and dissemination.
+    supporting_text: These results indicate that decreasing UCKL-1 expression in tumor cells induces apoptosis and inhibits tumor growth, dissemination, and metastasis.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were checked. This is the decisive direct
+      biochemical characterization of both core kinase activities; the
+      tumor-model experiments are also directly reported.
+- id: PMID:19653100
+  title: Downregulation of uridine-cytidine kinase like-1 decreases proliferation and enhances tumor susceptibility to lysis by apoptotic agents and natural killer cells.
+  full_text_unavailable: true
+  findings:
+  - statement: UCKL1 RNAi in K562 cells induced apoptosis, slowed the cell cycle, and reduced growth.
+    supporting_text: It was seen that downregulation of UCKL-1 initiated apoptosis and slowed the cell cycle, resulting in lower growth in the small interfering UCKL-1 RNA treated K562 cell culture.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID and title were checked. Full text is unavailable in the cache, so
+      only the explicit K562 RNAi phenotype stated in the abstract is used.
+- id: PMID:27090194
+  title: Chemical Screening Identifies EUrd as a Novel Inhibitor Against Temozolomide-Resistant Glioblastoma-Initiating Cells.
+  full_text_unavailable: true
+  findings:
+  - statement: UCKL1 expression partly contributes to EUrd cytotoxicity and positively regulates UMP synthesis in resistant glioblastoma-initiating cells.
+    supporting_text: &gt;-
+      We demonstrate that the cytotoxic effect of EUrd on GICRs partly depended
+      on the increased expression of uridine-cytidine kinase-like 1 (UCKL1) and
+      the decreased one of 5&#39;-nucleotidase cytosolic III (NT5C3), which regulate
+      uridine-monophosphate synthesis positively and negatively respectively.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID and title were checked. The abstract-only evidence supports a
+      context-specific role in EUrd action, not a general additional substrate
+      annotation without the inaccessible assay details.
+- id: PMID:32083188
+  title: Uridine Cytidine Kinase Like-1 Enhances Tumor Cell Proliferation and Mediates Protection from Natural Killer-Mediated Killing.
+  findings:
+  - statement: UCKL1 overexpression increases proliferation and protects tumor cells from NK- and drug-induced apoptosis.
+    supporting_text: We show that UCKL-1 over-expression protects tumor cells from NK-mediated and drug-induced apoptosis, enhances tumor survival in vitro and in vivo and increases the rate of tumor cell proliferation.
+    reference_section_type: INTRODUCTION
+  - statement: UCKL1 abundance correlates with NF-kappaB activity in K562 cells.
+    supporting_text: UCKL-1 transfected K562 cells had significantly higher NF-κB activity than control transfected cells; siUCKL-1 treated K562 cells had less NF-κB activity (Figure 7a).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were checked. The tumor-cell phenotypes are
+      direct but rely substantially on overexpression and do not establish
+      whether kinase activity is required.
+- id: PMID:39592843
+  title: Glucose limitation protects cancer cells from apoptosis induced by pyrimidine restriction and replication inhibition.
+  findings:
+  - statement: Deleting UCKL1 in UCK1/UCK2-deficient Jurkat cells eliminated residual uridine rescue, genetically supporting a contribution to uridine salvage.
+    supporting_text: &gt;-
+      We therefore generated a cell line also lacking the predicted UCK, UCKL1
+      (UCK tKO), and observed that uridine was unable to rescue the effects of
+      de novo pyrimidine synthesis inhibition on proliferation and Chk1
+      phosphorylation, confirming the absence of UCK activity (Fig. 3c and
+      Extended Data Fig. 4d).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were checked. The result is strong independent
+      genetic corroboration of residual UCKL1-dependent salvage, but the
+      triple-knockout design does not quantify UCKL1 alone.
+- id: PMID:41457201
+  title: Uridine-Cytidine Kinase 2 (UCK2)/Uridine-Cytidine Kinase Like 1 (UCKL1) complex exacerbates the differentiation of myocardial fibroblasts via TRIM21/Smurf2/Smad3 pathway after myocardial infarction.
+  findings:
+  - statement: Endogenous UCK2 and UCKL1 associate in human cardiac fibroblasts and mouse myocardium.
+    supporting_text: To experimentally validate this putative interaction, we conducted co-immunoprecipitation (Co-IP) assays, confirming that endogenous UCK2 physically associates with UCKL1 in both HCFs and myocardial tissues (Fig. 2b, c).
+    reference_section_type: RESULTS
+  - statement: UCK2 and UCKL1 cooperatively promote TGF-beta-mediated cardiac fibroblast differentiation.
+    supporting_text: Collectively, these results establish UCK2 and UCKL1 as critical, potentially cooperative drivers of TGF-β-mediated HCF differentiation.
+    reference_section_type: RESULTS
+  - statement: Kinase-dead UCK2/UCKL1 proteins retained the reported profibrotic activity.
+    supporting_text: Strikingly, the loss of kinase activity did not abolish their pro-fibrotic potential, as indicated by the sustained upregulation of fibrogenic markers and HCFs proliferation (Fig. S3).
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were checked. This is a recent, direct,
+      multi-level study of a context-specific kinase-independent scaffold role,
+      but it is currently a single report and is not elevated to a core evolved
+      function pending independent replication.
+- id: Reactome:R-HSA-73614
+  title: Pyrimidine salvage
+  findings:
+  - statement: Reactome defines the human pyrimidine-salvage pathway that contains the UCKL1 event.
+    supporting_text: &gt;-
+      In pyrimidine salvage reactions, nucleosides and free bases generated by
+      DNA and RNA breakdown are converted back to nucleotide monophosphates,
+      allowing them to re-enter the pathways of pyrimidine biosynthesis and
+      interconversion.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The cached Reactome record and stable identifier were checked. It provides
+      pathway context rather than UCKL1-specific experimental evidence.
+- id: Reactome:R-HSA-8954327
+  title: UCKL1 phosphorylates urindine, cytidine
+  findings:
+  - statement: Reactome places UCKL1 in the cytosol and models uridine/cytidine phosphorylation.
+    supporting_text: &gt;-
+      Based on sequence similarity, cytosolic uridine-cytidine kinase-like 1
+      (UCKL1 aka F538) is thought to function as a novel human uridine
+      kinase/uracil phosphoribosyltransferase (Kashuba et al. 2002).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The cached Reactome record and stable identifier were checked. The event
+      correctly records the historical sequence-based inference and cytosolic
+      placement; direct 2022 evidence now confirms kinase activity, while UPRT
+      activity remains untested.
+- id: file:human/UCKL1/UCKL1-uniprot.txt
+  title: UniProt record for human UCKL1 (Q9NWZ5)
+  findings:
+  - statement: Reviewed UniProt curates direct uridine and cytidine phosphorylation by UCKL1.
+    supporting_text: Phosphorylates uridine and cytidine to uridine monophosphate and cytidine monophosphate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The complete local reviewed UniProt record (entry version 187) was
+      inspected, including function, reactions, kinetics, isoforms, localization,
+      interactions, domains, and sequence features.
+core_functions:
+- description: &gt;-
+    Phosphorylates uridine with ATP to produce UMP, supporting pyrimidine
+    nucleoside salvage and the complete UMP salvage reaction.
+  molecular_function:
+    id: GO:0004849
+    label: uridine kinase activity
+  directly_involved_in:
+  - id: GO:0044206
+    label: UMP salvage
+  - id: GO:0043097
+    label: pyrimidine nucleoside salvage
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  substrates:
+  - id: CHEBI:16704
+    label: uridine
+  supported_by:
+  - reference_id: PMID:35583288
+    supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+    reference_section_type: RESULTS
+  - reference_id: PMID:39592843
+    supporting_text: &gt;-
+      We therefore generated a cell line also lacking the predicted UCK, UCKL1
+      (UCK tKO), and observed that uridine was unable to rescue the effects of
+      de novo pyrimidine synthesis inhibition on proliferation and Chk1
+      phosphorylation, confirming the absence of UCK activity (Fig. 3c and
+      Extended Data Fig. 4d).
+    reference_section_type: RESULTS
+- description: &gt;-
+    Phosphorylates cytidine with ATP to produce CMP, providing the first step of
+    CTP salvage from cytidine.
+  molecular_function:
+    id: GO:0043771
+    label: cytidine kinase activity
+  directly_involved_in:
+  - id: GO:0044211
+    label: CTP salvage
+  - id: GO:0043097
+    label: pyrimidine nucleoside salvage
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  substrates:
+  - id: CHEBI:17562
+    label: cytidine
+  supported_by:
+  - reference_id: PMID:35583288
+    supporting_text: Both enzymes efficiently phosphorylated uridine and cytidine (Figure 3).
+    reference_section_type: RESULTS
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does the C-terminal phosphoribosyltransferase-like domain of human UCKL1
+    catalyze PRPP-dependent uracil phosphoribosyltransferase activity under any
+    physiological condition?
+  experts:
+  - Elise C. Matchett
+  - Elise C. Ambrose
+  - Jacki Kornbluth
+  - Elena Kashuba
+- question: &gt;-
+    Are the tumor-cell survival, NF-kappaB, and nucleoside-analogue phenotypes
+    caused by UCKL1 kinase activity, by a kinase-independent scaffold function,
+    or by both?
+  experts:
+  - Elise C. Ambrose
+  - Jacki Kornbluth
+  - Richard G. Hoover
+- question: &gt;-
+    Is the reported kinase-independent nuclear UCK2-UCKL1-TRIM21 scaffold a
+    reproducible endogenous mechanism in human post-infarction cardiac
+    fibroblasts, and which UCKL1 interface is required?
+  experts:
+  - Xiao Zhou
+  - Yu Zhang
+  - Yongyi Wang
+- question: &gt;-
+    Which UCKL1 splice isoforms retain nucleoside kinase activity, and how do
+    their C-terminal differences control EBNA3-, RNF19B-, or TGF-beta-dependent
+    localization and turnover?
+  experts:
+  - Elena Kashuba
+  - Jacki Kornbluth
+suggested_experiments:
+- experiment_type: Purified-enzyme biochemistry
+  description: &gt;-
+    Assay full-length UCKL1 and isolated or active-site-mutated C-terminal
+    domains for conversion of uracil plus PRPP to UMP using orthogonal
+    LC-MS-based product detection and appropriate active UPRT controls.
+  hypothesis: &gt;-
+    The UPRT-like C-terminal domain is either catalytically active only under
+    specific cofactor or oligomerization conditions, or is a catalytically
+    inactive structural domain.
+- experiment_type: Catalytic-dead endogenous rescue and isotope tracing
+  description: &gt;-
+    Create UCKL1-null human cells and rescue them at endogenous abundance with
+    wild-type or kinase-dead UCKL1, then quantify labeled uridine and cytidine
+    flux into UMP/CMP/UTP/CTP together with proliferation, apoptosis, NF-kappaB
+    activity, and NK-cell killing.
+  hypothesis: &gt;-
+    Pyrimidine-salvage flux requires UCKL1 kinase activity, whereas some
+    survival or signaling phenotypes persist with catalytically inactive UCKL1.
+- experiment_type: Isoform-resolved endogenous localization
+  description: &gt;-
+    Tag individual endogenous UCKL1 isoforms and follow their localization,
+    interaction, ubiquitination, and half-life after EBNA3 expression, RNF19B
+    induction, or TGF-beta activation without overexpression.
+  hypothesis: &gt;-
+    The C-terminal region controls partner-specific nuclear trafficking and
+    degradation independently of the shared N-terminal nucleoside-kinase domain.
+- experiment_type: Independent cardiac-fibroblast mechanism replication
+  description: &gt;-
+    Reproduce the UCK2-UCKL1-TRIM21-Smurf2/SMAD3 mechanism with orthogonal
+    endogenous proximity labeling, separation-of-function interface mutants,
+    kinase-dead knock-in rescue, and fibroblast-specific loss and rescue in a
+    second myocardial-infarction model.
+  hypothesis: &gt;-
+    UCKL1 has a genuine kinase-independent scaffold activity in activated
+    cardiac fibroblasts that is separable from pyrimidine salvage.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
