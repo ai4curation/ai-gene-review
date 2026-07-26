@@ -184,7 +184,9 @@ domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the re
 (RII) of PKA and effectively recruits PKA holoenzyme to the Golgi"]. Combined with the Q-domain
 correction above, the UR/GOLD split collapses — leaving **three** functional regions, not four:
 
-- **ACB domain (83–174)** — binds C18:1-CoA / C16:0-CoA and oligomerises on ligand; binds
+- **ACB domain (83–174** per UniProt; PMID:23166793 writes "ACB domain (80–171)" and deletes
+  1–171, so the boundary is source-dependent — rule 3's own case, and nothing here turns on it**)
+  — binds C18:1-CoA / C16:0-CoA and oligomerises on ligand; binds
   SREBP1 (ACB-containing N-terminus); and is credited by PMID:38134218 with recruiting FAPP2,
   citing PMID:29750412 — though that paper's own abstract maps nothing to the ACB domain and
   models FAPP2 dispersal as a *consequence* of Golgi fragmentation. Treat the FAPP2 domain
@@ -424,3 +426,31 @@ It is also worth naming why this sentence in particular: it is a **secondary** s
 introduction compressing four primary papers into four clauses. High information density,
 each clause a lead worth a fetch, and no redundancy to catch a partial read. Reviews should
 treat an introduction's domain enumeration as a work list, not as a citation.
+
+### Round 11: the same shape one level further in — a figure legend for a paragraph
+
+Round 10 annotated `GO:2000639` and said the cached text carried *no quotable loss-of-function
+result*, so the call rested on overexpression alone. **It does carry one**, three occurrences of it:
+
+[PMID:23166793 "More strikingly, after knocking down endogenous ACBD3, nuclear SREBP1 expression was
+enhanced in both HEK293T and Hep G2 cells"] — with the authors' conclusion
+[PMID:23166793 "All these results strongly suggest that ACBD3 intrinsically plays a negative role in
+SREBP1 protein maturation."] and a specificity control
+[PMID:23166793 "knockdown of endogenous ACBD3 had no effect on the expression of these two
+SREBP-binding proteins, either (Figure S2)"].
+
+What I read was the **Figure 3 legend**, which describes the experiment and not its outcome. The
+result is the paragraph immediately above it. So the progression across rounds is:
+
+| Round | What stood in for the evidence |
+|---|---|
+| 8 | the **abstract** stood in for the results paragraph |
+| 10 | one **clause** stood in for the sentence |
+| 11 | the **figure legend** stood in for the paragraph |
+
+Each is a shorter, tidier text that sits next to the real one and reads as if it were complete.
+**Rule 5: a caption is not a result.** Figure legends, abstracts and introductions are all
+*summaries*; when a claim turns on what an experiment showed, the sentence that reports the outcome
+is in the body text, and it is the only one that counts. Corollary: this cut against my own
+annotation — the correction *strengthened* `GO:2000639` from one-directional to bidirectional — so
+the habit is not conservative, it is just wrong in whichever direction the summary happens to lean.
