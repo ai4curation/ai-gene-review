@@ -114,11 +114,23 @@ PANEL: dict[str, tuple[str, str]] = {
     "Q9HTI0": ("PA2949 (P. aeruginosa)", "node_member"),
 }
 
-# Which references are close enough for a global pairwise alignment to place
-# individual residues reliably. Below roughly 30% identity the alignment itself,
-# not the biology, decides where a position lands, so the register claim is only
-# made for the AADAC-family members.
-REGISTER_TRUSTED_ROLES = {"paralog", "reference"}
+# A global pairwise alignment only places individual residues reliably at
+# reasonably high identity; below roughly 30% the alignment itself, not the
+# biology, decides where a position lands. So the register claim is restricted by
+# the *computed* percent identity rather than by the hand-assigned role above.
+# REGISTER_MIN_GAP asserts the panel does not straddle the threshold: if a future
+# UniProt release moved an identity to within that margin, the partition would be
+# a coin-flip and the run stops instead of quietly reclassifying a reference.
+#
+# The threshold is placed inside the empty band this panel happens to leave: the
+# lowest AADAC-family member is AADACL2 at 32.3% and the highest non-family member
+# is M. tuberculosis NlhH at 30.3%, so nothing sits between them. Putting the cut
+# at 31.3 leaves a full point of margin on each side. This is deliberately stated
+# rather than tuned silently, and the margin assertion below is what keeps it
+# honest - an earlier attempt at 31.0 aborted the run because NlhH was only 0.7
+# points away.
+REGISTER_IDENTITY_THRESHOLD = 31.3
+REGISTER_MIN_GAP = 0.75
 
 # AADACL4's own UniProt features, restated here only as the hypothesis being
 # tested. The script re-reads them from UniProt and aborts if they have moved.
@@ -482,11 +494,31 @@ def main() -> None:
                 and all(
                     r["test_residue"] == r["ref_residue"] and r["matches_annotated"] for r in rows
                 ),
-                "alignment_trusted": entry.role in REGISTER_TRUSTED_ROLES,
+                "alignment_trusted": pct >= REGISTER_IDENTITY_THRESHOLD,
             }
         )
     register.sort(key=lambda row: (not row["alignment_trusted"], -row["percent_identity"]))
+    borderline = [
+        row
+        for row in register
+        if abs(row["percent_identity"] - REGISTER_IDENTITY_THRESHOLD) < REGISTER_MIN_GAP
+    ]
+    if borderline:
+        raise SystemExit(
+            "FATAL: "
+            + ", ".join(f"{r['label']} at {r['percent_identity']}%" for r in borderline)
+            + f" sits within {REGISTER_MIN_GAP} points of the "
+            f"{REGISTER_IDENTITY_THRESHOLD}% register threshold, so the trusted/untrusted "
+            f"split is arbitrary. Re-examine the panel and the threshold before trusting "
+            f"the register claim."
+        )
     results["register"] = register
+    results["register_identity_threshold"] = REGISTER_IDENTITY_THRESHOLD
+    # Does the purely numeric cut reproduce the AADAC-family membership? If so the
+    # threshold is not doing hidden work; if not, that is worth seeing.
+    results["register_cut_matches_family"] = all(
+        row["alignment_trusted"] == (row["role"] in {"paralog", "reference"}) for row in register
+    )
 
     # ---- Part 3: full WITH/FROM audit of the hydrolase-activity IBA ---------
     withfrom = []
@@ -540,6 +572,7 @@ def main() -> None:
                 "acc": entry.acc,
                 "label": entry.label,
                 "existence": entry.existence,
+                "length": len(entry.sequence),
                 "features": [
                     {"type": k, "start": s, "end": e, "note": n, "evidence": list(ev)}
                     for k, s, e, n, ev in entry.nterm_features
@@ -652,9 +685,16 @@ def write_report(entries: dict[str, Entry], r: dict) -> None:
     trusted = [row for row in r["register"] if row["alignment_trusted"]]
     n_ok = sum(1 for row in trusted if row["all_conserved"])
     w(
-        f"- AADAC-family references (the rows where a global alignment places single residues "
-        f"reliably) whose full annotated triad projects onto AADACL4 residues "
-        f"{list(EXPECTED_ACT_SITES)} with identical residue type: **{n_ok} of {len(trusted)}**."
+        f"- References above the computed **{r['register_identity_threshold']}%** identity cut - "
+        f"the rows where a global alignment places single residues reliably - whose full "
+        f"annotated triad projects onto AADACL4 residues {list(EXPECTED_ACT_SITES)} with "
+        f"identical residue type: **{n_ok} of {len(trusted)}**."
+    )
+    w(
+        f"- The cut is applied to the computed identity, not to a hand-labelled set, and the "
+        f"run aborts if any member lands within {REGISTER_MIN_GAP} point of it. Whether the "
+        f"numeric cut reproduces AADAC-family membership exactly: "
+        f"**{r['register_cut_matches_family']}**."
     )
     w(
         "- The remaining rows sit at 25-30% identity, where the alignment rather than the biology "
@@ -701,8 +741,11 @@ def write_report(entries: dict[str, Entry], r: dict) -> None:
         "closest paralogs and in the characterised relatives, with each feature's evidence code."
     )
     w("")
-    w("| Protein | PE | N-terminal features (evidence) | Subcellular location | KD peak (w=19) | Peak start | Charged in 1-10 |")
-    w("|---|---|---|---|---|---|---|")
+    w(
+        "| Protein | Length | PE | N-terminal features (evidence) | Subcellular location "
+        "| KD peak (w=19) | Peak start | Charged in 1-10 |"
+    )
+    w("|---|---|---|---|---|---|---|---|")
     for n in r["nterminus"]:
         feats = (
             "; ".join(
@@ -714,7 +757,8 @@ def write_report(entries: dict[str, Entry], r: dict) -> None:
             or "none annotated"
         )
         w(
-            f"| {n['label']} ({n['acc']}) | {n['existence'].split(':')[0]} | {feats} | "
+            f"| {n['label']} ({n['acc']}) | {n['length']} | "
+            f"{n['existence'].split(':')[0]} | {feats} | "
             f"{'; '.join(n['subcellular']) or '-'} | {n['kd_peak']} | {n['kd_peak_start']} | "
             f"{n['charged_in_first_10']} |"
         )

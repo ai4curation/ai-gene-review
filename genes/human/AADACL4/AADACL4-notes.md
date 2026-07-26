@@ -6,7 +6,8 @@ Reviewed for the PAINT + affinage campaign.
 Paralog map (verified against NCBI Gene and UniProt, since it matters for how the IBA
 donors are read): AADAC (3q25.1), AADACL2 (3q25.1) and NCEH1/AADACL1 (3q26.31) are on
 chromosome 3; AADACL3 and AADACL4 are adjacent at 1p36.21. AADACL3 is the closest paralog -
-same 407-residue length, same active-site positions 193/347/377, 55% identity - and is being
+both 407 residues, same active-site positions 193/347/377, 55% identity, all three figures
+recorded in `AADACL4-bioinformatics/results.json` from live UniProt data - and is being
 reviewed separately.
 
 ## Bottom line
@@ -68,9 +69,12 @@ sequence and against the family rather than taking the propagated positions on t
   around Ser193: `GESVG`"] — the nucleophile sits in a canonical G-x-S-x-G elbow.
 - [file:human/AADACL4/AADACL4-bioinformatics/RESULTS.md "Residues 119-121: `HGG` (the GDXG
   oxyanion-hole motif)"].
-- All 7 AADAC-family relatives (AADACL3, AADACL2, human/rat/mouse AADAC, human/mouse
-  NCEH1) project their own annotated triads onto exactly residues 193/347/377 of AADACL4
-  by global alignment, with matching residue identity — 7 of 7.
+- All 7 relatives above the 31.3% identity cut (AADACL3, AADACL2, human/rat/mouse AADAC,
+  human/mouse NCEH1) project their own annotated triads onto exactly residues 193/347/377 of
+  AADACL4 by global alignment, with matching residue identity — 7 of 7. The cut is applied to
+  the computed identity rather than to a hand-labelled set, and the run aborts if any panel
+  member falls within 0.75 points of it; the numeric cut reproduces AADAC-family membership
+  exactly. Placing it at 31.0 did abort, because M. tuberculosis NlhH sits at 30.3%.
 
 This is what makes the ester-hydrolase call a statement about an intact active site rather
 than a fold name transcribed into an activity. It also closes off the mirror error: there

@@ -43,7 +43,8 @@ Each reference is aligned to AADACL4 globally (BLOSUM62, gap open -11, extend -1
 | Afmid (mouse) (Q8K4H1) | node_member | 24.6 | S162→S193; D247→N323; H279→I381 | 1/3 | False |
 | ICME (A. thaliana) (Q94AS5) | node_member | 22.3 | S235→S193; D336→K316; H368→E345 | 1/3 | False |
 
-- AADAC-family references (the rows where a global alignment places single residues reliably) whose full annotated triad projects onto AADACL4 residues [193, 347, 377] with identical residue type: **7 of 7**.
+- References above the computed **31.3%** identity cut - the rows where a global alignment places single residues reliably - whose full annotated triad projects onto AADACL4 residues [193, 347, 377] with identical residue type: **7 of 7**.
+- The cut is applied to the computed identity, not to a hand-labelled set, and the run aborts if any member lands within 0.75 point of it. Whether the numeric cut reproduces AADAC-family membership exactly: **True**.
 - The remaining rows sit at 25-30% identity, where the alignment rather than the biology decides where an individual position lands; they are shown for completeness and carry no weight in the register claim. One of them is informative anyway: soybean HIDH's annotated nucleophile is a **threonine**, not a serine, which is the single clearest sign that this node is not a uniform serine-esterase family.
 
 ## Part 3 - full audit of the hydrolase-activity IBA WITH/FROM column
@@ -83,16 +84,16 @@ Each non-PANTHER token's resolution is checked back against the resolved entry's
 
 AADACL4's two `GO:0016020 membrane` rows both trace to a predicted N-terminal signal anchor. This tabulates what UniProt says about the equivalent segment in the closest paralogs and in the characterised relatives, with each feature's evidence code.
 
-| Protein | PE | N-terminal features (evidence) | Subcellular location | KD peak (w=19) | Peak start | Charged in 1-10 |
-|---|---|---|---|---|---|---|
-| AADACL4 (human) (Q5VUY2) | 3 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Membrane; Single-pass type II membrane protein | 2.8 | 6 | 0 |
-| AADACL3 (human) (Q5VUY0) | 2 | none annotated | - | 2.5 | 6 | 1 |
-| AADACL2 (human) (Q6P093) | 1 | Signal 1-18 [ECO:0000255] | Secreted | 1.94 | 1 | 1 |
-| AADAC (human) (P22760) | 1 | Transmembrane 6-23 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 1.81 | 5 | 2 |
-| NCEH1/AADACL1 (human) (Q6PIU2) | 1 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Cell membrane; Single-pass type II membrane protein; Microsome | 2.08 | 5 | 1 |
-| Aadac (rat) (Q9QZH8) | 2 | Transmembrane 6-26 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 2.28 | 4 | 1 |
-| Aadac (mouse) (Q99PG0) | 1 | Transmembrane 6-26 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 2.06 | 4 | 1 |
-| Nceh1 (mouse) (Q8BLF1) | 1 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Cell membrane; Single-pass type II membrane protein; Microsome | 2.19 | 5 | 1 |
+| Protein | Length | PE | N-terminal features (evidence) | Subcellular location | KD peak (w=19) | Peak start | Charged in 1-10 |
+|---|---|---|---|---|---|---|---|
+| AADACL4 (human) (Q5VUY2) | 407 | 3 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Membrane; Single-pass type II membrane protein | 2.8 | 6 | 0 |
+| AADACL3 (human) (Q5VUY0) | 407 | 2 | none annotated | - | 2.5 | 6 | 1 |
+| AADACL2 (human) (Q6P093) | 401 | 1 | Signal 1-18 [ECO:0000255] | Secreted | 1.94 | 1 | 1 |
+| AADAC (human) (P22760) | 399 | 1 | Transmembrane 6-23 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 1.81 | 5 | 2 |
+| NCEH1/AADACL1 (human) (Q6PIU2) | 408 | 1 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Cell membrane; Single-pass type II membrane protein; Microsome | 2.08 | 5 | 1 |
+| Aadac (rat) (Q9QZH8) | 398 | 2 | Transmembrane 6-26 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 2.28 | 4 | 1 |
+| Aadac (mouse) (Q99PG0) | 398 | 1 | Transmembrane 6-26 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Endoplasmic reticulum membrane; Single-pass type II membrane protein; Microsome membrane; Single-pass type II membrane protein | 2.06 | 4 | 1 |
+| Nceh1 (mouse) (Q8BLF1) | 408 | 1 | Transmembrane 5-25 ‘Helical; Signal-anchor for type II membrane protein’ [ECO:0000255] | Cell membrane; Single-pass type II membrane protein; Microsome | 2.19 | 5 | 1 |
 
 **Limitation, stated plainly.** Mean hydropathy cannot discriminate a cleaved signal peptide from an uncleaved type-II signal anchor - that is precisely why both calls in this family carry ECO:0000255. No licensed predictor (SignalP, Phobius, TMHMM, DeepTMHMM) was run here, so the hydropathy columns are reported as a like-for-like comparison only and no cleavage-site claim is made from them.
 
