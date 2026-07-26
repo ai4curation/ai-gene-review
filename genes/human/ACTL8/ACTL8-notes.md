@@ -228,6 +228,12 @@ paper shows ACTL8 binding any PI3K/AKT/mTOR component, and "acts upstream of" in
 | GO:0030424 axon (IBA) | REMOVE | Same |
 | GO:0007409 axonogenesis (IBA) | REMOVE | Same |
 | GO:0035267 NuA4 histone acetyltransferase complex (IBA) | REMOVE | The term's own definition names the actin subunits: "beta-actin and BAF53/ACTL6A" |
+
+Note on scope for the NuA4 row: PTN007551913 assigns `GO:0035267` to nine human genes. ACTB's
+membership is genuine (its own IDA, and it is named in the term definition together with
+BAF53/ACTL6A), so it is the **other eight** - ACTG1, ACTBL2, ACTL8 and the five POTE genes - whose
+rows are similarity transfers of a purification result. Stating this as "withdraw from all nine"
+would have been wrong, and the suggested question now says eight.
 | GO:0016020 membrane (IBA) | MARK_AS_OVER_ANNOTATED | Cortical-actin-derived; ACTL8 has no membrane-targeting feature and cannot form a cortical network |
 | GO:0019901 protein kinase binding (IBA) | MARK_AS_OVER_ANNOTATED | Promiscuous binding term, no gene-specific support |
 | GO:0048870 cell motility (IBA) | MODIFY → GO:0030335 | Human RNAi says ACTL8 *regulates* migration; nothing says it is part of the motility machinery |
