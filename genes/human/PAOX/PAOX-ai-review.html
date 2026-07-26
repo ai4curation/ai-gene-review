@@ -1,0 +1,4174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAOX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PAOX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6QHF9" target="_blank" class="term-link">
+                        Q6QHF9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PAOX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6QHF9" data-a="DESCRIPTION: PAOX is the human peroxisomal N(1)-acetylpolyamine..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PAOX is the human peroxisomal N(1)-acetylpolyamine oxidase (also called polyamine oxidase, PAO/APAO; EC 1.5.3.13), an FAD-dependent flavoenzyme of the flavin monoamine oxidase family. It catalyzes the oxidative arm of polyamine back-conversion: acting on N(1)-acetylated polyamines produced by spermidine/spermine N1-acetyltransferase (SAT1), it oxidizes N(1)-acetylspermine to spermidine and N(1)-acetylspermidine to putrescine, in each case releasing 3-acetamidopropanal and hydrogen peroxide. Its substrate preference is N(1)-acetylspermine = N(1)-acetylspermidine &gt; N(1),N(12)-diacetylspermine, and it does not oxidize free spermidine; its requirement for the acetylated substrate distinguishes it from spermine oxidase (SMOX), which oxidizes free spermine. By interconverting higher and lower polyamines, PAOX helps set intracellular polyamine concentrations. The protein carries a C-terminal PTS1 microbody targeting signal and localizes to the peroxisomal matrix, with a cytosolic (pre-import) pool. It is widely expressed and induced by polyamine analogs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) cytoplasm annotation. PAOX is a peroxisomal matrix enzyme bearing a C-terminal PTS1 microbody targeting signal; UniProt lists both Peroxisome and Cytoplasm. The cytoplasmic pool most plausibly reflects the newly-synthesized, pre-import protein. This is true but non-core; the functional compartment is the peroxisome.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046592" target="_blank" class="term-link">
+                                    GO:0046592
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046592" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) polyamine oxidase activity, the parent molecular function. Consistent with the experimentally demonstrated FAD-dependent oxidation of N(1)-acetylated polyamines. Correct; retained as a core MF (the more specific term GO:0052903 is also annotated experimentally).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                        PMID:12477380
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rapidly oxidized N1-acetylspermine to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046203" target="_blank" class="term-link">
+                                    GO:0046203
+                                </a>
+                            </span>
+                            <span class="term-label">spermidine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046203" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) spermidine catabolic process. PAOX oxidizes N(1)-acetylspermidine (a spermidine derivative) and, via the back-conversion pathway, participates in spermidine turnover. Correct and core to the back-conversion arm of polyamine catabolism.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">one of the key enzymes in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation mapped from the UniProt &#34;Cytoplasm&#34; subcellular location keyword. As with the IBA cytoplasm annotation, this reflects a pre-import/cytosolic pool; the functional compartment is the peroxisomal matrix. True but non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005777" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from the UniProt &#34;Peroxisome&#34; subcellular location. Strongly supported: PAOX carries a C-terminal PTS1 microbody targeting signal (residues 509-511) and is imported as a PEX5 cargo. Core cellular component.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microbody targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro) oxidoreductase activity. Correct in essence (PAOX is an FAD-dependent oxidoreductase) but far too general; the specific, experimentally supported activity is N(1)-acetylpolyamine oxidase activity.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052903" target="_blank" class="term-link">
+                                    N(1)-acetylpolyamine oxidase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=N(1)-acetylspermine + O2 + H2O = 3-acetamidopropanal +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052903" target="_blank" class="term-link">
+                                    GO:0052903
+                                </a>
+                            </span>
+                            <span class="term-label">N(1)-acetylpolyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0052903" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC/Rhea) mapping of the exact reaction PAOX catalyzes. Matches the experimental EXP annotation from PMID:12477380 (same term). This is the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=N(1)-acetylspermidine + O2 + H2O = 3-acetamidopropanal +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005782" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer (Ensembl Compara) peroxisomal matrix localization, consistent with the PTS1 signal and Reactome&#39;s placement of PAOX activity in the peroxisomal matrix. Core compartment (more specific than GO:0005777).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microbody targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006598" target="_blank" class="term-link">
+                                    GO:0006598
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0006598" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer polyamine catabolic process. This is the overarching biological process for PAOX in the back-conversion pathway; matches the experimental IDA evidence. Core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">one of the key enzymes in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010509" target="_blank" class="term-link">
+                                    GO:0010509
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular polyamine homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0010509" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer intracellular polyamine homeostasis. Biologically true (overexpression shifts spermine/spermidine pools), but this is a high-level systemic outcome rather than the direct molecular/pathway role. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                        PMID:12477380
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intracellular spermine pools decreased by approx. 30%, whereas</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046203" target="_blank" class="term-link">
+                                    GO:0046203
+                                </a>
+                            </span>
+                            <span class="term-label">spermidine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046203" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer spermidine catabolic process, duplicating the IBA and IDA annotations to the same term. Core back-conversion process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                    GO:0046208
+                                </a>
+                            </span>
+                            <span class="term-label">spermine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046208" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer spermine catabolic process. PAOX contributes to spermine turnover by oxidizing N(1)-acetylspermine (the SAT1-acetylated spermine) to spermidine, the committed step of spermine back-conversion. Core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046592" target="_blank" class="term-link">
+                                    GO:0046592
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046592" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-transfer polyamine oxidase activity, duplicating the IBA and IDA MF annotations. Correct core molecular function (parent of GO:0052903).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                        PMID:12477380
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rapidly oxidized N1-acetylspermine to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008215" target="_blank" class="term-link">
+                                    GO:0008215
+                                </a>
+                            </span>
+                            <span class="term-label">spermine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0008215" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-derived spermine metabolic process, matching UniProt&#39;s PATHWAY &#34;spermine metabolism&#34;. Correct but a general parent process; the specific, directional roles are captured by the spermine/spermidine catabolic process terms. Kept as non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amine and polyamine metabolism; spermine metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052903" target="_blank" class="term-link">
+                                    GO:0052903
+                                </a>
+                            </span>
+                            <span class="term-label">N(1)-acetylpolyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12477380
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic identification and biochemical characterization of t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0052903" data-r="PMID:12477380" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) N(1)-acetylpolyamine oxidase activity from Vujcic et al. 2003. Lysates of human PAOX-transfected HEK-293 cells rapidly oxidized N1-acetylspermine to spermidine, with the diagnostic substrate ranking (N1-acetylspermine = N1-acetylspermidine &gt; N1,N12-diacetylspermine &gt;&gt; spermine; spermidine not a substrate). This is the defining core molecular function of PAOX.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                        PMID:12477380
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-141348
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005782" data-r="Reactome:R-HSA-141348" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS peroxisomal matrix, from the reaction &#34;PAO:FAD oxidises NASPM to PTCN&#34; (N1-acetylspermidine to putrescine). Consistent with the PTS1 signal and UniProt peroxisome localization. Core compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microbody targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-141351
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005782" data-r="Reactome:R-HSA-141351" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS peroxisomal matrix, from the reaction &#34;PAOX:FAD oxidises NASPN to SPM&#34; (N1-acetylspermine to spermidine). Same well-supported peroxisomal localization. Core compartment (duplicate of the other Reactome/Ensembl matrix annotations).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microbody targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033235
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005782" data-r="Reactome:R-HSA-9033235" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS peroxisomal matrix, associated with PAOX being imported as a PTS1 cargo into the peroxisomal matrix (PEX5-mediated translocation). Consistent with the functional localization. Core compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Microbody targeting signal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033235
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005829" data-r="Reactome:R-HSA-9033235" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol, reflecting the pre-import (cytosolic) state of PAOX before PEX5-mediated translocation into the peroxisome. Represents a transit pool rather than the functional site. Non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9033236
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0005829" data-r="Reactome:R-HSA-9033236" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS cytosol, from the step where the PEX5:PAOX (PTS1 cargo) complex binds the peroxisomal docking/translocation module. Again a pre-import transit state; non-core relative to the peroxisomal matrix.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009446" target="_blank" class="term-link">
+                                    GO:0009446
+                                </a>
+                            </span>
+                            <span class="term-label">putrescine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0009446" data-r="PMID:16354669" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) putrescine biosynthetic process from Järvinen et al. 2006. Putrescine is a reaction product of PAOX-catalyzed oxidation of N(1)-acetylspermidine, so this &#34;biosynthetic&#34; framing describes product formation within the catabolic back-conversion pathway rather than a dedicated biosynthetic role of PAOX. Retained as experimental evidence but marked non-core (the core is the catabolic oxidase activity).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901307" target="_blank" class="term-link">
+                                    GO:1901307
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of spermidine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:1901307" data-r="PMID:16354669" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) positive regulation of spermidine biosynthesis. PAOX generates spermidine as a product of N(1)-acetylspermine oxidation, and its overexpression raises spermidine pools 2-4 fold; this term captures that downstream effect on spermidine levels rather than a distinct regulatory mechanism. Kept as non-core; the direct function is the oxidase activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                        PMID:12477380
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intracellular spermine pools decreased by approx. 30%, whereas</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009447" target="_blank" class="term-link">
+                                    GO:0009447
+                                </a>
+                            </span>
+                            <span class="term-label">putrescine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0009447" data-r="PMID:16354669" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) putrescine catabolic process. In the context of PAOX, putrescine is a product of back-conversion rather than a substrate; the broader amine-oxidase activity may act on some derivatives, but PAOX is not a canonical putrescine-degrading enzyme. Retained as experimental evidence but marked non-core.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046203" target="_blank" class="term-link">
+                                    GO:0046203
+                                </a>
+                            </span>
+                            <span class="term-label">spermidine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046203" data-r="PMID:16354669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) spermidine catabolic process. PAOX oxidizes N(1)-acetylspermidine (the acetylated spermidine derivative), the committed catabolic step of the back-conversion arm. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                    GO:0046208
+                                </a>
+                            </span>
+                            <span class="term-label">spermine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046208" data-r="PMID:16354669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) spermine catabolic process. PAOX oxidizes N(1)-acetylspermine (SAT1-acetylated spermine) to spermidine, executing the committed oxidative step of spermine back-conversion. Core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the catabolism of polyamines spermidine and spermine. The natural substrates for</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046592" target="_blank" class="term-link">
+                                    GO:0046592
+                                </a>
+                            </span>
+                            <span class="term-label">polyamine oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16354669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Guide molecule-driven stereospecific degradation of alpha-me...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0046592" data-r="PMID:16354669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) polyamine oxidase activity from Järvinen et al. 2006, an enzymology study confirming FAD-dependent oxidation of N1-acetylspermidine, N1-acetylspermine and N1,N12-diacetylspermine. Core molecular function (parent of the more specific GO:0052903).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                                        PMID:16354669
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is one of the key enzymes in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:human/PAOX/PAOX-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q6QHF9" data-a="GO:0050660" data-r="file:human/PAOX/PAOX-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Not present in the current GOA seed, but PAOX is an FAD-dependent flavoenzyme that binds one FAD per subunit (UniProt COFACTOR, with multiple FAD-binding residues annotated by similarity to mouse Paox). FAD binding is a core molecular function required for its oxidase activity and is proposed as a NEW annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PAOX/PAOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FAD per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD-dependent N(1)-acetylpolyamine oxidase that catalyzes the committed oxidative step of the SAT1-initiated polyamine back-conversion pathway, oxidizing N(1)-acetylspermine to spermidine and N(1)-acetylspermidine to putrescine (with 3-acetamidopropanal and H2O2) in the peroxisomal matrix.</h3>
+                <span class="vote-buttons" data-g="Q6QHF9" data-a="FUNCTION: FAD-dependent N(1)-acetylpolyamine oxidase that ca..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052903" target="_blank" class="term-link">
+                            N(1)-acetylpolyamine oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006598" target="_blank" class="term-link">
+                                polyamine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046208" target="_blank" class="term-link">
+                                spermine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046203" target="_blank" class="term-link">
+                                spermidine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:58101" target="_blank" class="term-link">
+                                N(1)-acetylspermine
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:58324" target="_blank" class="term-link">
+                                N(1)-acetylspermidine
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                                PMID:12477380
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PAOX/PAOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=N(1)-acetylspermine + O2 + H2O = 3-acetamidopropanal +</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds FAD as the redox cofactor required for its amine-oxidase activity (one FAD per subunit), as a member of the flavin monoamine oxidase family.</h3>
+                <span class="vote-buttons" data-g="Q6QHF9" data-a="FUNCTION: Binds FAD as the redox cofactor required for its a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PAOX/PAOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Binds 1 FAD per subunit.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PAOX/PAOX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q6QHF9 (PAOX_HUMAN)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" target="_blank" class="term-link">
+                            PMID:12477380
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic identification and biochemical characterization of the mammalian polyamine oxidase involved in polyamine back-conversion.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human PAOX cDNA expressed in HEK-293 cells confers rapid oxidation of N1-acetylspermine to spermidine, with substrate ranking N1-acetylspermine = N1-acetylspermidine &gt; N1,N12-diacetylspermine &gt;&gt; spermine; spermidine is not a substrate. This is distinct from spermine oxidase (SMO), which prefers free spermine.</div>
+
+                        <div class="finding-text">"a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PAOX overexpression shifts intracellular polyamine pools, decreasing spermine and increasing spermidine, supporting its role in polyamine back-conversion and homeostasis.</div>
+
+                        <div class="finding-text">"intracellular spermine pools decreased by approx. 30%, whereas spermidine increased 2-4-fold"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16354669" target="_blank" class="term-link">
+                            PMID:16354669
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Guide molecule-driven stereospecific degradation of alpha-methylpolyamines by polyamine oxidase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAD-dependent polyamine oxidase (PAO) is a key enzyme in spermidine/spermine catabolism whose natural substrates are N1-acetylspermidine, N1-acetylspermine and N1,N12-diacetylspermine.</div>
+
+                        <div class="finding-text">"the catabolism of polyamines spermidine and spermine. The natural substrates for"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-141348
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PAO:FAD oxidises NASPM to PTCN</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-141351
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PAOX:FAD oxidises NASPN to SPM</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033235
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cargo of PEX5S,L translocates from the cytosol to the peroxisomal matrix</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9033236
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PEX5S,L:Cargo binds PEX13:PEX14:PEX2:PEX10:PEX12 (Docking and Translocation Module)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PAOX-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6QHF9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="paox-peroxisomal-n1-acetyl-sperminespermidine-oxidase-review-notes">PAOX (Peroxisomal N(1)-acetyl-spermine/spermidine oxidase) — review notes</h1>
+<p>UniProt: Q6QHF9 (PAOX_HUMAN); gene PAOX (synonym PAO); HGNC:20837; EC 1.5.3.13.<br />
+511 aa; flavin monoamine oxidase family; FAD-dependent.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>PAOX is the mammalian <strong>peroxisomal polyamine oxidase (PAO / APAO)</strong> that carries out the<br />
+oxidative arm of <strong>polyamine back-conversion</strong>. Together with spermidine/spermine<br />
+N1-acetyltransferase (SAT1/SSAT), it converts higher polyamines back to lower ones:<br />
+SAT1 first N1-acetylates spermine/spermidine, then PAOX oxidatively cleaves the<br />
+N1-acetylated substrate.</p>
+<ul>
+<li>N(1)-acetylspermine + O2 + H2O → 3-acetamidopropanal + <strong>spermidine</strong> + H2O2<br />
+  [file:human/PAOX/PAOX-uniprot.txt "Reaction=N(1)-acetylspermine + O2 + H2O = 3-acetamidopropanal +"; EC=1.5.3.13; Rhea:RHEA:25800]</li>
+<li>N(1)-acetylspermidine + O2 + H2O → 3-acetamidopropanal + <strong>putrescine</strong> + H2O2<br />
+  [file:human/PAOX/PAOX-uniprot.txt "Reaction=N(1)-acetylspermidine + O2 + H2O = 3-acetamidopropanal +"; Rhea:RHEA:25812]</li>
+<li>N(1),N(12)-diacetylspermine + O2 + H2O → 3-acetamidopropanal + N(1)-acetylspermidine + H2O2<br />
+  [file:human/PAOX/PAOX-uniprot.txt "Reaction=N(1),N(12)-diacetylspermine + O2 + H2O = 3-acetamidopropanal +"; Rhea:RHEA:25868]</li>
+</ul>
+<p><strong>Substrate specificity</strong> ranking: N(1)-acetylspermine = N(1)-acetylspermidine &gt;<br />
+N(1),N(12)-diacetylspermine &gt;&gt; spermine; <strong>spermidine is not a substrate</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12477380" title="a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon">PMID:12477380</a>.<br />
+This distinguishes PAOX from <strong>spermine oxidase (SMOX/SMO)</strong>, which prefers free<br />
+spermine over N1-acetylspermine <a href="https://pubmed.ncbi.nlm.nih.gov/12477380" title="distinctly different from the recently identified spermine oxidase (SMO), which prefers spermine over N1-acetylspermine">PMID:12477380</a>.<br />
+PAOX therefore acts on <strong>acetylated</strong> polyamines (the SAT1 products), whereas SMOX acts<br />
+on the free amine. UniProt notes substrate specificity:<br />
+[file:human/PAOX/PAOX-uniprot.txt "acetylspermine = N(1)-acetylspermidine &gt; N(1),N(12)-diacylspermine &gt;&gt;"].</p>
+<h2 id="cofactor">Cofactor</h2>
+<p>Binds 1 FAD per subunit [file:human/PAOX/PAOX-uniprot.txt "Note=Binds 1 FAD per subunit."]. Multiple<br />
+FAD-binding residues annotated (24, 45, 53, 69-70, 247, 472, 481-482) by similarity to<br />
+mouse Q8C0L6. FAD/flavoprotein keyword present. GO cofactor term: FAD (ChEBI:CHEBI:57692).</p>
+<h2 id="localization">Localization</h2>
+<p>Peroxisomal. C-terminal tripeptide 509-511 is a <strong>microbody (PTS1) targeting signal</strong><br />
+[file:human/PAOX/PAOX-uniprot.txt "/note=\"Microbody targeting signal\""]. UniProt<br />
+subcellular location: Peroxisome; Cytoplasm [file:human/PAOX/PAOX-uniprot.txt "SUBCELLULAR LOCATION: Peroxisome"].<br />
+Reactome places PAOX activity in the peroxisomal matrix (R-HSA-141348, R-HSA-141351) and<br />
+also models its peroxisomal import as a PTS1 cargo of PEX5 (R-HSA-9033235/9033236).<br />
+The cytoplasm/cytosol annotations most plausibly reflect the newly-synthesized<br />
+pre-import pool and the SubCell "Cytoplasm" mapping; peroxisomal matrix is the functional<br />
+compartment.</p>
+<h2 id="function-regulation-of-polyamine-pools">Function / regulation of polyamine pools</h2>
+<p>Overexpression of PAOX in HEK-293 lowered spermine ~30% and raised spermidine 2-4 fold<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12477380" title="intracellular spermine pools decreased by approx. 30%, whereas spermidine increased 2-4-fold">PMID:12477380</a>,<br />
+consistent with its role in the regulation of intracellular polyamine concentration and as<br />
+a determinant of sensitivity to antitumor polyamine analogs<br />
+[file:human/PAOX/PAOX-uniprot.txt "Plays an important role in the"] /<br />
+[file:human/PAOX/PAOX-uniprot.txt "regulation of polyamine intracellular concentration and has the"].</p>
+<p>Widely expressed; not detected in spleen; lower in neoplastic tissues; induced by polyamine<br />
+analogs [file:human/PAOX/PAOX-uniprot.txt "TISSUE SPECIFICITY: Widely expressed. Not detected in spleen. Expressed"].</p>
+<h2 id="pmid16354669-jarvinen-et-al-2006-j-biol-chem-abstract-only">PMID:16354669 (Järvinen et al. 2006, J Biol Chem) — abstract only</h2>
+<p>Biochemical/enzymology paper on stereospecific degradation of alpha-methylpolyamines by<br />
+PAO. Confirms natural substrates: "The natural substrates for the enzyme are<br />
+N1-acetylspermidine, N1-acetylspermine, and N1,N12-diacetylspermine"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16354669" title="The natural substrates for the enzyme are N1-acetylspermidine, N1-acetylspermine, and N1,N12-diacetylspermine">PMID:16354669</a><br />
+and that PAO is "one of the key enzymes in the catabolism of polyamines spermidine and spermine"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16354669" title="one of the key enzymes in \nthe catabolism of polyamines spermidine and spermine">PMID:16354669</a>.<br />
+This paper is the GOA source for several human IDA annotations (putrescine biosynthesis,<br />
+positive regulation of spermidine biosynthesis, putrescine/spermidine/spermine catabolic<br />
+process, polyamine oxidase activity). The cached record is abstract-only<br />
+(full_text_available: false); the "biosynthetic"-direction annotations<br />
+(GO:0009446 putrescine biosynthesis; GO:1901307 positive regulation of spermidine<br />
+biosynthesis) are curator readings of the full text — PAOX generates putrescine and<br />
+spermidine as reaction products, so these are downstream product-formation framings of the<br />
+catabolic activity rather than PAOX being a biosynthetic enzyme. They are kept as non-core.</p>
+<h2 id="core-function-summary">Core function summary</h2>
+<ul>
+<li>MF (core): N(1)-acetylpolyamine oxidase activity (GO:0052903); parent polyamine oxidase<br />
+  activity (GO:0046592); FAD binding (GO:0050660).</li>
+<li>BP (core): polyamine catabolic process (GO:0006598) via spermidine catabolic (GO:0046203)<br />
+  and spermine catabolic (GO:0046208) processes — the back-conversion arm.</li>
+<li>CC (core): peroxisome (GO:0005777) / peroxisomal matrix (GO:0005782).</li>
+</ul>
+<h2 id="action-rationale-highlights">Action rationale highlights</h2>
+<ul>
+<li>EXP/IDA MF and catabolic-process annotations from PMID:12477380 / PMID:16354669 → ACCEPT<br />
+  (core) or KEEP_AS_NON_CORE.</li>
+<li>GO:0016491 oxidoreductase activity (IEA, ARBA/InterPro) → too general → MODIFY toward<br />
+  GO:0052903.</li>
+<li>GO:0009446 putrescine biosynthetic process &amp; GO:1901307 positive regulation of spermidine<br />
+  biosynthetic process (IDA) → experimental; KEEP_AS_NON_CORE (product-formation framing of<br />
+  the catabolic activity; not a biosynthetic function of PAOX).</li>
+<li>GO:0010509 intracellular polyamine homeostasis (IEA ortholog transfer) → KEEP_AS_NON_CORE<br />
+  (true but a high-level outcome, not the molecular/pathway core).</li>
+<li>GO:0008215 spermine metabolic process (IEA UniPathway) → general parent; KEEP_AS_NON_CORE.</li>
+<li>cytoplasm/cytosol CC → KEEP_AS_NON_CORE (pre-import / SubCell mapping); peroxisome is core.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6QHF9
+gene_symbol: PAOX
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PAOX is the human peroxisomal N(1)-acetylpolyamine oxidase (also called
+  polyamine oxidase, PAO/APAO; EC 1.5.3.13), an FAD-dependent flavoenzyme of the
+  flavin monoamine oxidase family. It catalyzes the oxidative arm of polyamine
+  back-conversion: acting on N(1)-acetylated polyamines produced by
+  spermidine/spermine N1-acetyltransferase (SAT1), it oxidizes N(1)-acetylspermine
+  to spermidine and N(1)-acetylspermidine to putrescine, in each case releasing
+  3-acetamidopropanal and hydrogen peroxide. Its substrate preference is
+  N(1)-acetylspermine = N(1)-acetylspermidine &gt; N(1),N(12)-diacetylspermine, and it
+  does not oxidize free spermidine; its requirement for the acetylated substrate
+  distinguishes it from spermine oxidase (SMOX), which oxidizes free spermine. By
+  interconverting higher and lower polyamines, PAOX helps set intracellular
+  polyamine concentrations. The protein carries a C-terminal PTS1 microbody
+  targeting signal and localizes to the peroxisomal matrix, with a cytosolic
+  (pre-import) pool. It is widely expressed and induced by polyamine analogs.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6QHF9-2
+- name: &#39;2&#39;
+  id: Q6QHF9-6
+  sequence_note: VSP_060446, VSP_060447
+- name: &#39;3&#39;
+  id: Q6QHF9-5
+  sequence_note: VSP_060448, VSP_060449
+- name: &#39;4&#39;
+  id: Q6QHF9-4
+  sequence_note: VSP_060450, VSP_060451
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) cytoplasm annotation. PAOX is a peroxisomal matrix
+      enzyme bearing a C-terminal PTS1 microbody targeting signal; UniProt lists
+      both Peroxisome and Cytoplasm. The cytoplasmic pool most plausibly reflects
+      the newly-synthesized, pre-import protein. This is true but non-core; the
+      functional compartment is the peroxisome.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0046592
+    label: polyamine oxidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) polyamine oxidase activity, the parent molecular
+      function. Consistent with the experimentally demonstrated FAD-dependent
+      oxidation of N(1)-acetylated polyamines. Correct; retained as a core MF
+      (the more specific term GO:0052903 is also annotated experimentally).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12477380
+      supporting_text: rapidly oxidized N1-acetylspermine to
+- term:
+    id: GO:0046203
+    label: spermidine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) spermidine catabolic process. PAOX oxidizes
+      N(1)-acetylspermidine (a spermidine derivative) and, via the back-conversion
+      pathway, participates in spermidine turnover. Correct and core to the
+      back-conversion arm of polyamine catabolism.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: one of the key enzymes in
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation mapped from the UniProt &#34;Cytoplasm&#34; subcellular
+      location keyword. As with the IBA cytoplasm annotation, this reflects a
+      pre-import/cytosolic pool; the functional compartment is the peroxisomal
+      matrix. True but non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation from the UniProt &#34;Peroxisome&#34; subcellular location.
+      Strongly supported: PAOX carries a C-terminal PTS1 microbody targeting
+      signal (residues 509-511) and is imported as a PEX5 cargo. Core cellular
+      component.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Microbody targeting signal
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA/InterPro) oxidoreductase activity. Correct in essence
+      (PAOX is an FAD-dependent oxidoreductase) but far too general; the specific,
+      experimentally supported activity is N(1)-acetylpolyamine oxidase activity.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0052903
+      label: N(1)-acetylpolyamine oxidase activity
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Reaction=N(1)-acetylspermine + O2 + H2O = 3-acetamidopropanal +
+- term:
+    id: GO:0052903
+    label: N(1)-acetylpolyamine oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (EC/Rhea) mapping of the exact reaction PAOX catalyzes. Matches
+      the experimental EXP annotation from PMID:12477380 (same term). This is the
+      core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Reaction=N(1)-acetylspermidine + O2 + H2O = 3-acetamidopropanal +
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ortholog-transfer (Ensembl Compara) peroxisomal matrix localization,
+      consistent with the PTS1 signal and Reactome&#39;s placement of PAOX activity in
+      the peroxisomal matrix. Core compartment (more specific than GO:0005777).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Microbody targeting signal
+- term:
+    id: GO:0006598
+    label: polyamine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ortholog-transfer polyamine catabolic process. This is the overarching
+      biological process for PAOX in the back-conversion pathway; matches the
+      experimental IDA evidence. Core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: one of the key enzymes in
+- term:
+    id: GO:0010509
+    label: intracellular polyamine homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ortholog-transfer intracellular polyamine homeostasis. Biologically true
+      (overexpression shifts spermine/spermidine pools), but this is a high-level
+      systemic outcome rather than the direct molecular/pathway role. Kept as
+      non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:12477380
+      supporting_text: intracellular spermine pools decreased by approx. 30%, whereas
+- term:
+    id: GO:0046203
+    label: spermidine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ortholog-transfer spermidine catabolic process, duplicating the IBA and IDA
+      annotations to the same term. Core back-conversion process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:0046208
+    label: spermine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ortholog-transfer spermine catabolic process. PAOX contributes to spermine
+      turnover by oxidizing N(1)-acetylspermine (the SAT1-acetylated spermine) to
+      spermidine, the committed step of spermine back-conversion. Core.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:0046592
+    label: polyamine oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Ortholog-transfer polyamine oxidase activity, duplicating the IBA and IDA
+      MF annotations. Correct core molecular function (parent of GO:0052903).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12477380
+      supporting_text: rapidly oxidized N1-acetylspermine to
+- term:
+    id: GO:0008215
+    label: spermine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway-derived spermine metabolic process, matching UniProt&#39;s PATHWAY
+      &#34;spermine metabolism&#34;. Correct but a general parent process; the specific,
+      directional roles are captured by the spermine/spermidine catabolic process
+      terms. Kept as non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Amine and polyamine metabolism; spermine metabolism.
+- term:
+    id: GO:0052903
+    label: N(1)-acetylpolyamine oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12477380
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) N(1)-acetylpolyamine oxidase activity from Vujcic et al.
+      2003. Lysates of human PAOX-transfected HEK-293 cells rapidly oxidized
+      N1-acetylspermine to spermidine, with the diagnostic substrate ranking
+      (N1-acetylspermine = N1-acetylspermidine &gt; N1,N12-diacetylspermine &gt;&gt;
+      spermine; spermidine not a substrate). This is the defining core molecular
+      function of PAOX.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:12477380
+      supporting_text: a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-141348
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS peroxisomal matrix, from the reaction &#34;PAO:FAD oxidises NASPM
+      to PTCN&#34; (N1-acetylspermidine to putrescine). Consistent with the PTS1
+      signal and UniProt peroxisome localization. Core compartment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Microbody targeting signal
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-141351
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS peroxisomal matrix, from the reaction &#34;PAOX:FAD oxidises NASPN
+      to SPM&#34; (N1-acetylspermine to spermidine). Same well-supported peroxisomal
+      localization. Core compartment (duplicate of the other Reactome/Ensembl
+      matrix annotations).
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Microbody targeting signal
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033235
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS peroxisomal matrix, associated with PAOX being imported as a
+      PTS1 cargo into the peroxisomal matrix (PEX5-mediated translocation).
+      Consistent with the functional localization. Core compartment.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Microbody targeting signal
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033235
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol, reflecting the pre-import (cytosolic) state of PAOX
+      before PEX5-mediated translocation into the peroxisome. Represents a transit
+      pool rather than the functional site. Non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9033236
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS cytosol, from the step where the PEX5:PAOX (PTS1 cargo) complex
+      binds the peroxisomal docking/translocation module. Again a pre-import
+      transit state; non-core relative to the peroxisomal matrix.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Peroxisome&#34;
+- term:
+    id: GO:0009446
+    label: putrescine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) putrescine biosynthetic process from Järvinen et al.
+      2006. Putrescine is a reaction product of PAOX-catalyzed oxidation of
+      N(1)-acetylspermidine, so this &#34;biosynthetic&#34; framing describes product
+      formation within the catabolic back-conversion pathway rather than a
+      dedicated biosynthetic role of PAOX. Retained as experimental evidence but
+      marked non-core (the core is the catabolic oxidase activity).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:1901307
+    label: positive regulation of spermidine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) positive regulation of spermidine biosynthesis. PAOX
+      generates spermidine as a product of N(1)-acetylspermine oxidation, and its
+      overexpression raises spermidine pools 2-4 fold; this term captures that
+      downstream effect on spermidine levels rather than a distinct regulatory
+      mechanism. Kept as non-core; the direct function is the oxidase activity.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:12477380
+      supporting_text: intracellular spermine pools decreased by approx. 30%, whereas
+- term:
+    id: GO:0009447
+    label: putrescine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) putrescine catabolic process. In the context of PAOX,
+      putrescine is a product of back-conversion rather than a substrate; the
+      broader amine-oxidase activity may act on some derivatives, but PAOX is not
+      a canonical putrescine-degrading enzyme. Retained as experimental evidence
+      but marked non-core.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:0046203
+    label: spermidine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) spermidine catabolic process. PAOX oxidizes
+      N(1)-acetylspermidine (the acetylated spermidine derivative), the committed
+      catabolic step of the back-conversion arm. Core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:0046208
+    label: spermine catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) spermine catabolic process. PAOX oxidizes
+      N(1)-acetylspermine (SAT1-acetylated spermine) to spermidine, executing the
+      committed oxidative step of spermine back-conversion. Core biological
+      process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+- term:
+    id: GO:0046592
+    label: polyamine oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16354669
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) polyamine oxidase activity from Järvinen et al. 2006, an
+      enzymology study confirming FAD-dependent oxidation of N1-acetylspermidine,
+      N1-acetylspermine and N1,N12-diacetylspermine. Core molecular function
+      (parent of the more specific GO:0052903).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:16354669
+      supporting_text: is one of the key enzymes in
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: file:human/PAOX/PAOX-uniprot.txt
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Not present in the current GOA seed, but PAOX is an FAD-dependent flavoenzyme
+      that binds one FAD per subunit (UniProt COFACTOR, with multiple FAD-binding
+      residues annotated by similarity to mouse Paox). FAD binding is a core
+      molecular function required for its oxidase activity and is proposed as a NEW
+      annotation.
+    action: NEW
+    supported_by:
+    - reference_id: file:human/PAOX/PAOX-uniprot.txt
+      supporting_text: Note=Binds 1 FAD per subunit.
+core_functions:
+- description: &gt;-
+    FAD-dependent N(1)-acetylpolyamine oxidase that catalyzes the committed
+    oxidative step of the SAT1-initiated polyamine back-conversion pathway,
+    oxidizing N(1)-acetylspermine to spermidine and N(1)-acetylspermidine to
+    putrescine (with 3-acetamidopropanal and H2O2) in the peroxisomal matrix.
+  supported_by:
+  - reference_id: PMID:12477380
+    supporting_text: a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon
+  - reference_id: file:human/PAOX/PAOX-uniprot.txt
+    supporting_text: Reaction=N(1)-acetylspermine + O2 + H2O = 3-acetamidopropanal +
+  molecular_function:
+    id: GO:0052903
+    label: N(1)-acetylpolyamine oxidase activity
+  directly_involved_in:
+  - id: GO:0006598
+    label: polyamine catabolic process
+  - id: GO:0046208
+    label: spermine catabolic process
+  - id: GO:0046203
+    label: spermidine catabolic process
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+  substrates:
+  - id: CHEBI:58101
+    label: N(1)-acetylspermine
+  - id: CHEBI:58324
+    label: N(1)-acetylspermidine
+- description: &gt;-
+    Binds FAD as the redox cofactor required for its amine-oxidase activity (one
+    FAD per subunit), as a member of the flavin monoamine oxidase family.
+  supported_by:
+  - reference_id: file:human/PAOX/PAOX-uniprot.txt
+    supporting_text: Note=Binds 1 FAD per subunit.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+references:
+- id: file:human/PAOX/PAOX-uniprot.txt
+  title: UniProtKB entry Q6QHF9 (PAOX_HUMAN)
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12477380
+  title: Genomic identification and biochemical characterization of the mammalian
+    polyamine oxidase involved in polyamine back-conversion.
+  findings:
+  - statement: &gt;-
+      Human PAOX cDNA expressed in HEK-293 cells confers rapid oxidation of
+      N1-acetylspermine to spermidine, with substrate ranking N1-acetylspermine =
+      N1-acetylspermidine &gt; N1,N12-diacetylspermine &gt;&gt; spermine; spermidine is not
+      a substrate. This is distinct from spermine oxidase (SMO), which prefers free
+      spermine.
+    supporting_text: a preference ranking of N1-acetylspermine= N1-acetylspermidine&gt; N1,N12-diacetylspermine&gt;&gt;spermine; spermidine was not acted upon
+  - statement: &gt;-
+      PAOX overexpression shifts intracellular polyamine pools, decreasing spermine
+      and increasing spermidine, supporting its role in polyamine back-conversion
+      and homeostasis.
+    supporting_text: intracellular spermine pools decreased by approx. 30%, whereas spermidine increased 2-4-fold
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary paper that genomically identified and biochemically characterized
+      mammalian PAO/PAOX; establishes the diagnostic acetylpolyamine substrate
+      specificity distinguishing PAOX from SMOX. Abstract-only in cache but the
+      substrate ranking and pool-shift data are stated verbatim in the abstract.
+- id: PMID:16354669
+  title: Guide molecule-driven stereospecific degradation of alpha-methylpolyamines
+    by polyamine oxidase.
+  findings:
+  - statement: &gt;-
+      FAD-dependent polyamine oxidase (PAO) is a key enzyme in spermidine/spermine
+      catabolism whose natural substrates are N1-acetylspermidine, N1-acetylspermine
+      and N1,N12-diacetylspermine.
+    supporting_text: the catabolism of polyamines spermidine and spermine. The natural substrates for
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Enzymology study of PAO substrate stereospecificity; GOA source for several
+      human PAOX IDA annotations. Abstract-only in cache; confirms the natural
+      acetylpolyamine substrates and PAO&#39;s role in polyamine catabolism. The
+      &#34;biosynthetic&#34;-direction IDA annotations reflect product formation within the
+      catabolic pathway rather than a dedicated biosynthetic function.
+- id: Reactome:R-HSA-141348
+  title: PAO:FAD oxidises NASPM to PTCN
+  findings: []
+- id: Reactome:R-HSA-141351
+  title: PAOX:FAD oxidises NASPN to SPM
+  findings: []
+- id: Reactome:R-HSA-9033235
+  title: Cargo of PEX5S,L translocates from the cytosol to the peroxisomal matrix
+  findings: []
+- id: Reactome:R-HSA-9033236
+  title: PEX5S,L:Cargo binds PEX13:PEX14:PEX2:PEX10:PEX12 (Docking and Translocation
+    Module)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

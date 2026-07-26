@@ -78,6 +78,23 @@ Please submit a [Pull Request][pulls] to submit a new term for consideration.
     - In the case of git conflicts, the contributor should try and resolve the conflict
     - If a PR fails a GitHub action check, the contributor should try and resolve the issue in a timely fashion
 
+### Important: Open PRs from Origin Branches, Not Forks
+
+Do not open pull requests from forks. Fork PRs are closed automatically by the
+`close-fork-prs` workflow.
+
+Two reasons. First, this repository depends on automated AI review, and GitHub
+does not expose repository secrets to workflows triggered from forks — so a
+fork-based PR cannot be reviewed. Second, fork-authored content (title, body,
+diff) is the main way external text reaches our agentic workflows, which is a
+prompt-injection risk we would rather refuse at the door than try to contain.
+
+Contributors should push branches directly to `origin` and open PRs from those
+branches. If you are a new contributor and do not yet have access, first open an
+issue asking to be added to the repository; GO/OBO contributors are usually
+granted branch access quickly. Issues, bug reports, and feedback are welcome
+from anyone — no access needed.
+
 ### Understanding LinkML
 
 Core developers should read the material on the [LinkML site](https://linkml.io/linkml), in particular:

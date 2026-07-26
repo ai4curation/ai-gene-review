@@ -1,0 +1,3883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELAVL2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ELAVL2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q12926" target="_blank" class="term-link">
+                        Q12926
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ELAVL2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q12926" data-a="DESCRIPTION: ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-bi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-binding protein with three RNA recognition motifs. It recognizes AU-/U-rich elements in target-mRNA 3&#39;-UTRs and acts in ribonucleoprotein assemblies that control neuronal RNA fate. Human-neuron perturbation studies establish roles in regulation of alternative splicing and distal poly(A)-site use: partial ELAVL2 depletion changes alternatively spliced transcript networks, while acute depletion globally shortens 3&#39;-UTRs. ELAVL2-dependent long 3&#39;-UTRs also increase endogenous dsRNA and tonic antiviral signaling in cultured neurons, a downstream consequence of its RNA-processing activity. The reviewed protein is brain-enriched and neural-specific; two splice isoforms differ by a 13-residue segment in the RRM2-RRM3 hinge, but isoform-specific molecular functions remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                                    GO:0035925
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR AU-rich region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0035925" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference assigns AU-rich mRNA 3&#39;-UTR binding to ELAVL2. Direct human Hel-N1 RNA-selection experiments independently recovered A/U-rich consensus sequences and natural 3&#39;-UTR targets.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most informative established molecular function. The IBA is supported by direct Hel-N1 binding to the Id mRNA 3&#39;-UTR and selection of A/U-rich sequences from randomized libraries. Three RRM domains and independent mRNA-interactome-capture experiments are also consistent with this core activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" target="_blank" class="term-link">
+                                        PMID:7972035
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                                        PMID:8158249
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ELAVL2/ELAVL2-deep-research-manual.md
+
+                                </span>
+
+                                <div class="support-text">The strongest ELAVL2-specific molecular evidence supports AU-/U-rich mRNA 3&#39;-UTR binding.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140517" target="_blank" class="term-link">
+                                    GO:0140517
+                                </a>
+                            </span>
+                            <span class="term-label">protein-RNA adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0140517" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference assigns protein-RNA adaptor activity to ELAVL2 from the ELAV/Hu clade.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA annotations represent curated ancestral-function inference. The term is consistent with ELAVL2&#39;s sequence-specific RNA binding, RNP-complex membership, and experimentally recorded interactions with other RNA-regulatory proteins. Because direct ELAVL2 evidence does not resolve a target-specific bridged protein-RNA pair, it is retained as a contextual family-level activity rather than a core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro domain mapping assigns the broad parent term nucleic acid binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ELAVL2 is specifically an RNA-binding protein, and direct human biochemical evidence further resolves the activity to AU-rich mRNA 3&#39;-UTRs. The generic term does not distinguish RNA from DNA and should be replaced by the most informative experimentally supported function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                                    mRNA 3&#39;-UTR AU-rich region binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" target="_blank" class="term-link">
+                                        PMID:7972035
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro mappings from the ELAV/Hu and RRM domains assign RNA binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This correct parent activity is supported by three annotated RRM domains, direct Hel-N1 3&#39;-UTR binding, and two independent human mRNA-interactome capture datasets. More specific AU-rich-region binding is separately retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                                        PMID:8158249
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    GO:0003730
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003730" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA assigns mRNA 3&#39;-UTR binding, matching direct human Hel-N1 experiments.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Hel-N1 directly binds the Id mRNA 3&#39;-UTR and binds multiple natural 3&#39;-UTR-derived sequences. The term accurately captures the region-level specificity without requiring every target to contain the same AU-rich motif.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                                        PMID:8158249
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                                    GO:1990904
+                                </a>
+                            </span>
+                            <span class="term-label">ribonucleoprotein complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:1990904" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro assigns ELAVL2 to ribonucleoprotein complexes based on the ELAV/Hu family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ELAVL2 directly binds target RNAs and the reviewed UniProt record reports an experimentally supported interaction with IGF2BP1, an RNP-granule protein. The general RNP-complex term is appropriate for the assembled RNA-protein state in which ELAVL2 performs its regulatory activity, without asserting a specific stable named complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ELAVL2/ELAVL2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Interacts with IGF2BP1 (PubMed:17289661).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36950384" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36950384
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction studies in human induced neurons indicat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0005515" data-r="PMID:36950384" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Neuronal interaction proteomics and IntAct report an ELAVL2-DYRK1A interaction. The interaction record is retained, but generic protein binding does not define a useful ELAVL2 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source study establishes a quality-controlled protein-interaction network in induced neurons, while GOA identifies DYRK1A as the partner. No functional consequence of this pair for ELAVL2 RNA binding or RNA processing is established, and GO:0005515 discards the only specific information in the record. The interaction may be genuine but should not be treated as a core molecular activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9921507
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0005654" data-r="Reactome:R-HSA-9921507" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome transfers a nucleoplasm location from a dengue-virus NS5/spliceosome event.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is plausible for an RNA-binding protein that regulates alternative splicing and poly(A)-site choice, so the location is retained. However, the cached Reactome summary names NS5, CD2BP2, and DDX23 but does not expose ELAVL2-specific localization evidence. This pathway-derived location should not define the core until the ELAVL2 evidence chain is clarified.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22658674
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insights into RNA biology from an atlas of mammalian mRNA-bi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003723" data-r="PMID:22658674" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UV-crosslinking and poly(A)-RNA interactome capture identified ELAVL2 in the human HeLa-cell mRNA-bound proteome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HDA evidence directly establishes RNA association in human cells and independently corroborates the lower-throughput Hel-N1 binding studies. The general RNA-binding term is appropriate for this assay because interactome capture does not resolve ELAVL2&#39;s sequence specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link">
+                                        PMID:22658674
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identify 860 proteins that qualify as RBPs by biochemical and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22681889" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22681889
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The mRNA-bound proteome and its global occupancy profile on ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003723" data-r="PMID:22681889" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Independent photo-crosslinking and oligo(dT) purification identified ELAVL2 in the human HEK-cell mRNA-bound proteome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This orthogonal human-cell mRNA-interactome experiment supports direct RNA association. Its broad term is appropriate to the resolution of the assay and complements the more specific 3&#39;-UTR annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22681889" target="_blank" class="term-link">
+                                        PMID:22681889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">approach to identify the mRNA-bound proteome using quantitative proteomics and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17289661" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17289661
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular composition of IMP1 ribonucleoprotein granules.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0005515" data-r="PMID:17289661" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GOA and reviewed UniProt record an ELAVL2-IGF2BP1 interaction in the context of IMP1 ribonucleoprotein granules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The partner-specific interaction is useful RNP-context evidence, but the generic term protein binding provides no mechanistic information. The cached abstract does not name ELAVL2 or establish what its IGF2BP1 association does, so the interaction is not converted into a more specific activity or process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ELAVL2/ELAVL2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Interacts with IGF2BP1 (PubMed:17289661).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    GO:0003730
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8158249
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian homologs of Drosophila ELAV localized to a neurona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0003730" data-r="PMID:8158249" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The original human Hel-N1 study directly demonstrated in-vitro binding to the Id mRNA 3&#39;-UTR.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is direct ELAVL2-specific biochemical evidence for its defining molecular activity. The paper identifies the human protein, tests a defined target 3&#39;-UTR, and reports binding; the annotation is specific without overstating a downstream regulatory outcome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                                        PMID:8158249
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8158249
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian homologs of Drosophila ELAV localized to a neurona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0006355" data-r="PMID:8158249" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited study links Hel-N1 to an mRNA encoding the Id transcriptional repressor, but it assays 3&#39;-UTR binding rather than DNA-templated transcription.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ELAVL2 acts at the RNA level. Binding the Id transcript can indirectly alter abundance of a transcriptional regulator, but that does not make ELAVL2 a direct regulator of transcription. Human neuronal perturbation studies instead establish post-transcriptional control of expression, alternative splicing, and poly(A)-site choice, so the broad transcription term should be replaced by post-transcriptional regulation of gene expression.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010608" target="_blank" class="term-link">
+                                    post-transcriptional regulation of gene expression
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                                        PMID:8158249
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27260404" target="_blank" class="term-link">
+                                        PMID:27260404
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">spliced genes resulting from haploinsufficient levels of ELAVL2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000381" target="_blank" class="term-link">
+                                    GO:0000381
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of alternative mRNA splicing, via spliceosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27260404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27260404
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ELAVL2-regulated transcriptional and splicing networks in hu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0000381" data-r="PMID:27260404" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed human-neuron annotation. ELAVL2 knockdown followed by RNA-seq identified a network of alternatively spliced genes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Perturbing ELAVL2 in primary human neurons changed alternative-splicing outcomes, supporting a direct regulatory role for this RNA-binding protein. The process is a core RNA-processing output; enrichment of the downstream target set for synaptic and autism-related genes is not itself propagated as additional GO annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27260404" target="_blank" class="term-link">
+                                        PMID:27260404
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">spliced genes resulting from haploinsufficient levels of ELAVL2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110104" target="_blank" class="term-link">
+                                    GO:0110104
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA alternative polyadenylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37862432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Long 3&#39;UTRs predispose neurons to inflammation by promoting ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q12926" data-a="GO:0110104" data-r="PMID:37862432" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed human-neuron annotation. Acute ELAVL2/HuB depletion globally shortened 3&#39;-UTRs, indicating reduced distal poly(A)-site use.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The study directly perturbed ELAVL2 in differentiated human neurons and measured 3&#39;-UTR-length changes using RNA-based assays. ELAVL2 had the strongest individual effect among the three neuronal ELAV proteins in that experiment. Alternative polyadenylation is therefore a core, specific RNA-processing annotation; downstream dsRNA and antiviral phenotypes remain contextual consequences.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" target="_blank" class="term-link">
+                                        PMID:37862432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ELAVL2 binds AU-/U-rich elements in target-mRNA 3&#39;-UTRs through its RRM domains and assembles RNA-protein complexes that regulate neuronal RNA fate. Human perturbation evidence links this activity to alternative-splicing control and distal poly(A)-site use/3&#39;-UTR lengthening. The downstream creation of immunostimulatory dsRNA by long neuronal 3&#39;-UTRs is experimentally supported but is not treated as a separate core molecular activity.</h3>
+                <span class="vote-buttons" data-g="Q12926" data-a="FUNCTION: ELAVL2 binds AU-/U-rich elements in target-mRNA 3&#39;..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035925" target="_blank" class="term-link">
+                            mRNA 3&#39;-UTR AU-rich region binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010608" target="_blank" class="term-link">
+                                post-transcriptional regulation of gene expression
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000381" target="_blank" class="term-link">
+                                regulation of alternative mRNA splicing, via spliceosome
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110104" target="_blank" class="term-link">
+                                mRNA alternative polyadenylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link">
+                            ribonucleoprotein complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" target="_blank" class="term-link">
+                                PMID:7972035
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27260404" target="_blank" class="term-link">
+                                PMID:27260404
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">spliced genes resulting from haploinsufficient levels of ELAVL2.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" target="_blank" class="term-link">
+                                PMID:37862432
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17289661" target="_blank" class="term-link">
+                            PMID:17289661
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular composition of IMP1 ribonucleoprotein granules.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22658674" target="_blank" class="term-link">
+                            PMID:22658674
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22681889" target="_blank" class="term-link">
+                            PMID:22681889
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The mRNA-bound proteome and its global occupancy profile on protein-coding transcripts.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36950384" target="_blank" class="term-link">
+                            PMID:36950384
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein interaction studies in human induced neurons indicate convergent biology underlying autism spectrum disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" target="_blank" class="term-link">
+                            PMID:8158249
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian homologs of Drosophila ELAV localized to a neuronal subset can bind in vitro to the 3&#39; UTR of mRNA encoding the Id transcriptional repressor.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human Hel-N1 directly binds the Id mRNA 3&#39;-UTR in vitro.</div>
+
+                        <div class="finding-text">"can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9921507
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NS5 interacts with Spliceosome</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" target="_blank" class="term-link">
+                            PMID:7972035
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Selection of a subset of mRNAs from combinatorial 3&#39; untranslated region libraries using neuronal RNA-binding protein Hel-N1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human Hel-N1 and Hel-N2 select A/U-rich RNA consensus sequences, and Hel-N1 binds a structurally related subset of natural 3&#39;-UTRs.</div>
+
+                        <div class="finding-text">"combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" target="_blank" class="term-link">
+                            PMID:10710437
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RNA-binding analyses of HuC and HuD with the VEGF and c-myc 3&#39;-untranslated regions using a novel ELISA-based assay.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The four human ELAV-like proteins include Hel-N1, and the family recognizes AU-rich elements in growth-related mRNA 3&#39;-UTRs.</div>
+
+                        <div class="finding-text">"include HuC, HuD, Hel-N1 and HuR. These proteins bind to AU-rich elements in the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27260404" target="_blank" class="term-link">
+                            PMID:27260404
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ELAVL2-regulated transcriptional and splicing networks in human neurons link neurodevelopment and autism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reducing ELAVL2 in human neurons produced networks of differentially expressed and alternatively spliced genes.</div>
+
+                        <div class="finding-text">"spliced genes resulting from haploinsufficient levels of ELAVL2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" target="_blank" class="term-link">
+                            PMID:37862432
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Long 3&#39;UTRs predispose neurons to inflammation by promoting immunostimulatory double-stranded RNA formation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ELAVL2 depletion in wild-type human neurons globally shortened 3&#39;-UTRs and reduced immunostimulatory dsRNA, while combined HuB/HuC/HuD expression promoted distal 3&#39;-UTR use.</div>
+
+                        <div class="finding-text">"Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ELAVL2/ELAVL2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for human ELAVL2 (Q12926)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ELAVL2 is a neural-specific RRM-ELAV-family protein with three annotated RRM domains and two splice isoforms.</div>
+
+                        <div class="finding-text">"Belongs to the RRM elav family."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed record describes target-mRNA 3&#39;-UTR binding and an experimentally supported IGF2BP1 interaction.</div>
+
+                        <div class="finding-text">"Interacts with IGF2BP1 (PubMed:17289661)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ELAVL2/ELAVL2-deep-research-manual.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual deep research synthesis for human ELAVL2</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The evidence converges on AU-rich 3&#39;-UTR binding coupled to regulation of alternative splicing and alternative polyadenylation in human neurons.</div>
+
+                        <div class="finding-text">"The strongest ELAVL2-specific molecular evidence supports AU-/U-rich mRNA 3&#39;-UTR binding."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ELAVL2/ELAVL2-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual ELAVL2 curation notes</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Records provenance, annotation-level decisions, evidence boundaries, and unresolved questions for this review.</div>
+
+                        <div class="finding-text">"ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-binding protein with three RRMs."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which ELAVL2-bound transcripts are directly regulated at splice sites versus proximal poly(A) sites in human neuronal subtypes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="Q: Which ELAVL2-bound transcripts are directly regula..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ELAVL2 act independently or cooperatively with ELAVL3, ELAVL4, cleavage/polyadenylation factors, and IGF2BP1 to lengthen neuronal 3&#39;-UTRs?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="Q: Does ELAVL2 act independently or cooperatively wit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do isoforms Q12926-1 and Q12926-2 differ in nuclear-cytoplasmic shuttling, RNA-target selection, or alternative-splicing versus polyadenylation output?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="Q: Do isoforms Q12926-1 and Q12926-2 differ in nuclea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DYRK1A directly phosphorylate ELAVL2, and if so, how does that alter RRM binding, subcellular localization, or RNP assembly?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="Q: Does DYRK1A directly phosphorylate ELAVL2, and if ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine acute degron-mediated ELAVL2 depletion in differentiated human neurons with ELAVL2 eCLIP, short- and long-read RNA-seq, and 3&#39;-end sequencing. Rescue with wild-type ELAVL2 and RRM-binding-defective mutants, and require direct binding near events whose splicing or distal poly(A)-site use is restored.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ELAVL2 directly binds U-rich elements adjacent to regulated neuronal exons and proximal poly(A) sites to control splicing and distal-site choice.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="EXPERIMENT: Combine acute degron-mediated ELAVL2 depletion in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate an ELAVL2-null neuronal line and perform matched single-copy rescue with Q12926-1 or Q12926-2. Compare nuclear-cytoplasmic localization, eCLIP targets, alternative-splicing events, poly(A)-site use, RNP partners, and endogenous dsRNA while controlling for protein abundance.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The two human ELAVL2 isoforms partition alternative-splicing and 3&#39;-UTR-length regulation through the variable RRM2-RRM3 hinge.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="EXPERIMENT: Generate an ELAVL2-null neuronal line and perform ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Validate endogenous, RNase-sensitive and RNase-resistant ELAVL2 interactions by reciprocal co-immunoprecipitation and proximity labeling. Map DYRK1A-dependent ELAVL2 phosphorylation, then test phosphosite mutants for changes in RNA binding, IGF2BP1 association, localization, splicing, and alternative polyadenylation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DYRK1A and IGF2BP1 interactions tune ELAVL2 RNP assembly rather than providing generic protein-binding activity.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q12926" data-a="EXPERIMENT: Validate endogenous, RNase-sensitive and RNase-res..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ELAVL2-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12926" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Manual deep research: human ELAVL2</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="manual-deep-research-human-elavl2">Manual deep research: human ELAVL2</h1>
+<p>Date: 2026-07-18</p>
+<h2 id="scope-and-provenance">Scope and provenance</h2>
+<p>Falcon deep research was attempted and returned HTTP 402. Its configured<br />
+Perplexity-lite fallback returned HTTP 401 because quota was unavailable. No<br />
+provider-named output was retained. This manual synthesis uses the reviewed<br />
+UniProtKB Q12926 record, the current GOA file, the local Reactome event, cached<br />
+primary publications, and targeted PubMed/PMC searches.</p>
+<h2 id="protein-identity-and-architecture">Protein identity and architecture</h2>
+<p>ELAVL2 (HuB/Hel-N1) is a 359-residue neural ELAV-family RNA-binding protein.<br />
+The reviewed UniProt record assigns three RNA-recognition motifs (RRMs), at<br />
+residues 39-117, 125-205, and 276-354, and records two splice isoforms. Isoform<br />
+2 lacks residues 239-251 in the hinge between RRM2 and RRM3. The record describes<br />
+brain-enriched, neural-specific expression and states that the protein binds<br />
+target-mRNA 3'-UTRs, while noting that its GAAA-motif preference and several<br />
+targets are transferred from mouse [file:human/ELAVL2/ELAVL2-uniprot.txt<br />
+"RNA-binding protein that binds to the 3' untranslated region"].</p>
+<h2 id="direct-rna-binding-specificity">Direct RNA-binding specificity</h2>
+<p>The original human Hel-N1 study cloned the protein and directly tested binding<br />
+to the Id transcript. The abstract states that Hel-N1 <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" title="can bind to the 3' untranslated region (3' UTR) of Id mRNA, a transcript that">PMID:8158249</a>. This is<br />
+direct support for mRNA 3'-UTR binding, but the paper does not demonstrate direct<br />
+control of DNA-templated transcription; Id is merely the protein encoded by the<br />
+bound mRNA.</p>
+<p>A second human study selected RNA targets for Hel-N1 and Hel-N2 from randomized<br />
+and naturally derived 3'-UTR libraries. It found that <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" title="combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1">PMID:7972035</a><br />
+and selected a subset of natural 3'-UTRs bound by Hel-N1. This directly supports<br />
+the more specific mRNA 3'-UTR AU-rich-region-binding activity.</p>
+<p>An independent ELAV-family analysis explicitly includes Hel-N1 among the four<br />
+human family members and summarizes that <a href="https://pubmed.ncbi.nlm.nih.gov/10710437" title="include HuC, HuD, Hel-N1 and HuR. These proteins bind to AU-rich elements in the">PMID:10710437</a>. Its full text<br />
+further reports that Hel-N1 recognizes U-rich motifs including AUUUG, GUUUUU,<br />
+and AUUUA. This corroborates the direct Hel-N1 selection experiments without<br />
+claiming that the HuC/HuD measurements in that paper were ELAVL2 assays.</p>
+<p>Two orthogonal mRNA-interactome capture studies independently assigned ELAVL2 as<br />
+an RNA-binding protein in human HeLa and HEK293 cells (GOA HDA annotations from<br />
+PMID:22658674 and PMID:22681889). Their abstracts describe UV-crosslinking plus<br />
+poly(A)-RNA purification and the resulting biochemical mRNA-bound proteomes.<br />
+They corroborate direct RNA association but do not establish ELAVL2 sequence or<br />
+target specificity.</p>
+<h2 id="alternative-splicing-and-3-utr-length-control">Alternative splicing and 3'-UTR length control</h2>
+<p>Reduction of ELAVL2 in primary human neurons followed by RNA-seq identified<br />
+ELAVL2-dependent expression and splicing networks. The cached abstract reports<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27260404" title="spliced genes resulting from haploinsufficient levels of ELAVL2.">PMID:27260404</a><br />
+The perturbation supports regulation of alternative mRNA splicing in human<br />
+neurons. The network enrichment for neurodevelopmental, synaptic, and<br />
+autism-associated genes is useful context, but it should not be converted into<br />
+direct annotations for every downstream neuronal process.</p>
+<p>A later primary study gives direct human-neuron evidence for alternative<br />
+polyadenylation/3'-UTR-length control. Combined HuB/HuC/HuD expression globally<br />
+lengthened 3'-UTRs in HEK293T cells, while acute neuronal HuB depletion had the<br />
+strongest individual effect. The abstract states <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" title="Depleting ELAVL2 in WT neurons led to global shortening of 3'UTR">PMID:37862432</a>. The full text reports<br />
+that HuB loss greatly decreased 3'-UTR length, whereas HuC loss had a smaller<br />
+trend and HuD loss had no detectable effect in that assay. This supports mRNA<br />
+alternative polyadenylation as a core ELAVL2-controlled process.</p>
+<p>The same study links ELAVL2-dependent long 3'-UTRs to endogenous dsRNA, tonic<br />
+type-I-interferon signaling, and antiviral resistance. These are experimentally<br />
+supported downstream phenotypes, but the mechanistic core remains ELAVL2's<br />
+control of neuronal RNA processing. Broad immune-process annotations would risk<br />
+turning an RNA-processing mechanism into downstream over-annotation.</p>
+<h2 id="rnp-and-protein-interactions">RNP and protein interactions</h2>
+<p>InterPro transfers ribonucleoprotein-complex membership from the ELAV/Hu family.<br />
+This is consistent with ELAVL2 binding RNA and with the reviewed UniProt record's<br />
+experimentally supported interaction with IGF2BP1. PMID:17289661 describes the<br />
+composition of IMP1/IGF2BP1 RNP granules, but its locally available abstract does<br />
+not name ELAVL2. The GOA row and UniProt record identify IGF2BP1 as the partner;<br />
+the generic GO molecular-function term protein binding adds little information.</p>
+<p>PMID:36950384 is a neuronal interaction-proteomics study. GOA/IntAct maps the<br />
+ELAVL2 interaction row to DYRK1A, and UniProt records three IntAct experiments.<br />
+The paper establishes a quality-controlled neuronal PPI network, but its main<br />
+text does not explain the functional consequence of the ELAVL2-DYRK1A pair.<br />
+Generic protein binding is therefore over-annotated rather than a core molecular<br />
+function.</p>
+<p>The Reactome event R-HSA-9921507 describes nuclear dengue-virus NS5 binding to<br />
+spliceosome components CD2BP2 and DDX23. Its local summary does not name ELAVL2<br />
+or expose the evidence for assigning ELAVL2 to the nucleoplasm. Nucleoplasmic<br />
+localization is biologically plausible for an alternative-splicing regulator,<br />
+but this specific pathway-derived record is retained only as non-core.</p>
+<h2 id="synthesis-and-curation-boundaries">Synthesis and curation boundaries</h2>
+<p>The strongest ELAVL2-specific molecular evidence supports AU-/U-rich mRNA<br />
+3'-UTR binding. Human perturbation experiments additionally establish regulation<br />
+of alternative splicing and distal poly(A)-site use/3'-UTR length. Phylogenetic<br />
+IBA evidence supports a protein-RNA adaptor activity, and the RNP-complex IEA is<br />
+consistent with the biochemical role.</p>
+<p>The following claims are deliberately excluded from the core:</p>
+<ul>
+<li>direct regulation of DNA-templated transcription;</li>
+<li>a specific biochemical consequence of DYRK1A or IGF2BP1 binding;</li>
+<li>direct control of every neurodevelopmental, synaptic, immune, or antiviral<br />
+  pathway enriched downstream of ELAVL2 perturbation;</li>
+<li>isoform-specific functions, because neither human isoform has been compared in<br />
+  the decisive RNA-processing assays;</li>
+<li>direct mRNA stabilization as an ELAVL2-specific in-vivo activity, because the<br />
+  strongest local evidence for stability is family-level or transferred from<br />
+  mouse.</li>
+</ul>
+<h2 id="curation-ready-conclusions">Curation-ready conclusions</h2>
+<ol>
+<li>Accept mRNA 3'-UTR AU-rich-region binding, mRNA 3'-UTR binding, RNA binding,<br />
+   protein-RNA adaptor activity, and ribonucleoprotein-complex membership.</li>
+<li>Modify broad nucleic-acid binding to the experimentally supported AU-rich<br />
+   mRNA 3'-UTR-binding term.</li>
+<li>Mark both generic protein-binding annotations as over-annotated while<br />
+   preserving the underlying interaction evidence.</li>
+<li>Keep the Reactome nucleoplasm location as non-core because the local event<br />
+   does not expose ELAVL2-specific evidence.</li>
+<li>Modify regulation of DNA-templated transcription to post-transcriptional<br />
+   regulation of gene expression.</li>
+<li>Add regulation of alternative mRNA splicing, via spliceosome, and mRNA<br />
+   alternative polyadenylation from direct human perturbation studies.</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ELAVL2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12926" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="elavl2-review-notes">ELAVL2 review notes</h1>
+<h2 id="research-provenance">Research provenance</h2>
+<p>The required Falcon deep-research attempt failed with HTTP 402, and the<br />
+configured Perplexity-lite fallback failed with HTTP 401. No provider-named<br />
+output was retained. The review instead uses reviewed UniProtKB Q12926, current<br />
+GOA, the local Reactome event, cached primary publications, and targeted manual<br />
+PubMed/PMC research. The evidence synthesis is in<br />
+<code>ELAVL2-deep-research-manual.md</code>.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-binding protein with three RRMs.<br />
+Human biochemical studies show that Hel-N1 binds mRNA 3'-UTRs and selects A/U-<br />
+rich RNA sequences <a href="https://pubmed.ncbi.nlm.nih.gov/8158249" title="can bind to the 3' untranslated region (3' UTR) of Id mRNA, a transcript that">PMID:8158249</a> <a href="https://pubmed.ncbi.nlm.nih.gov/7972035" title="combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1">PMID:7972035</a>. A family study that<br />
+explicitly includes Hel-N1 independently records AU-rich 3'-UTR recognition<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10710437" title="include HuC, HuD, Hel-N1 and HuR. These proteins bind to AU-rich elements in the">PMID:10710437</a>.</p>
+<p>Human-neuron perturbation studies reveal two major downstream RNA-processing<br />
+roles. ELAVL2 reduction changes alternatively spliced transcripts<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/27260404" title="spliced genes resulting from haploinsufficient levels of ELAVL2.">PMID:27260404</a>. A separate study shows that <a href="https://pubmed.ncbi.nlm.nih.gov/37862432" title="Depleting ELAVL2 in WT neurons led to global shortening of 3'UTR">PMID:37862432</a>, establishing a role in distal<br />
+poly(A)-site choice and 3'-UTR lengthening. Long 3'-UTRs increase endogenous<br />
+dsRNA and tonic antiviral signaling in that experimental system, but these<br />
+immune phenotypes are treated as downstream context rather than ELAVL2's primary<br />
+molecular function.</p>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<table>
+<thead>
+<tr>
+<th>GOA annotation</th>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0035925 mRNA 3'-UTR AU-rich region binding, IBA</td>
+<td>ACCEPT</td>
+<td>Direct Hel-N1 A/U-rich 3'-UTR selection corroborates the phylogenetic inference.</td>
+</tr>
+<tr>
+<td>GO:0140517 protein-RNA adaptor activity, IBA</td>
+<td>ACCEPT</td>
+<td>Well-curated IBA is consistent with ELAVL2's RNA binding and RNP associations.</td>
+</tr>
+<tr>
+<td>GO:0003676 nucleic acid binding, IEA</td>
+<td>MODIFY</td>
+<td>Too broad; replace with GO:0035925.</td>
+</tr>
+<tr>
+<td>GO:0003723 RNA binding, IEA</td>
+<td>ACCEPT</td>
+<td>Correct domain-supported parent activity.</td>
+</tr>
+<tr>
+<td>GO:0003730 mRNA 3'-UTR binding, IEA</td>
+<td>ACCEPT</td>
+<td>Direct human Hel-N1 evidence establishes this activity.</td>
+</tr>
+<tr>
+<td>GO:1990904 ribonucleoprotein complex, IEA</td>
+<td>ACCEPT</td>
+<td>Consistent with RNA binding and experimentally recorded IGF2BP1 association.</td>
+</tr>
+<tr>
+<td>GO:0005515 protein binding, DYRK1A IPI</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>The interaction may be genuine, but generic protein binding is not a useful function and no consequence is established.</td>
+</tr>
+<tr>
+<td>GO:0005654 nucleoplasm, Reactome TAS</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Plausible for RNA processing, but the cached viral Reactome event does not expose ELAVL2-specific evidence.</td>
+</tr>
+<tr>
+<td>GO:0003723 RNA binding, PMID:22658674 HDA</td>
+<td>ACCEPT</td>
+<td>Direct UV-crosslinking/mRNA-interactome capture.</td>
+</tr>
+<tr>
+<td>GO:0003723 RNA binding, PMID:22681889 HDA</td>
+<td>ACCEPT</td>
+<td>Independent direct mRNA-bound-proteome capture.</td>
+</tr>
+<tr>
+<td>GO:0005515 protein binding, IGF2BP1 IPI</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>Interaction retained; the generic GO term is uninformative.</td>
+</tr>
+<tr>
+<td>GO:0003730 mRNA 3'-UTR binding, PMID:8158249 TAS</td>
+<td>ACCEPT</td>
+<td>Direct Hel-N1 binding to the Id 3'-UTR.</td>
+</tr>
+<tr>
+<td>GO:0006355 regulation of DNA-templated transcription, PMID:8158249 TAS</td>
+<td>MODIFY</td>
+<td>The paper assays binding to an mRNA encoding a transcriptional repressor, not transcription; replace with GO:0010608.</td>
+</tr>
+<tr>
+<td>GO:0000381 regulation of alternative mRNA splicing, via spliceosome</td>
+<td>NEW (IMP)</td>
+<td>Human neuronal ELAVL2 knockdown changes alternative splicing.</td>
+</tr>
+<tr>
+<td>GO:0110104 mRNA alternative polyadenylation</td>
+<td>NEW (IMP)</td>
+<td>Human neuronal ELAVL2 knockdown globally shortens 3'-UTRs.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="evidence-boundaries">Evidence boundaries</h2>
+<ul>
+<li>The PMID:8158249 transcription row is not removed as a citation error; its<br />
+  biological essence is corrected from transcriptional to post-transcriptional<br />
+  regulation.</li>
+<li>PMID:17289661 is abstract-only locally and does not name ELAVL2 in the abstract.<br />
+  UniProt and GOA both map it to IGF2BP1 interaction, so the interaction is<br />
+  retained while the generic protein-binding function is marked over-annotated.</li>
+<li>PMID:36950384 is full text, but the ELAVL2-DYRK1A pair is exposed through the<br />
+  GOA/IntAct record rather than explained mechanistically in the paper body.</li>
+<li>The Reactome event focuses on dengue NS5 and spliceosomal components CD2BP2 and<br />
+  DDX23. It does not justify treating nucleoplasm as a defining ELAVL2 location.</li>
+<li>The two recorded UniProt isoforms differ in the RRM2-RRM3 hinge, but the cited<br />
+  functional assays do not support an isoform-specific GO assertion.</li>
+</ul>
+<h2 id="open-questions">Open questions</h2>
+<ul>
+<li>Which direct ELAVL2 RNA targets account for its alternative-splicing and<br />
+  alternative-polyadenylation phenotypes in human neurons?</li>
+<li>Does ELAVL2 act alone at proximal poly(A) sites, or cooperatively with ELAVL3,<br />
+  ELAVL4, cleavage/polyadenylation factors, or other RNP proteins?</li>
+<li>What do DYRK1A phosphorylation and IGF2BP1 association do to ELAVL2 target<br />
+  selection, localization, or regulatory output?</li>
+<li>Do isoforms Q12926-1 and Q12926-2 differ in nuclear-cytoplasmic shuttling or in<br />
+  alternative-splicing versus 3'-UTR-lengthening activity?</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q12926
+gene_symbol: ELAVL2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-binding protein with three RNA
+  recognition motifs. It recognizes AU-/U-rich elements in target-mRNA 3&#39;-UTRs
+  and acts in ribonucleoprotein assemblies that control neuronal RNA fate.
+  Human-neuron perturbation studies establish roles in regulation of alternative
+  splicing and distal poly(A)-site use: partial ELAVL2 depletion changes
+  alternatively spliced transcript networks, while acute depletion globally
+  shortens 3&#39;-UTRs. ELAVL2-dependent long 3&#39;-UTRs also increase endogenous dsRNA
+  and tonic antiviral signaling in cultured neurons, a downstream consequence of
+  its RNA-processing activity. The reviewed protein is brain-enriched and
+  neural-specific; two splice isoforms differ by a 13-residue segment in the
+  RRM2-RRM3 hinge, but isoform-specific molecular functions remain unresolved.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q12926-1
+  description: &gt;-
+    Canonical 359-residue isoform containing all three annotated RNA-recognition
+    motifs and the complete RRM2-RRM3 hinge.
+- name: &#39;2&#39;
+  id: Q12926-2
+  sequence_note: VSP_005788; residues 239-251 are absent
+  description: &gt;-
+    Isoform lacking 13 residues in the hinge between RRM2 and RRM3. The decisive
+    RNA-binding, splicing, and 3&#39;-UTR-length studies do not resolve whether its
+    activity differs from isoform 1.
+existing_annotations:
+- term:
+    id: GO:0035925
+    label: mRNA 3&#39;-UTR AU-rich region binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic inference assigns AU-rich mRNA 3&#39;-UTR binding to ELAVL2.
+      Direct human Hel-N1 RNA-selection experiments independently recovered
+      A/U-rich consensus sequences and natural 3&#39;-UTR targets.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most informative established molecular function. The IBA is
+      supported by direct Hel-N1 binding to the Id mRNA 3&#39;-UTR and selection of
+      A/U-rich sequences from randomized libraries. Three RRM domains and
+      independent mRNA-interactome-capture experiments are also consistent with
+      this core activity.
+    additional_reference_ids:
+    - PMID:8158249
+    - PMID:7972035
+    - PMID:10710437
+    supported_by:
+    - reference_id: PMID:7972035
+      supporting_text: combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1
+    - reference_id: PMID:8158249
+      supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+    - reference_id: file:human/ELAVL2/ELAVL2-deep-research-manual.md
+      supporting_text: &gt;-
+        The strongest ELAVL2-specific molecular evidence supports AU-/U-rich mRNA
+        3&#39;-UTR binding.
+- term:
+    id: GO:0140517
+    label: protein-RNA adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic inference assigns protein-RNA adaptor activity to ELAVL2 from
+      the ELAV/Hu clade.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IBA annotations represent curated ancestral-function inference. The term is
+      consistent with ELAVL2&#39;s sequence-specific RNA binding, RNP-complex
+      membership, and experimentally recorded interactions with other RNA-regulatory
+      proteins. Because direct ELAVL2 evidence does not resolve a target-specific
+      bridged protein-RNA pair, it is retained as a contextual family-level activity
+      rather than a core molecular function.
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro domain mapping assigns the broad parent term nucleic acid binding.
+    action: MODIFY
+    reason: &gt;-
+      ELAVL2 is specifically an RNA-binding protein, and direct human biochemical
+      evidence further resolves the activity to AU-rich mRNA 3&#39;-UTRs. The generic
+      term does not distinguish RNA from DNA and should be replaced by the most
+      informative experimentally supported function.
+    proposed_replacement_terms:
+    - id: GO:0035925
+      label: mRNA 3&#39;-UTR AU-rich region binding
+    additional_reference_ids:
+    - PMID:7972035
+    supported_by:
+    - reference_id: PMID:7972035
+      supporting_text: combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro mappings from the ELAV/Hu and RRM domains assign RNA binding.
+    action: ACCEPT
+    reason: &gt;-
+      This correct parent activity is supported by three annotated RRM domains,
+      direct Hel-N1 3&#39;-UTR binding, and two independent human mRNA-interactome
+      capture datasets. More specific AU-rich-region binding is separately retained.
+    additional_reference_ids:
+    - PMID:8158249
+    - PMID:22658674
+    - PMID:22681889
+    supported_by:
+    - reference_id: PMID:8158249
+      supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+- term:
+    id: GO:0003730
+    label: mRNA 3&#39;-UTR binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA assigns mRNA 3&#39;-UTR binding, matching direct human Hel-N1 experiments.
+    action: ACCEPT
+    reason: &gt;-
+      Hel-N1 directly binds the Id mRNA 3&#39;-UTR and binds multiple natural
+      3&#39;-UTR-derived sequences. The term accurately captures the region-level
+      specificity without requiring every target to contain the same AU-rich motif.
+    additional_reference_ids:
+    - PMID:8158249
+    - PMID:7972035
+    supported_by:
+    - reference_id: PMID:8158249
+      supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+- term:
+    id: GO:1990904
+    label: ribonucleoprotein complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      InterPro assigns ELAVL2 to ribonucleoprotein complexes based on the ELAV/Hu
+      family.
+    action: ACCEPT
+    reason: &gt;-
+      ELAVL2 directly binds target RNAs and the reviewed UniProt record reports an
+      experimentally supported interaction with IGF2BP1, an RNP-granule protein.
+      The general RNP-complex term is appropriate for the assembled RNA-protein
+      state in which ELAVL2 performs its regulatory activity, without asserting a
+      specific stable named complex.
+    additional_reference_ids:
+    - PMID:17289661
+    supported_by:
+    - reference_id: file:human/ELAVL2/ELAVL2-uniprot.txt
+      supporting_text: Interacts with IGF2BP1 (PubMed:17289661).
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36950384
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q13627
+  review:
+    summary: &gt;-
+      Neuronal interaction proteomics and IntAct report an ELAVL2-DYRK1A
+      interaction. The interaction record is retained, but generic protein binding
+      does not define a useful ELAVL2 molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The source study establishes a quality-controlled protein-interaction network
+      in induced neurons, while GOA identifies DYRK1A as the partner. No functional
+      consequence of this pair for ELAVL2 RNA binding or RNA processing is
+      established, and GO:0005515 discards the only specific information in the
+      record. The interaction may be genuine but should not be treated as a core
+      molecular activity.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9921507
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome transfers a nucleoplasm location from a dengue-virus NS5/spliceosome
+      event.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Nuclear localization is plausible for an RNA-binding protein that regulates
+      alternative splicing and poly(A)-site choice, so the location is retained.
+      However, the cached Reactome summary names NS5, CD2BP2, and DDX23 but does not
+      expose ELAVL2-specific localization evidence. This pathway-derived location
+      should not define the core until the ELAVL2 evidence chain is clarified.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: HDA
+  original_reference_id: PMID:22658674
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UV-crosslinking and poly(A)-RNA interactome capture identified ELAVL2 in the
+      human HeLa-cell mRNA-bound proteome.
+    action: ACCEPT
+    reason: &gt;-
+      HDA evidence directly establishes RNA association in human cells and
+      independently corroborates the lower-throughput Hel-N1 binding studies. The
+      general RNA-binding term is appropriate for this assay because interactome
+      capture does not resolve ELAVL2&#39;s sequence specificity.
+    supported_by:
+    - reference_id: PMID:22658674
+      supporting_text: We identify 860 proteins that qualify as RBPs by biochemical and
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: HDA
+  original_reference_id: PMID:22681889
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Independent photo-crosslinking and oligo(dT) purification identified ELAVL2
+      in the human HEK-cell mRNA-bound proteome.
+    action: ACCEPT
+    reason: &gt;-
+      This orthogonal human-cell mRNA-interactome experiment supports direct RNA
+      association. Its broad term is appropriate to the resolution of the assay and
+      complements the more specific 3&#39;-UTR annotations.
+    supported_by:
+    - reference_id: PMID:22681889
+      supporting_text: approach to identify the mRNA-bound proteome using quantitative proteomics and
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17289661
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9NZI8
+  review:
+    summary: &gt;-
+      GOA and reviewed UniProt record an ELAVL2-IGF2BP1 interaction in the context
+      of IMP1 ribonucleoprotein granules.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The partner-specific interaction is useful RNP-context evidence, but the
+      generic term protein binding provides no mechanistic information. The cached
+      abstract does not name ELAVL2 or establish what its IGF2BP1 association does,
+      so the interaction is not converted into a more specific activity or process.
+    supported_by:
+    - reference_id: file:human/ELAVL2/ELAVL2-uniprot.txt
+      supporting_text: Interacts with IGF2BP1 (PubMed:17289661).
+- term:
+    id: GO:0003730
+    label: mRNA 3&#39;-UTR binding
+  evidence_type: TAS
+  original_reference_id: PMID:8158249
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The original human Hel-N1 study directly demonstrated in-vitro binding to
+      the Id mRNA 3&#39;-UTR.
+    action: ACCEPT
+    reason: &gt;-
+      This is direct ELAVL2-specific biochemical evidence for its defining
+      molecular activity. The paper identifies the human protein, tests a defined
+      target 3&#39;-UTR, and reports binding; the annotation is specific without
+      overstating a downstream regulatory outcome.
+    supported_by:
+    - reference_id: PMID:8158249
+      supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: TAS
+  original_reference_id: PMID:8158249
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The cited study links Hel-N1 to an mRNA encoding the Id transcriptional
+      repressor, but it assays 3&#39;-UTR binding rather than DNA-templated
+      transcription.
+    action: MODIFY
+    reason: &gt;-
+      ELAVL2 acts at the RNA level. Binding the Id transcript can indirectly alter
+      abundance of a transcriptional regulator, but that does not make ELAVL2 a
+      direct regulator of transcription. Human neuronal perturbation studies
+      instead establish post-transcriptional control of expression, alternative
+      splicing, and poly(A)-site choice, so the broad transcription term should be
+      replaced by post-transcriptional regulation of gene expression.
+    proposed_replacement_terms:
+    - id: GO:0010608
+      label: post-transcriptional regulation of gene expression
+    additional_reference_ids:
+    - PMID:27260404
+    - PMID:37862432
+    supported_by:
+    - reference_id: PMID:8158249
+      supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+    - reference_id: PMID:27260404
+      supporting_text: spliced genes resulting from haploinsufficient levels of ELAVL2.
+- term:
+    id: GO:0000381
+    label: regulation of alternative mRNA splicing, via spliceosome
+  evidence_type: IMP
+  original_reference_id: PMID:27260404
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed human-neuron annotation. ELAVL2 knockdown followed by RNA-seq
+      identified a network of alternatively spliced genes.
+    action: NEW
+    reason: &gt;-
+      Perturbing ELAVL2 in primary human neurons changed alternative-splicing
+      outcomes, supporting a direct regulatory role for this RNA-binding protein.
+      The process is a core RNA-processing output; enrichment of the downstream
+      target set for synaptic and autism-related genes is not itself propagated as
+      additional GO annotations.
+    supported_by:
+    - reference_id: PMID:27260404
+      supporting_text: spliced genes resulting from haploinsufficient levels of ELAVL2.
+- term:
+    id: GO:0110104
+    label: mRNA alternative polyadenylation
+  evidence_type: IMP
+  original_reference_id: PMID:37862432
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed human-neuron annotation. Acute ELAVL2/HuB depletion globally
+      shortened 3&#39;-UTRs, indicating reduced distal poly(A)-site use.
+    action: NEW
+    reason: &gt;-
+      The study directly perturbed ELAVL2 in differentiated human neurons and
+      measured 3&#39;-UTR-length changes using RNA-based assays. ELAVL2 had the
+      strongest individual effect among the three neuronal ELAV proteins in that
+      experiment. Alternative polyadenylation is therefore a core, specific
+      RNA-processing annotation; downstream dsRNA and antiviral phenotypes remain
+      contextual consequences.
+    supported_by:
+    - reference_id: PMID:37862432
+      supporting_text: Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source and title verified from the seeded record. InterPro domain mappings
+      appropriately support RNA binding but produce one overly broad nucleic-acid
+      term and a general RNP-complex assignment that require biological review.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAINT family data were inspected locally. The ELAV/Hu node carries ancestral
+      AU-rich 3&#39;-UTR-binding and protein-RNA-adaptor annotations, both consistent
+      with direct ELAVL2 evidence and conserved RRM architecture.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source and title verified from the seeded record. The ARBA mRNA 3&#39;-UTR
+      prediction is independently supported by direct Hel-N1 experiments.
+- id: PMID:17289661
+  title: Molecular composition of IMP1 ribonucleoprotein granules.
+  full_text_unavailable: true
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. GOA and reviewed UniProt both map
+      this source to the ELAVL2-IGF2BP1 interaction, although the abstract does not
+      name ELAVL2; it supports RNP context but not a specific functional consequence.
+- id: PMID:22658674
+  title: Insights into RNA biology from an atlas of mammalian mRNA-binding proteins.
+  full_text_unavailable: true
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. GOA assigns ELAVL2 to this direct
+      human mRNA-interactome-capture dataset, supporting RNA binding at HDA
+      resolution; the local cache is abstract-only.
+- id: PMID:22681889
+  title: The mRNA-bound proteome and its global occupancy profile on protein-coding transcripts.
+  full_text_unavailable: true
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. GOA assigns ELAVL2 to this independent
+      human mRNA-bound-proteome experiment, providing orthogonal RNA-binding
+      evidence; the local cache is abstract-only.
+- id: PMID:36950384
+  title: Protein interaction studies in human induced neurons indicate convergent biology underlying autism spectrum disorders.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, full text, GOA partner, and reviewed-UniProt IntAct record were
+      checked. The study supports neuronal PPI evidence and GOA identifies DYRK1A,
+      but the pair&#39;s ELAVL2-specific functional consequence is not established.
+- id: PMID:8158249
+  title: Mammalian homologs of Drosophila ELAV localized to a neuronal subset can bind in vitro to the 3&#39; UTR of mRNA encoding the Id transcriptional repressor.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Human Hel-N1 directly binds the Id mRNA 3&#39;-UTR in vitro.
+    supporting_text: can bind to the 3&#39; untranslated region (3&#39; UTR) of Id mRNA, a transcript that
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. This is direct ELAVL2-specific
+      3&#39;-UTR-binding evidence. It does not assay DNA-templated transcription, so
+      the transcription annotation is modified to a post-transcriptional process;
+      the local cache is abstract-only.
+- id: Reactome:R-HSA-9921507
+  title: NS5 interacts with Spliceosome
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The cached Reactome event was inspected. Its summary names nuclear dengue NS5,
+      CD2BP2, and DDX23 but does not expose ELAVL2-specific evidence for the
+      nucleoplasm annotation. The plausible location is retained only as non-core.
+- id: PMID:7972035
+  title: Selection of a subset of mRNAs from combinatorial 3&#39; untranslated region libraries using neuronal RNA-binding protein Hel-N1.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Human Hel-N1 and Hel-N2 select A/U-rich RNA consensus sequences, and Hel-N1
+      binds a structurally related subset of natural 3&#39;-UTRs.
+    supporting_text: combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. This directly supports ELAVL2&#39;s
+      sequence preference and the AU-rich mRNA 3&#39;-UTR-binding annotation; the local
+      cache is abstract-only.
+- id: PMID:10710437
+  title: RNA-binding analyses of HuC and HuD with the VEGF and c-myc 3&#39;-untranslated regions using a novel ELISA-based assay.
+  findings:
+  - statement: &gt;-
+      The four human ELAV-like proteins include Hel-N1, and the family recognizes
+      AU-rich elements in growth-related mRNA 3&#39;-UTRs.
+    supporting_text: include HuC, HuD, Hel-N1 and HuR. These proteins bind to AU-rich elements in the
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and full text were verified. Direct measurements in this paper
+      emphasize HuC and HuD, but its family synthesis explicitly includes Hel-N1
+      and reports earlier Hel-N1 U-rich-motif evidence; it is corroborating rather
+      than the sole basis for ELAVL2 annotation.
+- id: PMID:27260404
+  title: ELAVL2-regulated transcriptional and splicing networks in human neurons link neurodevelopment and autism.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Reducing ELAVL2 in human neurons produced networks of differentially expressed
+      and alternatively spliced genes.
+    supporting_text: spliced genes resulting from haploinsufficient levels of ELAVL2.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, and abstract were verified. The human-neuron perturbation directly
+      supports regulation of alternative mRNA splicing and broader
+      post-transcriptional gene regulation; downstream network enrichments are not
+      over-propagated as direct functions. The local cache is abstract-only.
+- id: PMID:37862432
+  title: Long 3&#39;UTRs predispose neurons to inflammation by promoting immunostimulatory double-stranded RNA formation.
+  findings:
+  - statement: &gt;-
+      ELAVL2 depletion in wild-type human neurons globally shortened 3&#39;-UTRs and
+      reduced immunostimulatory dsRNA, while combined HuB/HuC/HuD expression
+      promoted distal 3&#39;-UTR use.
+    supporting_text: Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID, title, abstract, and full text were verified. Direct ELAVL2 perturbation
+      supports mRNA alternative polyadenylation/3&#39;-UTR-length control. dsRNA,
+      interferon, survival, and antiviral phenotypes are treated as downstream
+      context rather than the defining molecular core.
+- id: file:human/ELAVL2/ELAVL2-uniprot.txt
+  title: UniProtKB record for human ELAVL2 (Q12926)
+  findings:
+  - statement: &gt;-
+      ELAVL2 is a neural-specific RRM-ELAV-family protein with three annotated RRM
+      domains and two splice isoforms.
+    supporting_text: Belongs to the RRM elav family.
+    reference_section_type: OTHER
+  - statement: &gt;-
+      The reviewed record describes target-mRNA 3&#39;-UTR binding and an experimentally
+      supported IGF2BP1 interaction.
+    supporting_text: Interacts with IGF2BP1 (PubMed:17289661).
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed project-fetched UniProt record; used for accession, family, domain,
+      isoform, expression, and interaction metadata. By-similarity function claims
+      are distinguished from direct human evidence.
+- id: file:human/ELAVL2/ELAVL2-deep-research-manual.md
+  title: Manual deep research synthesis for human ELAVL2
+  findings:
+  - statement: &gt;-
+      The evidence converges on AU-rich 3&#39;-UTR binding coupled to regulation of
+      alternative splicing and alternative polyadenylation in human neurons.
+    supporting_text: &gt;-
+      The strongest ELAVL2-specific molecular evidence supports AU-/U-rich mRNA
+      3&#39;-UTR binding.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewer-authored synthesis of the fetched records, cached primary literature,
+      local PAINT data, Reactome event, and targeted PubMed/PMC research after both
+      automated providers failed.
+- id: file:human/ELAVL2/ELAVL2-notes.md
+  title: Manual ELAVL2 curation notes
+  findings:
+  - statement: &gt;-
+      Records provenance, annotation-level decisions, evidence boundaries, and
+      unresolved questions for this review.
+    supporting_text: &gt;-
+      ELAVL2 (HuB/Hel-N1) is a neural ELAV-family RNA-binding protein with three RRMs.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewer-authored decision log with inline source quotations and explicit
+      boundaries against transcriptional, interaction, immune, and isoform
+      over-annotation.
+core_functions:
+- description: &gt;-
+    ELAVL2 binds AU-/U-rich elements in target-mRNA 3&#39;-UTRs through its RRM
+    domains and assembles RNA-protein complexes that regulate neuronal RNA fate.
+    Human perturbation evidence links this activity to alternative-splicing
+    control and distal poly(A)-site use/3&#39;-UTR lengthening. The downstream creation
+    of immunostimulatory dsRNA by long neuronal 3&#39;-UTRs is experimentally supported
+    but is not treated as a separate core molecular activity.
+  molecular_function:
+    id: GO:0035925
+    label: mRNA 3&#39;-UTR AU-rich region binding
+  directly_involved_in:
+  - id: GO:0010608
+    label: post-transcriptional regulation of gene expression
+  - id: GO:0000381
+    label: regulation of alternative mRNA splicing, via spliceosome
+  - id: GO:0110104
+    label: mRNA alternative polyadenylation
+  in_complex:
+    id: GO:1990904
+    label: ribonucleoprotein complex
+  supported_by:
+  - reference_id: PMID:7972035
+    supporting_text: combinatorial libraries yielded (A+U)-rich consensus sequences for both Hel-N1
+  - reference_id: PMID:27260404
+    supporting_text: spliced genes resulting from haploinsufficient levels of ELAVL2.
+  - reference_id: PMID:37862432
+    supporting_text: Depleting ELAVL2 in WT neurons led to global shortening of 3&#39;UTR
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which ELAVL2-bound transcripts are directly regulated at splice sites versus
+    proximal poly(A) sites in human neuronal subtypes?
+- question: &gt;-
+    Does ELAVL2 act independently or cooperatively with ELAVL3, ELAVL4,
+    cleavage/polyadenylation factors, and IGF2BP1 to lengthen neuronal 3&#39;-UTRs?
+- question: &gt;-
+    Do isoforms Q12926-1 and Q12926-2 differ in nuclear-cytoplasmic shuttling,
+    RNA-target selection, or alternative-splicing versus polyadenylation output?
+- question: &gt;-
+    Does DYRK1A directly phosphorylate ELAVL2, and if so, how does that alter RRM
+    binding, subcellular localization, or RNP assembly?
+suggested_experiments:
+- hypothesis: &gt;-
+    ELAVL2 directly binds U-rich elements adjacent to regulated neuronal exons and
+    proximal poly(A) sites to control splicing and distal-site choice.
+  description: &gt;-
+    Combine acute degron-mediated ELAVL2 depletion in differentiated human neurons
+    with ELAVL2 eCLIP, short- and long-read RNA-seq, and 3&#39;-end sequencing. Rescue
+    with wild-type ELAVL2 and RRM-binding-defective mutants, and require direct
+    binding near events whose splicing or distal poly(A)-site use is restored.
+- hypothesis: &gt;-
+    The two human ELAVL2 isoforms partition alternative-splicing and 3&#39;-UTR-length
+    regulation through the variable RRM2-RRM3 hinge.
+  description: &gt;-
+    Generate an ELAVL2-null neuronal line and perform matched single-copy rescue
+    with Q12926-1 or Q12926-2. Compare nuclear-cytoplasmic localization, eCLIP
+    targets, alternative-splicing events, poly(A)-site use, RNP partners, and
+    endogenous dsRNA while controlling for protein abundance.
+- hypothesis: &gt;-
+    DYRK1A and IGF2BP1 interactions tune ELAVL2 RNP assembly rather than providing
+    generic protein-binding activity.
+  description: &gt;-
+    Validate endogenous, RNase-sensitive and RNase-resistant ELAVL2 interactions by
+    reciprocal co-immunoprecipitation and proximity labeling. Map DYRK1A-dependent
+    ELAVL2 phosphorylation, then test phosphosite mutants for changes in RNA binding,
+    IGF2BP1 association, localization, splicing, and alternative polyadenylation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

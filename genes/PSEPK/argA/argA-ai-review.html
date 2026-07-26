@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>argA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>argA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0A0Z9" target="_blank" class="term-link">
+                        P0A0Z9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "argA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0A0Z9" data-a="DESCRIPTION: ArgA (PP_5185) is an amino-acid acetyltransferase ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ArgA (PP_5185) is an amino-acid acetyltransferase (EC 2.3.1.1) that transfers an acetyl group from acetyl-CoA to L-glutamate, forming N-acetyl-L-glutamate in the first reaction of the acetylated-ornithine route to L-arginine. KT2440 also encodes the bifunctional ArgJ enzyme with the same annotated initiating activity, although argA-mutant auxotrophy shows that ArgJ does not replace ArgA under the tested minimal-medium conditions.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0A0Z9" data-a="GO:0004042" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining ArgA reaction that initiates acetylated-ornithine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt record assigns EC 2.3.1.1 and RHEA:24292 to P0A0Z9.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argA/argA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Full=Amino-acid acetyltransferase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/argA/argA-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The gene **argA** (ordered locus **PP_5185**; UniProt **P0A0Z9**) of *Pseudomonas putida* (strain ATCC 47054 / DSM 6125 / KT2440) encodes **N-acetylglutamate synthase (NAGS; also called amino-acid acetyltransferase or AGS; EC 2.3.1.1)**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P0A0Z9" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgA is a soluble cytoplasmic biosynthetic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The location is supported but is secondary to the catalytic reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P0A0Z9" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ArgA catalyzes the first reaction of the acetylated-ornithine route to L-arginine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places P0A0Z9 at step 1/4 of ornithine formation from glutamate, and a KT2440 argA insertion mutant is arginine auxotrophic.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P0A0Z9" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad acyltransferase term is redundant with the substrate-specific ArgA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004042 captures the biologically relevant reaction more precisely.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140085" target="_blank" class="term-link">
+                                    GO:0140085
+                                </a>
+                            </span>
+                            <span class="term-label">L-amino-acid N-acetyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P0A0Z9" data-a="GO:0140085" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broader acetyltransferase term is redundant with the donor-specific ArgA activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0004042 identifies both the amino-acid substrate class and acetyl-CoA donor.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfers an acetyl group from acetyl-CoA to L-glutamate to form N-acetyl-L-glutamate at the start of L-arginine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="P0A0Z9" data-a="FUNCTION: Transfers an acetyl group from acetyl-CoA to L-glu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                            L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argA/argA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Full=Amino-acid acetyltransferase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/argA/argA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">This enzyme catalyzes the transfer of an acetyl group from acetyl-CoA to the α-amino group of L-glutamate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31451546" target="_blank" class="term-link">
+                            PMID:31451546
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas putida as Part of the Mechanism of Adaptation to Oxidative Stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 study tests an argA insertion mutant and reports that it cannot grow in minimal medium without exogenous arginine.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argA/argA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ArgA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Assigns P0A0Z9 to the first reaction of acetylated-ornithine synthesis.</div>
+
+                        <div class="finding-text">"Full=Amino-acid acetyltransferase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argA/argA-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotation snapshot for PSEPK ArgA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the five existing annotations reviewed above.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/argA/argA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional synthesis for PSEPK ArgA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the exact accession and retrieves its acetyl-CoA-dependent N-acetylglutamate-synthase reaction.</div>
+
+                        <div class="finding-text">"The gene **argA** (ordered locus **PP_5185**; UniProt **P0A0Z9**) of *Pseudomonas putida* (strain ATCC 47054 / DSM 6125 / KT2440) encodes **N-acetylglutamate synthase (NAGS; also called amino-acid acetyltransferase or AGS; EC 2.3.1.1)**."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(argA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0A0Z9" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *argA* (P0A0Z9) — N-Acetylglutamate Synthase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-17T16:55:27.566060</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="argA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="argA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-arga-p0a0z9-n-acetylglutamate-synthase-of-pseudomonas-putida-kt2440">Functional Annotation Report: <em>argA</em> (P0A0Z9) — N-Acetylglutamate Synthase of <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>argA</strong> (ordered locus <strong>PP_5185</strong>; UniProt <strong>P0A0Z9</strong>) of <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440) encodes <strong>N-acetylglutamate synthase (NAGS; also called amino-acid acetyltransferase or AGS; EC 2.3.1.1)</strong>. This enzyme catalyzes the transfer of an acetyl group from acetyl-CoA to the α-amino group of L-glutamate, producing <strong>N-acetyl-L-glutamate (NAG) + coenzyme A + H⁺</strong> (Rhea:24292). This is the <strong>first, committed, and rate-controlling step of L-arginine biosynthesis</strong> (step 1 of 4 leading to N²-acetyl-L-ornithine). The gene symbol, organism, protein family (acetyltransferase family, ArgA subfamily), and characteristic bidomain architecture all align unambiguously — there is no evidence of gene-symbol misassignment, and the identification is made with <strong>high confidence</strong>.</p>
+<p>Structurally, P. putida ArgA is a <strong>432-amino-acid, cytoplasmic, bidomain protein</strong> consisting of an N-terminal <strong>amino-acid kinase (AAK) domain</strong> (~residues 1–285) that binds the allosteric feedback inhibitor L-arginine, and a C-terminal <strong>GNAT (GCN5-related N-acetyltransferase) domain</strong> (~residues 286–432) that carries the acetyltransferase active site. This "classical" NAGS architecture — biochemically and structurally dissected in the close relative <em>P. aeruginosa</em> and in <em>Neisseria gonorrhoeae</em> — assembles into a <strong>hexameric ring</strong> (three AAK dimers) and is catalytically active through a <strong>one-step nucleophilic addition–elimination mechanism</strong>. The enzyme is switched off by end-product <strong>L-arginine</strong>, which binds the AAK domain and triggers a large conformational change that disorders the acetyltransferase active site.</p>
+<p>Physiologically, ArgA functions in the <strong>cytoplasm</strong> as the anaplerotic enzyme that <strong>replenishes the pool of acetylated intermediates</strong> in the cyclic ornithine-biosynthetic pathway that operates in <em>Pseudomonas</em>. Because the acetyl group is normally recycled internally by ornithine acetyltransferase (ArgJ), ArgA supplies only the net acetyl input needed to sustain the cycle. In <em>Pseudomonas</em>, flux through this committed step is governed <strong>chiefly by allosteric feedback inhibition of the enzyme by L-arginine</strong>, rather than by transcriptional repression (in contrast to the ArgR-repressed <em>arg</em> regulon of <em>Escherichia coli</em>). Deletion of <em>argA</em> renders <em>Pseudomonas</em> an <strong>arginine auxotroph</strong>, confirming the enzyme's essential, non-redundant role in de novo arginine synthesis.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="1-arga-encodes-n-acetylglutamate-synthase-the-first-committed-step-of-arginine-biosynthesis">1. argA encodes N-acetylglutamate synthase — the first committed step of arginine biosynthesis</h3>
+<p>UniProt P0A0Z9 annotates the PP_5185/argA product as <strong>Amino-acid acetyltransferase / N-acetylglutamate synthase (NAGS/AGS), EC 2.3.1.1</strong>. The enzyme transfers the acetyl group from acetyl-CoA to L-glutamate, producing N-acetyl-L-glutamate + CoA. Substrate specificity is well defined: <strong>acetyl-CoA serves as the acyl donor and L-glutamate as the acceptor</strong>.</p>
+<p>The functional identity is directly supported by classical genetics in the closely related <em>Pseudomonas aeruginosa</em>, where argA was biochemically identified as N-acetylglutamate synthase and shown to be <strong>essential</strong>: argA mutants "showed no growth on unsupplemented minimal medium" <a href="https://pubmed.ncbi.nlm.nih.gov/408599/">(PMID: 408599)</a>. The authors state that "N-Acetylglutamate synthase, the enzyme which replenishes the cycle of acetylated intermediates in ornithine synthesis of Pseudomonas, appears to be essential for arginine synthesis since argA mutants showed no growth on unsupplemented minimal medium." This single sentence establishes the reaction catalyzed, the pathway role, and the genetic essentiality of argA in <em>Pseudomonas</em> arginine biosynthesis.</p>
+<h3 id="2-classical-bacterial-arga-is-a-bidomain-aakgnat-enzyme-forming-a-hexameric-ring-feedback-inhibited-by-l-arginine">2. Classical bacterial ArgA is a bidomain AAK+GNAT enzyme forming a hexameric ring, feedback-inhibited by L-arginine</h3>
+<p>The most directly relevant structural/functional dissection is that of <em>P. aeruginosa</em> ArgA <a href="https://pubmed.ncbi.nlm.nih.gov/22447897/">(PMID: 22447897)</a>, which describes "the classical N-acetylglutamate synthase (NAGS), an enzyme composed of N-terminal amino acid kinase (AAK) and C-terminal histone acetyltransferase (GNAT) domains that bind the feedback inhibitor arginine and the substrates, respectively." The quaternary structure is a hexamer: "three AAK domain dimers are interlinked by their N-terminal helices, conforming a hexameric ring, whereas each GNAT domain sits on the AAK domain of an adjacent dimer." Critically, the <strong>isolated GNAT domain retains acetyltransferase activity but loses arginine sensitivity</strong> — meaning the hexameric assembly and the AAK domain are required for allosteric regulation, not for catalysis per se.</p>
+<p>The allosteric mechanism is illuminated by the structure of <em>Neisseria gonorrhoeae</em> NAGS <a href="https://pubmed.ncbi.nlm.nih.gov/19095660/">(PMID: 19095660)</a>, a hexamer of two stacked trimers in which "Binding of l-arginine to the AAK domain induces a global conformational change." In that transition (a T-to-R–like rearrangement), the acetyltransferase (NAT) domains rotate by roughly 109°, disordering the NAT active site and reducing catalytic activity. A complementary study of the bifunctional NAGS/K from <em>Maricaulis maris</em> <a href="https://pubmed.ncbi.nlm.nih.gov/23850694/">(PMID: 23850694)</a> shows that when L-arginine binds, "the AcCoA binding site in the N-acetyltransferase (NAT) domain is blocked by a loop from the amino acid kinase (AAK) domain, as a result of a domain rotation that occurs when L-arginine binds," providing a second structural rationale for allosteric inhibition. The 432-aa length and bidomain layout of P. putida ArgA place it firmly within this classical, hexameric, arginine-inhibited subfamily rather than among the short (~170-aa) GNAT-only NAGS variants.</p>
+<h3 id="3-catalytic-mechanism-direct-one-step-acetyl-transfer">3. Catalytic mechanism: direct one-step acetyl transfer</h3>
+<p>The catalytic chemistry of this enzyme family was resolved crystallographically and kinetically using the <em>N. gonorrhoeae</em> NAGS–bisubstrate complex <a href="https://pubmed.ncbi.nlm.nih.gov/23261468/">(PMID: 23261468)</a>. The reaction "N-Acetyl-L-glutamate synthase catalyzes the conversion of AcCoA and glutamate to CoA and N-acetyl-L-glutamate (NAG), the first step of the arginine biosynthetic pathway in lower organisms," and proceeds via "a one-step nucleophilic addition-elimination mechanism with <strong>Glu353 as the catalytic base and Ser392 as the catalytic acid</strong>." This is a <strong>direct (sequential/ternary-complex) acetyl transfer</strong> — the α-amino group of glutamate attacks the thioester carbonyl of acetyl-CoA to form a tetrahedral intermediate that collapses to release CoA and NAG — rather than a ping-pong mechanism proceeding through an acetyl-enzyme intermediate.</p>
+<h3 id="4-p-putida-arga-is-a-432-aa-cytoplasmic-bidomain-enzyme-catalyzing-step-14-of-the-n-acetylornithine-branch">4. P. putida ArgA is a 432-aa cytoplasmic bidomain enzyme catalyzing step 1/4 of the N-acetylornithine branch</h3>
+<p>Direct retrieval of UniProt P0A0Z9 confirms the organism-specific details for the target protein: gene <strong>argA / PP_5185</strong>; length <strong>432 aa</strong>; catalytic activity "<strong>L-glutamate + acetyl-CoA = N-acetyl-L-glutamate + CoA + H(+)</strong>" (EC 2.3.1.1, Rhea:24292); pathway annotation "<strong>Amino-acid biosynthesis; L-arginine biosynthesis; N(2)-acetyl-L-ornithine from L-glutamate: step 1/4</strong>"; subcellular location <strong>Cytoplasm</strong> (evidence code ECO:0000250, inferred from homology). The feature table lists a C-terminal N-acetyltransferase (GNAT) domain spanning residues <strong>286–432</strong>, implying an N-terminal AAK domain from roughly residue 1 to 285. This bidomain layout and 432-aa length match the classical hexameric, arginine-inhibited NAGS of <em>P. aeruginosa</em> (~430 aa).</p>
+<h3 id="5-transcriptional-layer-the-argr-controlled-arginine-regulon-general-context">5. Transcriptional layer: the ArgR-controlled arginine regulon (general context)</h3>
+<p>In enteric bacteria, arginine biosynthetic genes constitute a classic <strong>regulon</strong>. The authoritative review by Charlier &amp; Bervoets <a href="https://pubmed.ncbi.nlm.nih.gov/31267155/">(PMID: 31267155)</a> recounts that "the term 'regulon' was coined by Maas and Clark (J Mol Biol 8:365-370, 1964) for the ensemble of arginine biosynthetic genes dispersed over the E. coli chromosome but all subjected to regulation by the trans-acting argR gene product." ArgR is the arginine-responsive repressor: when charged with L-arginine, it represses transcription of <em>arg</em> genes. This establishes a <strong>two-tier control paradigm</strong> — transcriptional repression by arginine-bound ArgR layered on top of allosteric feedback inhibition of the committed enzyme NAGS.</p>
+<h3 id="6-in-pseudomonas-control-is-dominated-by-allosteric-feedback-not-transcriptional-repression">6. In Pseudomonas, control is dominated by allosteric feedback, not transcriptional repression</h3>
+<p>A key organism-specific nuance is that <em>Pseudomonas</em> relies far less on transcriptional control of <em>arg</em> genes than <em>E. coli</em> does. Voellmy &amp; Leisinger <a href="https://pubmed.ncbi.nlm.nih.gov/103997/">(PMID: 103997)</a> systematically measured all eight arginine biosynthetic enzymes in <em>P. aeruginosa</em> grown on arginine versus its precursor glutamate and found that "In Pseudomonas aeruginosa the synthesis of only two out of eight arginine biosynthetic enzymes tested was regulated" (acetylornithine aminotransferase, induced ~14-fold; anabolic ornithine carbamoyltransferase, repressed ~18-fold). <strong>NAGS/ArgA was not among the transcriptionally regulated enzymes</strong>, indicating its cellular level is largely constitutive. Combined with the strong allosteric arginine inhibition of <em>Pseudomonas</em> NAGS <a href="https://pubmed.ncbi.nlm.nih.gov/22447897/">(PMID: 22447897)</a>, the dominant control point for the committed step in <em>Pseudomonas</em> is <strong>post-translational feedback inhibition of the enzyme</strong> rather than repression of its gene.</p>
+<h3 id="7-genomic-context-in-p-putida-kt2440-monofunctional-nags-feeding-a-complete-pathway-with-both-acetyl-handling-routes">7. Genomic context in P. putida KT2440: monofunctional NAGS feeding a complete pathway with both acetyl-handling routes</h3>
+<p>KEGG genome analysis situates argA within a fully functional arginine biosynthetic gene set. <strong>argA = PP_5185</strong>, a single 1299-bp CDS (432 aa) at complement(5914261..5915559), assigned KEGG Orthology <strong>K14682</strong> (amino-acid N-acetyltransferase, EC 2.3.1.1), pathway <strong>ppu00220 (Arginine biosynthesis)</strong> and module <strong>M00028 (Ornithine biosynthesis, glutamate ⇒ ornithine)</strong>. Pfam motifs <strong>AA_kinase + Acetyltransf</strong> confirm the bidomain AAK+GNAT architecture. Its immediate genomic neighbor, PP_5186, is <strong>argE (acetylornithine deacetylase, EC 3.5.1.16)</strong>. Notably, the KT2440 genome encodes the full downstream pathway (argB at PP_5289; argC at PP_0432/PP_3633) <strong>and both acetyl-recycling systems</strong>: <strong>argJ ornithine acetyltransferase (PP_1346, cyclic route)</strong> and <strong>argE acetylornithine deacetylase (PP_5186/PP_3571, linear route)</strong>. This means the acetyl group introduced by ArgA can be either internally recycled (cyclic pathway, the energetically economical mode) or hydrolytically removed as acetate (linear pathway).</p>
+<h3 id="8-consolidated-annotation-high-confidence">8. Consolidated annotation (high confidence)</h3>
+<p>Integrating all findings: argA/P0A0Z9 is the <strong>cytoplasmic, committed entry enzyme of arginine biosynthesis</strong> in <em>P. putida</em> KT2440 — a 432-aa amino-acid N-acetyltransferase / N-acetylglutamate synthase (EC 2.3.1.1, K14682, Rhea:24292) that converts L-glutamate + acetyl-CoA → N-acetyl-L-glutamate + CoA + H⁺ (pathway step 1/4 to N²-acetyl-L-ornithine). It has a bidomain AAK(~1–285)+GNAT(286–432) architecture matching the classical hexameric ArgA subfamily (as documented in <em>P. aeruginosa</em> [PMID: 22447897] and <em>N. gonorrhoeae</em> [PMID: 19095660]), uses a direct one-step acetyl-transfer catalytic mechanism [PMID: 23261468], and is controlled principally by allosteric L-arginine feedback inhibition in <em>Pseudomonas</em> [PMID: 22447897; 103997]. Its essentiality is demonstrated genetically — argA-null mutants are arginine auxotrophs <a href="https://pubmed.ncbi.nlm.nih.gov/408599/">(PMID: 408599)</a>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="the-reaction">The reaction</h3>
+<div class="codehilite"><pre><span></span><code>              ArgA / N-acetylglutamate synthase (EC 2.3.1.1)
+   L-glutamate  +  acetyl-CoA  ─────────────────────────────────────────►  N-acetyl-L-glutamate  +  CoA  +  H⁺
+   (acceptor)      (acyl donor)          (Rhea:24292)                        (NAG)
+</code></pre></div>
+
+<p>The α-amino group of L-glutamate is acetylated. This "masks" the amino group so that the downstream glutamate carbon skeleton can be phosphorylated, reduced, and transaminated without cyclizing prematurely — the acetyl group is the chemical protecting group that channels glutamate specifically toward ornithine (and thence arginine) rather than proline.</p>
+<h3 id="the-pathway-and-the-acetyl-cycle">The pathway and the acetyl cycle</h3>
+<p><em>Pseudomonas</em>, like most bacteria, uses the <strong>cyclic (economical) route</strong> for ornithine biosynthesis, in which the acetyl group is conserved:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">┌─────────────────────────────</span><span class="w"> </span><span class="n">acetyl</span><span class="w"> </span><span class="k">group</span><span class="w"> </span><span class="n">recycled</span><span class="w"> </span><span class="err">─────────────────────────────┐</span>
+<span class="err">│</span><span class="w">                                                                                  </span><span class="err">│</span>
+<span class="err">▼</span><span class="w">                                                                                  </span><span class="err">│</span>
+<span class="w">   </span><span class="n">L</span><span class="o">-</span><span class="n">glutamate</span><span class="w"> </span><span class="err">──</span><span class="o">[</span><span class="n">ArgA/NAGS</span><span class="o">]</span><span class="err">──►</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamate</span><span class="w"> </span><span class="err">──</span><span class="o">[</span><span class="n">ArgB</span><span class="o">]</span><span class="err">──►</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamyl</span><span class="o">-</span><span class="n">P</span><span class="w">            </span><span class="err">│</span>
+<span class="w">     </span><span class="p">(</span><span class="o">+</span><span class="n">AcCoA</span><span class="p">,</span><span class="w"> </span><span class="n">net</span><span class="w"> </span><span class="k">input</span><span class="p">)</span><span class="w">                                          </span><span class="err">│</span><span class="w">                         </span><span class="err">│</span>
+<span class="w">                                                  </span><span class="err">▼</span><span class="w"> </span><span class="o">[</span><span class="n">ArgC</span><span class="o">]</span><span class="w">                  </span><span class="err">│</span>
+<span class="w">                                          </span><span class="n">N</span><span class="o">-</span><span class="n">acetylglutamate</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="n">semialdehyde</span><span class="w">  </span><span class="err">│</span>
+<span class="w">                                                  </span><span class="err">│</span><span class="w">                         </span><span class="err">│</span>
+<span class="w">                                                  </span><span class="err">▼</span><span class="w"> </span><span class="o">[</span><span class="n">ArgD</span><span class="o">]</span><span class="w">                  </span><span class="err">│</span>
+<span class="w">                                          </span><span class="n">N</span><span class="o">-</span><span class="n">acetyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">ornithine</span><span class="w"> </span><span class="err">─────────────┘</span>
+<span class="w">                                                  </span><span class="err">│</span><span class="w">        </span><span class="o">[</span><span class="n">ArgJ: transfers acetyl</span>
+<span class="n">                                                  │         back to glutamate — CYCLIC</span><span class="o">]</span>
+<span class="w">                                                  </span><span class="err">▼</span>
+<span class="w">                                          </span><span class="n">L</span><span class="o">-</span><span class="n">ornithine</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">arginine</span>
+<span class="w">                                                  </span><span class="err">▲</span>
+<span class="w">                                 </span><span class="o">[</span><span class="n">ArgE: hydrolyzes acetyl off as acetate — LINEAR</span><span class="o">]</span>
+</code></pre></div>
+
+<p>Because ArgJ (ornithine acetyltransferase) transfers the acetyl group from N-acetylornithine back onto a fresh glutamate, the bulk of the acetyl flux is internally recycled. <strong>ArgA therefore acts anaplerotically</strong> — it supplies only the <em>net</em> acetyl groups needed to top up the cyclic pool (lost to dilution, growth, or the linear ArgE branch). This is precisely the "replenishes the cycle of acetylated intermediates" role described for <em>Pseudomonas</em> <a href="https://pubmed.ncbi.nlm.nih.gov/408599/">(PMID: 408599)</a>. KT2440 encodes <strong>both</strong> ArgJ (PP_1346, cyclic) and ArgE (PP_5186, linear), giving it metabolic flexibility in how the acetyl group is ultimately handled.</p>
+<h3 id="the-regulatory-switch">The regulatory switch</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">Low</span><span class="w"> </span><span class="o">[</span><span class="n">arginine</span><span class="o">]</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="n">ArgA</span><span class="w"> </span><span class="n">hexamer</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">ACTIVE</span><span class="w"> </span><span class="p">(</span><span class="n">R</span><span class="o">-</span><span class="ow">like</span><span class="p">)</span><span class="w"> </span><span class="k">state</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="n">high</span><span class="w"> </span><span class="n">NAG</span><span class="w"> </span><span class="n">synthesis</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="n">arginine</span><span class="w"> </span><span class="n">made</span>
+<span class="w">                                                                                  </span><span class="err">│</span>
+<span class="w">   </span><span class="n">High</span><span class="w"> </span><span class="o">[</span><span class="n">arginine</span><span class="o">]</span><span class="w"> </span><span class="err">──►</span><span class="w">  </span><span class="n">Arg</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">AAK</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="o">~</span><span class="mi">109</span><span class="err">°</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">rotation</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">NAT</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w">         </span><span class="err">│</span>
+<span class="w">        </span><span class="n">disordered</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">AcCoA</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="n">blocked</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">LOW</span><span class="w"> </span><span class="n">NAG</span><span class="w"> </span><span class="n">synthesis</span><span class="w">  </span><span class="err">◄──────</span><span class="w"> </span><span class="n">feedback</span><span class="w"> </span><span class="err">───┘</span>
+</code></pre></div>
+
+<p>Two comparative structural models converge on the same outcome: in <em>N. gonorrhoeae</em> NAGS the arginine-induced rotation <strong>disorders the NAT active site</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/19095660/">(PMID: 19095660)</a>, while in <em>M. maris</em> NAGS/K a loop from the AAK domain <strong>physically blocks the acetyl-CoA binding site</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/23850694/">(PMID: 23850694)</a>. Either way, high arginine shuts the enzyme off. Because <em>Pseudomonas</em> largely does <strong>not</strong> repress the arg genes transcriptionally <a href="https://pubmed.ncbi.nlm.nih.gov/103997/">(PMID: 103997)</a>, this <strong>allosteric feedback inhibition is the primary flux-control mechanism</strong> for the committed step in this organism.</p>
+<h3 id="comparison-of-control-logic">Comparison of control logic</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th><em>E. coli</em> (enteric)</th>
+<th><em>Pseudomonas</em> (this target)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transcriptional control of <em>arg</em> genes</td>
+<td>Strong — ArgR-repressed regulon</td>
+<td>Weak — only 2/8 enzymes regulated</td>
+</tr>
+<tr>
+<td>Allosteric feedback on NAGS/ArgA</td>
+<td>Present</td>
+<td>Present, <strong>dominant</strong> control point</td>
+</tr>
+<tr>
+<td>Acetyl handling</td>
+<td>Linear (ArgE) predominant</td>
+<td>Cyclic (ArgJ) + linear (ArgE) both present</td>
+</tr>
+<tr>
+<td>Net role of ArgA</td>
+<td>First committed step</td>
+<td>First committed step, <strong>anaplerotic</strong> to acetyl cycle</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/408599/">408599</a></td>
+<td><em>Genetic organization of arginine biosynthesis in P. aeruginosa</em></td>
+<td>Directly names argA as N-acetylglutamate synthase in <em>Pseudomonas</em>; demonstrates essentiality (argA mutants are arginine auxotrophs) and the anaplerotic "replenishes the cycle" role.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22447897/">22447897</a></td>
+<td><em>Functional dissection of NAGS (ArgA) of P. aeruginosa</em></td>
+<td>The single most relevant paper: defines the AAK+GNAT bidomain architecture, hexameric ring assembly, and the roles of each domain (arginine binding vs. catalysis) for <em>Pseudomonas</em> ArgA.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19095660/">19095660</a></td>
+<td><em>Mechanism of allosteric inhibition of NAGS by L-arginine</em></td>
+<td>Structural basis of feedback inhibition: arginine binding to the AAK domain drives a global conformational change (~109° NAT rotation) that disorders the active site.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23261468/">23261468</a></td>
+<td><em>N. gonorrhoeae NAGS with bisubstrate analog</em></td>
+<td>Defines the one-step nucleophilic addition–elimination catalytic mechanism (Glu353 base, Ser392 acid) and confirms the reaction as the first step of arginine biosynthesis.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23850694/">23850694</a></td>
+<td><em>Structure of M. maris NAGS/K with L-arginine bound</em></td>
+<td>Second structural model of allostery: arginine binding causes an AAK-domain loop to block the AcCoA site, explaining feedback inhibition.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22174908/">22174908</a></td>
+<td><em>Novel NAGS architecture from M. maris</em></td>
+<td>Shows domain-rotation control of activity and homology to human NAGS; contextualizes the bidomain family and quaternary-structure diversity (tetramer vs. hexamer).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31267155/">31267155</a></td>
+<td><em>Regulation of arginine biosynthesis in E. coli</em> (review)</td>
+<td>Establishes the ArgR-repressed arginine regulon paradigm — the transcriptional layer against which <em>Pseudomonas</em> is contrasted.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/103997/">103997</a></td>
+<td><em>Regulation of arginine enzymes in P. aeruginosa</em></td>
+<td>Shows only 2/8 arg enzymes are transcriptionally regulated in <em>Pseudomonas</em>; NAGS is not, implying reliance on allosteric feedback.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16409639/">16409639</a></td>
+<td><em>Bioinformatic analysis of gene-enzyme relationships (marine γ-proteobacteria)</em></td>
+<td>Important caveat: warns that the name "argA" has been applied to structurally different entities (classical NAGS vs. short GNAT-only NAGS vs. argH-A fusions); confirms P. putida ArgA is the <em>classical</em> type.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27037498/">27037498</a></td>
+<td><em>NAGS deficiency mutational spectrum</em></td>
+<td>Uses recombinant <em>P. aeruginosa</em> NAGS as the experimental model; corroborates the paramount catalytic role of the C-terminal GNAT domain and the modulatory role of the AAK domain.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on gene-symbol ambiguity:</strong> The literature explicitly flags that "argA" has been used for structurally distinct enzymes <a href="https://pubmed.ncbi.nlm.nih.gov/16409639/">(PMID: 16409639)</a>. We verified that P. putida ArgA (432 aa, AAK+GNAT bidomain, Pfam AA_kinase + Acetyltransf) is the <strong>classical NAGS type</strong> (as in <em>E. coli</em> and <em>P. aeruginosa</em>), not the short ~170-aa GNAT-only variant (as in <em>M. tuberculosis</em>) nor an argH-A fusion (as in <em>Moritella</em>). The identification is therefore unambiguous.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on the P. putida KT2440 protein itself.</strong> Every functional and structural claim about the <em>specific</em> PP_5185 gene product is inferred by strong homology from <em>P. aeruginosa</em> ArgA (~430 aa, closely related) and from more distant NAGS structures (<em>N. gonorrhoeae</em>, <em>M. maris</em>). No purified P. putida ArgA kinetic constants (Kₘ for glutamate/acetyl-CoA, kcat, IC₅₀ for arginine) have been reported here.</p>
+</li>
+<li>
+<p><strong>Subcellular localization is inferred, not measured.</strong> UniProt assigns cytoplasmic localization with evidence code ECO:0000250 (by similarity). This is highly plausible for a soluble biosynthetic enzyme but has not been experimentally verified in P. putida.</p>
+</li>
+<li>
+<p><strong>Quaternary structure not directly confirmed for P. putida.</strong> The hexameric ring is documented for <em>P. aeruginosa</em>; the P. putida assembly state is assumed from homology. Some family members (e.g., <em>M. maris</em> NAGS/K) are tetramers, so the oligomeric state is not universally conserved across the family.</p>
+</li>
+<li>
+<p><strong>Regulatory details in P. putida specifically.</strong> The conclusion that flux control is dominated by allosteric feedback rather than transcription is drawn from <em>P. aeruginosa</em> <a href="https://pubmed.ncbi.nlm.nih.gov/103997/">(PMID: 103997)</a> and general reasoning; direct measurement of argA/PP_5185 expression under arginine excess in KT2440, and quantitative in vitro arginine inhibition of the KT2440 enzyme, are lacking.</p>
+</li>
+<li>
+<p><strong>Relative flux through cyclic (ArgJ) vs. linear (ArgE) routes</strong> in KT2440 has not been quantified; both genes are present, but their relative contributions under different growth conditions are unknown.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology of PP_5185.</strong> Clone, over-express, and purify P. putida ArgA; measure steady-state kinetics (Kₘ for L-glutamate and acetyl-CoA, kcat) and determine the IC₅₀/Kᵢ for L-arginine feedback inhibition. This would replace homology inference with direct data for the target.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal or cryo-EM structure of P. putida ArgA in apo, substrate-bound, and arginine-bound states to confirm the hexameric ring and the arginine-induced domain rotation directly for this protein.</p>
+</li>
+<li>
+<p><strong>Genetic complementation/auxotrophy test.</strong> Construct a clean PP_5185 deletion in KT2440 and confirm arginine auxotrophy plus rescue by exogenous arginine or by a complementing plasmid — the definitive test of essentiality and non-redundancy in this strain.</p>
+</li>
+<li>
+<p><strong>Regulatory profiling.</strong> Use RT-qPCR/RNA-seq to measure argA transcript levels under arginine-replete vs. arginine-limited growth, and metabolomics (NAG pool sizing) to test whether allosteric inhibition is indeed the dominant in vivo control point in KT2440.</p>
+</li>
+<li>
+<p><strong>Flux partitioning between ArgJ and ArgE.</strong> Use ¹³C-labeled acetyl tracing or single/double knockouts of argJ (PP_1346) and argE (PP_5186) to quantify the relative use of the cyclic vs. linear acetyl-handling routes.</p>
+</li>
+<li>
+<p><strong>Domain-dissection assay.</strong> Express the isolated GNAT domain (residues ~286–432) of P. putida ArgA to test whether, as in <em>P. aeruginosa</em>, it retains acetyltransferase activity but loses arginine sensitivity — directly localizing catalysis vs. regulation in this ortholog.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>argA</em> (PP_5185; UniProt P0A0Z9) of <em>Pseudomonas putida</em> KT2440 encodes <strong>N-acetylglutamate synthase (EC 2.3.1.1)</strong>, a cytoplasmic, 432-aa, bidomain (AAK + GNAT) enzyme that catalyzes the <strong>acetyl-CoA-dependent acetylation of L-glutamate to N-acetyl-L-glutamate</strong>, the first committed and essential step of L-arginine biosynthesis. It operates anaplerotically to replenish the acetyl-intermediate cycle, assembles into the classical hexameric ArgA architecture, uses a direct one-step acetyl-transfer mechanism, and is controlled principally by <strong>allosteric feedback inhibition by L-arginine</strong>. The annotation is supported by direct genetics in <em>Pseudomonas</em> and by extensive structural/mechanistic work on close homologs, with high overall confidence and no evidence of gene-symbol misidentification.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="argA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="argA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:22447897</li>
+<li>PMID:19095660</li>
+<li>PMID:23850694</li>
+<li>PMID:23261468</li>
+<li>PMID:31267155</li>
+<li>PMID:16409639</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0A0Z9
+gene_symbol: argA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ArgA (PP_5185) is an amino-acid acetyltransferase (EC 2.3.1.1) that transfers
+  an acetyl group from acetyl-CoA to L-glutamate, forming N-acetyl-L-glutamate
+  in the first reaction of the acetylated-ornithine route to L-arginine. KT2440
+  also encodes the bifunctional ArgJ enzyme with the same annotated initiating
+  activity, although argA-mutant auxotrophy shows that ArgJ does not replace
+  ArgA under the tested minimal-medium conditions.
+existing_annotations:
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining ArgA reaction that initiates acetylated-ornithine synthesis.
+    action: ACCEPT
+    reason: The reviewed UniProt record assigns EC 2.3.1.1 and RHEA:24292 to P0A0Z9.
+    supported_by:
+    - reference_id: file:PSEPK/argA/argA-uniprot.txt
+      supporting_text: Full=Amino-acid acetyltransferase
+    - reference_id: file:PSEPK/argA/argA-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The gene **argA** (ordered locus **PP_5185**; UniProt **P0A0Z9**) of
+        *Pseudomonas putida* (strain ATCC 47054 / DSM 6125 / KT2440) encodes
+        **N-acetylglutamate synthase (NAGS; also called amino-acid
+        acetyltransferase or AGS; EC 2.3.1.1)**.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: ArgA is a soluble cytoplasmic biosynthetic enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The location is supported but is secondary to the catalytic reaction.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: ArgA catalyzes the first reaction of the acetylated-ornithine route to L-arginine.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt places P0A0Z9 at step 1/4 of ornithine formation from glutamate,
+      and a KT2440 argA insertion mutant is arginine auxotrophic.
+    additional_reference_ids:
+    - PMID:31451546
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This broad acyltransferase term is redundant with the substrate-specific ArgA activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0004042 captures the biologically relevant reaction more precisely.
+- term:
+    id: GO:0140085
+    label: L-amino-acid N-acetyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: This broader acetyltransferase term is redundant with the donor-specific ArgA activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0004042 identifies both the amino-acid substrate class and acetyl-CoA donor.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31451546
+  title: Arginine Biosynthesis Modulates Pyoverdine Production and Release in Pseudomonas
+    putida as Part of the Mechanism of Adaptation to Oxidative Stress.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The KT2440 study tests an argA insertion mutant and reports that it cannot
+      grow in minimal medium without exogenous arginine.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed identity and accessible publisher/PMC full text were checked. The
+      local publication cache remains abstract-only, so the full-text statement
+      is recorded without a supporting-text excerpt.
+- id: file:PSEPK/argA/argA-uniprot.txt
+  title: UniProtKB entry for PSEPK ArgA
+  findings:
+  - statement: Assigns P0A0Z9 to the first reaction of acetylated-ornithine synthesis.
+    supporting_text: Full=Amino-acid acetyltransferase
+- id: file:PSEPK/argA/argA-goa.tsv
+  title: QuickGO annotation snapshot for PSEPK ArgA
+  findings:
+  - statement: Contains the five existing annotations reviewed above.
+- id: file:PSEPK/argA/argA-deep-research-openscientist.md
+  title: OpenScientist functional synthesis for PSEPK ArgA
+  findings:
+  - statement: &gt;-
+      The report identifies the exact accession and retrieves its
+      acetyl-CoA-dependent N-acetylglutamate-synthase reaction.
+    supporting_text: &gt;-
+      The gene **argA** (ordered locus **PP_5185**; UniProt **P0A0Z9**) of
+      *Pseudomonas putida* (strain ATCC 47054 / DSM 6125 / KT2440) encodes
+      **N-acetylglutamate synthase (NAGS; also called amino-acid
+      acetyltransferase or AGS; EC 2.3.1.1)**.
+core_functions:
+- description: &gt;-
+    Transfers an acetyl group from acetyl-CoA to L-glutamate to form
+    N-acetyl-L-glutamate at the start of L-arginine biosynthesis.
+  molecular_function:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  directly_involved_in:
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/argA/argA-uniprot.txt
+    supporting_text: Full=Amino-acid acetyltransferase
+  - reference_id: file:PSEPK/argA/argA-deep-research-openscientist.md
+    supporting_text: &gt;-
+      This enzyme catalyzes the transfer of an acetyl group from acetyl-CoA to
+      the α-amino group of L-glutamate
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

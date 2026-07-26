@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3298 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3298</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HQ5" target="_blank" class="term-link">
+                        Q88HQ5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3298";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HQ5" data-a="DESCRIPTION: Small CinA C-terminal/PncC-family protein of Pseud..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Small CinA C-terminal/PncC-family protein of Pseudomonas putida KT2440. The 167-residue protein carries the CinA/PncC domain signatures IPR008136, PF02464, and TIGR00199. Its catalytic activity, substrate specificity, and physiological role have not been established; membership in a family that includes inactive domains does not by itself establish NMN deamidase activity for this paralog.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3298/PP_3298-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88HQ5 for Pseudomonas putida KT2440 PP_3298</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target is submitted only as a CinA domain protein.</div>
+
+                        <div class="finding-text">"SubName: Full=CinA domain protein"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The sequence carries the NCBIfam PncC-domain signature.</div>
+
+                        <div class="finding-text">"NCBIfam; TIGR00199; PncC_domain; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21953451" target="_blank" class="term-link">
+                            PMID:21953451
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of nicotinamide mononucleotide deamidase of the bacterial pyridine nucleotide cycle reveals a novel broadly conserved amidohydrolase family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PncC-family domain membership is not by itself proof of an active NMN deamidase.</div>
+
+                        <div class="finding-text">"The PncC family also comprises a few members with a nonfunctional PncC domain, bearing multiple mutations and deletions."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3298/PP_3298-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for Pseudomonas putida KT2440 PP_3298</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_3298 encode an active NMN deamidase, another CinA-family specificity, or a catalytically inactive paralog?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HQ5" data-a="Q: Does PP_3298 encode an active NMN deamidase, anoth..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88HQ5 and Q88ME5 side by side, measure substrate-dependent product formation rather than binding alone, and combine single/double deletions with targeted pyridine-nucleotide metabolomics before assigning a GO molecular function to PP_3298.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HQ5" data-a="EXPERIMENT: Purify Q88HQ5 and Q88ME5 side by side, measure sub..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular activity, substrate specificity, and physiological role of PP_3298/Q88HQ5 are unknown. CinA-C/PncC-family domain assignments do not establish that this paralog deamidates NMN.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Q88HQ5 is a 167-residue TIGR00199/IPR008136/PF02464 protein and is the second compact CinA-C/PncC-family candidate in KT2440, but unlike Q88ME5/PncC it lacks a submitted NMN-amidohydrolase name, EC assignment, GO activity, or target-specific experiment.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this paralog is necessary to distinguish redundant NMN salvage from a different CinA-family activity or a catalytically inactive domain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Compare purified Q88HQ5 and Q88ME5 against NMN and plausible alternative substrates, verify reaction products, and test single and double mutants with targeted NMN, NaMN, and NAD+ metabolomics.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"SubName: Full=CinA domain protein"</em> — file:PSEPK/PP_3298/PP_3298-uniprot.txt</li>
+
+                <li><em>"The PncC family also comprises a few members with a nonfunctional PncC domain, bearing multiple mutations and deletions."</em> — PMID:21953451</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3298-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HQ5" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_3298 (Q88HQ5): A Standalone CinA C-terminal / PncC-Family NMN Deamidase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">5 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-20T18:18:12.170753</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3298-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3298-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_3298-q88hq5-a-standalone-cina-c-terminal-pncc-family-nmn-deamidase-in-pseudomonas-putida-kt2440">Functional Annotation of PP_3298 (Q88HQ5): A Standalone CinA C-terminal / PncC-Family NMN Deamidase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_3298</strong> (UniProt <strong>Q88HQ5</strong>) of <em>Pseudomonas putida</em> KT2440 encodes a 167-amino-acid protein whose sole structural module is a <strong>CinA C-terminal domain</strong> (Pfam <strong>PF02464</strong>; InterPro <strong>IPR008136</strong> CinA_C / <strong>IPR036653</strong> CinA-like_C; COG1546). Based on convergent evidence from sequence homology, domain architecture, active-site conservation, and genomic context, PP_3298 is best annotated as a <strong>cytoplasmic nicotinamide mononucleotide (NMN) deamidase of the PncC family (EC 3.5.1.42)</strong>. Its predicted primary function is to hydrolytically deamidate NMN to nicotinic acid mononucleotide (NaMN) plus ammonia, a committed recycling reaction of the bacterial <strong>pyridine nucleotide cycle (PNC)</strong> that feeds salvaged pyridine into the Preiss–Handler pathway (NadD → NadE) to regenerate NAD⁺.</p>
+<p>Critically, PP_3298 is <strong>not</strong> a full-length bifunctional CinA (competence/damage-inducible protein A). Full CinA proteins (~420 aa) carry an N-terminal COG1058/MoaC-like (molybdopterin biosynthesis / ADP-ribose pyrophosphatase-like) domain fused to the C-terminal CinA domain. PP_3298 consists of the <strong>isolated C-terminal catalytic module only</strong>, and its length (167 aa) matches standalone PncC enzymes such as <em>E. coli</em> PncC/YgaD (165 aa) rather than full CinA. This distinction matters because the CinA name historically implies a role in natural competence and DNA recombination; PP_3298 does not carry that connotation. Importantly, the CinA C-terminal domain is precisely the module experimentally shown to harbor the NMN deamidase activity (<a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>).</p>
+<p>Three lines of evidence support this annotation: (1) the protein is architecturally a <strong>standalone CinA_C / PncC domain</strong>, lacking the N-terminal domain of full CinA; (2) it shares <strong>38% sequence identity</strong> with the experimentally confirmed <em>E. coli</em> NMN deamidase PncC (P0A6G3) and strictly conserves the <strong>AESCT active-site signature motif</strong>; and (3) its <strong>genomic neighborhood</strong> in KT2440 contains no <em>recA</em>, <em>recX</em>, or other competence/recombination genes, arguing against a competence-operon (cinA-like) role and in favor of a standalone housekeeping metabolic function. The consensus annotation is therefore a <strong>metabolic NMN deamidase acting in NAD⁺ salvage/recycling</strong>, not a competence factor.</p>
+<hr />
+<h2 id="verified-protein-identity">Verified Protein Identity</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88HQ5</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_3298 (EMBL AAN68905.1)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>167 aa</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>CinA C-terminal (≈ residues 9–156)</td>
+</tr>
+<tr>
+<td>Pfam / InterPro</td>
+<td>PF02464 (CinA); IPR008136 (CinA_C); IPR036653 (CinA-like_C)</td>
+</tr>
+<tr>
+<td>Fold / superfamily</td>
+<td>Gene3D 3.90.950.20; SUPFAM SSF142433 (CinA-like)</td>
+</tr>
+<tr>
+<td>Orthologous group</td>
+<td>eggNOG <strong>COG1546</strong> (CinA/PncC family)</td>
+</tr>
+</tbody>
+</table>
+<p>The domain content (a single CinA C-terminal domain, PF02464), the orthology assignment (COG1546), and the short single-domain length (167 aa) are all consistent with the UniProt description "CinA domain protein." The organism and locus match the research target exactly. <strong>There is no gene-symbol ambiguity — this is the correct protein</strong>, and the analysis below builds a functional annotation from its domain, homology, and genomic evidence rather than from a same-symbol gene in a different organism.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_3298-is-a-standalone-cina-c-terminal-pncc-family-protein-not-a-full-bifunctional-cina">Finding 1 — PP_3298 is a standalone CinA C-terminal / PncC-family protein, not a full bifunctional CinA</h3>
+<p>UniProt Q88HQ5 is a <strong>167-amino-acid</strong> protein consisting of a <strong>single CinA C-terminal domain</strong> spanning approximately residues 9–156. This module is annotated consistently across multiple databases: Pfam <strong>PF02464</strong> (CinA), InterPro <strong>IPR008136</strong> (CinA_C) and <strong>IPR036653</strong> (CinA-like_C), Gene3D <strong>3.90.950.20</strong>, SUPFAM <strong>SSF142433</strong>, and eggNOG <strong>COG1546</strong>. Importantly, the protein <strong>lacks the N-terminal COG1058/MoaC-like domain</strong> (a molybdopterin-biosynthesis / ADP-ribose pyrophosphatase-like module) that is fused to the C-terminal CinA domain in full-length bifunctional CinA proteins.</p>
+<p>The length and architecture are diagnostic. Full bifunctional CinA proteins are roughly <strong>420 amino acids</strong> (e.g., the <em>Thermus thermophilus</em> CinA characterized structurally in <a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>). Standalone PncC-type NMN deamidases are roughly half that length — <em>E. coli</em> PncC/YgaD is <strong>165 aa</strong>. PP_3298, at 167 aa, matches the standalone PncC architecture almost exactly. This establishes the protein as the <strong>isolated catalytic C-terminal module</strong>, which is the portion of CinA experimentally demonstrated to carry NMN deamidase activity. A practical consequence is that PP_3298 is <strong>not expected to possess ADP-ribose pyrophosphatase activity</strong>, because that activity resides in the N-terminal domain that PP_3298 lacks.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>PP_3298 (Q88HQ5)</th>
+<th><em>E. coli</em> PncC (P0A6G3)</th>
+<th>Full CinA (<em>T. thermophilus</em>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length (aa)</td>
+<td>167</td>
+<td>165</td>
+<td>~420</td>
+</tr>
+<tr>
+<td>N-terminal COG1058/MoaC domain</td>
+<td>Absent</td>
+<td>Absent</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>CinA C-terminal domain (PF02464)</td>
+<td>Present (≈9–156)</td>
+<td>Present</td>
+<td>Present</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Standalone</td>
+<td>Standalone</td>
+<td>Bifunctional</td>
+</tr>
+<tr>
+<td>Annotated function</td>
+<td>NMN deamidase (predicted)</td>
+<td>NMN deamidase (confirmed)</td>
+<td>Bifunctional CinA / NMN deamidase</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-2-pp_3298-is-predicted-to-be-an-nmn-deamidase-pncc-ec-35142-of-the-pyridine-nucleotide-cycle">Finding 2 — PP_3298 is predicted to be an NMN deamidase (PncC, EC 3.5.1.42) of the pyridine nucleotide cycle</h3>
+<p>A global Needleman–Wunsch alignment of Q88HQ5 against the experimentally validated <em>E. coli</em> NMN deamidase <strong>PncC (P0A6G3)</strong> yields <strong>38.1% identity (61/160 aligned positions)</strong> over the full length of the alignment. This level of identity is comfortably within the range where enzymatic function can be transferred with confidence for a single-domain enzyme family, particularly when combined with active-site conservation.</p>
+<p>Crucially, the <strong>PncC-family active-site signature motif is strictly conserved</strong>. Q88HQ5 residues 23–30, <strong><code>AESCTAGC</code></strong>, align exactly with the <em>E. coli</em> PncC motif <strong><code>AESCTGGW</code></strong>, preserving the invariant <strong>A-E-S-C-T</strong> catalytic core. In this enzyme family the conserved cysteine together with the surrounding acidic/serine residues form the machinery for the amidohydrolase chemistry, so their conservation is strong evidence that PP_3298 retains catalytic competence rather than being a degenerate pseudo-enzyme. This is an especially important control because the reference literature explicitly showed that <strong>not every family homolog is active</strong>.</p>
+<p>The reference biochemistry underpinning this assignment is well established. Galeazzi et al. 2011 (<a href="https://pubmed.ncbi.nlm.nih.gov/21953451/">PMID: 21953451</a>) identified <em>pncC</em>/<em>ygaD</em> as the long-sought <em>E. coli</em>/<em>Shewanella</em> NMN deamidase (EC 3.5.1.42), defining a <strong>novel, broadly conserved amidohydrolase family</strong>: <em>"Nicotinamide mononucleotide (NMN) deamidase (EC 3.5.1.42), one of the key enzymes of the bacterial pyridine nucleotide cycle, was originally described in Enterobacteria, but the corresponding gene eluded identification for over 30 years."</em> That study also cautioned that only a subset of family homologs are active — <em>"Of the three PncC homologs present in Escherichia coli, NMN deamidase activity was confirmed only for the recombinant purified product of the ygaD gene"</em> — which is precisely why the strict conservation of the AESCT motif in PP_3298 is central to a confident functional call.</p>
+<p>Karuppiah et al. 2014 (<a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>) resolved the structure and mechanism of the bifunctional <em>T. thermophilus</em> CinA and showed that <strong>the C-terminal domain — the sole domain present in PP_3298 — harbors the NMN deamidase activity</strong>: <em>"the C-terminal domain harbors the nicotinamide mononucleotide deamidase activity."</em> Sánchez-Carrón et al. 2013 (<a href="https://pubmed.ncbi.nlm.nih.gov/24340054/">PMID: 24340054</a>) provided a comprehensive phylogenetic and structural classification of NMN deamidases, placing CinA-domain proteins firmly within the NMN-deamidase family and cataloguing the conserved catalytic blocks that PP_3298 satisfies; they also reported that a characterized family enzyme (OiPncC) is a strict Michaelian enzyme toward its only substrate NMN (Km ≈ 0.18 mM).</p>
+<p>The reaction assigned to PP_3298 is therefore:</p>
+<div class="codehilite"><pre><span></span><code>   Nicotinamide mononucleotide (NMN) + H2O
+    │
+    ▼   NMN deamidase (PncC, EC 3.5.1.42)
+    │
+   Nicotinic acid mononucleotide (NaMN) + NH3
+</code></pre></div>
+
+<h3 id="finding-3-genomic-context-supports-a-standalone-metabolic-role-not-a-competence-operon">Finding 3 — Genomic context supports a standalone metabolic role, not a competence operon</h3>
+<p>The KEGG genome neighborhood of PP_3298 in <em>P. putida</em> KT2440 places the gene (coordinates 3,731,103–3,731,606; 504 nt / 167 aa) among neighbors that are <strong>not</strong> associated with DNA recombination, competence, or the SOS response:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Context</th>
+<th>Annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3296</td>
+<td>upstream</td>
+<td>Putative transporter (KEGG K07112)</td>
+</tr>
+<tr>
+<td>PP_3297</td>
+<td>upstream</td>
+<td>Conserved protein of unknown function</td>
+</tr>
+<tr>
+<td><strong>PP_3298</strong></td>
+<td><strong>target</strong></td>
+<td><strong>CinA domain protein (predicted NMN deamidase)</strong></td>
+</tr>
+<tr>
+<td>PP_3299</td>
+<td>complementary strand</td>
+<td>Outer membrane lipoprotein</td>
+</tr>
+<tr>
+<td>PP_3300</td>
+<td>downstream</td>
+<td>TetR-family transcriptional regulator</td>
+</tr>
+</tbody>
+</table>
+<p>None of these flanking genes is <em>recA</em>, <em>recX</em>, or another competence/DNA-recombination gene. This is a meaningful negative result. In naturally transformable bacteria, <em>cinA</em> is the <strong>first gene of a competence-inducible (cin) operon</strong> immediately preceding <em>recA</em>. The classic characterization in <em>Streptococcus pneumoniae</em> showed that <em>"recA is part of a competence-inducible (cin) operon"</em> and that the <em>cinA</em> gene heads this operon and is co-transcribed with <em>recA</em> under competence induction (<a href="https://pubmed.ncbi.nlm.nih.gov/7538190/">PMID: 7538190</a>). Similarly, in <em>Deinococcus radiodurans</em> the <em>recA</em> locus forms a polycistronic operon with an upstream <em>cinA</em>-like cistron, with the predicted product showing <em>"substantial similarity to the competence-damage inducible protein (cinA gene product) from Streptococcus pneumoniae"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10606814/">PMID: 10606814</a>). The <strong>absence</strong> of any such linkage for PP_3298 indicates it is <strong>not embedded in a cinA–recA competence operon</strong>, and is instead a stand-alone gene consistent with a housekeeping metabolic function. KEGG annotates PP_3298 only as a "CinA domain protein" with no KO/pathway ortholog assigned, reflecting the current under-annotation of this specific ortholog and consistent with the homology-based inference presented here.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The synthesis of the three findings yields a coherent functional model: <strong>PP_3298 is a cytoplasmic recycling enzyme of NAD⁺ metabolism</strong>, specifically the NMN deamidase step of the bacterial pyridine nucleotide cycle.</p>
+<p>NAD⁺ is continuously consumed not only as a redox cofactor but non-redoxively by enzymes such as NAD⁺-dependent DNA ligases, ADP-ribosyltransferases, and sirtuins, which cleave the glycosidic bond and release <strong>nicotinamide</strong> and other pyridine intermediates. The <strong>pyridine nucleotide cycle (PNC)</strong> salvages these degradation products back into NAD⁺ rather than paying the higher cost of de novo synthesis from aspartate. Within this cycle, NMN deamidase performs a key committed step: it <strong>removes the amide nitrogen from NMN</strong>, converting the amidated intermediate (NMN) into the deamidated intermediate (NaMN). NaMN then re-enters the universal <strong>Preiss–Handler / de novo convergence point</strong>, where NadD (NaMN adenylyltransferase) converts NaMN to NaAD, and NadE (NAD synthetase) amidates NaAD to regenerate NAD⁺.</p>
+<div class="codehilite"><pre><span></span><code>NAD+  ──(consumption / turnover)──►  Nicotinamide + ...
+  ▲                                        │
+  │ NadE (NAD synthetase)                  │  (salvage → NMN)
+NaAD                                        ▼
+  ▲                                        NMN
+  │ NadD (NaMN adenylyltransferase)         │
+NaMN  ◄────────────────────────────────────┘
+  PP_3298: NMN deamidase (EC 3.5.1.42)
+  NMN + H2O → NaMN + NH3
+</code></pre></div>
+
+<p>Localization is inferred to be <strong>cytoplasmic</strong>: PP_3298 has no signal peptide or predicted transmembrane segment, its substrate (NMN) and products (NaMN, NH₃) are soluble cytoplasmic metabolites, and its homolog PncC is a soluble cytoplasmic enzyme purified in native/recombinant soluble form. Its downstream partners (NadD, NadE) are likewise cytoplasmic. The reaction therefore occurs in the cytosol as part of central cofactor metabolism.</p>
+<p>The mechanistic chemistry is an <strong>amidohydrolase</strong> reaction — hydrolysis of the carboxamide of the nicotinamide moiety to a carboxylate, releasing ammonia. The conserved AESCT motif, including the invariant cysteine, provides the catalytic machinery, consistent with the "novel broadly conserved amidohydrolase family" described by Galeazzi et al. The key interpretive caution — that some CinA_C/PncC homologs are catalytically inactive — is addressed here by the strict conservation of the full active-site signature, which supports (though does not prove) that PP_3298 is an active enzyme.</p>
+<p>An important interpretive point concerns the <strong>"CinA" name</strong>. The domain family is named after the <em>S. pneumoniae</em> competence-damage-inducible protein A, creating a strong potential for mis-annotation as a competence/DNA-repair factor. Structural and biochemical work (Karuppiah et al. 2014) clarified that even in full bifunctional CinA the C-terminal domain is an NMN deamidase, and phylogenetic work (Sánchez-Carrón et al. 2013) folds CinA-domain proteins into the NMN-deamidase classification. Combined with the genomic-context evidence that PP_3298 is not in a <em>recA</em> operon, the weight of evidence points <strong>away from a competence role and toward a metabolic NMN deamidase identity</strong>.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title / focus</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21953451/">21953451</a></td>
+<td><em>Identification of NMN deamidase of the bacterial pyridine nucleotide cycle; a novel broadly conserved amidohydrolase family</em> (Galeazzi et al. 2011)</td>
+<td>Defines EC 3.5.1.42 activity of the PncC family (to which Q88HQ5 belongs by 38% identity) and warns that only some homologs (ygaD) are active — motivating active-site checking.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">25313401</a></td>
+<td><em>Structure and mechanism of the bifunctional CinA enzyme from Thermus thermophilus</em> (Karuppiah et al. 2014)</td>
+<td>Shows the CinA <strong>C-terminal domain</strong> — the sole domain in PP_3298 — harbors NMN deamidase activity; establishes the mechanism.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24340054/">24340054</a></td>
+<td><em>New insights into the phylogeny and molecular classification of NMN deamidases</em> (Sánchez-Carrón et al. 2013)</td>
+<td>Places CinA-domain proteins in the NMN-deamidase family; catalogs conserved catalytic blocks consistent with PP_3298; reports Km ≈ 0.18 mM for a family enzyme.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/7538190/">7538190</a></td>
+<td><em>The recA gene of S. pneumoniae is part of a competence-induced operon</em> (Martin et al. 1995)</td>
+<td>Establishes the classic <em>cinA</em>–<em>recA</em> competence-operon architecture that PP_3298 does <strong>not</strong> exhibit.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10606814/">10606814</a></td>
+<td><em>Molecular analysis of the D. radiodurans recA locus</em> (1999)</td>
+<td>Second example of <em>cinA</em>-like linkage to <em>recA</em>, reinforcing the diagnostic value of the missing linkage in PP_3298.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31874073/">31874073</a></td>
+<td>Multidrug resistance analysis (no abstract available)</td>
+<td>Peripheral; not directly informative for this annotation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Direct verbatim support:</strong></p>
+<ul>
+<li>On family/EC assignment — <em>"Nicotinamide mononucleotide (NMN) deamidase (EC 3.5.1.42), one of the key enzymes of the bacterial pyridine nucleotide cycle, was originally described in Enterobacteria, but the corresponding gene eluded identification for over 30 years."</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21953451/">PMID: 21953451</a>)</li>
+<li>On selectivity of activity within the family — <em>"Of the three PncC homologs present in Escherichia coli, NMN deamidase activity was confirmed only for the recombinant purified product of the ygaD gene."</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/21953451/">PMID: 21953451</a>)</li>
+<li>On the catalytic module — <em>"the C-terminal domain harbors the nicotinamide mononucleotide deamidase activity."</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>)</li>
+<li>On the competence-operon architecture that PP_3298 lacks — the <em>S. pneumoniae</em> study establishes that <em>recA</em> is part of a competence-inducible operon with <em>cinA</em> as its first gene (<a href="https://pubmed.ncbi.nlm.nih.gov/7538190/">PMID: 7538190</a>).</li>
+</ul>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3298 is a standalone CinA C-terminal (PncC-family) protein</td>
+<td><strong>Supported</strong></td>
+<td>167 aa, single PF02464 domain, COG1546, no COG1058 domain</td>
+</tr>
+<tr>
+<td>PP_3298 is an NMN deamidase (EC 3.5.1.42)</td>
+<td><strong>Supported (strong inference)</strong></td>
+<td>38.1% identity to confirmed <em>E. coli</em> PncC; conserved AESCT catalytic motif; family biochemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/21953451/">PMID: 21953451</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>)</td>
+</tr>
+<tr>
+<td>PP_3298 acts in the cytoplasm in the NAD pyridine nucleotide cycle</td>
+<td><strong>Supported</strong></td>
+<td>Soluble single-domain enzyme; substrate/pathway context</td>
+</tr>
+<tr>
+<td>PP_3298 is a full bifunctional competence CinA with ADP-ribose pyrophosphatase activity</td>
+<td><strong>Refuted</strong></td>
+<td>Lacks the N-terminal COG1058 domain that carries that activity (<a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>)</td>
+</tr>
+<tr>
+<td>PP_3298 directly mediates natural transformation/competence</td>
+<td><strong>Not supported</strong></td>
+<td>Competence link is for the full-length CinA operon (<a href="https://pubmed.ncbi.nlm.nih.gov/7538190/">PMID: 7538190</a>); genomic context shows no <em>recA</em>/competence linkage</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of PP_3298.</strong> The functional assignment is entirely <strong>inferential</strong>, based on homology (38% identity to <em>E. coli</em> PncC), active-site conservation, domain architecture, and genomic context. No enzyme kinetics, structure, or knockout phenotype has been reported for this specific <em>P. putida</em> protein.</p>
+</li>
+<li>
+<p><strong>Homology is moderate, not high.</strong> 38% identity is sufficient for confident family assignment but leaves room for shifted substrate specificity or altered kinetics. The reference literature explicitly notes that some PncC-family homologs are catalytically inactive, so the strict AESCT-motif conservation is necessary but not, by itself, definitive proof of activity.</p>
+</li>
+<li>
+<p><strong>Active-site motif divergence at non-core positions.</strong> PP_3298's motif <code>AESCTAGC</code> differs from <em>E. coli</em>'s <code>AESCTGGW</code> at the last three positions (AGC vs GGW). The invariant A-E-S-C-T core is preserved, but the functional consequence of the flanking differences (e.g., on substrate binding or turnover) is unknown.</p>
+</li>
+<li>
+<p><strong>Localization is predicted, not demonstrated.</strong> Cytoplasmic localization is inferred from the absence of targeting signals and the soluble nature of substrate/products, not from experimental fractionation or imaging.</p>
+</li>
+<li>
+<p><strong>Pathway context in <em>P. putida</em> is untested.</strong> Whether PP_3298 is the physiologically dominant NMN deamidase in <em>P. putida</em>, whether it is redundant with other salvage enzymes, and its regulation (e.g., by the nearby TetR-family regulator PP_3300) remain unknown.</p>
+</li>
+<li>
+<p><strong>CinA-name ambiguity.</strong> Databases may propagate a "competence/DNA-repair" connotation from the CinA name. The evidence here argues against that role for PP_3298, but the ambiguity should be flagged explicitly to prevent mis-annotation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and enzyme assay.</strong> Clone, express, and purify PP_3298 and directly measure NMN deamidase activity (NMN → NaMN + NH₃), determining kcat, Km, and pH/temperature optima — analogous to the OiPncC characterization in <a href="https://pubmed.ncbi.nlm.nih.gov/24340054/">PMID: 24340054</a> (Km ≈ 0.18 mM for NMN). This would convert the prediction into a confirmed function.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity panel.</strong> Test related nucleotides (NMN, NaMN, NAD⁺, NADH, nicotinamide riboside) to confirm NMN specificity and rule out promiscuous amidohydrolase activity.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Mutate the conserved catalytic residues (particularly the Cys and Ser/Glu of the AESCT motif) to confirm they are required for activity, validating the mechanistic model.</p>
+</li>
+<li>
+<p><strong>Genetic knockout and metabolomics.</strong> Delete PP_3298 in <em>P. putida</em> KT2440 and measure intracellular NMN/NaMN/NAD⁺ pools; a buildup of NMN and/or a growth phenotype under NAD⁺-recycling stress would confirm the physiological role. Test for redundancy with any other candidate NMN deamidases in the genome.</p>
+</li>
+<li>
+<p><strong>Structural determination or AlphaFold + docking.</strong> Solve or model the structure and dock NMN to verify the active-site geometry and compare to the <em>T. thermophilus</em> CinA C-terminal domain (<a href="https://pubmed.ncbi.nlm.nih.gov/25313401/">PMID: 25313401</a>).</p>
+</li>
+<li>
+<p><strong>Regulatory analysis.</strong> Investigate whether the adjacent TetR-family regulator (PP_3300) controls PP_3298 expression, and whether expression responds to NAD⁺ availability rather than DNA-damage/competence stimuli — a direct test of the metabolic-vs-competence hypothesis.</p>
+</li>
+<li>
+<p><strong>Comparative genomics across <em>Pseudomonas</em>.</strong> Confirm the conservation of the standalone architecture and non-<em>recA</em> genomic context across <em>Pseudomonas</em> species to strengthen the housekeeping-metabolism interpretation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_3298 (Q88HQ5) is a <strong>167-aa standalone CinA C-terminal / PncC-family protein</strong>, predicted with good confidence to be a <strong>cytoplasmic NMN deamidase (EC 3.5.1.42)</strong> that hydrolyzes NMN to NaMN + NH₃ as a committed recycling step of the bacterial pyridine nucleotide cycle, feeding NaMN into the Preiss–Handler pathway (NadD → NadE) to regenerate NAD⁺. It is the isolated catalytic module (lacking the N-terminal COG1058 domain of full bifunctional CinA) and, based on its genomic context, is a <strong>metabolic housekeeping enzyme rather than a competence/DNA-repair factor</strong>. The assignment rests on 38% identity to experimentally confirmed <em>E. coli</em> PncC, strict conservation of the AESCT active-site motif, and diagnostic genomic context — but awaits direct experimental validation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3298-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3298-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:25313401</li>
+<li>PMID:21953451</li>
+<li>PMID:24340054</li>
+<li>PMID:7538190</li>
+<li>PMID:10606814</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3298-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HQ5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3298-curation-notes">PP_3298 curation notes</h1>
+<h2 id="2026-07-20">2026-07-20</h2>
+<ul>
+<li>Target identity: PP_3298 / UniProtKB Q88HQ5, an unreviewed 167-aa protein<br />
+  submitted only as a CinA domain protein [UniProtKB:Q88HQ5, "SubName:<br />
+  Full=CinA domain protein"].</li>
+<li>Domain evidence: the target carries IPR036653, IPR008136, PF02464, and<br />
+  TIGR00199 [UniProtKB:Q88HQ5, "NCBIfam; TIGR00199; PncC_domain; 1."]. The<br />
+  local KT2440 partition places it in <code>orphan:domain_only_no_pathway</code>, so it was<br />
+  added as a manual pathway hole-fill rather than recovered from ppu00760.</li>
+<li>Annotation evidence: the fetched GOA file contains no annotation rows, and<br />
+  the UniProt record supplies no EC assignment, catalytic function statement,<br />
+  or PncC/NMN-amidohydrolase protein name.</li>
+<li>Paralog comparison: Q88ME5/pncC has the same compact family architecture but<br />
+  is specifically submitted as NMN amidohydrolase with EC 3.5.1.42 and<br />
+  GO:0019159. Those target-specific assignments are absent from Q88HQ5 and are<br />
+  not transferred here.</li>
+<li>Family caution: characterized bacterial PncC proteins establish that the<br />
+  family can deamidate NMN, but the same study explicitly reports inactive<br />
+  family members [PMID:21953451, "The PncC family also comprises a few members<br />
+  with a nonfunctional PncC domain, bearing multiple mutations and<br />
+  deletions."].</li>
+<li>Curation decision: include PP_3298 in the batch and module knowledge gap as<br />
+  an unresolved CinA-C/PncC-family paralog. Do not place it in the catalytic<br />
+  module graph, assign GO:0019159, or describe it as an NMN deamidase without<br />
+  specificity evidence.</li>
+<li>OpenScientist retrieval required a bounded retry: the initial<br />
+<code>max_iterations=3</code> job timed out at the provider's 7200-second ceiling<br />
+  without a report, while the <code>max_iterations=2</code> retry completed in 5155<br />
+  seconds with both artifacts. The final report promotes NMN deamidase,<br />
+  cytoplasmic localization, and pathway physiology from a provider-computed<br />
+  38.1% alignment, an asserted motif, and negative neighborhood context, but no<br />
+  alignment or query artifact was retained. It also acknowledges that Q88HQ5<br />
+  has no direct experiment, homology is moderate, family members can be<br />
+  inactive, and substrate specificity is untested<br />
+  [file:PSEPK/PP_3298/PP_3298-deep-research-openscientist.md, "No direct<br />
+  experimental characterization of PP_3298."]. It does not compare Q88ME5/pncC,<br />
+  the better-annotated paralog in the same proteome. The stronger assignment is<br />
+  therefore rejected pending a direct product-forming specificity assay.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HQ5
+gene_symbol: PP_3298
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  Small CinA C-terminal/PncC-family protein of Pseudomonas putida
+  KT2440. The 167-residue protein carries the CinA/PncC domain signatures
+  IPR008136, PF02464, and TIGR00199. Its catalytic activity, substrate
+  specificity, and physiological role have not been established; membership
+  in a family that includes inactive domains does not by itself establish NMN
+  deamidase activity for this paralog.
+references:
+  - id: file:PSEPK/PP_3298/PP_3298-uniprot.txt
+    title: UniProtKB entry Q88HQ5 for Pseudomonas putida KT2440 PP_3298
+    findings:
+      - statement: The target is submitted only as a CinA domain protein.
+        supporting_text: &#34;SubName: Full=CinA domain protein&#34;
+        reference_section_type: RESULTS
+      - statement: The sequence carries the NCBIfam PncC-domain signature.
+        supporting_text: &#34;NCBIfam; TIGR00199; PncC_domain; 1.&#34;
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Exact target accession Q88HQ5. The unreviewed record establishes the
+        sequence and domain assignments but does not establish catalytic
+        specificity.
+  - id: PMID:21953451
+    title: Identification of nicotinamide mononucleotide deamidase of the bacterial pyridine nucleotide cycle reveals a novel broadly conserved amidohydrolase family.
+    findings:
+      - statement: PncC-family domain membership is not by itself proof of an active NMN deamidase.
+        supporting_text: &gt;-
+          The PncC family also comprises a few members with a nonfunctional PncC
+          domain, bearing multiple mutations and deletions.
+        reference_section_type: DISCUSSION
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full text is cached. The paper establishes NMN deamidase activity for
+        characterized bacterial PncC proteins while explicitly documenting
+        inactive family members; it does not test Q88HQ5.
+  - id: file:PSEPK/PP_3298/PP_3298-deep-research-openscientist.md
+    title: OpenScientist research report for Pseudomonas putida KT2440 PP_3298
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: UNVERIFIED
+      review_notes: &gt;-
+        Provider-generated synthesis correctly identifies the compact
+        CinA-C/PncC-family architecture but overstates NMN-deamidase activity,
+        cytoplasmic pathway placement, and housekeeping physiology for the
+        untested target. Its exact alignment identity, motif mapping, and
+        neighborhood analysis have no retained reproducible artifact, while
+        the report itself acknowledges moderate identity, inactive family
+        members, untested specificity, and no direct Q88HQ5 experiment. These
+        inferences were not converted into a core function or NEW annotation.
+        The report also omits comparison with Q88ME5/pncC, the
+        better-annotated paralog in the same proteome.
+existing_annotations: []
+knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular activity, substrate specificity, and physiological role of
+      PP_3298/Q88HQ5 are unknown. CinA-C/PncC-family domain assignments do not
+      establish that this paralog deamidates NMN.
+    boundary: &gt;-
+      Q88HQ5 is a 167-residue TIGR00199/IPR008136/PF02464 protein and is the
+      second compact CinA-C/PncC-family candidate in KT2440, but unlike
+      Q88ME5/PncC it lacks a submitted NMN-amidohydrolase name, EC assignment,
+      GO activity, or target-specific experiment.
+    gap_kind:
+      - BIOLOGY
+      - CURATION
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Resolving this paralog is necessary to distinguish redundant NMN salvage
+      from a different CinA-family activity or a catalytically inactive domain.
+    resolution: &gt;-
+      Compare purified Q88HQ5 and Q88ME5 against NMN and plausible alternative
+      substrates, verify reaction products, and test single and double mutants
+      with targeted NMN, NaMN, and NAD+ metabolomics.
+    provenance:
+      - reference_id: file:PSEPK/PP_3298/PP_3298-uniprot.txt
+        supporting_text: &#34;SubName: Full=CinA domain protein&#34;
+        reference_section_type: RESULTS
+      - reference_id: PMID:21953451
+        supporting_text: &gt;-
+          The PncC family also comprises a few members with a nonfunctional PncC
+          domain, bearing multiple mutations and deletions.
+        reference_section_type: DISCUSSION
+suggested_questions:
+  - question: &gt;-
+      Does PP_3298 encode an active NMN deamidase, another CinA-family
+      specificity, or a catalytically inactive paralog?
+suggested_experiments:
+  - description: &gt;-
+      Purify Q88HQ5 and Q88ME5 side by side, measure substrate-dependent product
+      formation rather than binding alone, and combine single/double deletions
+      with targeted pyridine-nucleotide metabolomics before assigning a GO
+      molecular function to PP_3298.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
