@@ -50,7 +50,7 @@ the broad TSV for later pathway batches.
 | `davB` | PP_0383 | Q88QV1 | lysine 2-monooxygenase | Retain GO:0050067; flag conflicting automated tryptophan/auxin assignment |
 | `davA` | PP_0382 | Q88QV2 | 5-aminopentanamidase | Retain GO:0047588; remove N-carbamoylputrescine amidase transfer |
 | `davT` | PP_0214 | Q88RB9 | 5-aminovalerate aminotransferase | Retain GO:0047589; leave GABA transaminase activity undecided |
-| `davD` | PP_0213 | Q88RC0 | glutarate-semialdehyde dehydrogenase | Retain GO:0102810; remove succinate-semialdehyde/GABA transfers |
+| `davD` | PP_0213 | Q88RC0 | glutarate-semialdehyde dehydrogenase | Retain GO:0102810; remove succinate-semialdehyde transfers; leave GABA catabolism undecided |
 
 ## Evidence Notes
 
