@@ -199,15 +199,16 @@ Resolved:
 | SGD:S000002836 | yeast **BNA7** | formylkynurenine formamidase (amidohydrolase) |
 | P23872 | *E. coli* Aes | acetyl esterase |
 | P71668 / P95125 / P9WK87 | *M. tuberculosis* LipI / LipN / NlhH | carboxylesterases |
-| Q5NUF3 | soybean **HIDH** | 2-hydroxyisoflavanone **dehydratase** (a lyase) |
+| Q5NUF3 | soybean **HIDH** | bifunctional: carboxylesterase (EC 3.1.1.1) plus 2-hydroxyisoflavanone **dehydratase** (EC 4.2.1.105) |
 | Q9HTI0 | *P. aeruginosa*, unreviewed | — |
 
-The set mixes carboxylesterases, amidohydrolases and a lyase, which is precisely
-why the propagated term stopped at the generic `hydrolase activity`: that is the
-most specific term that survives across this clade. The inclusion of HIDH, whose
-characterised primary activity is a dehydratase rather than a hydrolase, is a
-mild inconsistency in the supporting set (though HIDH does retain slight
-carboxylesterase activity). Either way the term is *correct for AADACL3* but far
+The set mixes carboxylesterases, amidohydrolases and one bifunctional
+esterase/dehydratase, which is precisely why the propagated term stopped at the
+generic `hydrolase activity`: that is the most specific term that survives across
+this clade. The weakest donor is HIDH, which UniProt annotates with both EC
+3.1.1.1 and EC 4.2.1.105, so it does formally license a hydrolase term, but its
+physiologically important reaction is the dehydration and its esterase activity
+is described only as slight. Either way the term is *correct for AADACL3* but far
 less informative than what the same GOA record already carries from the
 subfamily signature.
 
