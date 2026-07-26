@@ -22,6 +22,12 @@ on:
   pull_request_review_comment:
     types: [created, edited]
 
+# `edited` is enabled on every trigger, so editing a comment would otherwise
+# dispatch a second agent run racing the first on the same issue/PR.
+concurrency:
+  group: ai-mention-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   check-mention:
     runs-on: ubuntu-latest
@@ -78,7 +84,12 @@ jobs:
             } else if (context.eventName === 'issue_comment') {
               content = context.payload.comment.body || '';
               userLogin = context.payload.comment.user.login;
-              itemType = 'issue';
+              // issue_comment fires for PR conversations too; the payload only
+              // carries `pull_request` when the item is really a PR. Getting this
+              // wrong tells the agent it is on an issue, so "make changes on a
+              // branch and open a PR" spawns a second PR off the default branch
+              // instead of touching the PR being discussed.
+              itemType = context.payload.issue.pull_request ? 'pull_request' : 'issue';
               itemNumber = context.payload.issue.number;
             } else if (context.eventName === 'pull_request_review_comment') {
               content = context.payload.comment.body || '';
@@ -99,13 +110,18 @@ jobs:
             // dragon-ai-agent is the retired legacy alias, kept so old habits and
             // older issue threads still work.
             const mentionRegex = /@(?:ai4c-agent|dragon-ai-agent)\s+please\s+(.*)/i;
-            const mentionMatch = forMatching.match(mentionRegex);
+            // Gate on the stripped text, but extract the request from the ORIGINAL:
+            // stripping is only there to stop a documented keyword from triggering
+            // a run, and extracting from the stripped copy would silently delete
+            // any inline code or fenced block from a legitimate request.
+            const gateMatch = forMatching.match(mentionRegex);
+            const rawMatch = content.match(mentionRegex);
 
-            const qualifiedMention = isAllowed && mentionMatch !== null;
-            const prompt = mentionMatch !== null ? mentionMatch[1].trim() : '';
+            const qualifiedMention = isAllowed && gateMatch !== null;
+            const prompt = rawMatch !== null ? rawMatch[1].trim() : '';
 
             console.log(
-              `User: ${userLogin}, Allowed: ${isAllowed}, Has mention: ${mentionMatch !== null}`
+              `User: ${userLogin}, Allowed: ${isAllowed}, Has mention: ${gateMatch !== null}`
             );
 
             return {
@@ -220,7 +236,9 @@ jobs:
 
           You should use \`gh\` to communicate with the user via the GitHub issue/ticket.
           If instructed to modify files, you should make changes on a branch and submit a PR, communicating clearly and in
-          detail on the PR.
+          detail on the PR. IMPORTANT: the checkout starts on the default branch. If the item above is a
+          pull_request, run \`gh pr checkout ${ITEM_NUMBER}\` first and push your changes to that PR's
+          branch — do not open a competing PR off the default branch.
 
           Always end by informing the user what you did (or were not able to do) with a message, either on an issue or a PR,
           as appropriate.
