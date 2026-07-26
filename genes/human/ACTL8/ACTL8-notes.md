@@ -231,6 +231,13 @@ paper shows ACTL8 binding any PI3K/AKT/mTOR component, and "acts upstream of" in
 | GO:0030855 epithelial cell differentiation (IEP) | MARK_AS_OVER_ANNOTATED | Differential abundance in a 2-D gel screen is expression, not involvement |
 | GO:0008284 positive regulation of cell population proliferation | NEW | Replicated across five tumour types and five groups, including xenografts; non-core (ectopic context) |
 
+The affinage record is cited in `references:` as an explicitly-labelled **lead** source
+(`reference_review.correctness: LOW_QUALITY`), with the reason stated: it passed its own gates but
+cites the retracted PMID:32125225 without flagging it. Its single use in an annotation is the
+non-mechanistic sentence "ACTL8 protein is detected in the cytoplasm of tumor cells", which was
+independently verified against PMID:41129177. No mechanistic claim anywhere in this review is
+sourced from affinage prose.
+
 `core_functions` is left **empty**. There is no experimentally supported molecular function, and
 the honest output for an MF-dark gene is an empty list plus the resulting validation warning — not
 invented content to silence it.
@@ -245,3 +252,7 @@ invented content to silence it.
 - `just fetch-gene-pmids` + 9 extra `just fetch-pmid` calls.
 - `ACTL8-bioinformatics/analyze_actl8.py`: five analyses, all from live data; `RESULTS.md` and
   `results.json` verified byte-identical on a second run (`diff`).
+- Gates: `checkquotes.py` 53 quotes / 0 problems; `just validate human ACTL8` -> `Valid` with the
+  single intentional "No core functions defined" warning; `cache/go/terms.csv` deletion check run as
+  the last step before commit.
+- `origin/main` merged in cleanly (18 commits, no conflicts, no shared-publication add/add clashes).
