@@ -163,9 +163,11 @@ clathrin-mediated endocytosis), and is worth a directed test.
 
 Set against that, **not one** of ACAP1's validated partners appears anywhere in the GO record:
 ARF6, ITGB1, CLTC, GULP1 and SLC2A4 are all in UniProt SUBUNIT with ECO:0000269 and all have dedicated
-papers, several with structures. UniProt's own INTERACTION block has the same problem — its ten entries
-are the same screen hits, each marked `NbExp=3`, which is IntAct's replicate count within those
-screens, not independent confirmation.
+papers, several with structures. UniProt's own INTERACTION block has the same problem — its ten
+entries are the same screen hits, and none of the validated partners appears there either. Each is
+marked `NbExp=3`; that count should not be read as three independent studies, since the underlying
+references are the same high-throughput screens (HuRI alone used three Y2H assay versions), but I
+have not traced the individual IntAct experiment records to confirm what the three are.
 
 ## 6. Ontology gap
 
