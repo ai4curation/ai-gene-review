@@ -419,6 +419,56 @@ Recorded so a later reviewer knows they were done rather than skipped.
   `source_entities` asserted its emitted count against the GOA field, which is the whole reason
   that list is generated rather than typed.
 
+## 14b. Reference scope: ask what a reference covers before treating a row as independent support
+
+`ACTRT3-bioinformatics/reference_scope.py` queries QuickGO **by reference** rather than by gene
+for every PMID this review cites. The technique comes from the merged ACTR8 review, where a
+reference returning 16 entities × 5 terms exposed a complex-to-subunit projection that a per-gene
+view could not see. Results here, and what each one changed:
+
+| PMID | total | entities | terms | reading |
+|---|---|---|---|---|
+| 35793634 | 35 | 19 | 3 | 12 PT proteins carry `GO:0033011` IDA; the phenotype row does **not** spread |
+| 18692047 | 5 | 2 | 2 | one co-IP, logged by two databases **and** reciprocally on both partners |
+| 33961781 | 9514 | 119+ | 1 | BioPlex; one term across GOA, all IntAct IPI |
+| 41668650, 34869336, 11750065 | 0 | — | — | not curated by GOA at all |
+
+Two of these changed the review.
+
+1. **`GO:0033011` is not a projection, and the discriminator is which row *fails* to spread.**
+   PMID:35793634 carries `GO:0033011` by IDA for twelve mouse theca proteins (Actl9, Actrt1,
+   Actrt2, Actrt3, Capza3, Capzb, Ccin, Cylc1, Fabp9, Gsto2, H2bl1, Wbp2nl), all `assignedBy:
+   UniProt`. A ComplexPortal-style projection would spread the *phenotype* too — and this one does
+   not: the paper's only functional row, `GO:0007286` IMP, is confined to **Ccin alone**, the gene
+   actually knocked out. So these are twelve per-protein localisation calls from one
+   immunolocalisation study. The ACCEPT stands, now on a stated basis rather than an assumed one.
+   Side benefit: it places ACTRT1, ACTRT2 and ACTL9 in the theca by IDA *independently* of the 2026
+   co-IPs, which is what turns "the ARP-T clade is a theca clade" from an inference from one paper
+   into a curated fact — and it strengthens the `suggested_questions` item addressed to that set.
+2. **"IPI twice" was a mis-statable claim and has been corrected.** The draft said mouse Actrt3
+   carries protein binding by IPI *twice* from that reference, which reads as two experiments. The
+   reference covers only 2 entities in total, so the rows are one co-immunoprecipitation logged
+   once by UniProt and once by IntAct, recorded reciprocally on Actrt3 and Pfn3 — one experiment
+   recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
+   proposal never depended on a replicate count, so the term survives; the sentence supporting it
+   did not.
+
+The checker itself needed a fix, found by reading its output rather than trusting it: counting
+bare `GO:0005515` as a functional claim made *every* interaction paper look like a projection and
+mis-flagged PMID:35793634 as "possible projection" until that term was excluded from the
+functional set. Same shape as the ACTL8 family survey excluding `GO:0005515` from
+"informative MF".
+
+Also checked and negative: **`CommentsCorrections`/`RefType` on all six cited PMIDs is empty** —
+no erratum, no Publisher Correction, no retraction. That field is checked directly on each cited
+article's own record, because a Publisher Correction is not findable by a publication-type query.
+
+And every cross-gene fact this review leans on was verified against the merged YAML rather than
+taken from a summary: ACTL7A `GO:0005198` IBA ACCEPT + `GO:0005200` TAS REMOVE + core MF
+`GO:0005198`; ACTL7B the same plus `GO:0015629` TAS REMOVE; ACTR10 `GO:0005200` IBA **ACCEPT**
+with core MF `GO:0005200`; ACTL8 `GO:0015629` IBA **KEEP_AS_NON_CORE**; ACTR1B `GO:0005515` from
+PMID:33961781 **KEEP_AS_NON_CORE**. All five as relied on.
+
 ## 15. The committed lint, and the two real defects it caught
 
 `ACTRT3-bioinformatics/audit_claims.py` checks every load-bearing number in the review and in

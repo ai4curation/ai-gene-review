@@ -234,6 +234,39 @@ def main() -> int:
          r"all (\d+) donors carry their own experimental evidence", (donors(2),), review, 1),
     ]
 
+    # --- reference-scope figures, from reference_scope.json rather than typed
+    scope_path = HERE / "reference_scope.json"
+    if scope_path.exists():
+        sc = json.loads(scope_path.read_text())
+        P.extend([
+            ("scope, BioPlex total annotations",
+             r"PMID:33961781 accounts for (\d+) GO:0005515 annotations",
+             (sc["33961781"]["total_annotations"],), review, 1),
+            ("scope, theca proteins carrying GO:0033011 IDA",
+             r"carries GO:0033011 by IDA for (\d+) mouse perinuclear-theca proteins",
+             (sc["35793634"]["entities_per_term"]["GO:0033011"],), review, 1),
+            ("scope, profilin reference entity count",
+             r"yields (\d+) annotations across just (\d+) entities",
+             (sc["18692047"]["total_annotations"], sc["18692047"]["distinct_entities"]),
+             review, 1),
+            ("scope, theca proteins named in the notes table",
+             r"by IDA for (\w+) mouse theca proteins",
+             (word(sc["35793634"]["entities_per_term"]["GO:0033011"]),), notes, 1),
+        ])
+        # the phenotype row must stay confined to one entity, or the projection verdict flips
+        if sc["35793634"]["entities_per_term"].get("GO:0007286") != 1:
+            problems_early = (
+                "PMID:35793634's GO:0007286 row no longer covers exactly one entity; the "
+                "'not a projection' argument on the GO:0033011 rows depends on it and must be "
+                "re-read"
+            )
+        else:
+            problems_early = None
+    else:
+        problems_early = (
+            f"missing {scope_path}; regenerate with: uv run python reference_scope.py"
+        )
+
     # Phrasings an earlier draft contained; each was a real error, so each stays retracted.
     RETRACTED = [
         "23 protein tokens",
@@ -243,6 +276,8 @@ def main() -> int:
         "eleven human genes",
         "covering 11 human genes",
         "11 human genes across",
+        # read as two experiments; it is one co-IP logged by two databases and reciprocally
+        "by IPI twice from PMID:18692047",
     ]
 
     ranking = r["divergent_clade_ranking"]
@@ -254,6 +289,8 @@ def main() -> int:
         RANKING_ROWS.append((setname, f"| {setname} | {block['n_contacts']} | {cells} |"))
 
     problems: list[str] = []
+    if problems_early:
+        problems.append(problems_early)
 
     for setname, row_text in RANKING_ROWS:
         if norm(row_text) not in review:
