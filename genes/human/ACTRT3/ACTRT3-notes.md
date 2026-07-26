@@ -426,12 +426,12 @@ for every PMID this review cites. The technique comes from the merged ACTR8 revi
 reference returning 16 entities × 5 terms exposed a complex-to-subunit projection that a per-gene
 view could not see. Results here, and what each one changed:
 
-| PMID | total | entities | terms | reading |
-|---|---|---|---|---|
-| 35793634 | 35 | 19 | 3 | 12 PT proteins carry `GO:0033011` IDA; the phenotype row does **not** spread |
-| 18692047 | 5 | 2 | 2 | one co-IP, logged by two databases **and** reciprocally on both partners |
-| 33961781 | 9514 | 119+ | 1 | BioPlex; one term across GOA, all IntAct IPI |
-| 41668650, 34869336, 11750065 | 0 | — | — | not curated by GOA at all |
+| PMID | total | complete? | reading |
+|---|---|---|---|
+| 35793634 | 35 | yes (35 of 35 rows) | 12 PT proteins carry `GO:0033011` IDA; the phenotype row does **not** spread |
+| 18692047 | 5 | yes (5 of 5) | one co-IP, logged by two databases **and** reciprocally on both partners |
+| 33961781 | 9514 | **no** — 200 rows sampled, 1 unaccounted | 9508 `GO:0005515`; plus a 5-row ComplexPortal projection tail |
+| 41668650, 34869336, 11750065 | 0 | — | not curated by GOA at all |
 
 Two of these changed the review.
 
@@ -452,6 +452,47 @@ Two of these changed the review.
    recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
    proposal never depended on a replicate count, so the term survives; the sentence supporting it
    did not.
+
+### The round-2 correction: this checker mixed a total with a 2 per cent sample
+
+The reviewer of the follow-up PR caught the sharper defect, and it is the same class the script
+was written to catch. The first version fetched **one `limit=200` page** and reported the
+per-term, per-code and per-database breakdowns *from that page*, while taking `total_annotations`
+from the API's own hit count. For five of the six references that is harmless, because the page
+covers everything. For **PMID:33961781** it is not: 9514 annotations, 200 examined, so every
+page-derived field was a 2 per cent sample — and the review then stated two of them as totals.
+Both were false:
+
+- *"it is the only term that publication contributes"* — false. `GO:0005515` exact is **9508**,
+  not 9514, and the aspect totals are MF 9509 / CC 5 / BP 0.
+- *"all assigned by IntAct"* — false. **IntAct 9509 + ComplexPortal 5.**
+
+And the five hidden rows are the interesting part: `GO:0005813 centrosome`, IPI, assigned by
+**ComplexPortal**, projected onto the ted-tubulin complex and its four subunits. So the very
+reference this review cites to illustrate what is *not* a projection contains a projection tail —
+which a 200-row sample of a 9,514-row screen could not show. None of it touches ACTRT3, and no
+action changed, but the prose was asserting coverage it did not have.
+
+Every count is now its own **filtered count query** (`limit=1`, read `numberOfHits`); page-derived
+fields are renamed `*_seen`; `truncated`, `unaccounted_annotations` and
+`term_list_provably_complete` are emitted; and **ComplexPortal is probed unconditionally**, because
+a projected tail can sit entirely outside a sample. Three further things came out of doing it
+properly:
+
+1. **The verdict function then inverted.** With bare `GO:0005515` excluded from the functional set,
+   the newly-visible ComplexPortal rows presented as "multi-entity localisation with no functional
+   claim" and were reported as *NOT* a projection — exactly backwards for rows a projecting database
+   assigned. Fixed by naming projecting-database rows as such before the heuristic runs at all.
+2. **Per-code totals do not partition the total.** QuickGO's `evidenceCode` filter is not
+   exact-only: on PMID:35793634 the per-code counts sum to 57 against a total of 35. They are kept
+   for orientation and used for no claim.
+3. **`term_list_provably_complete` is the precondition for the projection test**, and stating it
+   makes the two theca ACCEPTs rest on a checkable property rather than on the absence of a
+   surprise. PMID:35793634 is complete, 35 of 35, so the twelve-versus-one comparison is sound.
+
+The general rule, which is the transferable part: **a count taken from a page and a count taken
+from `numberOfHits` must never be reported side by side without saying which is which.** The
+`*_seen` suffix and the `truncated` flag exist to make that impossible to do by accident again.
 
 The checker itself needed a fix, found by reading its output rather than trusting it: counting
 bare `GO:0005515` as a functional claim made *every* interaction paper look like a projection and
