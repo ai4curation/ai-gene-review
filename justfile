@@ -177,15 +177,15 @@ _ai-instructions: goosehints copilot-instructions
 gh-add-topics:
   gh repo edit --add-topic "ai-gene-review,monarchinitiative,linkml"
 
+# PAT_FOR_PR is deliberately absent: the agentic workflows authenticate with
+# short-lived ai4c-agent / ai4c-reviewer GitHub App tokens, and the PAT this
+# recipe used to install was the credential exposed in the dragon-ai-agent
+# incident. Do not reintroduce it.
 gh-add-secrets:
-  gh secret set PAT_FOR_PR --body "$PAT_FOR_PR"
   gh secret set ANTHROPIC_API_KEY --body "$ANTHROPIC_API_KEY"
   gh secret set OPENAI_API_KEY --body "$OPENAI_API_KEY"
   gh secret set CBORG_API_KEY --body "$CBORG_API_KEY"
   gh secret set CLAUDE_CODE_OATH_TOKEN --body "$CLAUDE_CODE_OATH_TOKEN"
-
-gh-invite-the-dragon:
-  gh api repos/monarch-initiative/ai-gene-review/collaborators/dragon-ai-agent -X PUT -f permission=push
 
 # ============== Include project-specific recipes ==============
 
