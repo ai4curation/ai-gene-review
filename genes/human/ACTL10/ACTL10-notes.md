@@ -370,6 +370,39 @@ setting `page_size = 10`, which correctly aborts with "returned a full page (10)
 declared)". A fresh run reproduces `RESULTS.md` and `results.json` byte-for-byte, so the guard
 changed no number.
 
+## 7d. ACTRT3 merged mid-review with the same row and a different action
+
+Found by re-running the terms.csv gate against a `origin/main` that had moved again: ACTRT3 (#2296)
+landed titled *"a GO:0005200 that PAINT has already rejected next door"*. It carries the **same**
+`GO:0005200` IBA row from the same node and resolved it **MODIFY → `GO:0005198` structural molecule
+activity**, where this review has `MARK_AS_OVER_ANNOTATED`. Two independently reviewed members of
+the same six-gene residual set, one row, two actions — precisely the AADACL trio hazard, so it had
+to be reconciled rather than left to a reader to notice.
+
+The two agree where it matters and the divergence is principled. Both give
+`root_cause: PROPAGATION_BAD`; both cite `FUNCTIONAL_DIVERGENCE`; I have added
+`GRANULARITY_MISMATCH` to match ACTRT3's diagnosis, because the term being more specific than what
+transfers is a property of the row, not of the remedy chosen for it. So the *diagnosis* is now
+identical and only the action differs.
+
+The action differs because ACTRT3's reason is explicit that its generalisation rests on
+**gene-specific positive evidence**: "GO:0005198 is supported for ACTRT3 — it is a component of the
+perinuclear theca's protein scaffold and contributes to its structural integrity". Generalising
+therefore moves ACTRT3's row from an unsupported specific claim onto a supported general one.
+ACTL10 has no counterpart: no complex, no assembly, no location, no phenotype, no partner. Since
+`GO:0005198` is defined by contribution to the structural integrity of a complex or assembly,
+substituting it here would exchange one unsupported assertion for a slightly less specific
+unsupported assertion — and, because neither gene already carries `GO:0005198`, it would *newly
+add* a molecular function to a gene that has none. That is the wrong direction for a Tdark protein.
+
+Worth noting that ACTRT3 performs the same discrimination in the other direction, distinguishing
+its MODIFY from ACTR10's ACCEPT on the ground that ACTR10 "has an ortholog-strength donor in the
+seed set and ACTRT3 has none". So this row now has **three** actions across four merged reviews —
+ACCEPT (ACTR10), MODIFY (ACTRT3), MARK_AS_OVER_ANNOTATED (ACTL10), REMOVE (ACTL7A/7B on a
+different evidence code) — and unlike the AADACL trio, each is pinned to a stated, checkable
+gene-specific fact rather than to a differing judgement about the same evidence. That is the
+outcome the trio rule is asking for: not uniformity, but a reason per gene.
+
 ## 8. Negative results, recorded because a null from a check is still a finding
 
 - **IntAct**: `findInteractions/Q5JWF8` returns `totalElements: 0`. No interaction data at all, so

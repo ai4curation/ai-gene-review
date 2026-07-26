@@ -217,7 +217,8 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False,
     if "limit" not in params:
         raise RuntimeError(
             f"quickgo_all needs an explicit limit in params for {what}; without it the page size "
-            "is the server default and coverage cannot be verified")
+            "is whatever the server defaults to, which for a row-reading caller means coverage "
+            "cannot be verified and for a count_only caller means fetching rows it will discard")
     d = get_json(QUICKGO_SEARCH, params)
     limit = int(params["limit"])
     total = d.get("numberOfHits")
@@ -229,7 +230,12 @@ def quickgo_all(params: dict, what: str, allow_zero: bool = False,
         # on. The zero check below still applies, because the count itself is what it wants.
         if total == 0 and not allow_zero:
             raise RuntimeError(f"QuickGO returned zero rows for {what}")
-        return d
+        # Return the count ALONE, not the full response. Documenting "reads no rows" while handing
+        # back an unverified `results` array would leave a future caller free to iterate a page
+        # whose completeness was never checked - guarding the shape instead of the invariant, the
+        # same hole the name-based guard above closes one level up. Stripping the rows makes the
+        # contract mechanical rather than a promise in a docstring.
+        return {"numberOfHits": total}
     if got != total:
         # Equality, not `got < total`: an over-count would be just as much a sign that the
         # response does not mean what this function assumes, and the previous commit message
