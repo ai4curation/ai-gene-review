@@ -71,8 +71,12 @@ HISTORICAL_MARKER = "Historical: this section records the state that motivated t
 FOLD_SOURCE = "InterPro:IPR013094"
 FOLD_SOURCE_STATUS = "CIRCULAR_OR_REDUNDANT"
 # Values retracted for this row: the root cause recorded on it is redundancy, which says nothing
-# about source strength, and the fold-3 signature is not a weak source.
-RETRACTED_STATUSES = {"SOURCE_WEAK_OR_INFERRED", "SOURCE_EVIDENCE_WEAK"}
+# about source strength, and the fold-3 signature is not a weak source. They live in DIFFERENT
+# enums, and a first version of this guard rejected both in source_status - where SOURCE_EVIDENCE_WEAK
+# is not a permissible value at all, so that half was unreachable and read as coverage while the
+# field it can legally occupy went unguarded.
+RETRACTED_SOURCE_STATUS = "SOURCE_WEAK_OR_INFERRED"   # PropagationSourceStatusEnum
+RETRACTED_FAILURE_MODE = "SOURCE_EVIDENCE_WEAK"       # PropagationFailureModeEnum
 
 # Phrasings that were true before the three reviews were harmonised and are false after it.
 # Each is (regex, why it is stale). Applied to reviews, notes and the audit prose alike.
@@ -178,6 +182,11 @@ def check_invariant(root: Path, problems: list[str]) -> None:
             pr = rv.get("propagation_review") or {}
             if pr.get("root_cause") != ROOT_CAUSE:
                 problems.append(f"{where}: root_cause {pr.get('root_cause')!r}, expected {ROOT_CAUSE}")
+            if RETRACTED_FAILURE_MODE in (pr.get("failure_modes") or []):
+                problems.append(f"{where}: {RETRACTED_FAILURE_MODE} is recorded; every protein "
+                                f"donor on this node carries its own experimental evidence, so the "
+                                f"sources are not weak - the defect is that the term should not "
+                                f"propagate, which root_cause already states")
             if "GRANULARITY_MISMATCH" in (pr.get("failure_modes") or []):
                 problems.append(f"{where}: GRANULARITY_MISMATCH is recorded; the donors are "
                                 f"heterogeneous, so the parent is their LCA and there is no "
@@ -187,11 +196,13 @@ def check_invariant(root: Path, problems: list[str]) -> None:
                     problems.append(f"{where}: supporting_entities do not equal this gene's GOA "
                                     f"WITH/FROM column ({len(a.get('supporting_entities') or [])} "
                                     f"vs {len(tokens)} tokens)")
+            seen_fold = False
             for entity in pr.get("source_entities") or []:
                 if entity.get("source_id") != FOLD_SOURCE:
                     continue
+                seen_fold = True
                 status = entity.get("source_status")
-                if status in RETRACTED_STATUSES:
+                if status == RETRACTED_SOURCE_STATUS:
                     problems.append(f"{where}: {FOLD_SOURCE} source_status is {status!r}, which was "
                                     f"retracted for this row - the root cause is redundancy, which "
                                     f"says nothing about source strength, and the fold-3 signature "
@@ -199,6 +210,14 @@ def check_invariant(root: Path, problems: list[str]) -> None:
                 elif status != FOLD_SOURCE_STATUS:
                     problems.append(f"{where}: {FOLD_SOURCE} source_status is {status!r}, expected "
                                     f"{FOLD_SOURCE_STATUS} to match the sibling paralogs")
+            # Presence is asserted, not assumed. A continue-on-mismatch loop passes silently when the
+            # entity is deleted, the source_entities list is dropped, or source_id is relabelled -
+            # i.e. the guard could be defeated by removing the thing it guards, which is the same
+            # shape of hole this check was added to close.
+            if ev == "IEA" and not seen_fold:
+                problems.append(f"{where}: no {FOLD_SOURCE} source entity; it is the sole source of "
+                                f"this row in all three paralogs, so its absence is a divergence, "
+                                f"not an exemption")
 
         cf = doc.get("core_functions") or []
         if not cf or (cf[0].get("molecular_function") or {}).get("id") != CORE_MF:
@@ -366,9 +385,44 @@ def _break_invariant_supporting_entities(root: Path) -> None:
 def _break_invariant_fold_source_status(root: Path) -> None:
     """Reinstate the retracted assessment on the fold signature, one field below failure_modes."""
     f = gene_files(root, "AADACL3")["review"]
+    text = f.read_text()
+    target = f"source_status: {FOLD_SOURCE_STATUS}"
+    assert target in text, f"mutation target drifted: {target!r} not found in {f}"
+    f.write_text(text.replace(target, f"source_status: {RETRACTED_SOURCE_STATUS}", 1))
+
+
+def _break_invariant_fold_entity_deleted(root: Path) -> None:
+    """Delete the fold source entity, which a continue-on-mismatch check would not notice."""
+    f = gene_files(root, "AADACL3")["review"]
+    lines = f.read_text().splitlines(keepends=True)
+    out, dropping = [], False
+    for line in lines:
+        if f"source_id: {FOLD_SOURCE}" in line:
+            dropping = True
+            continue
+        if dropping:
+            # Drop the entity's remaining keys, i.e. until the next list item or a dedent.
+            if line.lstrip().startswith("- ") or not line.startswith(" " * 8):
+                dropping = False
+            else:
+                continue
+        out.append(line)
+    assert len(out) < len(lines), f"mutation target drifted: no {FOLD_SOURCE} entity found in {f}"
+    f.write_text("".join(out))
+
+
+def _break_invariant_retracted_failure_mode(root: Path) -> None:
+    """Reinstate SOURCE_EVIDENCE_WEAK in failure_modes, where it is a legal enum value."""
+    f = gene_files(root, "AADACL3")["review"]
+    text = f.read_text()
+    target = f"      root_cause: {ROOT_CAUSE}\n"
+    assert target in text, f"mutation target drifted: {target!r} not found in {f}"
     f.write_text(
-        f.read_text().replace(
-            f"source_status: {FOLD_SOURCE_STATUS}", "source_status: SOURCE_WEAK_OR_INFERRED", 1
+        text.replace(
+            target,
+            f"      root_cause: {ROOT_CAUSE}\n      failure_modes:\n"
+            f"      - {RETRACTED_FAILURE_MODE}\n",
+            1,
         )
     )
 
@@ -431,6 +485,8 @@ MUTATIONS = [
     ("invariant: root_cause reverted", _break_invariant_root_cause),
     ("invariant: GRANULARITY_MISMATCH re-added", _break_invariant_failure_mode),
     ("invariant: retracted source_status on the fold signature", _break_invariant_fold_source_status),
+    ("invariant: fold source entity deleted outright", _break_invariant_fold_entity_deleted),
+    ("invariant: retracted SOURCE_EVIDENCE_WEAK failure mode", _break_invariant_retracted_failure_mode),
     ("invariant: replacement term reverted to GO:0017171", _break_invariant_replacement),
     ("invariant: a supporting_entities token dropped", _break_invariant_supporting_entities),
     ("invariant: core_functions MF changed", _break_invariant_core_mf),
