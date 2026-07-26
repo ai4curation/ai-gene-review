@@ -67,7 +67,7 @@ REQUIRED: dict[Path, list[tuple[str, int]]] = {
         ("6 of 6 carrying `GO:0004239`", 1),
         # Round 2: the disjoint-branch finding is what justifies withdrawing GO:0030047,
         # so it must remain stated in the notes.
-        ("disjoint", 3),  # count derived by grepping, not guessed
+        ("disjoint", 4),  # count derived by measuring the file, not guessed
     ],
 }
 
@@ -97,6 +97,25 @@ STRUCTURAL = {
 
 # Claims that must appear in any extra file supplied on the command line (the PR body).
 REQUIRED_EXTRA: list[tuple[str, int]] = [("six reviewed", 1)]
+
+
+def _walk_supporting(node, path=""):
+    """Yield (path, reference_id, supporting_text) for every supporting-text entry."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in ("supported_by", "provenance", "findings") and isinstance(v, list):
+                for i, e in enumerate(v):
+                    if isinstance(e, dict) and e.get("supporting_text"):
+                        yield (
+                            f"{path}.{k}[{i}]",
+                            e.get("reference_id") or node.get("id"),
+                            e["supporting_text"],
+                        )
+            else:
+                yield from _walk_supporting(v, f"{path}.{k}")
+    elif isinstance(node, list):
+        for i, e in enumerate(node):
+            yield from _walk_supporting(e, f"{path}[{i}]")
 
 
 def check_retracted(path: Path, text: str) -> list[str]:
@@ -139,17 +158,69 @@ def audit(extra: list[Path]) -> list[str]:
     return problems
 
 
+class _StrictLoader(yaml.SafeLoader):
+    """SafeLoader that REJECTS duplicate mapping keys.
+
+    PyYAML silently keeps the last value for a repeated key, so a second
+    `supported_by:` in the same mapping deletes the first list before any consumer
+    - validator, renderer, exporter, or a quote checker walking the parsed document
+    - can see it. A gate that inspects the parsed tree is structurally blind to
+    quotes that parsing removed, so the check has to happen at load time.
+    """
+
+
+def _no_duplicate_keys(loader, node, deep=False):
+    seen, mapping = set(), {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in seen:
+            raise yaml.constructor.ConstructorError(
+                None,
+                None,
+                f"duplicate mapping key {key!r} (line {key_node.start_mark.line + 1}) - "
+                "PyYAML would silently keep only the last value",
+                key_node.start_mark,
+            )
+        seen.add(key)
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_StrictLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _no_duplicate_keys
+)
+
+
 def check_structural() -> list[str]:
     """Structural invariants on the review YAML. Asserts the file is loadable rather
     than skipping silently, so deleting it cannot defeat the check."""
     review = next((p for p in REQUIRED if p.name.endswith("-ai-review.yaml")), None)
     if review is None or not review.exists():
         return ["review YAML: MISSING - structural invariants could not be checked"]
+    raw = review.read_text()
     try:
-        doc = yaml.safe_load(review.read_text())
+        yaml.load(raw, Loader=_StrictLoader)
+    except yaml.constructor.ConstructorError as exc:
+        return [f"{review.name}: {exc.problem}"]
+    except Exception as exc:
+        return [f"{review.name}: unparseable ({exc})"]
+    try:
+        doc = yaml.safe_load(raw)
     except Exception as exc:  # a malformed review must be loud, not skipped
         return [f"{review.name}: unparseable ({exc})"]
     out = []
+    # Cross-check parsed against raw: a quote lost to a duplicate key would show as a
+    # mismatch here even if the strict loader were somehow bypassed.
+    raw_file_refs = raw.count("reference_id: file:")
+    parsed_file_refs = sum(
+        1 for _, ref, _ in _walk_supporting(doc) if str(ref).startswith("file:")
+    )
+    if raw_file_refs != parsed_file_refs:
+        out.append(
+            f"{review.name}: {raw_file_refs} 'reference_id: file:' lines in the text but "
+            f"{parsed_file_refs} survive parsing - {raw_file_refs - parsed_file_refs} entr(y/ies) "
+            "are being discarded, most likely by a duplicate mapping key"
+        )
     for name, predicate in STRUCTURAL.items():
         if not predicate(doc):
             out.append(f"{review.name}: structural invariant violated - {name}")
@@ -236,6 +307,20 @@ def self_test() -> int:
             review_c.write_text(t.replace(block, "", 1))
 
         cases.append(("has_input extensions stripped", strip_extensions, True))
+
+        # 7. reintroduce the duplicate supported_by key that dropped two provenance
+        #    entries in round 2 (the failure this check exists for)
+        def duplicate_key():
+            t = review_c.read_text()
+            anchor_sb = (
+                "    supported_by:\n"
+                "    - reference_id: file:human/ACTMAP/ACTMAP-bioinformatics/RESULTS.md\n"
+                "      supporting_text: '| GO:0016485 | protein processing | True | False | False | True |'\n"
+            )
+            assert anchor_sb in t, "self-test target drifted: merged supported_by block"
+            review_c.write_text(t.replace(anchor_sb, anchor_sb + "    supported_by:\n", 1))
+
+        cases.append(("duplicate supported_by key reintroduced", duplicate_key, True))
 
         pristine = {p: p.read_text() for p in (review_c, notes_c)}
         for name, mutate, should_fail in cases:

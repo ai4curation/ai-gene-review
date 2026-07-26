@@ -209,6 +209,9 @@ human annotation here: the phenotype is mouse-only and the human evidence is bio
 
 ## 10. The substrate is absent from the GO record, and the fix is an extension, not a process term
 
+*(Journal order: the case for a process term is recorded first, then the objections that killed it.
+The conclusion is the "What replaced it" paragraph — no `GO:0030047` annotation is proposed.)*
+
 Nothing in ACTMAP's GOA record says the protein it processes is actin. `GO:0030047 actin
 modification` ("Covalent modification of an actin molecule") says it exactly, and the precedent is
 already set one step downstream: **NAA80 carries `GO:0030047` by IDA from three separate papers**
@@ -245,8 +248,8 @@ secondary to it.
 
 ## 11. Sibling and repo-wide cross-checks
 
-- `ACTR5` and `ACTR8` merged into `main` while this review was in progress (PRs #2290, #2291, #2293).
-  Re-checked after rebasing onto the new `main`: neither mentions ACTMAP, actin maturation,
+- `ACTR5` and `ACTR8` merged into `main` while this review was in progress (PRs #2290, #2291, #2293),
+  and `ACTRT3` during round 2 (#2296). Re-checked each time: none mentions ACTMAP, actin maturation,
   N-terminal processing or NAA80, so there is no sibling inconsistency to reconcile.
 - Grepped every `*-ai-review.yaml` in the repo for `GO:0004239` and `GO:0030047`: **ACTMAP is the
   only gene review that touches either term**, so no other merged review has already resolved these
@@ -262,7 +265,9 @@ secondary to it.
   (Counts are printed by the runs rather than restated here, since round 2 changed them.)
 - Extra check beyond the shared script: every `file:` quote was additionally required to be an
   **exact** (not whitespace-normalised) substring, which is what catches a UniProt quote that
-  silently crosses a `CC       ` continuation line. 26 `file:` quotes, 0 problems.
+  silently crosses a `CC       ` continuation line. Clean on every run; the figure is deliberately
+  not restated here, for the same reason as the bullet above - and because a stale copy of it is
+  exactly what masked the duplicate-key bug described in §15.
 - `just validate human ACTMAP`: `✓ Valid`, one warning left standing deliberately - "No annotations
   reference available deep research files". The affinage record's substantive content is entirely
   traceable to PMIDs which are cited directly, and the campaign rule forbids quoting a provider
@@ -324,3 +329,50 @@ Four non-blocking suggestions, all taken:
 - **The description stated the alpha-actin activity flatly.** Hedged in both the top-level
   `description` and the core-function description: established for mouse, inferred for human by
   similarity (`ECO:0000250|UniProtKB:J3QPC3`).
+
+## 15. Round 3: a duplicate YAML key, and a number I explained away
+
+The reviewer found a genuine bug in the round-2 edit. Adding provenance to the accepted
+`GO:0016485` row produced **two `supported_by:` keys in the same mapping**. PyYAML keeps the *last*
+value for a repeated key, so the two `RESULTS.md` entries were deleted before any consumer saw them -
+the validator, the renderer, the exporters, `checkquotes.py`, and my own invariant harness alike.
+Merged into a single four-entry list; verified by counting `supported_by` entries on that row (2 → 4)
+and by loading the whole file through a duplicate-key-rejecting loader.
+
+**The part worth recording is how it hid.** The file holds **27** `reference_id: file:` lines while
+the parsed exact-substring check reported **25**, and the notes still carried the round-1 figure of
+**26**. I had written "the count moved from 26 to 25 when the GO:0030047 annotation was withdrawn" -
+which is arithmetically true (that row carried one `file:` quote) and *wrong as an explanation*,
+because the same round also added two entries that should have taken it to 27. The coincidence made a
+rationalisation look like a reconciliation. This is the campaign's own "do not rationalise a numeric
+discrepancy - investigate it" rule, failed on the very number I had just edited.
+
+It is also the "detector and mutator must agree on scope" failure in a new guise: **every quote gate
+in this repo walks the parsed document, so none of them can see a quote that parsing removed.** The
+gate reporting clean was not weak, it was blind.
+
+Two guards added so the class cannot recur silently here:
+
+1. `audit_actmap_claims.py` now loads the review through a `_StrictLoader` that **raises** on a
+   duplicate mapping key, rather than relying on any downstream consumer to notice.
+2. It also cross-checks **raw against parsed** - the number of `reference_id: file:` lines in the text
+   versus the number that survive `safe_load` - so a discarded entry is reported as an arithmetic
+   mismatch even if the strict loader were bypassed. A seventh self-test case reintroduces the exact
+   duplicate key and confirms both fire.
+
+Whether a duplicate-key-rejecting loader belongs in the **shared** validator is a good question and
+deliberately not answered here: `src/ai_gene_review/validation/` is shared infrastructure and out of
+scope for a gene PR. Nothing in the repo would flag this today, so it is worth raising separately.
+
+Two further reviewer suggestions, both taken:
+
+- **The disjointness sentence in `render()` had its boolean interpolated but its explanatory clause
+  hardcoded**, so a future ontology change could have printed `False` next to prose asserting the
+  `True` case. The clause is now generated from the per-term flags, with an explicit warning appended
+  if the test ever fails.
+- **`census()` and `family_wide_usage()` read `numberOfHits` for a total but derived their breakdowns
+  from a capped `results` page.** Nothing was truncated at 86 and 6 hits, but the script's contract is
+  to fail loudly, so `assert_complete_page()` now refuses any response where
+  `len(results) != numberOfHits` and names the fix. Verified by feeding it a synthetic truncated
+  response. Fitting, since the error this review corrected on itself was also a denominator set by a
+  query rather than by the biology.

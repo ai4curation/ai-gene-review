@@ -100,7 +100,7 @@ The census above is limited to five taxa and therefore **understates** the famil
 | GO:0030047 | actin modification | False | True | True | False |
 | GO:0007014 | actin ubiquitination | False | True | True | False |
 
-- **GO keeps proteolysis and protein modification in disjoint branches: True** - `GO:0016485 protein processing` is under `GO:0006508 proteolysis` and NOT under `GO:0036211 protein modification process`, while `GO:0030047 actin modification` is under `GO:0036211` and NOT under `GO:0006508`.
+- **GO keeps proteolysis and protein modification in disjoint branches: True** - `GO:0016485 protein processing` is under `GO:0006508` and is NOT under `GO:0036211`, while `GO:0030047 actin modification` is NOT under `GO:0006508` and is under `GO:0036211`.
 - NAA80 (`Q93015`) carries `GO:0030047` **3** time(s): IDA (PMID:29581253, UniProt), IDA (PMID:29581307, UniProt), IDA (PMID:30028079, UniProt) - but NAA80's reaction is an acetyl *transfer*, an additive modification, so the precedent does not extend to peptide-bond hydrolysis.
 - Drosophila ortholog `Q9VCE8` (CG33108) carries 3 annotation(s):
   - GO:0004239 ISS (GO_REF:0000024) assigned by **UniProt**, WITH/FROM `UniProtKB:Q5BKX5`

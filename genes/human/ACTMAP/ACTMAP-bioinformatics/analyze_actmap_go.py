@@ -58,6 +58,20 @@ TERMS_OF_INTEREST = [
 CENSUS_TAXA = ["9606", "10090", "7227", "7955", "559292"]
 
 
+def assert_complete_page(data: dict, url: str) -> dict:
+    """QuickGO caps a response at `limit`, so a count taken from numberOfHits and a
+    breakdown taken from results can silently disagree once the cap is hit. Fail loudly
+    instead, naming the fix - the same discipline as the WITH/FROM token assertion.
+    """
+    total, got = data.get("numberOfHits"), len(data.get("results", []))
+    if total is not None and got != total:
+        raise SystemExit(
+            f"TRUNCATED RESPONSE: {url}\n  numberOfHits={total} but only {got} results "
+            "returned; raise limit or paginate before trusting any per-product breakdown"
+        )
+    return data
+
+
 def get_json(url: str, tries: int = 4) -> dict:
     last = None
     for attempt in range(tries):
@@ -220,10 +234,11 @@ def family_wide_usage(go_id: str, family: dict[str, str]) -> dict:
     """
     members = {}
     for acc, gene in sorted(family.items()):
-        data = get_json(
+        url = (
             f"{QUICKGO}/annotation/search?geneProductId=UniProtKB:{acc}"
             f"&goId={go_id}&goUsage=exact&limit=100"
         )
+        data = assert_complete_page(get_json(url), url)
         res = data.get("results", [])
         members[acc] = {
             "gene": gene,
@@ -245,7 +260,7 @@ def census(go_id: str, family: dict[str, str]) -> dict:
         f"{QUICKGO}/annotation/search?goId={go_id}&goUsage=exact"
         f"&taxonId={','.join(CENSUS_TAXA)}&limit=200"
     )
-    data = get_json(url)
+    data = assert_complete_page(get_json(url), url)
     total_all_taxa = get_json(
         f"{QUICKGO}/annotation/search?goId={go_id}&goUsage=exact&limit=1"
     ).get("numberOfHits")
@@ -606,11 +621,22 @@ def render(r: dict) -> str:
     for go_id, v in pb["terms"].items():
         cells = " | ".join(str(v["under"][k]) for k in pb["probes"])
         add(f"| {go_id} | {v['name']} | {cells} |")
+    # Build the clause from the flags, so the narrative cannot contradict its own
+    # number if QuickGO ever changes.
+    def clause(go_id: str) -> str:
+        u = pb["terms"][go_id]["under"]
+        parts = [
+            ("" if u[k] else "NOT ") + f"under `{k}`"
+            for k in ("GO:0006508", "GO:0036211")
+        ]
+        return f"`{go_id} {pb['terms'][go_id]['name']}` is " + " and is ".join(parts)
+
+    disjoint = pb["proteolysis_and_modification_are_disjoint"]
     add(
         f"\n- **GO keeps proteolysis and protein modification in disjoint branches: "
-        f"{pb['proteolysis_and_modification_are_disjoint']}** - `GO:0016485 protein processing` is "
-        "under `GO:0006508 proteolysis` and NOT under `GO:0036211 protein modification process`, "
-        "while `GO:0030047 actin modification` is under `GO:0036211` and NOT under `GO:0006508`."
+        f"{disjoint}** - {clause('GO:0016485')}, while {clause('GO:0030047')}."
+        + ("" if disjoint else " NOTE: the disjointness test did NOT hold on this run, so any"
+           " argument resting on it must be re-examined.")
     )
     n8 = pb["naa80_GO_0030047"]
     add(
