@@ -205,10 +205,17 @@ Reasons this is not credible for ACTR10:
    table lists only CHAIN, sequence CONFLICTs and secondary structure), and UniProt
    gives one location: `Cytoplasm, cytoskeleton`. A subunit buried in a 1.2 MDa
    cytosolic complex has no route to a secretory granule *lumen*.
-2. Not a complex-level property. Of the 11 dynactin subunits only ACTR10 and ACTR1B
-   carry these Reactome granule/extracellular TAS annotations; DCTN1, DCTN2, DCTN4,
-   DCTN5, DCTN6 and ACTR1A do not (checked via QuickGO). If dynactin were genuinely
-   packaged into azurophil granules, all subunits would be.
+2. Not a complex-level property (checked per subunit via QuickGO). ACTR10 is the only
+   one of the 11 dynactin subunits annotated to azurophil granule lumen at all, and only
+   three (ACTR10, ACTR1B and CAPZA1) carry any Reactome TAS granule or extracellular
+   term; DCTN1, DCTN2, DCTN3, DCTN4, DCTN5, DCTN6, ACTR1A, ACTB and CAPZB carry none.
+   The two that share the pattern are precisely the subunits with large non-dynactin
+   pools - CAPZA1 is a bona fide F-actin capping protein and ACTR1B a centractin paralog
+   - so the pattern is per-protein detection in granule fractions, not secretion of the
+   complex.
+   If dynactin were genuinely packaged into azurophil granules, all subunits would be
+   there. ACTB does carry `GO:0005576` but by **HDA**, i.e. mass spectrometry, not this
+   Reactome route.
 3. It has already misled a downstream paper. A 2024 HCC study describes ACTR10 as
    [PMID:39697424 "ACTR10 is predicted to involve in the retrograde axonal transport of mitochondria and is suggested to be present in the cytosol, extracellular region and secretory granules."]
    — reading the GO annotations back out as ACTR10 biology. That is the concrete cost
