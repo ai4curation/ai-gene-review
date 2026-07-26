@@ -13,8 +13,8 @@ PAINT no-IBA project review, using the `affinage` deep-research provider
   **MWT374-376 motif** that giantin and golgin-45 bind redundantly [PMID:38134218 "We therefore
   concluded that the second mechanism for Golgi recruitment of ACBD3 is between the MWT374-376
   residues of ACBD3 and two golgins: golgin-45 and giantin."]; and that UR together with the
-  **GOLD domain (384–526)** binds the SEC22B longin domain, PKA RIIα and picornaviral 3A
-  proteins. None of them is the ACB domain.
+  **GOLD domain (384–526)** binds the SEC22B longin domain, PKA RIIα (at I380) and
+  picornaviral 3A proteins (at I380/K381). None of them is the ACB domain.
 - **No acyl-CoA ligand, affinity or acyl-CoA-dependent activity has ever been reported.**
 - The affinage record for this gene synthesises **30+ primary papers** across Golgi structure,
   PI4KB recruitment, steroidogenesis, sphingolipid transport, STING trafficking and picornavirus
@@ -135,9 +135,12 @@ domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the re
 correction above, the map collapses to **two** interaction surfaces, not three:
 
 - **Q domain (241–308)** — PI4KB *or* TBC1D22A/B, mutually exclusively
-- **UR + GOLD (≈368–526)** — one shared surface. `MWT374-376` binds giantin *or* golgin-45
-  (redundantly); `I380/K381` are the picornaviral 3A contact residues; `K381` is required for
-  PKA RIIα docking; and the UR-plus-GOLD fragment (328–528) binds the SEC22B longin domain.
+- **UR + GOLD** — one shared surface. UniProt places GOLD at **384–526**; the paper's
+  Golgi-competent, SEC22B-binding fragment is **328–528**; and the 21-residue alanine-scanned UR
+  lies immediately upstream of 384, i.e. inside that fragment. No source gives "UR + GOLD" a
+  lower bound, so quote residues, not a range. `MWT374-376` binds giantin *or* golgin-45 (redundantly); `I380/K381` are the
+  picornaviral 3A contact residues; **`I380`** is the residue nominated from the crystal
+  structure as the PKA RIIα contact; and 328–528 binds the SEC22B longin domain.
 
 An earlier version of these notes called this map "clean and non-overlapping" and set UR
 (golgins) against GOLD (3A, PKA, SEC22B). **That was wrong**, and a reviewer caught it using the
@@ -150,11 +153,23 @@ highlighted in blue and protein 3A targeted residues"], and the study's premise 
 ACBD3 recruitment factor."]. Having adopted the convention that "the UR of the GOLD domain" is
 one locus, I could not then use UR and GOLD as *contrasting* labels.
 
-Cross-referencing the two papers makes it sharper still: PMID:37044218 maps RIIα docking to
-**K381** [PMID:37044218 "K381P mutation greatly reduced the interaction between RIIα and the
-GOLD domain, while Q379P and I380P had almost no effect"] — one of the two residues the 2024
-paper names as the 3A contact site. So residues **374–381 are a shared hub** for the golgins,
-PKA RII and viral 3A.
+Cross-referencing the two papers makes it sharper still — but the residue has to be read off the
+right experiment. An earlier version of this section said PMID:37044218 "maps RIIα docking to
+**K381**", citing [PMID:37044218 "K381P mutation greatly reduced the interaction between
+RIIα and the GOLD domain, while Q379P and I380P had almost no effect"]. **That over-reads a
+proline scan.** The mutants are prolines chosen as helix breakers [PMID:37044218 "we generated
+GST-tagged GOLD mutants (Q379P, I380P, or K381P) for pulldown assays since proline is known to be
+a potent helix breaker"], and the authors read the result structurally, not as a contact
+[PMID:37044218 "suggesting that K381P disrupts the helical structure and the RIIα-binding
+interface"]. Two sentences later they name the actual contact from the crystal structure:
+[PMID:37044218 "the side chain of Ile380 is mostly available for protein interactions, likely
+involved in binding the shallow hydrophobic groove on RII surface"], with Phe383 buried.
+
+So the RIIα contact residue is **I380** — and I380 is one of the two residues the 2024 paper
+names as the 3A contact site [PMID:38134218 "in red (I380/K381; AlphaFold2)"]. The conclusion
+gets *stronger*: residues **374–381 are a shared hub** for the golgins, PKA RII and viral 3A,
+and the PKA/viral overlap is a direct structural coincidence at **I380** rather than an
+inference from a helix-breaking mutation.
 
 What survives unchanged is the Q-domain conclusion: 3A does not displace PI4KB, because neither
 the UR nor GOLD is the Q domain. What changes is the mechanism of the hijack — it is most
@@ -235,8 +250,9 @@ Reading it added three things beyond the fix:
    specific requirement for ACBD3 recruitment cannot be read off it. The review therefore
    attributes the upstream *requirement* to SCFD1 alone and annotates SEC22B only as a binding
    partner.
-2. **The GOLD domain binds the longin domain of SEC22B** [PMID:38134218 "We thus conclude that the
-   UR and GOLD domain of ACBD3 interacts with the longin domain of SEC22B"], with the SNARE and
+2. **The UR plus GOLD domain binds the longin domain of SEC22B** [PMID:38134218 "We thus conclude
+   that the UR and GOLD domain of ACBD3 interacts with the longin domain of SEC22B"] — the mapped
+   fragment is 328–528, so GOLD alone is not the right attribution. With the SNARE and
    transmembrane domains excluded by truncation. Annotated as a `NEW` `GO:0000149 SNARE binding`
    IPI. Deliberately *not* annotated as complex membership, which the paper does claim: the assays
    are binary co-IPs from overexpressing cells, and the cytosolic MWT374-376>AAA mutant binds
@@ -265,7 +281,7 @@ giantin  OR  golgin-45   (redundant)         <- step 2, both bind MWT374-376 in 
 ACBD3 on cis/trans-Golgi membranes
         |
         v
-PI4KB (via Q domain) / PKA RII (via UR+GOLD, K381) / FAPP2 / PPM1L / STING
+PI4KB (via Q domain) / PKA RII (via UR+GOLD, I380) / FAPP2 / PPM1L / STING
 ```
 
 Sequential, not parallel: ACBD3-giantin binding drops in SCFD1-KO cells, while ACBD3-SCFD1 binding
