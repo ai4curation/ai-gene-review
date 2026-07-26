@@ -373,20 +373,30 @@ two formamidases in the WITH/FROM column are named as amidohydrolases in the
 review rather than folded into an esterase generalisation.
 
 **AADACL4 (PR #2263, already merged).** I queried its GOA directly rather than
-taking the paralog framing on trust, and it is **row-for-row identical to
-AADACL3's**: the same five annotations, the same terms, and the same WITH/FROM
-sets, including `GO:0016787` IBA from `PTN009058710` with all seventeen sources and
-`GO:0016020` IBA from `PTN009058713`. So the node-placement recommendation applies
-to AADACL4 unchanged.
+taking the paralog framing on trust: it carries the **same five annotations with the
+same five terms**, and the WITH/FROM sets on both IBA rows are identical to
+AADACL3's — `GO:0016787` from `PTN009058710` with all seventeen sources, and
+`GO:0016020` from `PTN009058713`. It is *not* identical throughout, and the one
+difference is the `SL-0162` token recorded below, so the blanket phrasing would
+contradict this section's own finding. Scoped to the two IBA rows, the
+node-placement recommendation applies to AADACL4 unchanged.
 
 That also corrects one premise in the cross-gene framing: AADACL3 and AADACL4 do
 **not** inherit "no mechanism term at all", and neither does AADACL2. All three
 inherit `GO:0016787 hydrolase activity` at a second node, `PTN009058710`. That term
 is the correct lowest common ancestor of that node's donors — it is not a parent
 standing in for something better that PAINT should have chosen — but it is
-uninformative *for these genes*, and it duplicates a more specific term two of them
-already carry from a subfamily signature. That is why MODIFY on redundancy grounds,
-rather than a new annotation, is the right action.
+uninformative *for these genes*, and it duplicates a more specific term that **all
+three** of them already carry — `GO:0052689` IEA from `InterPro:IPR017157` appears on
+AADACL2, AADACL3 and AADACL4 alike. That is why MODIFY on redundancy grounds, rather
+than a new annotation, is the right action.
+
+That count is not just arithmetic: it means the remedy this review relies on is
+directly available to AADACL2 as well. Modifying `GO:0016787` toward `GO:0052689`
+**merges two rows that already exist** on each of the three records, whereas
+modifying it toward `GO:0017171` would introduce a term that appears on none of
+them. So the #2266 follow-up has a concrete remedy to adopt, not merely a
+disagreement to adjudicate.
 
 One asymmetry in the two records is worth recording because it corroborates the
 UniProt-gap finding from a different direction: AADACL4's `GO:0016020` IEA carries
