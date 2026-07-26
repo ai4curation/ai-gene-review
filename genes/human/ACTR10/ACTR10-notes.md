@@ -69,8 +69,8 @@ The same paper raises an Arp2/3-like nucleation role as a hypothesis while argui
 nucleator
 [PMID:12857853 "Arp1 has a vanishingly low critical concentration for polymerization (<1 nM) and assembles without a lag phase, suggesting nucleation is not required"],
 which is why no nucleation or polymerisation term is annotated here: not demonstrated, rather
-than excluded. See §14 — this correction only became visible when a merge brought in the full
-text.
+than excluded. See §14 — and note that the clause refuting the stronger claim was in the cached
+abstract all along, two lines above the sentence I quoted.
 
 Nucleotide binding is a defining property of the actin *fold*, not of actin alone
 [PMID:42439233 "While actin is defined by its ability to form dynamic filaments, bind and hydrolyze ATP, and serve as a major cytoskeletal scaffold, Arps and actin-like proteins have evolved specialized roles in cytoplasmic and nuclear protein complexes."],
@@ -537,12 +537,19 @@ identical to the committed `RESULTS.md`** — so all five modules, section F inc
 verified reproducible, and the partial-re-run caveat above is superseded. This is the
 `diff`-reproducibility gate met properly rather than argued around.
 
-## 14. A merge brought in full text that refuted two of my own claims
+## 14. I quoted one sentence and ignored the one before it
 
-Resolving a merge conflict on `publications/PMID_12857853.md` — main's copy had
-`full_text_available: true` against my abstract-only one, so main's was kept per the
-add/add rule — made the Eckley & Schroer 2003 full text readable for the first time. It
-falsified two claims I had made from the abstract, both in the same way.
+**The refuting clause was in the cached abstract the whole time.** My pre-merge,
+abstract-only copy of `publications/PMID_12857853.md` contained *"found it could
+coassemble"* on line 49 — two lines above the sentence I quoted from line 50. A merge
+conflict later replaced that file with main's full-text copy and I re-read it, which is
+*when* I noticed; but nothing was unavailable to me when I made the error. Attributing the
+catch to the merge, as an earlier draft of this section did, gets the lesson backwards and
+implies the mitigation is "fetch full text" — which CLAUDE.md warns is frequently
+impossible. The actual mitigation is free and always available: **read the whole paragraph
+around the sentence you are about to quote.**
+
+Two claims were falsified, both in the same way.
 
 **What went wrong.** The abstract reads: *"We tested the ability of Arp11 to interact with
 conventional actin and found it could coassemble. Like Arp1, cytosolic Arp11 is found only
@@ -572,10 +579,24 @@ to catch.
 Both rows now cite **both halves** of the actin result rather than the half that suited
 the argument, which is the structural fix: a one-sided quote set is the symptom.
 
-**Process note.** This was found only because a merge conflict forced me to look at the
-file. Nothing in the review had flagged it — the quote was verbatim, the reference title
-matched, and the quote checker passed, because none of those checks can see a *quotation
-that is true but selectively bounded*. The `reference_review` for PMID:12857853 now
+**One more datum from the full text (🔵 4).** The paper maps a minimal actin-binding
+fragment
+[PMID:12857853 "We identified a minimal actin-binding fragment as amino acids 23–137, which corresponds roughly to subdomains 1 and 2 in conventional actin"],
+i.e. subdomains 1–2 carry Arp11's actin-binding surface. This does **not** conflict with the
+subdomain-2 loop being deleted: the missing element is actin's 38–57 surface loop, a
+sub-feature within subdomain 2, not the subdomain itself, and its absence is what stops a
+further subunit adding beyond Arp11 rather than what stops Arp11 binding. Recording it because
+this round's lesson is precisely about noticing the adjacent fact — and because a reader who
+found this line independently might otherwise read it as contradicting §2.
+
+**Process note.** I noticed the error while re-reading the file after a merge conflict
+replaced it. but the file's abstract had always
+contained the refuting clause, so the merge changed only when I looked, not what was there.
+Nothing in the review had flagged it — the quote was verbatim, the reference title matched, and
+the quote checker passed, because none of those checks can see a *quotation that is true but
+selectively bounded*. That is the gap worth remembering: every mechanical check in this repo
+validates a quote against its source, and none validates it against its own neighbouring
+sentence. The `reference_review` for PMID:12857853 now
 records the full-text reading, and the stale `full_text_unavailable: true` flag is
 removed. (It is retained on PMID:42439233 and PMID:23650620, which really are
 abstract-only.)
