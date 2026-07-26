@@ -117,8 +117,11 @@ Two separate losses, with different causes:
   human proteome. The collateral damage is not ACTR1A-specific — **human ACTB
   (P60709) also now has no ATP-binding annotation**, although it retains
   `GO:0016887 ATP hydrolysis activity` (IDA) and `GO:0005200` (TAS,
-  PMID:6202424). So the entire actin family currently has no nucleotide-binding
-  molecular function in GOA, at a moment when human structures model the
+  PMID:6202424). The loss is not confined to `GO:0005524` either: a QuickGO query
+  for `GO:0000166` with `goUsage=descendants` returns **0 hits** for each of
+  P60709 (ACTB), P61163 (ACTR1A), P42025 (ACTR1B) and Q9NZ32 (ACTR10), so no
+  nucleotide-binding molecular function of any granularity survives anywhere in
+  the human actin/Arp set — at a moment when human structures model the
   nucleotide in every Arp1 protomer.
 - **`GO:0005200 structural constituent of cytoskeleton`** is the best available
   MF for a filament-forming structural subunit, is the exact analogue of
