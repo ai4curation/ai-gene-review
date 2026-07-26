@@ -35,13 +35,17 @@ type 1 GshA already satisfies step 1.
 - [x] Fetch the focused PSEPK genes from UniProt and GOA.
 - [x] Curate all three first-pass gene reviews.
 - [x] Create and semantically validate the species-neutral two-part module.
-- [ ] Complete OpenScientist gene-level research.
+- [x] Attempt full OpenScientist gene-level research; the corrected `gshA`,
+  `gshB`, and `PP_3253` requests each exhausted the 7,200-second provider
+  timeout without a report.
 - [x] Complete generic module OpenScientist research.
-- [ ] Complete module + `ppu00480` + PSEPK OpenScientist research.
+- [x] Attempt module + `ppu00480` + PSEPK OpenScientist research; the corrected
+  request exhausted the 7,200-second provider timeout without a report.
 - [x] Resolve whether `PP_3253` merits a step-1 variant after research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open and shepherd one PR for this module.
+- [ ] Open one non-draft PR for this module.
+- [ ] Shepherd the PR through review and CI.
 
 ## Focused Genes
 
@@ -63,6 +67,12 @@ reviewed *Pasteurella multocida* GshAB (UniProtKB:Q9CM00) while retaining
 separate reaction parts. The report did not provide organism-specific evidence
 that `PP_3253` performs the first reaction in vivo, so it remains outside the
 module.
+
+The three gene-level requests and the species-aware module request were each
+allowed the full configured 7,200 seconds with three iterations and returned
+no report. The module therefore cites the completed generic report and
+inspectable exact-record, reaction, family, and gene-review evidence rather
+than nonexistent provider files.
 
 The 31-gene KEGG candidate inventory is retained in
 [`ppu00480_glutathione_biosynthesis.tsv`](ppu00480_glutathione_biosynthesis.tsv).
