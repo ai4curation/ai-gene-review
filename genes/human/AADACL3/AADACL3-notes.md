@@ -441,3 +441,65 @@ than removing anything.
    AADACL4 (ENSG00000204518) as choroid-enhanced, so the two members with a skin
    signal are AADACL2 and AADACL3 rather than the 1p36.21 tandem pair. Is there a
    skin ester-hydrolase role for this branch of the family?
+
+## Harmonised with AADACL2 and AADACL4 after #2264 merged
+
+This review's verdict on the `PTN009058710` `GO:0016787` row was the correct one of the three
+that were reached independently, and it is unchanged: the row is correct, correctly scoped and
+validly transferred, and replaceable only as **redundant** with the `IPR017157`-derived
+`GO:0052689` that the same GOA record carries. What changes here is the encoding and two donor
+facts, so that AADACL2, AADACL3 and AADACL4 — which carry this row byte for byte, the same 17
+`WITH/FROM` tokens in all three records — now say the same thing about it.
+
+**The independent measurement.** `genes/human/AADACL2/AADACL2-bioinformatics/` holds a shared
+node-level audit (`audit_node_PTN009058710.py` → `NODE_PTN009058710.md`) that resolves all 17
+tokens and tests each candidate term against every donor, reading chemistry off each donor's own
+EC numbers *and* its own curated GO annotations classified by fetched ontology ancestry, and the
+nucleophile off its own `ACT_SITE` features:
+
+```
+GO:0016787 hydrolase activity:                  TRUE 16, FALSE 0, UNDETERMINED 0
+GO:0052689 carboxylic ester hydrolase activity: TRUE 14, FALSE 2, UNDETERMINED 0
+GO:0017171 serine hydrolase activity:           TRUE 15, FALSE 1, UNDETERMINED 0
+```
+
+That is this review's conclusion reached by a different route — `GO:0016787` is the exact LCA,
+`GO:0052689` blocked by the two arylformamidases and `GO:0017171` by HIDH — and it also settles
+the equality of the `WITH/FROM` sets across all three genes by measurement (QuickGO per
+accession, plus the committed TSVs).
+
+**1. `GRANULARITY_MISMATCH` removed from both hydrolase rows.** This review kept it on the
+literal reading of the enum ("parent term is true but uninformative") while simultaneously
+arguing that `GO:0016787` is the genuine LCA. Those two are in tension: `failure_modes` records
+the *biological shape of a propagation issue*, and this propagation has none — the parent is
+uninformative because the donor set is heterogeneous, not because the transfer could have been
+more specific. `root_cause: EVIDENCE_CIRCULAR_OR_REDUNDANT` alone now carries the row, matching
+AADACL2 and AADACL4. `SOURCE_EVIDENCE_WEAK` is kept on the `IPR013094` row: that is a separate
+and still-correct judgment about a fold signature reaching outside the subfamily, not a
+granularity claim. (The schema's enum description does not yet distinguish the two readings and
+is worth clarifying; that is a repo question, raised in #2286.)
+
+**2. Yeast BNA7 does resolve.** This gene's own audit reached `SGD:S000002836` through its
+Alliance record, failed, and honestly reported the nucleophile as unresolved — hence its
+13-of-14 serine count. `xref:sgd-S000002836` returns **Q04066** directly, whose `ACT_SITE 110`
+UniProt labels the nucleophile and which reads as **Ser**. So the node-wide tally is **15 of 16
+donors with a serine nucleophile**, and both arylformamidases are themselves serine hydrolases.
+This strengthens the conclusion: the sole non-serine donor is still HIDH. `AADACL3-bioinformatics/
+RESULTS.md` is deliberately left as generated — 13 of 14 is what its resolver really produced —
+and the correction is recorded as a supersession citing the shared audit.
+
+**3. HIDH is a bifunctional carboxylesterase, not a weakly inferred hydrolase.** Its
+`source_status` moves from `SOURCE_WEAK_OR_INFERRED` to `SUPPORTS_TRANSFER`: `GO:0106435
+carboxylesterase activity` is held by **IDA**, alongside the `GO:0033987` dehydratase IDA, so its
+esterase activity is slight but not inferred. It genuinely supports the hydrolase parent, and its
+role in the argument is unchanged — it is the single donor that refutes `GO:0017171`. Worth
+noting that call rests on fold position rather than a UniProt label (`ACT_SITE 164` is annotated
+"Proton acceptor", `ECO:0000305`), but the elbow pentapeptide corroborates it independently:
+15 of 16 donors read G-x-S-x-G while HIDH alone reads `GETSG`, and a sensitivity analysis in the
+shared audit shows `GO:0017171` fails at this node whether HIDH is scored FALSE or UNDETERMINED.
+
+**4. The mechanism term's node placement.** Unchanged in substance from this review's
+`suggested_questions`, and now measured: at the family node `PTN009058713` the three donors PAINT
+cites — human AADAC, mouse Aadac and mouse Nceh1 — are all `IPR017157` members, all serine, all
+ester hydrolases, and **all three hold `GO:0017171` by IDA**. All three blockers at the deep node
+lie outside `IPR017157`. So the recommendation is a node move, not a term change on the row.

@@ -304,8 +304,8 @@ disagreed with its own analysis file.
 
 **Where the mechanism term does belong.** `GO:0017171` is not wrong about this family, it is
 attached to the wrong node. At the *family* node `PTN009058713` — whose `WITH/FROM` names only
-human AADAC, mouse Aadac and mouse Nceh1 — it is true of all three donors and held by **IDA** in
-two of them, and all three are `IPR017157` members, while all three blockers at the deep node
+human AADAC, mouse Aadac and mouse Nceh1 — it is true of every donor PAINT cites there and held
+by **IDA** in all three of them, and all three are `IPR017157` members, while all three blockers at the deep node
 lie *outside* `IPR017157`. The recommendation is therefore a **node move**
 (`PTN002745055`/`PTN002745068` → `PTN009058713`), added to `suggested_questions` here and to
 `knowledge_gaps` + `suggested_questions` in AADACL2, naming all three affected genes once.
@@ -383,3 +383,25 @@ All five taken; none changed a conclusion.
    what `query_for` already refuses to do.
 5. Two `supporting_text` entries quoted the same file with one a strict prefix of the other, the
    longer starting mid-bold. Reduced to the single clean quote.
+
+### Round-4: the same staleness, in the file that flagged it
+
+The reviewer found that `AADACL2-bioinformatics/RESULTS.md` still carried "true of every donor at
+`PTN009058713` and IDA-supported by **two** of them" — a sentence this PR itself added, left
+un-updated when round 2 changed "two" to "three" in six other places and round 3 changed "every
+donor **at**" to "every donor PAINT **cites** at". So both conceded items were unapplied in one
+sentence, in the very file whose stale-quote problem was item 9. Patching named line numbers is
+what let it survive twice.
+
+Fixed by **sweeping instead of patching**: a single script now greps all seven changed files for
+every `IDA … two of them` variant and every unqualified `every donor at the family node`, applies
+the corrections idempotently, and then **re-greps and hard-fails** if any occurrence survives.
+That found four more instances beyond the one reported — the round-1 sentence in *both* notes
+files, the "Not two of three: every donor at the family node" line in `NODE_PTN009058710.md`, and
+two places in the AADACL4 review that round 3's line-targeted edit had missed. Lesson for the
+campaign log: when a phrase is corrected, grep the whole changed file set for the phrase, not for
+the line.
+
+Also from the same review: the `uncovered` guard is now an explicit `if … die()` rather than an
+`assert`, since `python -O` strips assertions and the guard is the mechanism by which the
+"no gene drops out of the equality test" promise is kept.

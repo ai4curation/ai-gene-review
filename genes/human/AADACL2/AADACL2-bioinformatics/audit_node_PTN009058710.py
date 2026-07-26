@@ -37,11 +37,12 @@ Deliberate discipline, each point having cost a previous round:
     only its curated GO annotations and annotated features count, and the reviewed status
     is printed next to every claim.
   * The WITH/FROM sets are read out of the committed GOA TSVs, never retyped. Equality across
-    the three paralogs is *measured*, not assumed - and because AADACL3's folder is not in the
-    tree while its review is still an open PR, the sets are also fetched per accession from
-    QuickGO (Q6P093, Q5VUY0, Q5VUY2) so that all three genes are covered by a live source
-    rather than two by file and one by assertion. Where both sources exist they are
-    cross-checked against each other.
+    the three paralogs is *measured*, not assumed, from two independent sources: the committed
+    TSVs, and a per-accession fetch from QuickGO (Q6P093, Q5VUY0, Q5VUY2). Where both exist they
+    are cross-checked against each other, and a gene present in neither is a hard error. The
+    QuickGO path was introduced while one of the three reviews was still an open PR and its folder
+    was absent here; it is retained now that all three are present, because two independent
+    sources agreeing is worth more than one.
   * A missing input is never silently converted into an absence: a gene whose TSV is absent is
     named in the output with the reason, and the run aborts unless QuickGO covers it, so no
     gene drops out of the equality test unnoticed.
@@ -77,8 +78,8 @@ while REPO != REPO.parent and not (REPO / "genes").is_dir():
     REPO = REPO.parent
 
 GENES = ["AADACL2", "AADACL3", "AADACL4"]
-# The three human paralogs that share this row. AADACL3's gene folder is not in the tree while
-# its review is an open PR, so its WITH/FROM set is measured from QuickGO instead of from a TSV.
+# The three human paralogs that share this row. Accessions are listed so the WITH/FROM set can be
+# measured from QuickGO independently of whether a gene's folder is present in the tree.
 PARALOG_ACCESSIONS = {"AADACL2": "Q6P093", "AADACL3": "Q5VUY0", "AADACL4": "Q5VUY2"}
 AUDITED_TERM = "GO:0016787"
 AUDITED_REF = "GO_REF:0000033"
@@ -130,8 +131,9 @@ def quickgo_with_from(accession: str) -> list[str]:
     """The audited row's WITH/FROM set for one protein, fetched live from QuickGO.
 
     This exists so that the "identical across all three paralogs" claim is measured for every
-    gene, including one whose review is still an open PR and whose folder is therefore not in
-    this tree. Returned in GOA token form (db:id), sorted, so it is directly comparable with
+    gene from a source that does not depend on the tree's contents - it was added when one of the
+    three had no folder here - and so that, once every folder is present, two independent sources
+    have to agree. Returned in GOA token form (db:id), sorted, so it is directly comparable with
     the TSV column.
     """
     payload = get(QUICKGO_ANN, geneProductId=f"UniProtKB:{accession}", goId=AUDITED_TERM,
@@ -155,11 +157,11 @@ def read_with_from(gene: str) -> dict:
     if not tsv.exists():
         # Not silently an absence: named in the output, printed, and the run aborts later
         # unless QuickGO covers this gene instead.
-        print(f"NOTE: {tsv.relative_to(REPO)} is not in this tree "
+        print(f"NOTE: {tsv.relative_to(REPO)} is not in this checkout "
               f"(regenerate with `just fetch-gene human {gene}`); "
               f"{gene}'s WITH/FROM set will be measured from QuickGO instead.")
         return {"present": False, "path": str(tsv.relative_to(REPO)),
-                "why_absent": "gene folder not in this tree",
+                "why_absent": "gene folder not present in this checkout",
                 "covered_by": "QuickGO"}
     rows = list(csv.DictReader(tsv.open(), delimiter="\t"))
     if not rows:
@@ -434,9 +436,9 @@ def main() -> int:
     # testing a condition that cannot fail: if a gene is ever added to GENES without an
     # accession, this fires instead of the gene silently dropping out of the comparison.
     uncovered = [g for g in GENES if g not in present and g not in from_quickgo]
-    assert not uncovered, (
-        f"no WITH/FROM source for {uncovered}: neither a committed GOA TSV nor an entry in "
-        f"PARALOG_ACCESSIONS, so the equality test would silently omit them")
+    if uncovered:  # not an assert: python -O strips those, and this promise must not vanish
+        die(f"no WITH/FROM source for {uncovered}: neither a committed GOA TSV nor an entry in "
+            f"PARALOG_ACCESSIONS, so the equality test would silently omit them")
 
     reference = from_tsv["AADACL2"]
     identical_genes = sorted(from_quickgo)

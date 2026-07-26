@@ -201,7 +201,8 @@ the localisation from it would fix three human genes at once.
 
 Both halves of that claim were then tested donor by donor in `NODE_PTN009058710.md`, the
 shared node-level audit for AADACL2, AADACL3 and AADACL4. It confirms that `GO:0017171` is
-true of every donor at `PTN009058713` and IDA-supported by two of them, and that at
+true of every donor PAINT cites at `PTN009058713` and IDA-supported by all three of them,
+and that at
 `PTN009058710` no candidate term below `GO:0016787` survives every donor — so the deep-node
 row cannot be upgraded, only recognised as redundant with the `IPR017157`-derived
 `GO:0052689` that all three genes already carry.
