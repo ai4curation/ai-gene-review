@@ -14,3 +14,8 @@ record and characterized orthologs. Its mismatch-repair discussion is not
 target-specific and includes evidence from non-Pseudomonas and eukaryotic ExoI
 systems, so it does not justify adding mismatch repair as a core Q88N51
 process.
+
+The cached parent `PTHR11046` artifacts are retained as negative provenance:
+the parent spans oligoribonuclease and Exonuclease I subfamilies, whereas
+Q88N51 and the module's SbcB selector use the function-specific
+`PTHR11046:SF11` Exonuclease I subfamily.

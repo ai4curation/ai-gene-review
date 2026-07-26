@@ -10,6 +10,8 @@ from pathlib import Path
 
 from Bio import SeqIO
 from Bio.Align import PairwiseAligner
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,6 +38,14 @@ def sha256(sequence: str) -> str:
     return hashlib.sha256(sequence.encode("ascii")).hexdigest()
 
 
+def alignment_label(record_id: str) -> str:
+    """Use the accession from a standard UniProt FASTA identifier."""
+    fields = record_id.split("|")
+    if len(fields) == 3 and fields[0] in {"sp", "tr"}:
+        return fields[1]
+    return record_id
+
+
 def main() -> None:
     args = parse_args()
     query_id, query_sequence = read_single_fasta(args.query)
@@ -48,7 +58,10 @@ def main() -> None:
         open_gap_score=args.gap_open_score,
         extend_gap_score=args.gap_extend_score,
     )
-    alignment = aligner.align(query_sequence, target_sequence)[0]
+    alignment = aligner.align(
+        SeqRecord(Seq(query_sequence), id=alignment_label(query_id)),
+        SeqRecord(Seq(target_sequence), id=alignment_label(target_id)),
+    )[0]
 
     aligned_pairs: list[tuple[int, int]] = []
     for (query_start, query_end), (target_start, target_end) in zip(
