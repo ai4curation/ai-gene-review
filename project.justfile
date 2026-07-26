@@ -607,6 +607,12 @@ validate-terms-all:
         {{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
     done
 
+# Audit references flagged full_text_unavailable whose cached publication has full text.
+# Silent defect: no validator checks the pair, and the flag discourages extracting the
+# evidence an annotation needs. Add --fix to remove them. Exits non-zero if any remain.
+audit-fulltext-flags *args="":
+    uv run ai-gene-review audit-fulltext-flags {{args}}
+
 # Reference validation (publication titles + supporting text snippets)
 [group('QC')]
 validate-references file:
