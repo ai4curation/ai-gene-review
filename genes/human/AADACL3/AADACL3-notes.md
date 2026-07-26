@@ -238,6 +238,12 @@ its own right.
 
 ## Reconciling with the parallel AADACL2 and AADACL4 reviews
 
+*Superseded, and kept for its reasoning: written while AADACL2 and AADACL4 still encoded this row
+differently. All three now record `EVIDENCE_CIRCULAR_OR_REDUNDANT` with no granularity failure
+mode, and the 13-of-14 serine figure below is superseded by the shared node audit's 15 of 16,
+which resolves BNA7 directly rather than through the Alliance record. Nothing here is
+outstanding.*
+
 The AADACL2 review (PR #2266) reported that PAINT's node placement for this family
 is inverted: `GO:0017171 serine hydrolase activity` sits only at ortholog-level
 nodes, while the shared family node `PTN009058713` carries `GO:0016020 membrane` —
@@ -296,26 +302,27 @@ that node only if HIDH is excluded, whereas at the tighter `PTN009058713` there 
 no obstacle at all. That is a sharper version of the recommendation: the term is
 blocked by exactly one member, and it is nameable.
 
-**This review now conflicts with the merged AADACL2 review, and the conflict
-should be resolved there rather than papered over here.** I checked the two records
-directly. `genes/human/AADACL2/AADACL2-goa.tsv` carries a `GO:0016787` IBA whose
-WITH/FROM set is **identical token-for-token** to AADACL3's — the same seventeen
-tokens, the same node `PTN009058710` (compared programmatically, not by eye). And
-`AADACL2-ai-review.yaml` resolves that row as `MODIFY → GO:0017171` with
-`root_cause: TERM_SCOPING_PROBLEM` and `failure_modes: [GRANULARITY_MISMATCH]`,
-reading its serine count as *supporting* the mechanism term. This review reads the
-same count as *blocking* it, because one member of that node — HIDH, `Thr164` — is
-not a serine hydrolase. Both cannot be right about the same row.
+**The conflict with the merged AADACL2 review, since resolved.** *(Written when
+AADACL2 and AADACL4 still disagreed with this review; the disagreement no longer
+exists — all three now record the treatment argued for here. Kept because the
+merges-two-existing-rows argument below is what settled it.)*
 
-I think AADACL3's reading is the correct one, for a reason that is about the record
-rather than about the argument: `GO:0052689` already exists on the GOA from an
-independent subfamily signature, so a MODIFY toward it **merges two existing rows**,
-whereas `GO:0017171` appears nowhere in the GOA and a MODIFY toward it would
-*introduce* a claim that the cited node does not license. But AADACL2's review is
-already merged, so this needs a follow-up on **PR #2266** rather than a unilateral
-assertion here; a curator reading both files today gets contradictory advice about
-the same annotation row. Two further details for whoever picks that up: AADACL2's
-notes still describe HIDH as "a dehydratase, not a hydrolase", which is the
+I checked the two records directly. `genes/human/AADACL2/AADACL2-goa.tsv` carries a
+`GO:0016787` IBA whose WITH/FROM set is **identical token-for-token** to AADACL3's —
+the same seventeen tokens, the same node `PTN009058710` (compared programmatically,
+not by eye). AADACL2's review then resolved that row as `MODIFY → GO:0017171`,
+reading its serine count as *supporting* the mechanism term, where this review read
+the same count as *blocking* it because one member of that node — HIDH, `Thr164` — is
+not a serine hydrolase. Both could not be right about the same row.
+
+AADACL3's reading was the correct one, for a reason that is about the record rather
+than about the argument: `GO:0052689` already exists on the GOA from an independent
+subfamily signature, so a MODIFY toward it **merges two existing rows**, whereas
+`GO:0017171` appears nowhere in the GOA and a MODIFY toward it would *introduce* a
+claim that the cited node does not license. That argument is what the shared node
+audit then confirmed against the donor chemistry, and AADACL2 and AADACL4 were
+brought into line with it, so nothing is outstanding on either. Two details that were flagged for whoever picked that up, both since fixed: AADACL2's
+notes described HIDH as "a dehydratase, not a hydrolase", which is the
 characterisation corrected in `f50b47fcd` (UniProt gives it both EC 3.1.1.1 and EC
 4.2.1.105); and AADACL2 and AADACL3 do *not* differ in whether they inherit a
 molecular-function term, which is how I first framed it — they both inherit
@@ -506,30 +513,76 @@ lie outside `IPR017157`. So the recommendation is a node move, not a term change
 
 ### Round-5: retiring the divergence statements this harmonisation made false
 
-Extending the harmonisation to AADACL3 (round 4) invalidated every statement in the three reviews
-that described them as disagreeing — and round 4's sweep grepped for the `two of them` phrasings
-but not for those, which is how they survived one more round.
+Extending the harmonisation to AADACL3 invalidated every statement in the three reviews that
+described them as disagreeing — and the round-4 sweep grepped for the `two of them` phrasings but
+not for those, which is how they survived a round.
 
-- **`suggested_questions`** here still said the merged AADACL2 review resolves the same row as
+- **AADACL3's `suggested_questions`** said the merged AADACL2 review resolves the same row as
   `MODIFY → GO:0017171` with `TERM_SCOPING_PROBLEM` + `GRANULARITY_MISMATCH`, that "both cannot be
   right about one row", and that "**PR #2266** needs a follow-up to settle it". None of that
-  survives: AADACL2 now carries this review's own verdict. Rewritten to ask PAINT only where the
+  survives: AADACL2 now carries AADACL3's own verdict. Rewritten to ask PAINT only where the
   mechanism term should sit — the question that is genuinely still open — while keeping the
   merges-two-existing-rows argument, which is what settled the matter.
-- **AADACL2's row reason** motivated the schema request with "since AADACL3's review reaches the
-  same LCA conclusion while keeping the mode on the literal reading". That divergence no longer
-  exists either. The request stands but the justification changes: all three paralogs now encode
-  the row on the propagation-shape reading, which the enum text does not itself state, so the
-  convention is carried by argument rather than by the schema.
-- **The shared audit's "Why this audit exists"** section is now explicitly marked *historical*,
-  with a closing "Settled outcome" paragraph, so the one remaining mention of
-  `TERM_SCOPING_PROBLEM` cannot be read as a live claim.
-- The conflict section earlier in this file carries an inline **superseded** marker, and the local
-  13-of-14 serine count now points at the shared audit's 15 of 16.
+- **AADACL2's and AADACL4's row reasons** motivated the schema request with "since AADACL3's review
+  reaches the same LCA conclusion while keeping the mode on the literal reading". That divergence
+  no longer exists either. The request stands but the justification changes: all three paralogs now
+  encode the row on the propagation-shape reading, which the enum text does not itself state, so
+  the convention is carried by argument rather than by the schema.
+- **The shared audit's "Why this audit exists"** section is explicitly marked *historical*, with a
+  closing "Settled outcome" paragraph, so the one remaining mention of `TERM_SCOPING_PROBLEM`
+  cannot be read as a live claim.
+- **AADACL3's earlier conflict section** (in `AADACL3-notes.md`) is rewritten in the past tense
+  with the resolution stated up front, rather than opening "This review now conflicts with the
+  merged AADACL2 review … a curator reading both files today gets contradictory advice".
+- **AADACL3's 13-of-14 serine count** now carries the pointer to the shared audit's 15 of 16 *at
+  the place the count is stated* (`AADACL3-ai-review.yaml`, the analysis `review_notes`), not only
+  in a `propagation_review` comment and a reference entry elsewhere in the file.
 
-The sweep guard was widened accordingly: it greps all three reviews and the audit prose for
-`TERM_SCOPING_PROBLEM`, "both cannot be right", "needs a follow-up" and the divergence clause, and
-fails unless the only survivor is inside text explicitly marked historical. Generalisable lesson,
-now the second instance of it in this PR: **when a change makes a claim false, grep for the claim,
-not for the sentence you remember writing** — and when the change is "these two now agree", the
-claims to hunt are the ones asserting that they do not.
+### The automation, which is the actual fix
+
+Five items on this PR (9, 13, 17, 18, 22) were the same defect: a claim corrected in one place and
+left standing in another, twice in a file that recorded the lesson. Round 5's own bullet asserted
+two of these fixes that the tree did not contain. Being more careful demonstrably does not work, so
+the checks are now a committed script:
+
+`genes/human/AADACL2/AADACL2-bioinformatics/check_paralog_agreement.py`
+
+It enforces two things across **AADACL2, AADACL3 and AADACL4** — the reviews, the notes files and
+the audit prose:
+
+1. **the agreement invariant** — for each of the six `GO:0016787` rows: `MODIFY` →
+   `GO:0052689`, `root_cause: EVIDENCE_CIRCULAR_OR_REDUNDANT`, no `GRANULARITY_MISMATCH`,
+   `supporting_entities` equal to that gene's own GOA `WITH/FROM` column, one shared 17-token set
+   across all three genes, `core_functions` molecular function `GO:0052689`, and the shared audit
+   cited;
+2. **the stale-claim greps** — no live `TERM_SCOPING_PROBLEM`, "both cannot be right", "needs a
+   follow-up", `IDA … two of them`, unqualified "every donor at the family node", "13 of 14"
+   without a superseding pointer, or "not yet in the tree", in *any* of those files. Text
+   explicitly marked historical is exempt, and the exemption is itself checked.
+
+All **eleven** guards were verified by **deliberately breaking them**: `--self-test` copies the
+tree to a temporary directory, applies one mutation at a time, and requires each to be caught. That
+paid for itself immediately — the first run reported `superseding pointer removed from a count:
+NOT caught`, and the cause was the *mutation*, which only reworded a lead-in and left the pointer
+inside the search window, so nothing was actually broken and the guard was right to stay silent.
+Reading the guard would not have found that; only trying to break it did. The mutation now deletes
+the whole clause and raises if its target text has moved, so the self-test cannot silently pass
+later.
+
+Two design points worth recording. Curator-facing text (reviews, the audit prose, `RESULTS.md`) is
+grepped wholesale, but **notes files are journals** — a journal recording "X was wrong, now fixed"
+necessarily contains X, so a blanket grep is unusable there. They are scanned paragraph by
+paragraph and a stale phrase is allowed only where the paragraph, or a marker at the top of its
+section, marks the passage retrospective; an unqualified stale sentence in running prose fails,
+which is exactly the shape of the AADACL3 section that survived four rounds. And the section-level
+exemption requires a *strong* marker (superseded, historical, since resolved …) rather than any
+past tense, so appending a new live claim to an old section is not laundered by its header — there
+is a self-test mutation for precisely that.
+
+Integration with `just` is out of scope for a gene PR, so it runs as
+`uv run --no-project --with pyyaml python check_paralog_agreement.py` and is documented in the
+audit file.
+
+Generalisable lesson, and the reason this is a script rather than a resolution: **when a change
+makes a claim false, grep for the claim, not for the sentence you remember writing** — and when the
+change is "these two now agree", the claims to hunt are the ones asserting that they do not.
