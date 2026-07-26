@@ -32,17 +32,22 @@ why the campaign rule about not treating a silent record as evidence of absence 
 **And the ACB domain has a gene-specific function too.** PMID:23166793: ACBD3 binds SREBP1 directly
 and blocks its maturation [PMID:23166793 "ACBD3 blocked intracellular maturation of SREBP1 probably
 through directly binding with the lipid regulator rather than disrupted SREBP1-SCAP-Insig1
-interaction"], and the effect maps to the ACB-containing N-terminus [PMID:23166793 "Taken together,
-these results suggest that ACB domain-containing N-terminal sequence of ACBD3 plays an important
-role in its regulatory effects on SREBP1."]. The lipogenic readout is real but weaker than the
+interaction"]. The ACB-containing N-terminus plays an important part in that effect — but only a
+part, since deleting it attenuates FASN-promoter suppression from 76% to 40% rather than abolishing
+it, and the co-IP itself used full-length ACBD3 [PMID:23166793 "Taken together, these results
+suggest that ACB domain-containing N-terminal sequence of ACBD3 plays an important role in its
+regulatory effects on SREBP1."]. The lipogenic readout is real but weaker than the
 abstract implies — unchanged at 48 h, reduced only at 72 h [PMID:23166793 "if allowing
 overexpressed ACBD3 to be present in the cells for longer time (72 hours), we could see the
 reduction of palmitate synthesis"].
 
 **Why non-core rather than accepted as core.** The binding is demonstrated, so the InterPro
-inference is corroborated. But no acyl-CoA-*dependent* step in ACBD3's Golgi activity is known: the
-scaffolding, PI4KB recruitment and AKAP functions map to the Q domain and the UR/GOLD surface, and
-the ACB domain is dispensable for PI4KB recruitment [PMID:30755512 "we show that acyl-coenzyme A
+inference is corroborated. But no acyl-CoA-*dependent* step in ACBD3's Golgi activity is
+known. This is a statement about the **ligand**, not the domain — the ACB domain has its own
+functions (SREBP1 restraint, and the FAPP2 attribution; see the domain map). What is absent is
+any demonstrated consequence of acyl-CoA binding: deleting the ACBD domain does not prevent
+Golgi localisation, and the domain is dispensable for PI4KB recruitment
+[PMID:30755512 "we show that acyl-coenzyme A
 binding (ACB) and charged-amino-acid region (CAR) domains are dispensable for 3A-mediated PI4KB
 recruitment and efficient enterovirus replication"], with Q+GOLD sufficient [PMID:30755512 "we
 dissected the different domains of ACBD3 and uncovered that the glutamine-rich region (Q) and Golgi
