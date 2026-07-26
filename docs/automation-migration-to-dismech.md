@@ -72,6 +72,31 @@ since — which it will have been, if you rebase between review rounds. #2247 wa
 lost that way. The order that works is merge → retarget the next PR to `main`
 → *then* delete the branch.
 
+## Why this order
+
+Asked six times in review, so it belongs in the record. The sequencing was not
+arbitrary:
+
+1. **Reviewer split before anything else.** Every subsequent PR was reviewed by
+   an identity distinct from the one writing it. Landing it first is what made
+   the rest of the stack worth reviewing at all — and the reviewer went on to
+   find a 🔴 and several 🟡s that the author's own tests did not.
+2. **Injection controls before the scanners.** `close-fork-prs` and the
+   untrusted-comment guard reduce what can reach an agent's context; they should
+   be in place before more agents get write-capable tokens, not after.
+3. **Auth per workflow group, smallest blast radius first.** `pr-shepherd` alone,
+   then the four scanners, then the mention responder, then the page/cache jobs.
+   Each group is independently revertible, and a mistake in one does not strand
+   the others.
+4. **Teardown last, and it means more than the secret.** The `PAT_FOR_PR` secret
+   is the obvious item, but the `just` recipes that *re-install* it are the ones
+   that matter: while those existed, a single `just gh-add-secrets` could undo
+   the whole migration. Remove the ability to recreate the credential before
+   congratulating yourself on removing the credential.
+
+Cron profiles came last because they are cadence, not security, and applying
+them is behaviour-preserving.
+
 ## The token pattern
 
 Every write-capable workflow now looks like this:
