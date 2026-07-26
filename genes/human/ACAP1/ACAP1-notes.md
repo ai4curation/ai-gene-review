@@ -54,7 +54,8 @@ negative-stain EM of purified BAR-PH [PMID:25284369 "We next found that ACAP1BAR
 membrane curvature, as reflected by the tubulation of liposomes, which was visualized by negative-stain
 electron microscopy (EM)"], and the BAR domain fails it on its own [PMID:25284369 "the BAR domain of
 ACAP1 also showed little affinity to the generated liposomes, regardless of their size"]. The bilayer
-contact comes from PH-domain Loop1, whose distal Phe-280 inserts into one leaflet
+contact comes from PH-domain Loop1 (residues 276–282, between the β1 and β2 folds), whose distal
+Phe-280 inserts into the membrane
 [PMID:25284369 "We found that F280 is also critical for the induction of membrane curvature"] and whose
 mutants titrate the activity [PMID:25284369 "In particular, mutation of this residue to alanine (F280A)
 reduced the ability of ACAP1BAR-PH to induce liposome tubulation, while a more conservative mutation
@@ -284,3 +285,30 @@ on BAR-PH (1–377 in the cryoEM work, 1–364 modelled), so it is a domain-attr
 ACAP1, not a demonstration on the intact protein. Recorded as non-core: homodimerisation is the
 structural precondition for the curved scaffold, not an output, and it is already described inside the
 membrane-bending core function.
+
+### Review nits taken (PR #2267)
+
+**"Inserts into one leaflet" was my wording, not the paper's.** I had written it three times as settled
+fact. The word "leaflet" appears nowhere in PMID:25284369. What is demonstrated is insertion *into the
+membrane*: Loop1 (a.a. 276–282, ASNAFKT, between the β1 and β2 folds) is where the 5A(276–280) and F280
+mutants act on both binding and tubulation, and the cryoEM map shows
+[PMID:25284369 "only one monomer of the ACAP1BAR-PH dimer was observed to insert its Loop1 into the
+membrane."]. The *single-leaf* part is a molecular-dynamics-derived model, and the paper hedges it
+[PMID:25284369 "As such, the insertion of F280 into one leaf of the bilayer could reduce membrane
+surface tension asymmetrically and thereby induce membrane deformation"]. Reworded in all three places
+to attribute the asymmetry to the simulation. Note that Loop1 is introduced even more weakly at first
+mention — "which could potentially insert into the membrane" — so the insertion itself rests on the
+mutagenesis and the cryoEM density, not on the paper's structural prediction.
+
+**IDA vs IPI on `GO:0042803`.** IPI is the conventional code for a binding term, and
+`supporting_entities: UniProtKB:Q15027` sits in the with/from position IPI expects, so the pairing looks
+unusual. Kept as IDA and the reason made explicit on the row: IPI covers interaction *detection*
+(two-hybrid, co-purification, co-IP), which reports co-complex membership and therefore cannot support a
+stoichiometric term at all. Crystallography, static light scattering and a measured Kd assay the
+oligomeric state of purified protein directly. The evidence code is doing the same work here as the
+argument that distinguishes this row from the withdrawn ACAP3 heterodimerization claim.
+
+**Row summaries trimmed.** The `review.summary` blocks had drifted into arguing with a hypothetical
+reviewer ("worth stating twice", "the phrasing a reader would default to"). Per the repo convention that
+process commentary belongs in the notes file, the meta was cut and the substance — which domain does
+what, which readouts, what is deliberately not claimed — kept. The argument itself lives in §9 above.
