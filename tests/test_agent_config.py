@@ -184,3 +184,100 @@ def test_managed_workflows_use_the_resolver_action():
                 f"workflow '{stem}' is in agent-config.yaml but does not `uses:` "
                 f"the resolve-agent-config action"
             )
+
+
+# Inputs declared by anthropics/claude-code-action at the SHA every workflow
+# pins (be7b93b, v1). Refresh with:
+#   gh api "/repos/anthropics/claude-code-action/contents/action.yml?ref=<sha>" \
+#     --jq .content | base64 -d | python3 -c \
+#     "import sys,yaml;print(sorted(yaml.safe_load(sys.stdin)['inputs']))"
+# The v0 names `mode`, `direct_prompt`, `model`, `mcp_config`, `allowed_tools`
+# and `custom_instructions` are NOT here. GitHub only warns about an unexpected
+# input, so passing one silently drops it — arba-issue-monitor never delivered
+# its prompt and claude.yml never applied its model, MCP servers or tool
+# allowlist, both for months, both green the whole time.
+CLAUDE_ACTION_V1_INPUTS = {
+    "additional_permissions", "allowed_bots", "allowed_non_write_users",
+    "anthropic_api_key", "anthropic_federation_rule_id", "anthropic_oidc_audience",
+    "anthropic_organization_id", "anthropic_service_account_id",
+    "anthropic_workspace_id", "assignee_trigger", "base_branch", "bot_id",
+    "bot_name", "branch_name_template", "branch_prefix",
+    "classify_inline_comments", "claude_args", "claude_code_oauth_token",
+    "display_report", "exclude_comments_by_actor", "github_token",
+    "include_comments_by_actor", "include_fix_links", "label_trigger",
+    "path_to_bun_executable", "path_to_claude_code_executable",
+    "plugin_marketplaces", "plugins", "prompt", "settings", "show_full_output",
+    "ssh_signing_key", "track_progress", "trigger_phrase", "use_bedrock",
+    "use_commit_signing", "use_foundry", "use_sticky_comment", "use_vertex",
+}
+
+# Outputs it declares. Notably there is no `result`: workflows that wrote
+# `${{ steps.<id>.outputs.result }}` were emitting an empty string, which is why
+# run reports go through .github/actions/agent-run-summary instead.
+CLAUDE_ACTION_V1_OUTPUTS = {
+    "branch_name", "execution_file", "github_token", "session_id",
+    "structured_output",
+}
+
+
+def _claude_action_steps():
+    """Yield (workflow stem, step mapping) for every claude-code-action step."""
+    for path in WORKFLOW_DIR.glob("*.y*ml"):
+        doc = yaml.safe_load(path.read_text())
+        for job in (doc.get("jobs") or {}).values():
+            for step in (job or {}).get("steps") or []:
+                uses = (step or {}).get("uses") or ""
+                if uses.startswith("anthropics/claude-code-action@"):
+                    yield path.stem, step
+
+
+def test_no_workflow_passes_an_undeclared_input_to_claude_code_action():
+    offenders = []
+    for stem, step in _claude_action_steps():
+        for key in (step.get("with") or {}):
+            if key not in CLAUDE_ACTION_V1_INPUTS:
+                offenders.append(f"{stem}: with.{key}")
+    assert not offenders, (
+        "input(s) not declared by the pinned claude-code-action; GitHub only "
+        "warns, so these are silently dropped:\n" + "\n".join(offenders)
+    )
+
+
+def test_no_workflow_reads_an_undeclared_claude_code_action_output():
+    """`steps.<id>.outputs.result` does not exist; it renders as empty."""
+    offenders = []
+    for path in WORKFLOW_DIR.glob("*.y*ml"):
+        doc = yaml.safe_load(path.read_text())
+        ids = {
+            step.get("id")
+            for job in (doc.get("jobs") or {}).values()
+            for step in ((job or {}).get("steps") or [])
+            if (step or {}).get("uses", "").startswith("anthropics/claude-code-action@")
+        }
+        text = path.read_text()
+        for step_id in filter(None, ids):
+            for ref in re.findall(
+                rf"steps\.{re.escape(step_id)}\.outputs\.([A-Za-z_][A-Za-z0-9_]*)", text
+            ):
+                if ref not in CLAUDE_ACTION_V1_OUTPUTS:
+                    offenders.append(f"{path.stem}: steps.{step_id}.outputs.{ref}")
+    assert not offenders, (
+        "claude-code-action output(s) that do not exist (these expand to an "
+        "empty string):\n" + "\n".join(offenders)
+    )
+
+
+def test_every_claude_code_action_workflow_is_in_the_agent_config():
+    """The reverse of test_managed_workflows_use_the_resolver_action.
+
+    An empty pin-allowlist does not by itself mean every agent is centrally
+    modelled: a workflow that pins no model AND is absent from the config is
+    invisible to both other tests.
+    """
+    config = yaml.safe_load(CONFIG_PATH.read_text())
+    managed = set(config["workflows"])
+    using = {stem for stem, _ in _claude_action_steps()}
+    assert not (using - managed), (
+        "workflow(s) run claude-code-action but are not in agent-config.yaml, so "
+        f"their model is not centrally configured: {sorted(using - managed)}"
+    )

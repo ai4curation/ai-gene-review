@@ -103,72 +103,28 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.ai4c-token.outputs.token }}
-          allowed_bots: "ai4c-agent,claude,github-actions"
-          mcp_config: |
-            {
-              "mcpServers": {
-                "ols": {
-                  "command": "uvx",
-                  "args": [
-                    "ols-mcp"
-                  ]
-                },
-                "sequential-thinking": {
-                  "command": "npx",
-                  "args": [
-                    "-y",
-                    "@modelcontextprotocol/server-sequential-thinking"
-                  ]
-                }
-              }
-            }
 
-          # This is an optional setting that allows Claude to read CI results on PRs
+          # Lets Claude read CI results on PRs.
           additional_permissions: |
             actions: read
-          
-          model: ${{ env.AGENT_MODEL }}
-          
-          # Optional: Customize the trigger phrase (default: @claude)
-          # trigger_phrase: "/claude"
-          
-          # Optional: Trigger when specific user is assigned to an issue
-          # assignee_trigger: "claude-bot"
-          
-          # Optional: Allow Claude to run specific commands
-          allowed_tools: "Bash(*),FileEdit,Edit,MultiEdit,WebSearch,WebFetch,mcp__ols_mcp__search_all_ontologies,mcp__ols_mcp__get_terms_from_ontology"
-          
-          # Optional: Add custom instructions for Claude to customize its behavior for your project
-          custom_instructions: |
-            REPO: ${{ github.repository }}
-            ISSUE NUMBER: ${{ github.event.issue.number }}
-            TITLE: ${{ github.event.issue.title }}
-            BODY: ${{ github.event.issue.body }}
-            AUTHOR: ${{ github.event.issue.user.login }}
 
-            First analyzer the user request. If it doesn't involve gene review, 
+          # No `prompt:` on purpose. This is the interactive "@claude" responder,
+          # and v1 switches to non-interactive automation mode as soon as a prompt
+          # is supplied. Repository conventions come from CLAUDE.md, which the
+          # agent reads; they used to be duplicated here in a `custom_instructions:`
+          # block that v1 does not accept and silently discarded.
+          #
+          # `mcp_config:`, `model:` and `allowed_tools:` were dropped the same way
+          # — none of them are v1 inputs. Everything now goes through claude_args,
+          # which is how v1 takes CLI flags.
+          claude_args: |
+            --model ${{ env.AGENT_MODEL }}
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}, "sequential-thinking": {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]}}}'
+            --allowedTools "Bash,Edit,MultiEdit,Write,Read,Glob,Grep,WebSearch,WebFetch,mcp__ols__search_all_ontologies,mcp__ols__get_terms_from_ontology"
 
-            If the user asks for a gene review, you must perform the following steps:
-              
-            When reviewing a gene, first check if the relevant files are in place. To create the uniprot and goa files, and a stub review,
-            run `just fetch-gene SPECIES GENE`. Never initiate these yourself. If a GENE-deep-research.md is NOT already present, you
-            should first do extensive literature search and make one, being sure to include citations for all statements.
-
-            ALWAYS do a `just validate SPECIES GENE` before finishing. You must fix BOTH ERRORs and WARNINGs.
-
-            Make sure you use the correct uniprot code for SPECIES (unless this is a common species: human, worm, fly, rat, mouse)
-            And use the uniprot gene symbol
-
-            Make sure your commit also includes:
-
-            - GENE-goa.tsv and GENE-uniprot.txt (if you created these with `just fetch-gene`)
-            - GENE-deep-research.md (if this was not previously present)
-            - New publications in `publications/`
-            - any bioinformatics analyses
-
-            Make a PR at the end
-          
-          # Optional: Custom environment variables for Claude
-          # claude_env: |
-          #   NODE_ENV: test
-
+      - name: Write step summary
+        if: always()
+        uses: ./.github/actions/agent-run-summary
+        with:
+          execution-file: ${{ steps.claude.outputs.execution_file }}
+          title: "@claude Run"
