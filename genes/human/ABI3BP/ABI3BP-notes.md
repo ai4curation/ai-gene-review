@@ -228,12 +228,36 @@ perturbation experiment behind them is mouse:
 | GO:0033625 positive regulation of integrin activation | PMID:23666637 | Ligand changes receptor state, measured as phospho-paxillin/paxillin ratio |
 | GO:1902461 negative regulation of mesenchymal stem cell proliferation | PMID:23666637 | Germline KO with in vivo phenotype in three organs + independent shRNA lines |
 | GO:0070373 negative regulation of ERK1 and ERK2 cascade | PMID:23666637 | Perturbed at three points in the chain; vinculin knockdown is the specificity control |
-| GO:2000738 positive regulation of stem cell differentiation | PMID:23666637 | Two lineages fail in KO cells, so kept lineage-agnostic on purpose |
+| GO:0045669 positive regulation of osteoblast differentiation | PMID:23666637 | Osteogenesis fails in KO cells across all three isolations |
+| GO:0045600 positive regulation of fat cell differentiation | PMID:23666637 | Adipogenesis fails in the same KO cells |
 | GO:2000727 positive regulation of cardiac muscle cell differentiation | PMID:25296984 | In vivo ablation + marker analysis + antibody demonstration that it runs through integrin β1 |
 
-`GO:0098640 integrin binding involved in cell-matrix adhesion` was considered for the MF and
-rejected: the demonstrated consequence of binding is receptor activation and signalling, not
-adhesion of the cell to the matrix.
+### Two term-choice traps I fell into and had to back out of
+
+**`GO:2000738 positive regulation of stem cell differentiation` is the wrong term, despite
+looking exactly right.** My first draft used it as the lineage-agnostic way to say "knockout MSCs
+fail to differentiate". But its target, `GO:0048863 stem cell differentiation`, is defined (QuickGO)
+as *"The process in which a relatively unspecialized cell acquires specialized features of a stem
+cell"* — differentiation **into** a stem cell. Annotating it would assert that ABI3BP promotes cells
+*becoming* stem cells, which is the opposite of the observed biology. `GO:2000741 positive
+regulation of mesenchymal stem cell differentiation` inherits the identical inversion via
+`GO:0072497` (*"…acquires specialized features of a mesenchymal stem cell"*), so the
+more-specific-looking term is wrong in the same way.
+
+The whole GO `<cell type> differentiation` branch means "becoming that cell type", so the only
+correct route is outcome-specific terms — hence `GO:0045669` (→ `GO:0001649` osteoblast
+differentiation, "acquires the specialized features of an osteoblast" ✓) and `GO:0045600`
+(→ `GO:0045444` fat cell differentiation, "…of an adipocyte" ✓). `GO:2000727` survives the same
+test (`GO:0055007`: "a cardiac muscle precursor cell acquires specialized features of a cardiac
+muscle cell" ✓), and so does `GO:1902461` (`GO:0097168` MSC proliferation = "multiplication or
+reproduction of mesenchymal stem cells" ✓).
+
+Lesson: fetch the definition of the *target* of every regulation term, not just the regulation
+term itself. The label reads correctly in both directions; only the definition disambiguates.
+
+**`GO:0098640 integrin binding involved in cell-matrix adhesion`** was also considered for the MF
+and rejected — the demonstrated consequence of binding is receptor activation and downstream
+signalling, not adhesion of the cell to the matrix. Plain `GO:0005178` is the honest choice.
 
 **Also:**
 
@@ -248,6 +272,8 @@ adhesion of the cell to the matrix.
   every domain boundary, binding partner and mechanistic step is quoted from UniProt's own feature
   table or from the primary paper.
 
-**Verification run before pushing:** `checkquotes.py` — 90 quotes, 0 problems (it checks `file:`
+**Verification run before pushing:** `checkquotes.py` — 93 quotes, 0 problems (it checks `file:`
 quotes as well as PMIDs, so the UniProt lines are verified too); `just validate human ABI3BP` —
-`✓ Valid`, zero warnings; `cache/go/terms.csv` — 4 insertions, 0 deletions.
+`✓ Valid`, zero warnings; `cache/go/terms.csv` — 4 insertions, 0 deletions (a `just validate` run
+dropped unrelated terms twice, so the file was restored from `origin/main` and re-appended in sorted
+position each time).
