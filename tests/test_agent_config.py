@@ -3,9 +3,9 @@
 `.github/agent-config.yaml` is the single source of truth for which Claude model
 backs each agentic workflow. These tests pin the resolver's behaviour and, more
 importantly, keep the config honest: every key must map to a real workflow that
-actually sources its model from the config, and no workflow may re-hardcode a
-`--model claude-...` inline (a stale hardcoded ID silently no-ops a run into a
-phantom green check).
+actually sources its model from the config, and no workflow may pin a model of
+its own — a stale or retired model id breaks every run of that workflow, and one
+config file is a much smaller place to keep current than twenty-odd call sites.
 """
 
 import importlib.util
@@ -105,7 +105,6 @@ def _workflow_texts() -> dict[str, str]:
 # NOT listed here that pins a model fails.
 UNMIGRATED_MODEL_PINS = {
     "claude",
-    "claude-code-review",
     "curation-scanner",
     "go-annotation-scanner",
     "litscan-module-member",
@@ -148,8 +147,8 @@ def _model_pins(text: str) -> list[str]:
 def test_no_workflow_pins_a_model_inline():
     """No workflow should pin a model; models must come from the config.
 
-    A stale or retired model id silently no-ops an agent run into a phantom
-    green check, which is exactly why this lives in one file.
+    A stale or retired model id breaks every run of that workflow, so the set of
+    places that have to be kept current should be exactly one.
     """
     offenders = {
         stem: pins
