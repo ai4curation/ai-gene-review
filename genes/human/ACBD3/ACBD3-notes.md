@@ -12,9 +12,9 @@ PAINT no-IBA project review, using the `affinage` deep-research provider
   recruits PI4KB; the **unique region (UR)** immediately upstream of the GOLD domain carries the
   **MWT374-376 motif** that giantin and golgin-45 bind redundantly [PMID:38134218 "We therefore
   concluded that the second mechanism for Golgi recruitment of ACBD3 is between the MWT374-376
-  residues of ACBD3 and two golgins: golgin-45 and giantin."]; and the **GOLD domain (384–526)**
-  binds the SEC22B longin domain, PKA RIIα and picornaviral 3A proteins. None of them is the
-  ACB domain.
+  residues of ACBD3 and two golgins: golgin-45 and giantin."]; and that UR together with the
+  **GOLD domain (384–526)** binds the SEC22B longin domain, PKA RIIα and picornaviral 3A
+  proteins. None of them is the ACB domain.
 - **No acyl-CoA ligand, affinity or acyl-CoA-dependent activity has ever been reported.**
 - The affinage record for this gene synthesises **30+ primary papers** across Golgi structure,
   PI4KB recruitment, steroidogenesis, sphingolipid transport, STING trafficking and picornavirus
@@ -132,16 +132,35 @@ record, and that specific point remains a UniProt correction to report.
 **Why this matters beyond the isoform.** The 2023 paper places the RII interaction in the **GOLD
 domain** [PMID:37044218 "the GOLD domain of ACBD3 directly interacts with the regulatory subunit II
 (RII) of PKA and effectively recruits PKA holoenzyme to the Golgi"]. Combined with the Q-domain
-correction above, the domain map becomes clean and non-overlapping:
+correction above, the map collapses to **two** interaction surfaces, not three:
 
 - **Q domain (241–308)** — PI4KB *or* TBC1D22A/B, mutually exclusively
-- **UR (unique region, upstream of GOLD)** — MWT374-376 motif; giantin *or* golgin-45, redundantly
-- **GOLD domain (384–526)** — SEC22B longin domain, PKA RII, and picornaviral 3A proteins
+- **UR + GOLD (≈368–526)** — one shared surface. `MWT374-376` binds giantin *or* golgin-45
+  (redundantly); `I380/K381` are the picornaviral 3A contact residues; `K381` is required for
+  PKA RIIα docking; and the UR-plus-GOLD fragment (328–528) binds the SEC22B longin domain.
 
-So GOLD is not a viral-only surface, as the previous version of these notes implied. It has two
-host partners — PKA RII and the SEC22B longin domain (see below) — and the same reasoning that
-made 3A-vs-PI4KB non-competitive predicts that a virus clamping GOLD would displace both — a
-testable consequence, added to `suggested_experiments`.
+An earlier version of these notes called this map "clean and non-overlapping" and set UR
+(golgins) against GOLD (3A, PKA, SEC22B). **That was wrong**, and a reviewer caught it using the
+very paper I had just cited: PMID:38134218 places 3A recruitment at *"the UR of the GOLD
+domain"* [PMID:38134218 "Picornavirus 3A peptide recruits ACBD3 to viral replication sites
+through a protein–protein interaction via the UR of the GOLD domain of ACBD3"], its Figure 1D
+puts I380/K381 four residues downstream of T376 [PMID:38134218 "MWT (M374/W375/T376) residues
+highlighted in blue and protein 3A targeted residues"], and the study's premise is competition
+[PMID:38134218 "We reasoned that the 3A peptide must outcompete the endogenous Golgi-localized
+ACBD3 recruitment factor."]. Having adopted the convention that "the UR of the GOLD domain" is
+one locus, I could not then use UR and GOLD as *contrasting* labels.
+
+Cross-referencing the two papers makes it sharper still: PMID:37044218 maps RIIα docking to
+**K381** [PMID:37044218 "K381P mutation greatly reduced the interaction between RIIα and the
+GOLD domain, while Q379P and I380P had almost no effect"] — one of the two residues the 2024
+paper names as the 3A contact site. So residues **374–381 are a shared hub** for the golgins,
+PKA RII and viral 3A.
+
+What survives unchanged is the Q-domain conclusion: 3A does not displace PI4KB, because neither
+the UR nor GOLD is the Q domain. What changes is the mechanism of the hijack — it is most
+likely **displacement of ACBD3's own anchors**, giantin/golgin-45 and PKA, rather than occupancy
+of a spare site. That is now the leading `suggested_experiment`, with 3A-vs-golgin competition
+foregrounded over 3A-vs-PKA because the paper states the golgin premise itself.
 
 ## A gap the GOA record has, found by reading the paper the record cites
 
@@ -210,25 +229,34 @@ Reading it added three things beyond the fix:
 
 1. **SCFD1 (SLY1) is an essential upstream recruitment factor.** Its CRISPR knockout strips ACBD3
    from the Golgi [PMID:38134218 "Loss of SCFD1, however, resulted in the almost complete loss of
-   ACBD3 from the Golgi apparatus"], and takes PI4KIIIβ with it.
+   ACBD3 from the Golgi apparatus"], and takes PI4KIIIβ with it. **SEC22B is a different case**:
+   ACBD3 binds it, but its knockout [PMID:38134218 "Loss of TMED10 and SEC22B caused a drastic
+   loss of Golgi organization resulting in Golgi fragmentation."] wrecks the Golgi generally, so a
+   specific requirement for ACBD3 recruitment cannot be read off it. The review therefore
+   attributes the upstream *requirement* to SCFD1 alone and annotates SEC22B only as a binding
+   partner.
 2. **The GOLD domain binds the longin domain of SEC22B** [PMID:38134218 "We thus conclude that the
    UR and GOLD domain of ACBD3 interacts with the longin domain of SEC22B"], with the SNARE and
    transmembrane domains excluded by truncation. Annotated as a `NEW` `GO:0000149 SNARE binding`
    IPI. Deliberately *not* annotated as complex membership, which the paper does claim: the assays
    are binary co-IPs from overexpressing cells, and the cytosolic MWT374-376>AAA mutant binds
-   SEC22B *more* strongly than wild type, so binding and Golgi residence are separable.
+   SEC22B *more* strongly than wild type, so binding and Golgi residence are separable. Nor is it
+   listed in `core_functions`: SEC22B binding serves ACBD3's own delivery to the cis-Golgi,
+   upstream of what ACBD3 does for the cell, and `core_functions` records the two outputs (PI4KB
+   recruitment, PKA anchoring). An informative MF term need not be a core function.
 3. **ACBD3 is required for PI4KB to reach the Golgi, one-way.** ACBD3 knockout loses Golgi
    PI4KIIIβ; PI4KIIIβ knockout leaves ACBD3 in place. The gene had no protein-localisation
    process term at all, so `GO:0034067 protein localization to Golgi apparatus` is proposed as a
    `NEW` IMP - the process counterpart of the `GO:0043495` adaptor MF it already carries.
 
-Together these mean the **GOLD domain is not a viral-only surface**: it has two host partners
-(SEC22B longin domain, PKA RIIα) as well as picornaviral 3A.
+Together these mean the **UR/GOLD surface is not viral-only**: it has two host partners
+(SEC22B longin domain, PKA RIIα) as well as picornaviral 3A — and, per the correction above,
+they are not on private sub-sites but share residues 374–381 with the golgin motif.
 
 ## Recruitment, as it now stands
 
 ```
-SCFD1 (SM protein) + SEC22B (v-SNARE)        <- step 1, GOLD/UR binds SEC22B longin domain
+SCFD1 (SM protein); ACBD3 binds SEC22B       <- step 1, UR+GOLD binds SEC22B longin domain
         |                                       SCFD1 KO -> ACBD3 cytosolic
         v
 giantin  OR  golgin-45   (redundant)         <- step 2, both bind MWT374-376 in the UR
@@ -237,7 +265,7 @@ giantin  OR  golgin-45   (redundant)         <- step 2, both bind MWT374-376 in 
 ACBD3 on cis/trans-Golgi membranes
         |
         v
-PI4KB (via Q domain) / PKA RII (via GOLD) / FAPP2 / PPM1L / STING
+PI4KB (via Q domain) / PKA RII (via UR+GOLD, K381) / FAPP2 / PPM1L / STING
 ```
 
 Sequential, not parallel: ACBD3-giantin binding drops in SCFD1-KO cells, while ACBD3-SCFD1 binding
