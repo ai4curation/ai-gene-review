@@ -405,3 +405,33 @@ the line.
 Also from the same review: the `uncovered` guard is now an explicit `if … die()` rather than an
 `assert`, since `python -O` strips assertions and the guard is the mechanism by which the
 "no gene drops out of the equality test" promise is kept.
+
+### Round-5: retiring the divergence statements this harmonisation made false
+
+Extending the harmonisation to AADACL3 (round 4) invalidated every statement in the three reviews
+that described them as disagreeing — and round 4's sweep grepped for the `two of them` phrasings
+but not for those, which is how they survived one more round.
+
+- **`suggested_questions`** here still said the merged AADACL2 review resolves the same row as
+  `MODIFY → GO:0017171` with `TERM_SCOPING_PROBLEM` + `GRANULARITY_MISMATCH`, that "both cannot be
+  right about one row", and that "**PR #2266** needs a follow-up to settle it". None of that
+  survives: AADACL2 now carries this review's own verdict. Rewritten to ask PAINT only where the
+  mechanism term should sit — the question that is genuinely still open — while keeping the
+  merges-two-existing-rows argument, which is what settled the matter.
+- **AADACL2's row reason** motivated the schema request with "since AADACL3's review reaches the
+  same LCA conclusion while keeping the mode on the literal reading". That divergence no longer
+  exists either. The request stands but the justification changes: all three paralogs now encode
+  the row on the propagation-shape reading, which the enum text does not itself state, so the
+  convention is carried by argument rather than by the schema.
+- **The shared audit's "Why this audit exists"** section is now explicitly marked *historical*,
+  with a closing "Settled outcome" paragraph, so the one remaining mention of
+  `TERM_SCOPING_PROBLEM` cannot be read as a live claim.
+- The conflict section earlier in this file carries an inline **superseded** marker, and the local
+  13-of-14 serine count now points at the shared audit's 15 of 16.
+
+The sweep guard was widened accordingly: it greps all three reviews and the audit prose for
+`TERM_SCOPING_PROBLEM`, "both cannot be right", "needs a follow-up" and the divergence clause, and
+fails unless the only survivor is inside text explicitly marked historical. Generalisable lesson,
+now the second instance of it in this PR: **when a change makes a claim false, grep for the claim,
+not for the sentence you remember writing** — and when the change is "these two now agree", the
+claims to hunt are the ones asserting that they do not.
