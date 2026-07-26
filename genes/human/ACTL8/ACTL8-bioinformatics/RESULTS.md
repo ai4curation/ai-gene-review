@@ -357,7 +357,26 @@ Donates to human genes: GO:0005737, GO:0007409, GO:0016020, GO:0019901, GO:00304
 
 ACTL8 is 33.8% identical to beta-actin over its aligned block. In the narrow nodes the lowest identity to beta-actin among the *other* human members is: `PTN002631586` 90.7%; `PTN007551913` 90.7%.
 
-## 5. How common is experimental molecular function in this family?
+## 5. Do ACTL8's own closest relatives sit under the same PANTHER nodes?
+
+For each divergent human actin-like / actin-related-T protein, QuickGO was asked which PANTHER
+nodes appear in the WITH/FROM field of its *own* IBA annotations. If ACTL8's membership of the
+cytoplasmic-actin subfamily were normal for this group, its relatives would be there too.
+
+| Gene | Accession | own IBA rows | PANTHER nodes in its WITH/FROM | shares a narrow node with ACTL8 |
+|---|---|---|---|---|
+| ACTL10 | Q5JWF8 | 2 | PTN000940351, PTN002631484 | no |
+| ACTL7A | Q9Y615 | 3 | PTN000940351, PTN001377938, PTN008986520, PTN008986528 | no |
+| ACTL7B | Q9Y614 | 3 | PTN000940351, PTN001377938, PTN008986520, PTN008986528 | no |
+| ACTL8 | Q9H568 | 11 | PTN002631484, PTN002631586, PTN007551913 | PTN002631586, PTN007551913 |
+| ACTL9 | Q8TC94 | 2 | PTN000940351, PTN002631484 | no |
+| ACTRT1 | Q8TDG2 | 5 | PTN000748066, PTN000940351, PTN002631484 | no |
+| ACTRT2 | Q8TDY3 | 2 | PTN000940351, PTN002631484 | no |
+| ACTRT3 | Q9BYD9 | 2 | PTN000940351, PTN002631484 | no |
+
+Narrow (beta-actin subfamily) nodes: PTN002631586, PTN007551913. Of the 8 relatives examined, the ones other than ACTL8 that sit under a narrow node are: **none**. ACTL8 carries 11 IBA rows against a median of 2 for its relatives.
+
+## 6. How common is experimental molecular function in this family?
 
 Human members of PANTHER PTHR11937 (ACTIN) listed in the repository's cached InterPro entry table: **32**. Of these, **24** carry at least one experimental-code molecular-function annotation in QuickGO, **31** carry an experimental annotation in any aspect, and **1** have none at all. Once bare `GO:0005515 protein binding` is excluded — which nearly every human protein has from interactome screens, so counting it would make this survey uninformative — **7** members retain an experimentally supported, informative molecular function.
 

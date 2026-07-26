@@ -48,7 +48,14 @@ Analysis 4 -- clade composition of the donating PANTHER nodes.
   and inheriting that state at 34% identity is a different proposition from inheriting
   the generic actin-fold state of a deep node.
 
-Analysis 5 -- family context.
+Analysis 5 -- do ACTL8's own closest relatives sit under the same nodes?
+  If ACTL8's placement inside the cytoplasmic-actin subfamily is anomalous, then the
+  other divergent human actin-like proteins should not be there. QuickGO is asked, for
+  each of them, which PANTHER nodes appear in the WITH/FROM field of its own IBA
+  annotations, and how many IBA rows it has. This turns "ACTL8 is mis-placed" from an
+  argument about one clade into a comparison across the whole set of relatives.
+
+Analysis 6 -- family context.
   For every human member of PANTHER family PTHR11937 (ACTIN), QuickGO is asked how
   many experimental-code annotations it has, per GO aspect. This tests, rather than
   asserts, the claim that experimentally characterised molecular function in this
@@ -482,6 +489,40 @@ def node_human_targets(node: str) -> dict[str, list[str]]:
     }
 
 
+def iba_panther_nodes(accession: str) -> dict:
+    """PANTHER nodes appearing in the WITH/FROM of this protein's own IBA annotations."""
+    data = get_json(
+        "https://www.ebi.ac.uk/QuickGO/services/annotation/search",
+        {"geneProductId": f"UniProtKB:{accession}", "evidenceCode": "ECO:0000318", "limit": 200},
+    )
+    nodes: set[str] = set()
+    terms: set[str] = set()
+    for r in data.get("results", []):
+        terms.add(r.get("goId"))
+        for w in r.get("withFrom") or []:
+            for x in w.get("connectedXrefs", []):
+                if x.get("db") == "PANTHER":
+                    nodes.add(x.get("id"))
+    return {
+        "n_iba_rows": data.get("numberOfHits", 0),
+        "panther_nodes": sorted(nodes),
+        "iba_terms": sorted(terms),
+    }
+
+
+# Human actin-like / actin-related-T proteins: ACTL8's nearest divergent relatives.
+RELATIVES = {
+    "Q9H568": "ACTL8",
+    "Q9Y615": "ACTL7A",
+    "Q9Y614": "ACTL7B",
+    "Q8TC94": "ACTL9",
+    "Q5JWF8": "ACTL10",
+    "Q8TDG2": "ACTRT1",
+    "Q8TDY3": "ACTRT2",
+    "Q9BYD9": "ACTRT3",
+}
+
+
 def local_identity_to(reference: str, query: str) -> dict:
     """Smith-Waterman identity, so a multidomain protein's actin block is compared fairly."""
     al = Align.PairwiseAligner()
@@ -765,7 +806,28 @@ def main() -> None:
         },
     }
 
-    # ---- Analysis 5: family context
+    # ---- Analysis 5: do ACTL8's own closest relatives sit under the same nodes?
+    narrow = set(shallow)
+    rel = {}
+    for acc, sym in RELATIVES.items():
+        info = iba_panther_nodes(acc)
+        info["shares_narrow_nodes_with_ACTL8"] = sorted(set(info["panther_nodes"]) & narrow)
+        rel[sym] = {"accession": acc, **info}
+    others_in_narrow = [s for s, v in rel.items() if s != "ACTL8" and v["shares_narrow_nodes_with_ACTL8"]]
+    results["relatives"] = {
+        "narrow_nodes": sorted(narrow),
+        "per_gene": dict(sorted(rel.items())),
+        "summary": {
+            "n_relatives_examined": len(rel),
+            "relatives_other_than_ACTL8_under_a_narrow_node": others_in_narrow,
+            "ACTL8_iba_rows": rel["ACTL8"]["n_iba_rows"],
+            "median_iba_rows_of_relatives": sorted(
+                v["n_iba_rows"] for s, v in rel.items() if s != "ACTL8"
+            )[len([s for s in rel if s != "ACTL8"]) // 2],
+        },
+    }
+
+    # ---- Analysis 6: family context
     members = human_family_members(PANTHER_ENTRIES)
     fam = []
     for m in members:
@@ -924,7 +986,27 @@ def main() -> None:
       + "; ".join(f"`{k}` {v}%" for k, v in sorted(cs["min_identity_of_other_members_in_narrow_nodes"].items()))
       + ".")
     A("")
-    A("## 5. How common is experimental molecular function in this family?")
+    A("## 5. Do ACTL8's own closest relatives sit under the same PANTHER nodes?")
+    A("")
+    rs = results["relatives"]["summary"]
+    A("For each divergent human actin-like / actin-related-T protein, QuickGO was asked which PANTHER")
+    A("nodes appear in the WITH/FROM field of its *own* IBA annotations. If ACTL8's membership of the")
+    A("cytoplasmic-actin subfamily were normal for this group, its relatives would be there too.")
+    A("")
+    A("| Gene | Accession | own IBA rows | PANTHER nodes in its WITH/FROM | shares a narrow node with ACTL8 |")
+    A("|---|---|---|---|---|")
+    for sym, v in results["relatives"]["per_gene"].items():
+        shared = ", ".join(v["shares_narrow_nodes_with_ACTL8"]) or "no"
+        A(f"| {sym} | {v['accession']} | {v['n_iba_rows']} | {', '.join(v['panther_nodes']) or '—'} | {shared} |")
+    A("")
+    A(f"Narrow (beta-actin subfamily) nodes: {', '.join(results['relatives']['narrow_nodes'])}. "
+      f"Of the {rs['n_relatives_examined']} relatives examined, the ones other than ACTL8 that sit "
+      f"under a narrow node are: "
+      + (", ".join(rs["relatives_other_than_ACTL8_under_a_narrow_node"]) or "**none**")
+      + f". ACTL8 carries {rs['ACTL8_iba_rows']} IBA rows against a median of "
+      f"{rs['median_iba_rows_of_relatives']} for its relatives.")
+    A("")
+    A("## 6. How common is experimental molecular function in this family?")
     A("")
     f = results["family"]["summary"]
     A(f"Human members of PANTHER PTHR11937 (ACTIN) listed in the repository's cached InterPro "

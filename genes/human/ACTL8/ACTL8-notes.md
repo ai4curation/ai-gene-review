@@ -75,6 +75,29 @@ This is the reciprocal of the `blow`/ACAP2 pattern from earlier in this campaign
 mis-clustered member inheriting a tight subfamily's specifics — but here it is quantified rather
 than argued, and the donor side is blameless.
 
+### The comparison that closes it: none of ACTL8's own relatives is there
+
+Asking QuickGO, for each divergent human actin-like / actin-related-T protein, which PANTHER nodes
+appear in the WITH/FROM of its **own** IBA annotations:
+
+| gene | own IBA rows | PANTHER nodes | under a narrow node? |
+|---|---|---|---|
+| **ACTL8** | **11** | PTN002631484, **PTN002631586, PTN007551913** | **yes, both** |
+| ACTL7A | 3 | PTN000940351, PTN001377938, PTN008986520, PTN008986528 | no |
+| ACTL7B | 3 | PTN000940351, PTN001377938, PTN008986520, PTN008986528 | no |
+| ACTL9 | 2 | PTN000940351, PTN002631484 | no |
+| ACTL10 | 2 | PTN000940351, PTN002631484 | no |
+| ACTRT1 | 5 | PTN000748066, PTN000940351, PTN002631484 | no |
+| ACTRT2 | 2 | PTN000940351, PTN002631484 | no |
+| ACTRT3 | 2 | PTN000940351, PTN002631484 | no |
+
+**ACTL8 is the only one of the eight.** Every relative either uses the ACTL7-specific nodes or the
+same deep node PTN002631484 that gives ACTL8 its one defensible IBA. The consequence is
+quantitative: ACTL8 carries **11 IBA rows against a median of 2** for its seven relatives, a roughly
+five-fold inflation of its GO record traceable to a single tree placement. Verified against QuickGO
+directly rather than read off the sibling ACTL7A/ACTL7B reviews, so it does not depend on their
+conclusions.
+
 ## 4. Do the sources themselves carry evidence? Yes — all 47 of them
 
 62 WITH/FROM tokens across the GOA rows (parsed programmatically from the TSV, never by hand;
