@@ -23,7 +23,8 @@ jobs:
         (
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository &&
-          github.event.pull_request.head.ref != 'auto/generate-pages'
+          github.event.pull_request.head.ref != 'auto/generate-pages' &&
+          github.actor != 'dependabot[bot]'
         ) ||
         github.event_name == 'workflow_dispatch' ||
         (
@@ -69,6 +70,16 @@ jobs:
         with:
           app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
           private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
+
+      # The fallback keeps review running, but it is genuinely degraded: GitHub
+      # refuses PR approvals authored with the built-in GITHUB_TOKEN, and the
+      # review would come from `github-actions[bot]` — the same identity family
+      # as the writer, which is the split this workflow exists to make. Say so
+      # loudly rather than letting `continue-on-error` hide it.
+      - name: Warn if the reviewer App token could not be minted
+        if: steps.reviewer-token.outcome != 'success'
+        run: |
+          echo "::warning title=Reviewer App unavailable::Could not mint an ai4c-reviewer token; falling back to GITHUB_TOKEN. GitHub does not permit Actions to APPROVE a PR with that token, so this run can only post a comment or request changes. Check AI4C_REVIEWER_APP_ID / AI4C_REVIEWER_PRIVATE_KEY and the App installation."
 
       - name: Run Claude Code Review
         id: claude-review
@@ -123,6 +134,10 @@ jobs:
             ```
             gh pr review ${{ env.PR_NUMBER }} --approve --body "<your review summary>"
             ```
+            If that approve is rejected because Actions is not permitted to approve pull
+            requests, the reviewer App token was unavailable and you are running on the
+            built-in GITHUB_TOKEN. Do not retry; post the same text with
+            `gh pr comment` instead and note that approval could not be recorded.
 
             Always include a summary checklist at the top of your review:
             - [ ] Schema validation passes
@@ -133,18 +148,19 @@ jobs:
             - [ ] Core functions accurately identified
             - [ ] No over-annotation issues missed
 
-      # Hardening: claude-code-action exits 0 even when the agent run itself
-      # errored, yielding a zero-cost is_error result and NO posted review —
-      # turning a broken review into a phantom green check. Two failure modes
-      # this repo has actually hit:
-      #   * a Claude weekly usage limit on CLAUDE_CODE_OAUTH_TOKEN (rate_limit),
-      #     which silently no-ops EVERY agent workflow account-wide; and
-      #   * an invalid/retired `--model`.
-      # Inspect the execution log and fail the job when the run errored, calling
-      # out a usage-limit distinctly (it is otherwise very hard to diagnose) so
-      # the next breakage is a loud red X, not a silent pass.
-      - name: Verify the review agent actually ran
-        if: always()
+      # claude-code-action at the pinned SHA already fails the job when the agent
+      # errors (base-action/src/run-claude-sdk.ts throws unless
+      # `subtype == "success" && !is_error`), so this step does NOT exist to catch
+      # a phantom green from that path. It exists to say WHY, because the generic
+      # "Claude execution failed" is very hard to act on — in particular a weekly
+      # usage limit on CLAUDE_CODE_OAUTH_TOKEN silently no-ops every agent workflow
+      # account-wide and looks identical to a code problem in the PR.
+      #
+      # `!cancelled()` rather than `always()`: with `cancel-in-progress: true`, every
+      # follow-up push cancels the in-flight review before it writes an execution
+      # log, and `always()` would turn that routine event into a red X.
+      - name: Explain a failed review run
+        if: ${{ !cancelled() && steps.claude-review.conclusion == 'failure' }}
         env:
           EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
         run: |
@@ -154,8 +170,8 @@ jobs:
             file="${RUNNER_TEMP}/claude-execution-output.json"
           fi
           if [[ ! -f "$file" ]]; then
-            echo "::error title=Claude review failed::No execution log found; the review agent did not run."
-            exit 1
+            echo "::warning title=No execution log::The review step failed before writing an execution log, so there is no agent-side reason to report. Check the step log above."
+            exit 0
           fi
           python3 - "$file" <<'PY'
           import json, os, sys
@@ -166,47 +182,54 @@ jobs:
                   with open(path, "a", encoding="utf-8") as fh:
                       fh.write(md + "\n")
 
-          raw = open(sys.argv[1], encoding="utf-8").read().strip()
-          try:
-              events = json.loads(raw)
-              if not isinstance(events, list):
-                  events = [events]
-          except json.JSONDecodeError:
-              events = [json.loads(line) for line in raw.splitlines() if line.strip()]
-
+          # execution-file.ts always writes a JSON array of events.
+          events = json.loads(open(sys.argv[1], encoding="utf-8").read())
           results = [e for e in events if isinstance(e, dict) and e.get("type") == "result"]
           if not results:
-              print("::error title=Claude review failed::No result event in the execution "
-                    "log; the agent did not complete.")
-              summary("### ❌ Claude review failed\nNo result event — the agent did not complete.")
-              sys.exit(1)
-
-          r = results[-1]
-          stats = (f"num_turns={r.get('num_turns')} cost=${r.get('total_cost_usd')} "
-                   f"subtype={r.get('subtype')}")
-
-          if not r.get("is_error"):
-              print(f"Claude review completed cleanly: {stats}")
+              summary("### Claude review failed\n\nNo result event — the agent did not complete.")
               sys.exit(0)
 
-          reason = str(r.get("error") or "").strip()
+          r = results[-1]
+          # Result events carry `errors` (a list), not `error`.
+          errors = " ".join(str(e) for e in (r.get("errors") or []))
           detail = str(r.get("result") or "").strip()
-          haystack = f"{reason} {detail}".lower()
+          haystack = f"{errors} {detail}".lower()
 
-          if reason == "rate_limit" or "usage limit" in haystack or "weekly limit" in haystack:
-              msg = (f"Claude USAGE LIMIT reached — NO review ran ({detail!r}). This is an "
-                     "account-quota issue on CLAUDE_CODE_OAUTH_TOKEN, NOT a problem with this "
-                     "PR. Fix: wait for the limit to reset, rotate the token to an account with "
-                     "headroom, or set ANTHROPIC_API_KEY (pay-per-use) on the workflow. "
-                     "Re-run this check afterward.")
+          if "usage limit" in haystack or "weekly limit" in haystack or "rate_limit" in haystack:
+              msg = ("Claude USAGE LIMIT reached — NO review ran. This is an account-quota "
+                     "issue on CLAUDE_CODE_OAUTH_TOKEN, NOT a problem with this PR. Fix: wait "
+                     "for the limit to reset, rotate the token to an account with headroom, or "
+                     "set ANTHROPIC_API_KEY (pay-per-use) on the workflow. Re-run afterward.")
               print(f"::error title=Claude review skipped: usage limit::{msg}")
-              summary("### ⛔ Claude review skipped — usage limit reached\n\n" + msg)
-              sys.exit(1)
+              summary("### Claude review skipped — usage limit reached\n\n" + msg)
+              sys.exit(0)
 
-          msg = (f"Review agent errored (is_error=true); NO review was posted. "
-                 f"error={reason!r} detail={detail!r} {stats}. Common causes: an "
-                 "invalid/retired --model, a bad CLAUDE_CODE_OAUTH_TOKEN, or an aborted run.")
+          stats = (f"num_turns={r.get('num_turns')} cost=${r.get('total_cost_usd')} "
+                   f"subtype={r.get('subtype')}")
+          msg = (f"Review agent errored; no review was posted. errors={errors!r} "
+                 f"detail={detail!r} {stats}. Common causes: an invalid/retired --model, a bad "
+                 "CLAUDE_CODE_OAUTH_TOKEN, or an aborted run.")
           print(f"::error title=Claude review errored::{msg}")
-          summary("### ❌ Claude review errored\n\n" + msg)
-          sys.exit(1)
+          summary("### Claude review errored\n\n" + msg)
           PY
+
+      # The remaining phantom-green shape the action cannot see: the agent runs
+      # cleanly but its `gh pr review` is rejected (wrong token, missing App
+      # permission), so the job is green with no review on the PR. A warning, not
+      # a failure — a missing review is fail-safe here (the PR shepherd only acts
+      # on an actual approval), and hard-failing would block PRs on a heuristic.
+      - name: Warn if no review landed on the head commit
+        if: ${{ !cancelled() && steps.claude-review.conclusion == 'success' && env.PR_NUMBER != '' }}
+        env:
+          GH_TOKEN: ${{ steps.reviewer-token.outputs.token || github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          head_sha="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq .head.sha)"
+          count="$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" --paginate \
+            --jq "[.[] | select(.commit_id == \"${head_sha}\")] | length")"
+          if [[ "$count" -eq 0 ]]; then
+            echo "::warning title=No review posted::The review agent completed successfully but no review is recorded against ${head_sha}. Its \`gh pr review\` may have been rejected — check the reviewer App's Pull requests permission."
+          else
+            echo "${count} review(s) recorded against ${head_sha}."
+          fi
