@@ -97,11 +97,22 @@ def fetch_json(url: str, cache_name: str, *, refetch: bool) -> dict:
 
 
 def uniprot_entry(accession: str, *, refetch: bool) -> dict:
-    return fetch_json(
+    entry = fetch_json(
         f"https://rest.uniprot.org/uniprotkb/{accession}.json",
         f"uniprot_{accession}.json",
         refetch=refetch,
     )
+    # A truncated or stale cache file must fail here with an actionable message rather
+    # than surfacing later as a KeyError in the middle of an analysis section.
+    for key in ("sequence", "features"):
+        if key not in entry:
+            raise SystemExit(
+                f"FATAL: cached UniProt entry for {accession} has no '{key}' field, so it is "
+                f"truncated or not a UniProtKB record.\n"
+                f"       Fix: rm {DATA / f'uniprot_{accession}.json'} and re-run, or run "
+                f"`uv run python {Path(__file__).name} --refetch`."
+            )
+    return entry
 
 
 def uniprot_isoform_sequence(isoform_id: str, *, refetch: bool) -> str:
