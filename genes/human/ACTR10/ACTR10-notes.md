@@ -245,10 +245,22 @@ that the four later rows restate the same fact from further Reactome reactions r
 than adding evidence.
 
 Ontology gap proposed: a new GO term for pointed-end capping of the dynactin Arp1
-minifilament. GO's nearest term, `GO:0051694 pointed-end actin filament capping`, is
-scoped to F-actin, and `GO:0005870 actin capping protein of dynactin complex` is
-obsolete (and was a CC term for CapZ at the opposite end), so dynactin's own capping
-event is currently unrepresentable.
+minifilament. The mismatch is one of scope. `GO:0051694 pointed-end actin filament
+capping` is defined as *"The binding of a protein or protein complex to the pointed (or
+minus) end of an actin filament, thus preventing the addition, exchange or removal of
+further actin subunits"*, and `GO:0005884 actin filament` is *"A filamentous structure
+formed of a two-stranded helical polymer of the protein actin and associated proteins"* —
+whereas dynactin's backbone is, per `GO:0005869`'s own definition, *"an actin-like 40 nm
+filament composed of actin-related protein"*. The subunits Arp11 blocks are Arp1, not
+actin. `GO:0005870 actin capping protein of dynactin complex` is obsolete with no
+replacement and was a CC term for the CapZ heterodimer at the *barbed* end.
+
+Two placements are offered in the proposal, since the choice is an editorial call about
+`GO:0051693`'s intended scope: as its child if `actin filament capping` is meant to cover
+filaments of any actin-family protein, or under `GO:0065003 protein-containing complex
+assembly` if it is to stay strictly F-actin. (Checked all definitions against QuickGO
+`/complete` rather than paraphrasing — an earlier draft of this justification attributed
+the `GO:0005884` wording to `GO:0051694`, which was wrong.)
 
 Two `core_functions` knowledge gaps are recorded on the cargo-coupling function: the
 unidentified mitochondrial outer-membrane partner, and the complete absence of any
