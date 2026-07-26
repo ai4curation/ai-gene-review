@@ -32,6 +32,13 @@ same migration in a third repo — the things that were different here.
 | **Mention dispatch** | `ai.yml` and `dragon-ai.yml`, byte-identical, both firing | one `ai.yml`, keyword `@ai4c-agent please` (legacy alias kept) |
 | **Run reports** | `echo "${{ ... }}"` — an injection sink | `env:` + `printf`, tilde-fenced |
 
+The push path is verified end to end, not just statically: `generate-pages` ran
+47 minutes on the migrated workflow and opened
+[#2277](https://github.com/ai4curation/ai-gene-review/pull/2277) with
+`git push --force-with-lease` authenticated by `gh auth setup-git`, committed as
+`ai4c-agent[bot] <242316268+ai4c-agent[bot]@users.noreply.github.com>` with
+nothing in `.git/config`.
+
 Verification, all of which should stay empty/green:
 
 ```bash
@@ -200,7 +207,9 @@ routine event in the repo into a red X.
   `Contents: write` first (an App-settings change plus accepting the permission
   bump on the org installation).
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it. It
-  should be deleted and the token confirmed revoked.
+  should be deleted. Note it is already non-functional — a checkout using it
+  fails outright, which is how `pr-shepherd` came to fail 24 runs in a row — so
+  deleting it is bookkeeping rather than a cutover.
 - **Scanners still run with `--dangerously-skip-permissions`** while reading
   upstream `geneontology/go-annotation` issue text. The mitigations are the
   prompt-level untrusted-input guardrail and the App token's scope, not tool
