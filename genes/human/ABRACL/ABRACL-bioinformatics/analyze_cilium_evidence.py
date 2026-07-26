@@ -213,7 +213,7 @@ def main() -> None:
         "neighbourhood, not a localisation call; and three of the four baits here "
         "(SASS6, CNTRL, DCTN1) are centriolar or dynactin proteins rather than "
         "ciliary ones. Part 2 shows the family is retained "
-        "ortholog, in four proteomes that build no cilium at all, while four "
+        "in four proteomes that build no cilium at all, while four "
         "cilium-core families are absent from every one of them and the universal "
         "control is present in all. The reciprocal observation points the same "
         "way: no PTHR46334 member is cross-referenced in *Chlamydomonas "
