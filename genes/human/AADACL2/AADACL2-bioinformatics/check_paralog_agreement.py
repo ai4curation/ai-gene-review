@@ -14,6 +14,11 @@ Two things are enforced, over the reviews, the notes files and the shared audit 
      GRANULARITY_MISMATCH failure mode, supporting_entities equal to that gene's own GOA WITH/FROM
      column, core_functions molecular function GO:0052689, and the shared node audit cited.
 
+     Also the assessment of InterPro:IPR013094, the fold-level signature that is the sole source of
+     all three IEA rows. That field was missed twice: once by the harmonisation, and again by the
+     three-line follow-up written to remove this exact class of divergence - because it sits one
+     line below the field being fixed, so re-reading the edited block could not reveal it.
+
   2. the stale-claim greps. Statements that were true before the harmonisation are false after it,
      and they hid in notes files and in generated prose, not only in the YAML.
 
@@ -58,6 +63,16 @@ ROOT_CAUSE = "EVIDENCE_CIRCULAR_OR_REDUNDANT"
 CORE_MF = "GO:0052689"
 AUDIT = "NODE_PTN009058710.md"
 HISTORICAL_MARKER = "Historical: this section records the state that motivated the audit"
+
+# The fold-level signature that every one of these three IEA rows cites as its only source. Its
+# assessment has to agree too: a divergence here was missed by the harmonisation PR and then again
+# by the three-line PR written to remove exactly this kind of divergence, because the field sits one
+# line below the one being fixed.
+FOLD_SOURCE = "InterPro:IPR013094"
+FOLD_SOURCE_STATUS = "CIRCULAR_OR_REDUNDANT"
+# Values retracted for this row: the root cause recorded on it is redundancy, which says nothing
+# about source strength, and the fold-3 signature is not a weak source.
+RETRACTED_STATUSES = {"SOURCE_WEAK_OR_INFERRED", "SOURCE_EVIDENCE_WEAK"}
 
 # Phrasings that were true before the three reviews were harmonised and are false after it.
 # Each is (regex, why it is stale). Applied to reviews, notes and the audit prose alike.
@@ -172,6 +187,19 @@ def check_invariant(root: Path, problems: list[str]) -> None:
                     problems.append(f"{where}: supporting_entities do not equal this gene's GOA "
                                     f"WITH/FROM column ({len(a.get('supporting_entities') or [])} "
                                     f"vs {len(tokens)} tokens)")
+            for entity in pr.get("source_entities") or []:
+                if entity.get("source_id") != FOLD_SOURCE:
+                    continue
+                status = entity.get("source_status")
+                if status in RETRACTED_STATUSES:
+                    problems.append(f"{where}: {FOLD_SOURCE} source_status is {status!r}, which was "
+                                    f"retracted for this row - the root cause is redundancy, which "
+                                    f"says nothing about source strength, and the fold-3 signature "
+                                    f"is not a weak source; expected {FOLD_SOURCE_STATUS}")
+                elif status != FOLD_SOURCE_STATUS:
+                    problems.append(f"{where}: {FOLD_SOURCE} source_status is {status!r}, expected "
+                                    f"{FOLD_SOURCE_STATUS} to match the sibling paralogs")
+
         cf = doc.get("core_functions") or []
         if not cf or (cf[0].get("molecular_function") or {}).get("id") != CORE_MF:
             problems.append(f"{gene}: core_functions molecular_function is not {CORE_MF}")
@@ -335,6 +363,16 @@ def _break_invariant_supporting_entities(root: Path) -> None:
     p = gene_files(root, "AADACL4")["review"]
     p.write_text(p.read_text().replace("  - UniProtKB:Q9HTI0\n  review:", "  review:", 1))
 
+def _break_invariant_fold_source_status(root: Path) -> None:
+    """Reinstate the retracted assessment on the fold signature, one field below failure_modes."""
+    f = gene_files(root, "AADACL3")["review"]
+    f.write_text(
+        f.read_text().replace(
+            f"source_status: {FOLD_SOURCE_STATUS}", "source_status: SOURCE_WEAK_OR_INFERRED", 1
+        )
+    )
+
+
 def _break_invariant_core_mf(root: Path) -> None:
     p = gene_files(root, "AADACL3")["review"]
     t = p.read_text()
@@ -392,6 +430,7 @@ def _break_stale_pseudo_retrospective(root: Path) -> None:
 MUTATIONS = [
     ("invariant: root_cause reverted", _break_invariant_root_cause),
     ("invariant: GRANULARITY_MISMATCH re-added", _break_invariant_failure_mode),
+    ("invariant: retracted source_status on the fold signature", _break_invariant_fold_source_status),
     ("invariant: replacement term reverted to GO:0017171", _break_invariant_replacement),
     ("invariant: a supporting_entities token dropped", _break_invariant_supporting_entities),
     ("invariant: core_functions MF changed", _break_invariant_core_mf),
