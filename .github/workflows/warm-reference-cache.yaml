@@ -18,24 +18,17 @@ concurrency:
 jobs:
   warm-reference-cache:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
       # with the ai4c-agent App token below.
       contents: read
 
     steps:
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
-
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          token: ${{ steps.ai4c-token.outputs.token }}
           persist-credentials: false
 
       - name: Install uv
@@ -79,6 +72,16 @@ jobs:
             echo "changed=$CHANGED"
             echo "total=$TOTAL"
           } >> "$GITHUB_OUTPUT"
+
+      # Minted here rather than at job start, for the same reason as
+      # generate-pages: the cache warm needs no credentials, only the push does,
+      # and a token minted at job start burns its 60-minute life on the fetch.
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
 
       - name: Create or update warm-cache PR
         if: steps.check-changes.outputs.has_changes == 'true'

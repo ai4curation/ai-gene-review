@@ -227,9 +227,16 @@ CLAUDE_ACTION_V1_OUTPUTS = {
 
 def _action_definition_files():
     """Every file that can invoke an action: workflows and composite actions."""
-    return sorted(WORKFLOW_DIR.glob("*.y*ml")) + sorted(
-        (REPO_ROOT / ".github" / "actions").rglob("action.y*ml")
-    )
+    # Everything under .github/ that can declare steps. Deliberately broad: a
+    # step file in an unexpected place (.github/copilot-setup-steps.yml) is
+    # exactly the kind of thing a narrower glob misses. Files with no steps —
+    # agent-config.yaml, cron-profiles.yaml, dependabot.yml — simply yield none.
+    return sorted((REPO_ROOT / ".github").rglob("*.y*ml"))
+
+
+def _definition_name(path: Path) -> str:
+    """A composite action is named by its directory, a workflow by its stem."""
+    return path.parent.name if path.stem == "action" else path.stem
 
 
 def _steps(doc: dict):
@@ -247,7 +254,7 @@ def _claude_action_steps():
             if ((step or {}).get("uses") or "").startswith(
                 "anthropics/claude-code-action@"
             ):
-                yield path.stem if path.name != "action.yml" else path.parent.name, step
+                yield _definition_name(path), step
 
 
 def test_no_workflow_passes_an_undeclared_input_to_claude_code_action():
