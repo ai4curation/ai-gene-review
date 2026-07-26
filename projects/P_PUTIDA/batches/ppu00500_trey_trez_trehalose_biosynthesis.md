@@ -53,10 +53,16 @@ cellulose synthesis, and central hexose metabolism are also separate.
 
 The TreY and TreZ records map to the specific PTHR10357:SF216 and
 PTHR43651:SF11 subfamilies, respectively. Both target assignments remain
-inferred rather than directly assayed, so OpenScientist research is being used
-to look for KT2440 genetics or biochemistry. The broad candidate inventory is
+inferred rather than directly assayed; the completed OpenScientist review
+looked for KT2440 genetics and biochemistry. The broad candidate inventory is
 retained in
 [`ppu00500_trey_trez_trehalose_biosynthesis.tsv`](ppu00500_trey_trez_trehalose_biosynthesis.tsv).
+
+Ortholog biochemistry independently grounds the reusable module:
+PMID:8605217 identifies the adjacent *Arthrobacter* sp. Q36 treY/treZ pair,
+PMID:8611744 characterizes purified TreY, and PMID:8611745 characterizes
+purified TreZ. These papers support the two reaction definitions and exemplar
+accessions without being treated as direct evidence for the KT2440 proteins.
 
 The completed species-aware report judged both reactions present and the
 two-step module satisfiable, while correctly retaining weaker evidence for
