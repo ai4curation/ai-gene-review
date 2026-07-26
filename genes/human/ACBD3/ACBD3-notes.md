@@ -187,7 +187,9 @@ correction above, the UR/GOLD split collapses — leaving **three** functional r
 - **ACB domain (83–174** per UniProt; PMID:23166793 writes "ACB domain (80–171)" and deletes
   1–171, so the boundary is source-dependent — rule 3's own case, and nothing here turns on it**)
   — binds C18:1-CoA / C16:0-CoA and oligomerises on ligand; binds
-  SREBP1 (ACB-containing N-terminus); and is credited by PMID:38134218 with recruiting FAPP2,
+  contributes to SREBP1 restraint (ΔN weakens but does not abolish it; the SREBP1 co-IP itself used
+  full-length ACBD3, so the interaction is not domain-mapped); and is credited by PMID:38134218 with
+  recruiting FAPP2,
   citing PMID:29750412 — though that paper's own abstract maps nothing to the ACB domain and
   models FAPP2 dispersal as a *consequence* of Golgi fragmentation. Treat the FAPP2 domain
   assignment as PMID:38134218's, not as established.
