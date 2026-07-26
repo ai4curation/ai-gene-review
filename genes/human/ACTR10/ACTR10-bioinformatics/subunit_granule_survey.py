@@ -98,7 +98,7 @@ def http_json(url: str, tries: int = 4) -> dict:
     raise RuntimeError(f"GET failed after {tries} tries: {url}") from last
 
 
-def assert_not_truncated(payload: dict, url: str, limit: int = 100) -> None:
+def assert_not_truncated(payload: dict, url: str) -> None:
     """Fail if QuickGO reported more hits than one page returned.
 
     A `limit=100` query that silently drops page 2 is the same class of defect as a

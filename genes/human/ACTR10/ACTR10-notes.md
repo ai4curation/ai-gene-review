@@ -363,8 +363,12 @@ immediately exposed two mistakes that hand-checking had missed:
 1. **`O15507` is an *inactive* (deleted) UniProt entry.** I had used it as DCTN3. It returns
    no gene name and no annotations, so querying it is indistinguishable from a subunit that
    genuinely carries nothing — my "DCTN3 carries none" was vacuous. The real accession is
-   **O75935** (`DCTN3_HUMAN`). The module now prints the entry name for every accession so
-   this cannot recur silently. *A dead accession is the quietest possible false negative.*
+   **O75935** (`DCTN3_HUMAN`). ~~The module now prints the entry name for every accession
+   so this cannot recur silently.~~ **Superseded — that fix does not work, see §12 🔵 3:**
+   UniProt *follows the merge*, so printing the entry name displays `GFRA1_HUMAN`, a
+   different protein's identity, and reads as a healthy answer. The working guard asserts
+   `primaryAccession`. Do not copy the entry-name pattern into another gene's module.
+   *A dead accession is the quietest possible false negative.*
 2. **CAPZA1's extracellular TAS is not the granule route.** It comes from `R-HSA-879377`,
    "The TRTK-12 fragment of F-actin capping protein alpha binds the AGER ligand S100B",
    which is **not** under Neutrophil degranulation (`R-HSA-6798695`). Counting it beside
@@ -480,10 +484,41 @@ dependency on Reactome, and the module **aborts** rather than degrading to "rout
 Degrading would emit a different, weaker report that still looked complete — the ABRA failure
 mode. So the committed `RESULTS.md` cannot be regenerated while Reactome is down, and that is
 the intended trade. `RESULTS.md` is byte-identical to the round-3 commit, and the three
-network-independent modules were each re-run and confirmed to emit output already present in
-it, so this round's code changes are output-neutral.
+modules that do **not** depend on Reactome — `paint_sources.py`, `nuclear_arp_control.py` and
+`nucleotide_gap_survey.py`; all five modules require network access, so "network-independent"
+would be wrong — were each re-run and confirmed to emit only lines already present in it, so
+this round's code changes are output-neutral.
 
 ### 🔵 5 — the ficolin row's "like CAPZA1" comparison
 
 Fixed: it now says ACTR1B and CAPZA1 are alike in having large non-dynactin pools but only
 ACTR1B is on this Reactome route.
+
+## 13. Round-5 review response (PR #2274) — APPROVED
+
+`ai4c-reviewer` **approved** on `f8fdcf970` and left three cosmetic suggestions, none
+blocking. All three taken, because the first was the round-4 mistake about to repeat itself.
+
+1. **§11 still carried the sentence §12 falsifies.** §11 said *"The module now prints the
+   entry name for every accession so this cannot recur silently"* — the exact claim §12 opens
+   by disproving. §10 got a superseded marker in round 4; §11 did not, and as the reviewer
+   noted it is the more consequential of the two, because a reader could copy that guard
+   pattern into another gene's module. Now struck through with the working alternative
+   (`primaryAccession`) and an explicit "do not copy the entry-name pattern". *Correcting a
+   claim in one section while leaving it standing in another is the same failure twice; the
+   rule is to grep for the falsified sentence, not the falsified section.*
+2. **`assert_not_truncated`'s `limit` parameter was dead** in both copies — the check reads
+   `numberOfHits` against `len(results)` and never consulted it. Removed rather than wired
+   up, since the caller's limit is already implicit in the comparison. Both copies re-tested:
+   they pass a complete page and abort on a truncated one.
+3. **"the three network-independent modules" was imprecise** — all five modules require
+   network access; the three meant are those that do not depend on Reactome
+   (`paint_sources.py`, `nuclear_arp_control.py`, `nucleotide_gap_survey.py`). Reworded,
+   since that sentence is doing the provenance work for the byte-identical `RESULTS.md`
+   claim.
+
+Reactome's ContentService was still returning HTTP 521 at the close of this round, so
+`RESULTS.md` has still not been regenerated end-to-end since `9c348858c`. It is byte-identical
+to that commit, and the three non-Reactome modules were re-run and emit only lines already
+present in it — that is the whole basis for the claim, and it is a partial re-run, not a full
+one. A background retry is still cycling.
