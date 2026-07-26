@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMAS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CMAS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8NFW8" target="_blank" class="term-link">
+                        Q8NFW8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CMAS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8NFW8" data-a="DESCRIPTION: CMAS is human N-acylneuraminate cytidylyltransfera..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CMAS is human N-acylneuraminate cytidylyltransferase (CMP-N-acetylneuraminic acid synthase; EC 2.7.7.43), the enzyme that activates free sialic acid for use in glycoconjugate biosynthesis. It condenses N-acetylneuraminate (Neu5Ac) with CTP to form the sugar-nucleotide donor CMP-N-acetylneuraminate (CMP-Neu5Ac) plus diphosphate; the enzyme also acts on other sialic acids including N-glycolylneuraminate (Neu5Gc) and KDN. CMP-Neu5Ac is the universal donor substrate used by sialyltransferases (after transport into the Golgi by the CMP-sialic acid transporter SLC35A1) to sialylate glycoproteins and glycolipids. The active enzyme is a homotetramer (a dimer of dimers). Unusually among the sialic-acid biosynthetic enzymes, human CMAS localizes at least partly to the nucleus; its basic-cluster (BC2) motif directs nuclear localization and contains the catalytic active site, although nuclear localization is not itself required for catalytic activity. CMAS is ubiquitously expressed.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008781" target="_blank" class="term-link">
+                                    GO:0008781
+                                </a>
+                            </span>
+                            <span class="term-label">N-acylneuraminate cytidylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0008781" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic molecular function. CMAS condenses N-acylneuraminate with CTP to form CMP-N-acyl-beta-neuraminate plus diphosphate (EC 2.7.7.43), the activation step for sialic acid. The phylogenetic (IBA) inference is well supported by the experimentally verified human enzyme activity and by orthologs across fly, mouse and zebrafish. This is the primary function of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CMAS/CMAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=an N-acylneuraminate + CTP = a CMP-N-acyl-beta-neuraminate +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from the UniProt Swiss-Prot subcellular-location mapping. It correctly mirrors the experimentally determined nuclear localization of human CMAS. Redundant with the HDA nucleus annotation (PMID:21630459) but correct.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CMAS/CMAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Nucleus {ECO:0000269|PubMed:11602804}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008781" target="_blank" class="term-link">
+                                    GO:0008781
+                                </a>
+                            </span>
+                            <span class="term-label">N-acylneuraminate cytidylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0008781" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated molecular-function annotation derived from the Rhea/EC mapping (RHEA:11344, EC 2.7.7.43). Identical to the core catalytic function and consistent with the experimentally characterized enzyme.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CMAS/CMAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ChEBI:CHEBI:37563, ChEBI:CHEBI:60073, ChEBI:CHEBI:68671; EC=2.7.7.43;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006054" target="_blank" class="term-link">
+                                    GO:0006054
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylneuraminate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0006054" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but a broad parent process. CMAS acts on N-acetylneuraminate, so involvement in its metabolism is accurate. However the specific product of the CMAS reaction is CMP-N-acetylneuraminate, so the more precise process term GO:0006055 (CMP-N-acetylneuraminate biosynthetic process) better captures the core biological role. Retained as non-core (less-precise ancestor).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/CMAS/CMAS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Amino-sugar metabolism; N-acetylneuraminate metabolism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0005730" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence (HPA) sub-nuclear localization to the nucleolus. Consistent with the established nuclear localization of CMAS, but the nucleolar sub-compartment is not functionally established as the site relevant to catalysis (the enzyme is also seen in nucleoplasm and is active independent of nuclear import). Kept as a valid but non-core localization detail.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006055" target="_blank" class="term-link">
+                                    GO:0006055
+                                </a>
+                            </span>
+                            <span class="term-label">CMP-N-acetylneuraminate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31121216" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31121216
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activity of N-acylneuraminate-9-phosphatase (NANP) is not es...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0006055" data-r="PMID:31121216" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process, experimentally supported. Willems et al. (2019) showed that CMAS-knockout cells have undetectable CMP-sialic acid, directly demonstrating that CMAS is required for CMP-N-acetylneuraminate biosynthesis. This is the precise process term for the CMAS reaction and represents the core biological role of the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31121216" target="_blank" class="term-link">
+                                        PMID:31121216
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CMP-sialic acid was dramatically reduced
+in GNE and NANS KO cells and undetectable in CMAS KO.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Derived from a large-scale membrane-proteome MS survey of an NK-like cell line. CMAS is a soluble nuclear/cytosolic enzyme (homotetramer) with no transmembrane domain or signal peptide, and the study itself notes that a large fraction of identified proteins are only transiently associated with membranes rather than integral. Capture in a membrane preparation is best interpreted as a proteomics artifact, not a functional membrane localization. This is a high-throughput (HDA) dataset annotation, so it is flagged as an over-annotation rather than removed.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0005634" data-r="PMID:21630459" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS identification of CMAS in the isolated human sperm nucleus proteome. Corroborates the experimentally established nuclear localization of CMAS (Lawrence et al. 2001). Consistent and correct.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-4084982
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8NFW8" data-a="GO:0005654" data-r="Reactome:R-HSA-4084982" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing CMAS in the nucleoplasm. Reactome states that CMAS localizes to the nucleus in mammalian cells; nucleoplasm is a reasonable sub-nuclear compartment consistent with the experimental nuclear localization. Kept as a valid but non-core localization detail.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-4084982
+
+                                </span>
+
+                                <div class="support-text">CMAS is ubiquitously expressed and localizes to the nucleus in mammalian cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>N-acylneuraminate cytidylyltransferase (CMP-sialic acid synthase) activity: CMAS condenses free N-acetylneuraminate (Neu5Ac; also Neu5Gc and KDN) with CTP to form the sugar-nucleotide donor CMP-N-acetylneuraminate plus diphosphate, activating sialic acid for downstream sialyltransferase reactions. The active enzyme is a homotetramer localized (at least partly) to the nucleus.</h3>
+                <span class="vote-buttons" data-g="Q8NFW8" data-a="FUNCTION: N-acylneuraminate cytidylyltransferase (CMP-sialic..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008781" target="_blank" class="term-link">
+                            N-acylneuraminate cytidylyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006055" target="_blank" class="term-link">
+                                CMP-N-acetylneuraminate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/CMAS/CMAS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=an N-acylneuraminate + CTP = a CMP-N-acyl-beta-neuraminate +</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31121216" target="_blank" class="term-link">
+                                PMID:31121216
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">CMP-sialic acid was dramatically reduced
+in GNE and NANS KO cells and undetectable in CMAS KO.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/CMAS/CMAS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Nucleus {ECO:0000269|PubMed:11602804}.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31121216" target="_blank" class="term-link">
+                            PMID:31121216
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Activity of N-acylneuraminate-9-phosphatase (NANP) is not essential for de novo sialic acid biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">CMAS-knockout cells have undetectable CMP-sialic acid, demonstrating that CMAS is required for CMP-N-acetylneuraminate (CMP-sialic acid) biosynthesis.</div>
+
+                        <div class="finding-text">"CMP-sialic acid was dramatically reduced
+in GNE and NANS KO cells and undetectable in CMAS KO."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-4084982
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CMAS transfers CMP from CTP to Neu5Ac, forming CMP-Neu5Ac</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/CMAS/CMAS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q8NFW8 (NEUA_HUMAN), N-acylneuraminate cytidylyltransferase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CMAS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8NFW8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cmas-human-review-notes">CMAS (human) — review notes</h1>
+<p>UniProt: Q8NFW8 (NEUA_HUMAN). Gene: CMAS. HGNC:18290. Chromosome 12.<br />
+Recommended name: <strong>N-acylneuraminate cytidylyltransferase</strong> (EC 2.7.7.43).<br />
+AltName: CMP-N-acetylneuraminic acid synthase (CMP-NeuNAc synthase).</p>
+<h2 id="core-biology">Core biology</h2>
+<p>CMAS is the enzyme that <strong>activates free sialic acid</strong> so it can be used for<br />
+glycoconjugate biosynthesis. It condenses <strong>N-acetylneuraminate (Neu5Ac)</strong> with<br />
+<strong>CTP</strong> to form the sugar-nucleotide donor <strong>CMP-N-acetylneuraminate (CMP-Neu5Ac)</strong><br />
+plus diphosphate. CMP-Neu5Ac is the universal donor substrate used by<br />
+sialyltransferases (after CMP-Neu5Ac is transported into the Golgi by SLC35A1).</p>
+<ul>
+<li>FUNCTION (UniProt): "Catalyzes the activation of N-acetylneuraminic acid (NeuNAc) to cytidine 5'-monophosphate N-acetylneuraminic acid (CMP-NeuNAc), a substrate required for the addition of sialic acid. Has some activity toward NeuNAc, N-glycolylneuraminic acid (Neu5Gc) or 2-keto-3-deoxy-D-glycero-D-galacto-nononic acid (KDN)." [file:human/CMAS/CMAS-uniprot.txt]</li>
+<li>CATALYTIC ACTIVITY (UniProt): "an N-acylneuraminate + CTP = a CMP-N-acyl-beta-neuraminate + diphosphate"; Rhea:RHEA:11344; EC=2.7.7.43; Evidence ECO:0000269|PubMed:11602804. [file:human/CMAS/CMAS-uniprot.txt]</li>
+<li>PATHWAY (UniProt): "Amino-sugar metabolism; N-acetylneuraminate metabolism." [file:human/CMAS/CMAS-uniprot.txt] (UniPathway UPA00628)</li>
+<li>Substrate promiscuity: acts on Neu5Ac, Neu5Gc and KDN — hence the recommended name is the general "N-acylneuraminate cytidylyltransferase", not just CMP-Neu5Ac synthase.</li>
+</ul>
+<h2 id="subcellular-location-notably-nuclear">Subcellular location — notably nuclear</h2>
+<p>Human CMAS is (at least partly) <strong>nuclear</strong>. This is unusual among the sialic-acid<br />
+biosynthetic enzymes (the others are cytosolic); CMP-Neu5Ac made in the nucleus is<br />
+then exported to the cytosol and imported into the Golgi.</p>
+<ul>
+<li>SUBCELLULAR LOCATION (UniProt): "Nucleus {ECO:0000269|PubMed:11602804}." [file:human/CMAS/CMAS-uniprot.txt] — experimental, from Lawrence et al. 2001.</li>
+<li>DOMAIN (UniProt): "The BC2 (basic cluster 2) motif is necessary and sufficient for the nuclear localization and contains the catalytic active site. The localization in the nucleus is however not required for the enzyme activity (By similarity)." [file:human/CMAS/CMAS-uniprot.txt] — i.e. nuclear localization and catalysis are separable; nuclear import is NOT needed for activity.</li>
+<li>SUBUNIT (UniProt): "Homotetramer; the active enzyme is formed by a dimer of dimers." [file:human/CMAS/CMAS-uniprot.txt]</li>
+</ul>
+<p>Reactome R-HSA-4084982 concurs: "CMAS is ubiquitously expressed and localizes to the nucleus in mammalian cells. The active form of the enzyme is a homotetramer (a dimer of dimers) ... CMP-Neu5Ac is the donor substrate for sialyltransferases." [reactome:R-HSA-4084982]</p>
+<h2 id="go-term-id-verification-ols-2026-07">GO term id verification (OLS, 2026-07)</h2>
+<ul>
+<li>GO:0008781 N-acylneuraminate cytidylyltransferase activity — MF; def "Catalysis of the reaction: CTP + N-acylneuraminate = diphosphate + CMP-N-acylneuraminate." Current, not obsolete. Core MF.</li>
+<li>GO:0006055 CMP-N-acetylneuraminate biosynthetic process — BP; current. Core BP (the actual product of the reaction).</li>
+<li>GO:0006054 N-acetylneuraminate metabolic process — BP; current. Parent/broader metabolic process (UniPathway IEA).</li>
+<li>GO:0005634 nucleus — CC; current. Experimental (Lawrence 2001) + HDA.</li>
+<li>GO:0005730 nucleolus — CC; current. HPA IDA (immunofluorescence).</li>
+<li>GO:0005654 nucleoplasm — CC; current. Reactome TAS.</li>
+</ul>
+<h2 id="annotation-by-annotation-reasoning">Annotation-by-annotation reasoning</h2>
+<ol>
+<li>GO:0008781 MF, IBA (GO_REF:0000033) — core catalytic function. ACCEPT. Directly supported by UniProt CATALYTIC ACTIVITY + EC 2.7.7.43 + phylogenetic (IBA) consensus across FB/MGI/ZFIN orthologs.</li>
+<li>GO:0005634 nucleus, IEA (GO_REF:0000044, SubCell) — subcellular-location IEA that mirrors the experimental Nucleus location. ACCEPT (redundant with the HDA nucleus but correct).</li>
+<li>GO:0008781 MF, IEA (GO_REF:0000120, RHEA/EC) — automated MF from the Rhea/EC mapping; identical to core function. ACCEPT.</li>
+<li>GO:0006054 N-acetylneuraminate metabolic process, IEA (GO_REF:0000041, UniPathway) — correct but broad parent process. The reaction product is specifically CMP-Neu5Ac (GO:0006055), so this is a less-precise ancestor. KEEP_AS_NON_CORE (correct, but GO:0006055 is the precise core BP).</li>
+<li>GO:0005730 nucleolus, IDA (GO_REF:0000052, HPA immunofluorescence) — HPA IF sub-nuclear localization. Consistent with the nuclear localization but nucleolar sub-compartment is not functionally established as where catalysis matters. KEEP_AS_NON_CORE.</li>
+<li>GO:0006055 CMP-N-acetylneuraminate biosynthetic process, IMP (PMID:31121216) — Willems et al. 2019: CMAS KO cells have UNDETECTABLE CMP-sialic acid, directly demonstrating CMAS is required for CMP-Neu5Ac biosynthesis. This is the precise core BP. ACCEPT. (abstract-only cache; abstract explicitly states the CMAS-KO result.)</li>
+<li>GO:0016020 membrane, HDA (PMID:19946888) — NK-cell membrane-proteome MS dataset. CMAS is a soluble nuclear/cytosolic enzyme with no TM domain; membrane capture is a proteomics artifact (paper itself notes ~60% of hits are not membrane proteins). Non-experimental for a specific function; over-annotation. MARK_AS_OVER_ANNOTATED (HDA, not IDA/IMP — do not REMOVE; flag as over-annotation).</li>
+<li>GO:0005634 nucleus, HDA (PMID:21630459) — sperm-nucleus proteome MS. Corroborates nuclear localization (consistent with the experimental Lawrence 2001 nucleus). ACCEPT.</li>
+<li>GO:0005654 nucleoplasm, TAS (Reactome:R-HSA-4084982) — Reactome states CMAS localizes to the nucleus; nucleoplasm is a reasonable sub-nuclear placement. Consistent with nuclear localization. KEEP_AS_NON_CORE.</li>
+</ol>
+<h2 id="publications-reviewed-cache-abstract-only">Publications reviewed (cache = abstract-only)</h2>
+<ul>
+<li>PMID:31121216 (Willems 2019) full_text_available: false. Abstract supports GO:0006055 IMP: "CMP-sialic acid was ... undetectable in CMAS KO." RELEVANT/HIGH.</li>
+<li>PMID:19946888 (Ghosh 2010, NK membrane proteome) full_text_available: false. Large-scale MS; ~40% predicted membrane, remainder transient/artifactual. Supports only "membrane" HDA capture; LOW relevance to CMAS function.</li>
+<li>PMID:21630459 (de Mateo 2011, sperm nucleus proteome) full_text_available: false. Large-scale MS of sperm nuclei; supports nucleus HDA. MEDIUM (corroborative of nuclear localization).</li>
+<li>PMID:11602804 (Lawrence 2001) NOT in publications cache — this is the primary experimental reference for enzyme activity, tissue specificity, and Nucleus location (cited in UniProt with ECO:0000269). Its content is quoted here via the UniProt record (file: reference), not the paper directly.</li>
+</ul>
+<h2 id="core-functions-synthesis">Core functions (synthesis)</h2>
+<ul>
+<li>MF: GO:0008781 N-acylneuraminate cytidylyltransferase activity.</li>
+<li>BP: GO:0006055 CMP-N-acetylneuraminate biosynthetic process.</li>
+<li>Location: GO:0005634 nucleus (experimental; also detected nucleolus/nucleoplasm sub-compartments).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8NFW8
+gene_symbol: CMAS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CMAS is human N-acylneuraminate cytidylyltransferase (CMP-N-acetylneuraminic acid
+  synthase; EC 2.7.7.43), the enzyme that activates free sialic acid for use in
+  glycoconjugate biosynthesis. It condenses N-acetylneuraminate (Neu5Ac) with CTP to
+  form the sugar-nucleotide donor CMP-N-acetylneuraminate (CMP-Neu5Ac) plus
+  diphosphate; the enzyme also acts on other sialic acids including
+  N-glycolylneuraminate (Neu5Gc) and KDN. CMP-Neu5Ac is the universal donor substrate
+  used by sialyltransferases (after transport into the Golgi by the CMP-sialic acid
+  transporter SLC35A1) to sialylate glycoproteins and glycolipids. The active enzyme is
+  a homotetramer (a dimer of dimers). Unusually among the sialic-acid biosynthetic
+  enzymes, human CMAS localizes at least partly to the nucleus; its basic-cluster (BC2)
+  motif directs nuclear localization and contains the catalytic active site, although
+  nuclear localization is not itself required for catalytic activity. CMAS is
+  ubiquitously expressed.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8NFW8-1
+- name: &#39;2&#39;
+  id: Q8NFW8-2
+  sequence_note: VSP_012764
+existing_annotations:
+- term:
+    id: GO:0008781
+    label: N-acylneuraminate cytidylyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic molecular function. CMAS condenses N-acylneuraminate with CTP to
+      form CMP-N-acyl-beta-neuraminate plus diphosphate (EC 2.7.7.43), the activation
+      step for sialic acid. The phylogenetic (IBA) inference is well supported by the
+      experimentally verified human enzyme activity and by orthologs across fly, mouse
+      and zebrafish. This is the primary function of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/CMAS/CMAS-uniprot.txt
+      supporting_text: &#34;Reaction=an N-acylneuraminate + CTP = a CMP-N-acyl-beta-neuraminate +&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation from the UniProt Swiss-Prot subcellular-location mapping.
+      It correctly mirrors the experimentally determined nuclear localization of human
+      CMAS. Redundant with the HDA nucleus annotation (PMID:21630459) but correct.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/CMAS/CMAS-uniprot.txt
+      supporting_text: &#34;Nucleus {ECO:0000269|PubMed:11602804}.&#34;
+- term:
+    id: GO:0008781
+    label: N-acylneuraminate cytidylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated molecular-function annotation derived from the Rhea/EC mapping
+      (RHEA:11344, EC 2.7.7.43). Identical to the core catalytic function and consistent
+      with the experimentally characterized enzyme.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/CMAS/CMAS-uniprot.txt
+      supporting_text: &#34;ChEBI:CHEBI:37563, ChEBI:CHEBI:60073, ChEBI:CHEBI:68671; EC=2.7.7.43;&#34;
+- term:
+    id: GO:0006054
+    label: N-acetylneuraminate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Correct but a broad parent process. CMAS acts on N-acetylneuraminate, so
+      involvement in its metabolism is accurate. However the specific product of the
+      CMAS reaction is CMP-N-acetylneuraminate, so the more precise process term
+      GO:0006055 (CMP-N-acetylneuraminate biosynthetic process) better captures the
+      core biological role. Retained as non-core (less-precise ancestor).
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:human/CMAS/CMAS-uniprot.txt
+      supporting_text: &#34;Amino-sugar metabolism; N-acetylneuraminate metabolism.&#34;
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Immunofluorescence (HPA) sub-nuclear localization to the nucleolus. Consistent
+      with the established nuclear localization of CMAS, but the nucleolar
+      sub-compartment is not functionally established as the site relevant to catalysis
+      (the enzyme is also seen in nucleoplasm and is active independent of nuclear
+      import). Kept as a valid but non-core localization detail.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0006055
+    label: CMP-N-acetylneuraminate biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:31121216
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process, experimentally supported. Willems et al. (2019) showed
+      that CMAS-knockout cells have undetectable CMP-sialic acid, directly
+      demonstrating that CMAS is required for CMP-N-acetylneuraminate biosynthesis. This
+      is the precise process term for the CMAS reaction and represents the core
+      biological role of the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:31121216
+      supporting_text: &#34;CMP-sialic acid was dramatically reduced \nin GNE and NANS KO cells and undetectable in CMAS KO.&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Derived from a large-scale membrane-proteome MS survey of an NK-like cell line.
+      CMAS is a soluble nuclear/cytosolic enzyme (homotetramer) with no transmembrane
+      domain or signal peptide, and the study itself notes that a large fraction of
+      identified proteins are only transiently associated with membranes rather than
+      integral. Capture in a membrane preparation is best interpreted as a proteomics
+      artifact, not a functional membrane localization. This is a high-throughput (HDA)
+      dataset annotation, so it is flagged as an over-annotation rather than removed.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput MS identification of CMAS in the isolated human sperm nucleus
+      proteome. Corroborates the experimentally established nuclear localization of
+      CMAS (Lawrence et al. 2001). Consistent and correct.
+    action: ACCEPT
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-4084982
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing CMAS in the nucleoplasm. Reactome
+      states that CMAS localizes to the nucleus in mammalian cells; nucleoplasm is a
+      reasonable sub-nuclear compartment consistent with the experimental nuclear
+      localization. Kept as a valid but non-core localization detail.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: Reactome:R-HSA-4084982
+      supporting_text: &#34;CMAS is ubiquitously expressed and localizes to the nucleus in mammalian cells.&#34;
+core_functions:
+- description: &gt;-
+    N-acylneuraminate cytidylyltransferase (CMP-sialic acid synthase) activity: CMAS
+    condenses free N-acetylneuraminate (Neu5Ac; also Neu5Gc and KDN) with CTP to form
+    the sugar-nucleotide donor CMP-N-acetylneuraminate plus diphosphate, activating
+    sialic acid for downstream sialyltransferase reactions. The active enzyme is a
+    homotetramer localized (at least partly) to the nucleus.
+  molecular_function:
+    id: GO:0008781
+    label: N-acylneuraminate cytidylyltransferase activity
+  directly_involved_in:
+  - id: GO:0006055
+    label: CMP-N-acetylneuraminate biosynthetic process
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:human/CMAS/CMAS-uniprot.txt
+    supporting_text: &#34;Reaction=an N-acylneuraminate + CTP = a CMP-N-acyl-beta-neuraminate +&#34;
+  - reference_id: PMID:31121216
+    supporting_text: &#34;CMP-sialic acid was dramatically reduced \nin GNE and NANS KO cells and undetectable in CMAS KO.&#34;
+  - reference_id: file:human/CMAS/CMAS-uniprot.txt
+    supporting_text: &#34;Nucleus {ECO:0000269|PubMed:11602804}.&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale membrane-proteome MS of an NK-like cell line. Correctly cited for the
+      &#34;membrane&#34; HDA capture, but this reflects proteomics co-isolation of a soluble
+      nuclear/cytosolic enzyme rather than genuine membrane localization; low relevance
+      to CMAS function.
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Human sperm nucleus proteome MS. Correctly cited; corroborates the nuclear
+      localization of CMAS as a high-throughput dataset annotation.
+- id: PMID:31121216
+  title: Activity of N-acylneuraminate-9-phosphatase (NANP) is not essential for de
+    novo sialic acid biosynthesis.
+  findings:
+  - statement: &gt;-
+      CMAS-knockout cells have undetectable CMP-sialic acid, demonstrating that CMAS is
+      required for CMP-N-acetylneuraminate (CMP-sialic acid) biosynthesis.
+    reference_section_type: RESULTS
+    supporting_text: &#34;CMP-sialic acid was dramatically reduced \nin GNE and NANS KO cells and undetectable in CMAS KO.&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Although the paper&#39;s title/focus is NANP, its knockout panel includes CMAS and
+      directly shows CMP-sialic acid is undetectable in CMAS KO, supporting the
+      GO:0006055 IMP annotation. Cache is abstract-only but the abstract states this
+      result explicitly.
+- id: Reactome:R-HSA-4084982
+  title: CMAS transfers CMP from CTP to Neu5Ac, forming CMP-Neu5Ac
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the CMAS-catalyzed conversion of Neu5Ac + CTP to CMP-Neu5Ac;
+      supports the core catalytic function and nuclear localization.
+- id: file:human/CMAS/CMAS-uniprot.txt
+  title: UniProt entry Q8NFW8 (NEUA_HUMAN), N-acylneuraminate cytidylyltransferase
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGPL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SGPL1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95470" target="_blank" class="term-link">
+                        O95470
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SGPL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95470" data-a="DESCRIPTION: SGPL1 is sphingosine-1-phosphate lyase 1, a pyrido..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SGPL1 is sphingosine-1-phosphate lyase 1, a pyridoxal 5&#39;-phosphate (PLP)-dependent enzyme (EC 4.1.2.27) anchored in the endoplasmic reticulum membrane that catalyzes the final, irreversible degradative step of sphingolipid metabolism. It cleaves phosphorylated sphingoid bases, chiefly sphingosine-1-phosphate (S1P; also sphinganine 1-phosphate), into a long-chain fatty aldehyde ((2E)-hexadecenal or hexadecanal) plus phosphoethanolamine. This reaction has no reverse counterpart and is the only exit from the sphingolipid pathway, channeling sphingoid-derived carbon into glycerolipid and ethanolamine-phosphate metabolism. The catalytic domain faces the cytosol; the enzyme is a homodimer that binds PLP covalently through a Schiff base to Lys-353. By irreversibly degrading S1P, SGPL1 terminates S1P signaling and helps establish the tissue-to-blood/lymph S1P gradient that governs lymphocyte egress and immune function, and it acts as a modulator of the ceramide/S1P &#34;rheostat&#34; controlling cell survival. Biallelic loss-of-function variants cause an autosomal-recessive syndrome (SPLIS / RENI, MIM:617575) featuring steroid-resistant nephrotic syndrome, primary adrenal insufficiency, ichthyosis, immunodeficiency, and neurological defects.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO/IBA) placement of SGPL1 activity in the ER. Consistent with experimental localization; the more precise term is ER membrane (GO:0005789), but the ER assignment is correct.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. GO:0008117 is the canonical GO term for the S1P/sphinganine 1-phosphate lyase reaction (EC 4.1.2.27, RHEA:18593); no separate &#34;sphingosine-1-phosphate lyase activity&#34; term exists. IBA recovers the conserved function across orthologs and agrees with direct human experimental data.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030149" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. SGPL1 performs the terminal, irreversible step of sphingolipid catabolism. IBA correctly recovers this conserved role.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SubCell keyword mapping to ER membrane. This is the precise, correct location: SGPL1 is a single-pass type III ER membrane protein with its catalytic domain on the cytoplasmic side. Corroborated by experimental annotations below.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0006629" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation to the very general grandparent term &#34;lipid metabolic process&#34;. Correct but uninformative; the specific sphingolipid catabolic process (GO:0030149) captures the function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (RHEA:18593 / EC 4.1.2.27) mapping to the core lyase activity. Consistent with the experimental IDA/IMP annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016830" target="_blank" class="term-link">
+                                    GO:0016830
+                                </a>
+                            </span>
+                            <span class="term-label">carbon-carbon lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0016830" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping to the general parent MF &#34;carbon-carbon lyase activity&#34;. Correct (the enzyme cleaves a C-C bond) but the specific child GO:0008117 is the informative term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function feature. SGPL1 is a PLP-dependent enzyme; PLP is bound covalently via a Schiff base to Lys-353 (essential for catalysis) and is confirmed in the crystal structure. Although IEA, this is strongly supported by direct structural and cofactor evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21903422" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21903422
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mapping a dynamic innate immunity protein interaction networ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005515" data-r="PMID:21903422" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale innate-immunity interactome screen (HI5); IntAct records SGPL1-STING1 (Q86WV6). Uninformative as a molecular function and no specific physiological complex is established. Retained (experimental IPI) but flagged as over-annotation; not promoted to a core function.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI high-throughput binary interactome (many ER/membrane partners, e.g. aquaporins, ERG28, FA2H, IFITM3). Systematic-screen hits with no specific molecular function; retained but flagged as over-annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005783" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated ER localization (from mouse ortholog). Correct; ER membrane (GO:0005789) is the more precise term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9845614
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030149" data-r="Reactome:R-HSA-9845614" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing SGPL1 in sphingolipid catabolism. Correct core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006665" target="_blank" class="term-link">
+                                    GO:0006665
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0006665" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway mapping (UPA00222, sphingolipid metabolism). Correct but a parent of the more specific catabolic process (GO:0030149); consistent with the UniProt PATHWAY annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428681
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="Reactome:R-HSA-428681" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion for the S1P/sphinganine 1-phosphate lyase reaction. Core molecular function, consistent with experimental data.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence localization to the ER. Consistent with all other localization evidence; ER membrane is the precise term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14570870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-phosphate lyase enhances stress-induced ceramide...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005789" data-r="PMID:14570870" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental localization of recombinant human SGPL1 to the ER. Core location: SGPL1 is an integral ER membrane protein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                        PMID:14570870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant enzyme was active, localized to the endoplasmic reticulum, and reduced baseline sphingosine and sphingosine 1-phosphate levels.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22784711" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22784711
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    First evidence of sphingosine 1-phosphate lyase protein expr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="PMID:22784711" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct measurement of SPL enzymatic activity in human tissue/cell lines. Supports the core lyase molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22784711" target="_blank" class="term-link">
+                                        PMID:22784711
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzyme drives irreversible degradation of sphingosine 1-phosphate (S1P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28165339
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in sphingosine-1-phosphate lyase cause nephrosis w...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="PMID:28165339" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Disease-variant / mutational evidence: SGPL1 patient mutations reduce or abolish enzyme activity, and WT human SGPL1 (but not variants) rescues the S1P-lyase-deficient dpl1-delta yeast strain, directly demonstrating the lyase activity for the human protein. Supports the core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link">
+                                        PMID:28165339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains, whereas expression of disease-associated variants did not.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28165339
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in sphingosine-1-phosphate lyase cause nephrosis w...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030149" data-r="PMID:28165339" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss of SGPL1 (patient mutations) impairs sphingolipid catabolism, and the human enzyme complements sphingolipid-catabolism-deficient yeast. Supports the core biological process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link">
+                                        PMID:28165339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All mutations resulted in reduced or absent SGPL1 protein and/or enzyme activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    GO:0097190
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14570870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-phosphate lyase enhances stress-induced ceramide...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0097190" data-r="PMID:14570870" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGPL1 overexpression potentiates stress-induced apoptosis, and lyase activity is required for the effect. This is a real but downstream/indirect consequence of altering the S1P/ceramide rheostat rather than a distinct molecular function of SGPL1; the reaction products themselves have no apoptotic effect. Kept as a genuine but non-core process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                        PMID:14570870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Lyase enzymatic activity was required to potentiate apoptosis, because cells expressing a catalytically inactive enzyme behaved like controls.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24809814
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Orally active 7-substituted (4-benzylphthalazin-1-yl)-2-meth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0006631" data-r="PMID:24809814" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The lyase reaction produces a long-chain fatty aldehyde ((2E)-hexadecenal), which feeds into fatty-acid/glycerolipid metabolism. This is a peripheral downstream role of the catabolic activity rather than a core function; retained as non-core.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24809814
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Orally active 7-substituted (4-benzylphthalazin-1-yl)-2-meth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="PMID:24809814" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biochemical assay and co-crystal structure of the homodimeric human S1P lyase with PLP and an active-site inhibitor directly demonstrate the lyase activity. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link">
+                                        PMID:24809814
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24809814
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Orally active 7-substituted (4-benzylphthalazin-1-yl)-2-meth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030149" data-r="PMID:24809814" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration of S1P-degrading (sphingolipid catabolic) activity via the biochemical inhibitor assay. Core biological process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-428681
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005789" data-r="Reactome:R-HSA-428681" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion for ER membrane association. Core location, consistent with experimental evidence.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14570870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-phosphate lyase enhances stress-induced ceramide...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005783" data-r="PMID:14570870" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental ER localization of recombinant human SGPL1. Correct; ER membrane is the precise term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                        PMID:14570870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant enzyme was active, localized to the endoplasmic reticulum, and reduced baseline sphingosine and sphingosine 1-phosphate levels.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14570870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-phosphate lyase enhances stress-induced ceramide...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="PMID:14570870" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant human SGPL1 was enzymatically active and reduced sphingosine/S1P levels, directly demonstrating the lyase activity. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                        PMID:14570870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant enzyme was active, localized to the endoplasmic reticulum, and reduced baseline sphingosine and sphingosine 1-phosphate levels.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11018465
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human sphingosine-1-phosphate lyase: cDNA cloning, functiona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0005789" data-r="PMID:11018465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement (cDNA cloning paper) of a single N-terminal membrane span, consistent with the integral ER membrane localization established by later experimental work. Correct core location.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link">
+                                        PMID:11018465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Hydropathy plots revealed the presence of one membrane span near the amino-terminal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006672" target="_blank" class="term-link">
+                                    GO:0006672
+                                </a>
+                            </span>
+                            <span class="term-label">ceramide metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14570870
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sphingosine-phosphate lyase enhances stress-induced ceramide...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0006672" data-r="PMID:14570870" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SGPL1 does not act on ceramide directly; overexpression raises stress-induced ceramide indirectly by shifting the S1P/ceramide balance. A genuine but indirect metabolic effect, retained as non-core rather than a direct molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                        PMID:14570870
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Stress increased the amounts of long- and very long-chain ceramides in HEK293 cells, and this was enhanced in cells overexpressing wild type but not catalytically inactive lyase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                                    GO:0008117
+                                </a>
+                            </span>
+                            <span class="term-label">sphinganine-1-phosphate aldolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11018465
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human sphingosine-1-phosphate lyase: cDNA cloning, functiona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0008117" data-r="PMID:11018465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement from the original human cDNA cloning / functional expression study assigning the S1P-lyase activity to SGPL1. Core molecular function (corroborated by later IDA/IMP evidence).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link">
+                                        PMID:11018465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11018465
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human sphingosine-1-phosphate lyase: cDNA cloning, functiona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95470" data-a="GO:0030149" data-r="PMID:11018465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement that SGPL1 catalyzes the last step in sphingolipid breakdown. Core biological process; corroborated by experimental and phylogenetic annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link">
+                                        PMID:11018465
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PLP-dependent sphingosine-1-phosphate lyase activity: cleaves phosphorylated sphingoid bases (sphingosine-1-phosphate / sphinganine 1-phosphate) into a long-chain fatty aldehyde ((2E)-hexadecenal / hexadecanal) and phosphoethanolamine, using covalently bound pyridoxal 5&#39;-phosphate (Schiff base to Lys-353). This is the final, irreversible step of sphingolipid catabolism, performed at the cytoplasmic face of the endoplasmic reticulum membrane.</h3>
+                <span class="vote-buttons" data-g="O95470" data-a="FUNCTION: PLP-dependent sphingosine-1-phosphate lyase activi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008117" target="_blank" class="term-link">
+                            sphinganine-1-phosphate aldolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                sphingolipid catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link">
+                                PMID:11018465
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                                PMID:14570870
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The recombinant enzyme was active, localized to the endoplasmic reticulum, and reduced baseline sphingosine and sphingosine 1-phosphate levels.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link">
+                                PMID:28165339
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains, whereas expression of disease-associated variants did not.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Pyridoxal 5&#39;-phosphate binding: SGPL1 is a PLP-dependent (fold-type I / group II decarboxylase family) enzyme; the PLP cofactor is essential for catalysis and is bound covalently at the active site. This molecular-function feature underpins the lyase activity.</h3>
+                <span class="vote-buttons" data-g="O95470" data-a="FUNCTION: Pyridoxal 5&#39;-phosphate binding: SGPL1 is a PLP-dep..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link">
+                                PMID:24809814
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" target="_blank" class="term-link">
+                            PMID:11018465
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human sphingosine-1-phosphate lyase: cDNA cloning, functional expression studies and mapping to chromosome 10q22(1).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Original cloning and functional expression of human SGPL1; establishes it as the enzyme catalyzing the last, irreversible step of sphingolipid breakdown and identifies Cys-218/Cys-317 as important for catalysis.</div>
+
+                        <div class="finding-text">"Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" target="_blank" class="term-link">
+                            PMID:14570870
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingosine-phosphate lyase enhances stress-induced ceramide generation and apoptosis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant human SGPL1 is enzymatically active, localizes to the ER, lowers sphingosine/S1P, and (lyase-activity-dependently) potentiates stress-induced ceramide accumulation and apoptosis.</div>
+
+                        <div class="finding-text">"sphingosine-1-phosphate lyase overexpression in HEK293 cells decreases sphingosine and sphingosine 1-phosphate amounts but elevates stress-induced ceramide generation and apoptosis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21903422" target="_blank" class="term-link">
+                            PMID:21903422
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mapping a dynamic innate immunity protein interaction network regulating type I interferon production.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale innate-immunity interactome (HI5) that includes SGPL1 among the network proteins; notes SGPL1 regulates cell apoptosis. IntAct records the SGPL1-STING1 (Q86WV6) binary interaction.</div>
+
+                        <div class="finding-text">"Similarly, BAT3 and SGPL1 also regulate cell apoptosis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22784711" target="_blank" class="term-link">
+                            PMID:22784711
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">First evidence of sphingosine 1-phosphate lyase protein expression and activity downregulation in human neoplasm: implication for resistance to therapeutics in prostate cancer.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Measures SPL protein expression and enzymatic activity in human prostate tissue; SPL drives irreversible S1P degradation and is lost in tumors, inversely correlated with SphK1.</div>
+
+                        <div class="finding-text">"This enzyme drives irreversible degradation of sphingosine 1-phosphate (S1P)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" target="_blank" class="term-link">
+                            PMID:24809814
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Orally active 7-substituted (4-benzylphthalazin-1-yl)-2-methylpiperazin-1-yl]nicotinonitriles as active-site inhibitors of sphingosine 1-phosphate lyase for the treatment of multiple sclerosis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Discovery of active-site S1P-lyase inhibitors with a co-crystal structure of the homodimeric human enzyme bound to PLP and inhibitor; oral dosing reduces peripheral T-cell numbers and protects in a rat MS model.</div>
+
+                        <div class="finding-text">"as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" target="_blank" class="term-link">
+                            PMID:28165339
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in sphingosine-1-phosphate lyase cause nephrosis with ichthyosis and adrenal insufficiency.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic SGPL1 mutations cause a syndromic steroid-resistant nephrotic syndrome with ichthyosis, adrenal insufficiency, immunodeficiency, and neurological defects; all mutations reduce/abolish SGPL1 protein and/or activity, and WT (not variant) human SGPL1 rescues S1P-lyase-deficient yeast.</div>
+
+                        <div class="finding-text">"expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains, whereas expression of disease-associated variants did not."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI all-by-all binary interactome; source of the high-throughput SGPL1 &#34;protein binding&#34; hits (many ER/membrane partners). No specific physiological complex established.</div>
+
+                        <div class="finding-text">"Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-428681
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PXLP-SGPL1 cleaves sphingoid-1-phosphates</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9845614
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sphingolipid catabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond homodimerization, does SGPL1 have any physiologically meaningful, specific protein partner (e.g. a channeling or regulatory complex), or are the reported binary interactome hits largely incidental ER co-localization?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95470" data-a="Q: Beyond homodimerization, does SGPL1 have any physi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided in-vitro kinetics on purified WT vs SPLIS/RENI disease variants (e.g. R222Q, S346I) to quantify how each mutation affects PLP binding, substrate turnover, protein stability, and dimerization, mapping enzymatic loss to clinical severity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SPLIS/RENI disease severity correlates with the degree of residual S1P-lyase catalytic activity and protein stability of the mutant enzyme.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme kinetics / protein biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O95470" data-a="EXPERIMENT: Structure-guided in-vitro kinetics on purified WT ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SGPL1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95470" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sgpl1-sphingosine-1-phosphate-lyase-1-review-notes">SGPL1 (Sphingosine-1-phosphate lyase 1) review notes</h1>
+<p>UniProt: O95470 (SGPL1_HUMAN), 568 aa. HGNC:10817. Gene ID 8879. Chromosome 10q22.<br />
+EC 4.1.2.27. Belongs to the group II decarboxylase family, sphingosine-1-phosphate<br />
+lyase subfamily (PLP-dependent fold-type I; DOPA-decarboxylase-like, CDD cd06450).</p>
+<h2 id="core-molecular-function">Core molecular function</h2>
+<p>SGPL1 catalyzes the final, irreversible degradative step of sphingolipid metabolism:<br />
+it cleaves phosphorylated sphingoid bases (sphingosine-1-phosphate / sphinganine<br />
+1-phosphate) into a long-chain fatty aldehyde ((2E)-hexadecenal or hexadecanal) plus<br />
+phosphoethanolamine.</p>
+<ul>
+<li>[file:human/SGPL1/SGPL1-uniprot.txt "Cleaves phosphorylated sphingoid bases (PSBs), such as sphingosine-1-phosphate, into fatty aldehydes and phosphoethanolamine."]</li>
+<li>[file:human/SGPL1/SGPL1-uniprot.txt "Reaction=sphinganine 1-phosphate = hexadecanal + phosphoethanolamine"] with EC=4.1.2.27, Rhea:RHEA:18593.</li>
+<li>[file:human/SGPL1/SGPL1-uniprot.txt "Reaction=sphing-4-enine 1-phosphate = (2E)-hexadecenal + phosphoethanolamine"] (this is the S1P substrate; sphing-4-enine 1-phosphate = sphingosine 1-phosphate).</li>
+<li>Cofactor: [file:human/SGPL1/SGPL1-uniprot.txt "Name=pyridoxal 5'-phosphate; Xref=ChEBI:CHEBI:597326"] — PLP is bound covalently via Schiff base to Lys-353 (MOD_RES 353 "N6-(pyridoxal phosphate)lysine"). K353L mutagenesis abolishes activity (MUTAGEN 353 "K-&gt;L: Loss of sphinganine-1-phosphate aldolase activity").</li>
+<li>Pathway: [file:human/SGPL1/SGPL1-uniprot.txt "Lipid metabolism; sphingolipid metabolism."]</li>
+<li>Homodimer: [file:human/SGPL1/SGPL1-uniprot.txt "SUBUNIT: Homodimer."]</li>
+</ul>
+<p>The reaction is irreversible and is the ONLY exit route from the sphingolipid<br />
+pathway, channeling sphingoid carbon into glycerolipid/ethanolamine-phosphate<br />
+metabolism <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" title="Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.">PMID:11018465</a>. Reactome likewise: [file:human/SGPL1/SGPL1-uniprot.txt] cross-refs R-HSA-428681 and reactome/R-HSA-428681.md states "The reaction has no reverse counterpart and, thus, irreversibly removes sphingoids from the lipid pool."</p>
+<p>The GO MF term for this activity is <strong>GO:0008117</strong> — current GO label "sphinganine-1-phosphate aldolase activity" (a synonym-level naming of the S1P-lyase reaction; EC 4.1.2.27, RHEA:18593). There is no separate GO term "sphingosine-1-phosphate lyase activity" (OLS search returns none as of this review); GOA, UniProt (DR GO), and Reactome all annotate this enzyme with GO:0008117. So GO:0008117 is the correct, canonical MF term.</p>
+<h2 id="catalytic-residues-structure">Catalytic residues / structure</h2>
+<ul>
+<li>Cys-218 and Cys-317 important for cleavage: <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" title="Site-directed mutagenesis disclosed the importance of the cysteine residues 218 and 317 for the cleavage reaction.">PMID:11018465</a> (UniProt MUTAGEN 218 C-&gt;G loss; 317 C-&gt;S almost no activity).</li>
+<li>Membrane span near N-terminus not required for catalytic activity of the recombinant soluble domain: <a href="https://pubmed.ncbi.nlm.nih.gov/11018465" title="Hydropathy plots revealed the presence of one membrane span near the amino-terminal which is however not required for enzyme activity since recombinant poly-His-tagged lyase, lacking this membrane span, was functionally active.">PMID:11018465</a></li>
+<li>Crystal structure (PDB 4Q6R, 8AYF): homodimeric human S1P lyase with PLP and synthetic inhibitor; active-site directed inhibitors <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" title="as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.">PMID:24809814</a>. Km = 5.2 uM for S1P (UniProt BIOPHYSICOCHEMICAL PROPERTIES).</li>
+</ul>
+<h2 id="subcellular-location">Subcellular location</h2>
+<p>ER membrane, single-pass type III membrane protein, catalytic domain on cytoplasmic<br />
+side. TOPO_DOM 1-40 lumenal, TRANSMEM 41-61, TOPO_DOM 62-568 cytoplasmic.<br />
+- [file:human/SGPL1/SGPL1-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic reticulum membrane"]<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" title="The recombinant enzyme was active, localized to the endoplasmic reticulum, and reduced baseline sphingosine and sphingosine 1-phosphate levels.">PMID:14570870</a> (EXP/IDA for ER and ER membrane localization).</p>
+<h2 id="biological-role">Biological role</h2>
+<p>By irreversibly degrading S1P, SGPL1 terminates S1P signaling, sets tissue-vs-blood<br />
+S1P gradients (lymphocyte egress), and pushes the sphingolipid pathway toward exit.<br />
+It is a dual modulator of the ceramide/S1P rheostat, promoting stress-induced<br />
+ceramide accumulation and apoptosis when overexpressed:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" title="sphingosine-1-phosphate lyase overexpression in HEK293 cells decreases sphingosine and sphingosine 1-phosphate amounts but elevates stress-induced ceramide generation and apoptosis. This identifies sphingosine-1-phosphate lyase as a dual modulator of sphingosine 1-phosphate and ceramide metabolism as well as a regulator of cell fate decisions.">PMID:14570870</a><br />
+- Lyase activity required to potentiate apoptosis (catalytically inactive enzyme has no effect): <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" title="Lyase enzymatic activity was required to potentiate apoptosis, because cells expressing a catalytically inactive enzyme behaved like controls.">PMID:14570870</a><br />
+- The apoptotic effect works through the S1P/ceramide balance, not through the reaction products: <a href="https://pubmed.ncbi.nlm.nih.gov/14570870" title="In contrast to sphingosine 1-phosphate, the products of the lyase reaction had no effect on apoptosis.">PMID:14570870</a>. So the GO:0097190 "apoptotic signaling pathway" (IDA) and GO:0006672 "ceramide metabolic process" (IDA) annotations reflect a downstream/indirect consequence of the catabolic activity, not a distinct molecular function.</p>
+<p>Immunology / therapeutic target: S1P lyase inhibition reduces peripheral T-cell<br />
+numbers and protects in an MS model — S1PL as target for T-cell-targeted therapy:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/24809814" title="31 induces profound reduction of peripheral T cell numbers after oral dosage and confers pronounced protection in a rat model of multiple sclerosis.">PMID:24809814</a></p>
+<p>Cancer (S1P rheostat): SPL expression/activity lost in prostate tumors, inversely<br />
+correlated with SphK1; enforced SPL sensitizes cells to therapy:<br />
+- [PMID:22784711 "This enzyme drives irreversible degradation of sphingosine 1-phosphate (S1P)"; "a remarkable decrease in SPL enzymatic activity was found in tumor samples"].</p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic loss-of-function SGPL1 variants cause an autosomal-recessive syndrome<br />
+(UniProt disease "RENI", MIM:617575; also called SPLIS / NPHS14): steroid-resistant<br />
+nephrotic syndrome, primary adrenal insufficiency, ichthyosis, immunodeficiency, and<br />
+neurological defects; some fetal hydrops/demise.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" title="In 7 families with SRNS and facultative ichthyosis, adrenal insufficiency, immunodeficiency, and neurological defects, we identified 9 different recessive mutations in SGPL1, which encodes sphingosine-1-phosphate (S1P) lyase. All mutations resulted in reduced or absent SGPL1 protein and/or enzyme activity.">PMID:28165339</a><br />
+- Disease variants mislocalize / lose activity: <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" title="Overexpression of cDNA representing SGPL1 mutations resulted in subcellular mislocalization of SGPL1.">PMID:28165339</a>. RENI variants R222Q and S346I show decreased protein abundance, increased aggregation, decreased activity (UniProt VARIANT records).<br />
+- Cross-species rescue confirms conserved enzymatic function: <a href="https://pubmed.ncbi.nlm.nih.gov/28165339" title="expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains, whereas expression of disease-associated variants did not.">PMID:28165339</a><br />
+- SGPL1 IMP annotations to GO:0008117 and GO:0030149 (PMID:28165339) are supported: patient/variant loss of enzyme activity ("decreased sphinganine-1-phosphate aldolase activity") plus dpl1Δ yeast complementation directly demonstrate the lyase activity and its role in sphingolipid catabolism for the human protein.</p>
+<h2 id="protein-protein-interactions-go0005515-ipi">Protein-protein interactions (GO:0005515 IPI)</h2>
+<ul>
+<li>PMID:21903422 (HI5 innate-immunity interactome): SGPL1 appears in the network as an<br />
+  interactor within the STING/innate-immunity map; the paper notes "BAT3 and SGPL1<br />
+  also regulate cell apoptosis" <a href="https://pubmed.ncbi.nlm.nih.gov/21903422" title="Similarly, BAT3 and SGPL1 also regulate cell apoptosis">PMID:21903422</a>. IntAct records the SGPL1–STING1 (Q86WV6) binary interaction from this study. This is a large-scale interactome screen; the SGPL1 partner (STING1) is with/from UniProtKB:Q86WV6.</li>
+<li>PMID:32296183 (HuRI reference binary interactome): high-throughput Y2H yielding many<br />
+  binary partners for SGPL1 (AQP3/AQP9/MIP aquaporins, BCL2L2, ERG28, FA2H, IFITM3,<br />
+  MARCHF5, STX4/STX8, TMEM97, TUSC5=A5PKU2, etc.). These are systematic all-by-all<br />
+  screen hits, mostly ER/membrane proteins; individually low-information.</li>
+</ul>
+<p>Bare "protein binding" (GO:0005515) IPI annotations carry no specific molecular<br />
+function; per policy they are marked as over-annotated (not removed), and not promoted<br />
+to core_functions. No single physiological adapter/complex partner is established for<br />
+SGPL1 beyond homodimerization.</p>
+<h2 id="annotation-level-decisions-summary">Annotation-level decisions (summary)</h2>
+<ul>
+<li>GO:0008117 sphinganine-1-phosphate aldolase activity — CORE MF. Multiple IDA/EXP/IMP<br />
+  (PMID:14570870, 22784711, 28165339, 24809814) + IBA + IEA + TAS all converge. ACCEPT<br />
+  the experimental ones; IBA/TAS ACCEPT; IEA (RHEA/EC) ACCEPT as consistent.</li>
+<li>GO:0030170 pyridoxal phosphate binding (IEA InterPro) — CORE MF, ACCEPT. PLP is the<br />
+  essential cofactor (covalent to Lys-353); consistent with COFACTOR + MOD_RES + PDB.</li>
+<li>GO:0030149 sphingolipid catabolic process — CORE BP. IDA/IMP/IBA/TAS/NAS. ACCEPT.</li>
+<li>GO:0006665 sphingolipid metabolic process (IEA UniPathway) — parent of catabolic<br />
+  process; ACCEPT (keep, less specific but correct pathway).</li>
+<li>GO:0006629 lipid metabolic process (IEA ARBA) — very general grandparent; correct but<br />
+  uninformative; KEEP_AS_NON_CORE.</li>
+<li>GO:0016830 carbon-carbon lyase activity (IEA InterPro) — correct general MF parent of<br />
+  the aldolase/lyase activity; KEEP_AS_NON_CORE (GO:0008117 is the specific term).</li>
+<li>GO:0005783 endoplasmic reticulum / GO:0005789 endoplasmic reticulum membrane —<br />
+  location. ER membrane (integral) is the precise term; ER is the parent. Experimental<br />
+  (IDA/EXP/HPA) + TAS + IEA + NAS all agree. ACCEPT the membrane term as core location;<br />
+  ER (GO:0005783) ACCEPT/KEEP.</li>
+<li>GO:0097190 apoptotic signaling pathway (IDA PMID:14570870) — real but downstream/<br />
+  indirect consequence of altering the S1P/ceramide rheostat; KEEP_AS_NON_CORE.</li>
+<li>GO:0006672 ceramide metabolic process (IDA PMID:14570870) — SGPL1 does not act on<br />
+  ceramide directly; it raises ceramide indirectly by shifting the rheostat.<br />
+  KEEP_AS_NON_CORE (indirect).</li>
+<li>GO:0006631 fatty acid metabolic process (IDA PMID:24809814) — the lyase product is a<br />
+  long-chain fatty aldehyde (hexadecenal), which feeds fatty-acid/glycerolipid<br />
+  metabolism; a peripheral downstream role. KEEP_AS_NON_CORE.</li>
+<li>GO:0005515 protein binding (IPI x2, PMID:21903422, 32296183) — bare; large-scale<br />
+  screens. MARK_AS_OVER_ANNOTATED (not removed, per policy).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95470
+gene_symbol: SGPL1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SGPL1 is sphingosine-1-phosphate lyase 1, a pyridoxal 5&#39;-phosphate (PLP)-dependent
+  enzyme (EC 4.1.2.27) anchored in the endoplasmic reticulum membrane that catalyzes
+  the final, irreversible degradative step of sphingolipid metabolism. It cleaves
+  phosphorylated sphingoid bases, chiefly sphingosine-1-phosphate (S1P; also
+  sphinganine 1-phosphate), into a long-chain fatty aldehyde ((2E)-hexadecenal or
+  hexadecanal) plus phosphoethanolamine. This reaction has no reverse counterpart and
+  is the only exit from the sphingolipid pathway, channeling sphingoid-derived carbon
+  into glycerolipid and ethanolamine-phosphate metabolism. The catalytic domain faces
+  the cytosol; the enzyme is a homodimer that binds PLP covalently through a Schiff
+  base to Lys-353. By irreversibly degrading S1P, SGPL1 terminates S1P signaling and
+  helps establish the tissue-to-blood/lymph S1P gradient that governs lymphocyte
+  egress and immune function, and it acts as a modulator of the ceramide/S1P
+  &#34;rheostat&#34; controlling cell survival. Biallelic loss-of-function variants cause an
+  autosomal-recessive syndrome (SPLIS / RENI, MIM:617575) featuring steroid-resistant
+  nephrotic syndrome, primary adrenal insufficiency, ichthyosis, immunodeficiency, and
+  neurological defects.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (PAN-GO/IBA) placement of SGPL1 activity in the ER. Consistent with
+      experimental localization; the more precise term is ER membrane (GO:0005789), but
+      the ER assignment is correct.
+    action: ACCEPT
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. GO:0008117 is the canonical GO term for the S1P/sphinganine
+      1-phosphate lyase reaction (EC 4.1.2.27, RHEA:18593); no separate
+      &#34;sphingosine-1-phosphate lyase activity&#34; term exists. IBA recovers the conserved
+      function across orthologs and agrees with direct human experimental data.
+    action: ACCEPT
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. SGPL1 performs the terminal, irreversible step of
+      sphingolipid catabolism. IBA correctly recovers this conserved role.
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      SubCell keyword mapping to ER membrane. This is the precise, correct location:
+      SGPL1 is a single-pass type III ER membrane protein with its catalytic domain on
+      the cytoplasmic side. Corroborated by experimental annotations below.
+    action: ACCEPT
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic annotation to the very general grandparent term &#34;lipid metabolic
+      process&#34;. Correct but uninformative; the specific sphingolipid catabolic process
+      (GO:0030149) captures the function.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (RHEA:18593 / EC 4.1.2.27) mapping to the core lyase activity. Consistent
+      with the experimental IDA/IMP annotations.
+    action: ACCEPT
+- term:
+    id: GO:0016830
+    label: carbon-carbon lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO mapping to the general parent MF &#34;carbon-carbon lyase activity&#34;. Correct
+      (the enzyme cleaves a C-C bond) but the specific child GO:0008117 is the informative
+      term.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function feature. SGPL1 is a PLP-dependent enzyme; PLP is bound
+      covalently via a Schiff base to Lys-353 (essential for catalysis) and is confirmed
+      in the crystal structure. Although IEA, this is strongly supported by direct
+      structural and cofactor evidence.
+    action: ACCEPT
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21903422
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale innate-immunity interactome screen (HI5);
+      IntAct records SGPL1-STING1 (Q86WV6). Uninformative as a molecular function and no
+      specific physiological complex is established. Retained (experimental IPI) but flagged
+      as over-annotation; not promoted to a core function.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from the HuRI high-throughput binary interactome (many
+      ER/membrane partners, e.g. aquaporins, ERG28, FA2H, IFITM3). Systematic-screen hits
+      with no specific molecular function; retained but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated ER localization (from mouse ortholog). Correct; ER membrane (GO:0005789)
+      is the more precise term.
+    action: ACCEPT
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9845614
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion placing SGPL1 in sphingolipid catabolism. Correct core
+      biological process.
+    action: ACCEPT
+- term:
+    id: GO:0006665
+    label: sphingolipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway mapping (UPA00222, sphingolipid metabolism). Correct but a parent of the
+      more specific catabolic process (GO:0030149); consistent with the UniProt PATHWAY
+      annotation.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428681
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable assertion for the S1P/sphinganine 1-phosphate lyase reaction.
+      Core molecular function, consistent with experimental data.
+    action: ACCEPT
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence localization to the ER. Consistent with all other localization
+      evidence; ER membrane is the precise term.
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:14570870
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental localization of recombinant human SGPL1 to the ER. Core location: SGPL1
+      is an integral ER membrane protein.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:14570870
+      supporting_text: &gt;-
+        The recombinant enzyme was active, localized to the endoplasmic reticulum, and
+        reduced baseline sphingosine and sphingosine 1-phosphate levels.
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: EXP
+  original_reference_id: PMID:22784711
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct measurement of SPL enzymatic activity in human tissue/cell lines. Supports the
+      core lyase molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22784711
+      supporting_text: &gt;-
+        This enzyme drives irreversible degradation of sphingosine 1-phosphate (S1P)
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: IMP
+  original_reference_id: PMID:28165339
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Disease-variant / mutational evidence: SGPL1 patient mutations reduce or abolish
+      enzyme activity, and WT human SGPL1 (but not variants) rescues the S1P-lyase-deficient
+      dpl1-delta yeast strain, directly demonstrating the lyase activity for the human
+      protein. Supports the core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28165339
+      supporting_text: &gt;-
+        expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains,
+        whereas expression of disease-associated variants did not.
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:28165339
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Loss of SGPL1 (patient mutations) impairs sphingolipid catabolism, and the human enzyme
+      complements sphingolipid-catabolism-deficient yeast. Supports the core biological process.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:28165339
+      supporting_text: &gt;-
+        All mutations resulted in reduced or absent SGPL1 protein and/or enzyme activity.
+- term:
+    id: GO:0097190
+    label: apoptotic signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:14570870
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SGPL1 overexpression potentiates stress-induced apoptosis, and lyase activity is required
+      for the effect. This is a real but downstream/indirect consequence of altering the
+      S1P/ceramide rheostat rather than a distinct molecular function of SGPL1; the reaction
+      products themselves have no apoptotic effect. Kept as a genuine but non-core process.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:14570870
+      supporting_text: &gt;-
+        Lyase enzymatic activity was required to potentiate apoptosis, because cells expressing
+        a catalytically inactive enzyme behaved like controls.
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:24809814
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The lyase reaction produces a long-chain fatty aldehyde ((2E)-hexadecenal), which feeds
+      into fatty-acid/glycerolipid metabolism. This is a peripheral downstream role of the
+      catabolic activity rather than a core function; retained as non-core.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:24809814
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Biochemical assay and co-crystal structure of the homodimeric human S1P lyase with PLP
+      and an active-site inhibitor directly demonstrate the lyase activity. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24809814
+      supporting_text: &gt;-
+        as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:24809814
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct demonstration of S1P-degrading (sphingolipid catabolic) activity via the biochemical
+      inhibitor assay. Core biological process.
+    action: ACCEPT
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-428681
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion for ER membrane association. Core location, consistent with
+      experimental evidence.
+    action: ACCEPT
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: PMID:14570870
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental ER localization of recombinant human SGPL1. Correct; ER membrane is the
+      precise term.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:14570870
+      supporting_text: &gt;-
+        The recombinant enzyme was active, localized to the endoplasmic reticulum, and
+        reduced baseline sphingosine and sphingosine 1-phosphate levels.
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:14570870
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Recombinant human SGPL1 was enzymatically active and reduced sphingosine/S1P levels,
+      directly demonstrating the lyase activity. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:14570870
+      supporting_text: &gt;-
+        The recombinant enzyme was active, localized to the endoplasmic reticulum, and
+        reduced baseline sphingosine and sphingosine 1-phosphate levels.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:11018465
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Author statement (cDNA cloning paper) of a single N-terminal membrane span, consistent with
+      the integral ER membrane localization established by later experimental work. Correct core
+      location.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11018465
+      supporting_text: &gt;-
+        Hydropathy plots revealed the presence of one membrane span near the amino-terminal
+- term:
+    id: GO:0006672
+    label: ceramide metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:14570870
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SGPL1 does not act on ceramide directly; overexpression raises stress-induced ceramide
+      indirectly by shifting the S1P/ceramide balance. A genuine but indirect metabolic effect,
+      retained as non-core rather than a direct molecular function.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:14570870
+      supporting_text: &gt;-
+        Stress increased the amounts of long- and very long-chain ceramides in HEK293 cells, and
+        this was enhanced in cells overexpressing wild type but not catalytically inactive lyase.
+- term:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  evidence_type: NAS
+  original_reference_id: PMID:11018465
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Author statement from the original human cDNA cloning / functional expression study assigning
+      the S1P-lyase activity to SGPL1. Core molecular function (corroborated by later IDA/IMP evidence).
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11018465
+      supporting_text: &gt;-
+        Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the
+        cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:11018465
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author statement that SGPL1 catalyzes the last step in sphingolipid breakdown. Core biological
+      process; corroborated by experimental and phylogenetic annotations.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11018465
+      supporting_text: &gt;-
+        Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the
+        cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.
+core_functions:
+- description: &gt;-
+    PLP-dependent sphingosine-1-phosphate lyase activity: cleaves phosphorylated sphingoid
+    bases (sphingosine-1-phosphate / sphinganine 1-phosphate) into a long-chain fatty aldehyde
+    ((2E)-hexadecenal / hexadecanal) and phosphoethanolamine, using covalently bound pyridoxal
+    5&#39;-phosphate (Schiff base to Lys-353). This is the final, irreversible step of sphingolipid
+    catabolism, performed at the cytoplasmic face of the endoplasmic reticulum membrane.
+  molecular_function:
+    id: GO:0008117
+    label: sphinganine-1-phosphate aldolase activity
+  directly_involved_in:
+  - id: GO:0030149
+    label: sphingolipid catabolic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:11018465
+    supporting_text: &gt;-
+      Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the
+      cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.
+  - reference_id: PMID:14570870
+    supporting_text: &gt;-
+      The recombinant enzyme was active, localized to the endoplasmic reticulum, and
+      reduced baseline sphingosine and sphingosine 1-phosphate levels.
+  - reference_id: PMID:28165339
+    supporting_text: &gt;-
+      expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains,
+      whereas expression of disease-associated variants did not.
+- description: &gt;-
+    Pyridoxal 5&#39;-phosphate binding: SGPL1 is a PLP-dependent (fold-type I / group II
+    decarboxylase family) enzyme; the PLP cofactor is essential for catalysis and is bound
+    covalently at the active site. This molecular-function feature underpins the lyase activity.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  supported_by:
+  - reference_id: PMID:24809814
+    supporting_text: &gt;-
+      as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Beyond homodimerization, does SGPL1 have any physiologically meaningful, specific protein
+    partner (e.g. a channeling or regulatory complex), or are the reported binary interactome
+    hits largely incidental ER co-localization?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided in-vitro kinetics on purified WT vs SPLIS/RENI disease variants (e.g. R222Q,
+    S346I) to quantify how each mutation affects PLP binding, substrate turnover, protein stability,
+    and dimerization, mapping enzymatic loss to clinical severity.
+  hypothesis: &gt;-
+    SPLIS/RENI disease severity correlates with the degree of residual S1P-lyase catalytic activity
+    and protein stability of the mutant enzyme.
+  experiment_type: enzyme kinetics / protein biochemistry
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO pipeline. Correctly assigns the general carbon-carbon lyase parent and the
+      pyridoxal phosphate binding cofactor feature from the PLP-dependent decarboxylase domain.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/IBA pipeline; correctly recovers the conserved core lyase activity, sphingolipid
+      catabolic process, and ER localization.
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniPathway (UPA00222) mapping to the sphingolipid metabolism parent process; correct but
+      less specific than the catabolic-process annotation.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      SubCell keyword mapping to ER membrane; matches the experimentally established integral ER
+      membrane localization.
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HPA immunofluorescence; ER localization consistent with all other evidence.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ARBA machine-learning annotation to the very general &#34;lipid metabolic process&#34;; correct but
+      uninformative.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Combined automated pipeline (RHEA/EC and ortholog transfer) reproducing the core lyase
+      activity and ER localization.
+- id: PMID:11018465
+  title: &#39;Human sphingosine-1-phosphate lyase: cDNA cloning, functional expression
+    studies and mapping to chromosome 10q22(1).&#39;
+  findings:
+  - statement: &gt;-
+      Original cloning and functional expression of human SGPL1; establishes it as the enzyme
+      catalyzing the last, irreversible step of sphingolipid breakdown and identifies Cys-218/Cys-317
+      as important for catalysis.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Sphingosine-1-phosphate lyase catalyzes the last step in sphingolipid breakdown, the
+      cleavage of phosphorylated sphingoid bases such as sphingenine-1-phosphate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified original human cDNA cloning and functional expression study; abstract-only in
+      cache but directly supports the core lyase activity, pathway, and membrane span.
+- id: PMID:14570870
+  title: Sphingosine-phosphate lyase enhances stress-induced ceramide generation and
+    apoptosis.
+  findings:
+  - statement: &gt;-
+      Recombinant human SGPL1 is enzymatically active, localizes to the ER, lowers sphingosine/S1P,
+      and (lyase-activity-dependently) potentiates stress-induced ceramide accumulation and apoptosis.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      sphingosine-1-phosphate lyase overexpression in HEK293 cells decreases sphingosine and
+      sphingosine 1-phosphate amounts but elevates stress-induced ceramide generation and apoptosis.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; source of the ER localization, lyase activity, and the (indirect) apoptotic
+      and ceramide annotations.
+- id: PMID:21903422
+  title: Mapping a dynamic innate immunity protein interaction network regulating
+    type I interferon production.
+  findings:
+  - statement: &gt;-
+      Large-scale innate-immunity interactome (HI5) that includes SGPL1 among the network proteins;
+      notes SGPL1 regulates cell apoptosis. IntAct records the SGPL1-STING1 (Q86WV6) binary interaction.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      Similarly, BAT3 and SGPL1 also regulate cell apoptosis
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified full-text interactome screen; the SGPL1 mention supports only a generic &#34;protein
+      binding&#34; annotation, not a specific molecular function.
+- id: PMID:22784711
+  title: &#39;First evidence of sphingosine 1-phosphate lyase protein expression and activity
+    downregulation in human neoplasm: implication for resistance to therapeutics in
+    prostate cancer.&#39;
+  findings:
+  - statement: &gt;-
+      Measures SPL protein expression and enzymatic activity in human prostate tissue; SPL drives
+      irreversible S1P degradation and is lost in tumors, inversely correlated with SphK1.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      This enzyme drives irreversible degradation of sphingosine 1-phosphate (S1P)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; provides EXP support for the S1P-lyase enzymatic activity in human tissue.
+- id: PMID:24809814
+  title: Orally active 7-substituted (4-benzylphthalazin-1-yl)-2-methylpiperazin-1-yl]nicotinonitriles
+    as active-site inhibitors of sphingosine 1-phosphate lyase for the treatment of
+    multiple sclerosis.
+  findings:
+  - statement: &gt;-
+      Discovery of active-site S1P-lyase inhibitors with a co-crystal structure of the homodimeric
+      human enzyme bound to PLP and inhibitor; oral dosing reduces peripheral T-cell numbers and
+      protects in a rat MS model.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      as seen in the cocrystal structure of derivative 31 with the homodimeric human S1P lyase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; structural/biochemical source for the IDA lyase activity, PLP cofactor, homodimer,
+      and the immunological (T-cell/MS) relevance.
+- id: PMID:28165339
+  title: Mutations in sphingosine-1-phosphate lyase cause nephrosis with ichthyosis
+    and adrenal insufficiency.
+  findings:
+  - statement: &gt;-
+      Biallelic SGPL1 mutations cause a syndromic steroid-resistant nephrotic syndrome with ichthyosis,
+      adrenal insufficiency, immunodeficiency, and neurological defects; all mutations reduce/abolish
+      SGPL1 protein and/or activity, and WT (not variant) human SGPL1 rescues S1P-lyase-deficient yeast.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      expression of WT human SGPL1 rescued growth of SGPL1-deficient dpl1Δ yeast strains, whereas
+      expression of disease-associated variants did not.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; disease-defining paper providing IMP support for the lyase activity and
+      sphingolipid catabolic process via loss-of-function variants and yeast complementation.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI all-by-all binary interactome; source of the high-throughput SGPL1 &#34;protein binding&#34; hits
+      (many ER/membrane partners). No specific physiological complex established.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein
+      interactions, or &#39;HuRI&#39;.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified systematic interactome; supports only generic &#34;protein binding&#34;, flagged as
+      over-annotation.
+- id: Reactome:R-HSA-428681
+  title: PXLP-SGPL1 cleaves sphingoid-1-phosphates
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the SGPL1-catalyzed irreversible cleavage of sphingoid-1-phosphates at the
+      ER membrane; supports the core MF, catabolic process, and location.
+- id: Reactome:R-HSA-9845614
+  title: Sphingolipid catabolism
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome sphingolipid catabolism pathway placing SGPL1 in the catabolic process.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

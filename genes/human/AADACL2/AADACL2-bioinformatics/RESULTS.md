@@ -52,6 +52,22 @@ lies at 26.5% identity or below, which is where this global alignment loses regi
 C-terminal half (for Afmid and Aes the source His has no aligned partner at all). The failures
 are therefore alignment artefacts, not evidence of residue loss.
 
+Broken down by position, the aggregate understates the nucleophile badly:
+
+| AADACL2 position | residue | sources aligning here | with the identical residue |
+|---|---|---|---|
+| 189 | Ser | **15 / 15** | **14 / 15** |
+| 341 | Asp | 8 / 15 | 8 / 15 |
+| 371 | His | 8 / 15 | 8 / 15 |
+
+**Every one of the fifteen sources places its own catalytic serine on AADACL2 position 189**,
+and fourteen of them carry a serine there. The single exception is soybean HIDH, whose own
+annotated nucleophile is a threonine — and HIDH is the one source in the set that is not a
+hydrolase at all but a dehydratase, so the substitution is informative rather than noise. The
+8/15 triad-complete figure is driven entirely by the acid and the base, which sit in the
+C-terminal half where register is lost below 26.5% identity. The nucleophile elbow, the most
+conserved element of the fold, never loses register.
+
 So this is not a case of a family name propagating onto a fold-only relic: the nucleophile,
 the acid, the base and the oxyanion loop are all present and all in register with three
 independently characterised bacterial carboxylesterases and with the 51.6%-identical human

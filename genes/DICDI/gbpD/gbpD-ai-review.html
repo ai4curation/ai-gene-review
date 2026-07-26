@@ -1,0 +1,3233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gbpD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gbpD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q54S40" target="_blank" class="term-link">
+                        Q54S40
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Dictyostelium discoideum</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gbpD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q54S40" data-a="DESCRIPTION: GbpD (also known as GefU/RasGEFU) is a RasGEF-fami..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GbpD (also known as GefU/RasGEFU) is a RasGEF-family guanine nucleotide exchange factor in Dictyostelium discoideum that specifically activates the small GTPase Rap1. The protein is a large multidomain molecule containing an N-terminal RasGEF domain pair (RasGEF_N and catalytic RasGEF), a GRAM domain, and cyclic-nucleotide-binding (cNMP/GAF-like) domains that give it cGMP-binding capacity. Acting at the plasma membrane, GbpD activates Rap1 both in vivo and in vitro but not the other characterized Ras proteins, and this Rap1 signal drives the formation of substrate-attached pseudopodia, increasing cell-substrate adhesion while suppressing cell polarity and thereby slowing chemotaxis. Downstream, Rap1 engages the effector kinase Phg2 for adhesion. Although GbpD binds cGMP, its adhesion/polarity phenotype is independent of intracellular cGMP or cAMP levels. Its expression rises during the aggregation phase of starvation-induced development, consistent with a role in regulating motility, spreading and pseudopod dynamics.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD acts at the plasma membrane, where it encounters and activates membrane-associated Rap1. This phylogenetic inference is corroborated by direct localization data for the same protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane localization is directly confirmed for GbpD/RasGEFU, which localizes almost uniformly to the plasma membrane. This is where a Rap1 GEF would be expected to function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU localized almost uniformly to the membrane and did not exhibit traveling waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007265" target="_blank" class="term-link">
+                                    GO:0007265
+                                </a>
+                            </span>
+                            <span class="term-label">Ras protein signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0007265" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD activates the Ras-superfamily small GTPase Rap1, functioning within a Ras/Rap signal transduction pathway. Rap1 is a member of the Ras family, so the general term is accurate, though the more precise process is Rap1-mediated signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GbpD is a bona fide activator of Rap1 (a Ras-family GTPase), placing it within Ras protein signal transduction. Directly supported by biochemical and genetic evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005085" target="_blank" class="term-link">
+                                    GO:0005085
+                                </a>
+                            </span>
+                            <span class="term-label">guanyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0005085" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD is a RasGEF-family guanine nucleotide exchange factor. This molecular function is the protein&#39;s defining activity and is directly demonstrated for its target Rap1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Phylogenetic inference of GEF activity is fully consistent with the RasGEF domain architecture and with direct biochemical demonstration that GbpD activates Rap1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005085" target="_blank" class="term-link">
+                                    GO:0005085
+                                </a>
+                            </span>
+                            <span class="term-label">guanyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0005085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference from the RasGEF catalytic domain signatures (IPR001895, IPR008937, IPR036964). This correctly captures the core GEF activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The RasGEF catalytic domain is present in GbpD and the GEF activity is experimentally validated on Rap1, so this electronic annotation is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007264" target="_blank" class="term-link">
+                                    GO:0007264
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase-mediated signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0007264" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD acts as an upstream activator of the small GTPase Rap1, so it participates in small GTPase-mediated signal transduction. This is a correct but general process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with GbpD&#39;s demonstrated role as a Rap1 GEF driving downstream adhesion/polarity signaling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010810" target="_blank" class="term-link">
+                                    GO:0010810
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell-substrate adhesion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39746985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Excitable Ras dynamics-based screens reveal RasGEFX is requi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0010810" data-r="PMID:39746985" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD/RasGEFU regulates cell-substrate adhesion. Overexpression increases adhesion to the substrate (with a corresponding decrease in motility), consistent with earlier GbpD studies. This is a core biological role of the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by mutant/overexpression phenotypes in which RasGEFU enhances cell-substrate adhesion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU-GFP-expressing cells showed increased adhesion to the substrates and thus less motility as their expression increased</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU enhanced cell adhesion to substrates, consistent with previous reports of cGMP-binding protein D (GbpD), which is the same as RasGEFU</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031272" target="_blank" class="term-link">
+                                    GO:0031272
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of pseudopodium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39746985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Excitable Ras dynamics-based screens reveal RasGEFX is requi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0031272" data-r="PMID:39746985" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD regulates pseudopod formation; RasGEFU overexpression leads to enlarged pseudopods (and reduced motility), consistent with earlier reports that GbpD overexpression induces many bifurcated/lateral pseudopodia.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the overexpression phenotype affecting pseudopod size and formation, a well-established GbpD effect on protrusion dynamics.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU overexpression in these cells led to a large pseudopod and also less motility</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells overexpressing GbpD are flat, exhibit strongly increased cell-substrate attachment, and extend many bifurcated and lateral pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39746985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Excitable Ras dynamics-based screens reveal RasGEFX is requi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0005886" data-r="PMID:39746985" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows GbpD/RasGEFU-GFP localizing almost uniformly to the plasma membrane, the site where it activates Rap1. This is a core localization for the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization (GFP fusion) places GbpD at the plasma membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU localized almost uniformly to the membrane and did not exhibit traveling waves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000145" target="_blank" class="term-link">
+                                    GO:2000145
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell motility</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39746985
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Excitable Ras dynamics-based screens reveal RasGEFX is requi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:2000145" data-r="PMID:39746985" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD/RasGEFU contributes to efficient spontaneous cell motility, shown genetically alongside other RasGEFs (including RasGEFM). Because GbpD acts on motility largely by modulating adhesion and pseudopod dynamics, this is a downstream/secondary consequence of its GEF activity rather than its core molecular role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Motility regulation is a genuine phenotype but is an emergent consequence of GbpD-driven adhesion and pseudopod changes. Retained as a valid but non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFX, RasGEFB, RasGEFU and RasGEFM are important for efficient spontaneous motility</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                        PMID:39746985
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RasGEFU-GFP-expressing cells showed increased adhesion to the substrates and thus less motility as their expression increased</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031271" target="_blank" class="term-link">
+                                    GO:0031271
+                                </a>
+                            </span>
+                            <span class="term-label">lateral pseudopodium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15827084
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RasGEF-containing proteins GbpC and GbpD have differential e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0031271" data-r="PMID:15827084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD controls lateral pseudopod formation. gbpD-null cells make very few lateral pseudopodia (and are hyperpolar), whereas GbpD overexpression produces many lateral/bifurcated pseudopodia. This is a well-supported core process for GbpD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss- and gain-of-function phenotypes directly implicate GbpD in lateral pseudopod assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">gbpD-null mutants exhibit the opposite phenotype: cells display improved chemotaxis and appear hyperpolar, because cells make very few lateral pseudopodia</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cells overexpressing GbpD are flat, exhibit strongly increased cell-substrate attachment, and extend many bifurcated and lateral pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032060" target="_blank" class="term-link">
+                                    GO:0032060
+                                </a>
+                            </span>
+                            <span class="term-label">bleb assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26317626" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26317626
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Microtubule-Mediated Inositol Lipid Signaling Plays Critical...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0032060" data-r="PMID:26317626" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In a microsurgery-based blebbing screen, cells deficient in gbpC/gbpD extended blebs more frequently than wild-type, implicating this cGMP-pathway branch in the suppression/regulation of bleb formation. The evidence is genetic and comes from a double-mutant context (with gbpC), so the effect on bleb assembly is indirect and not a core GbpD function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The blebbing phenotype is derived from a gbpC/gbpD-deficient background and reflects a modulatory role of the cGMP signaling branch rather than a direct, core molecular function of GbpD. Retained as a valid non-core regulatory annotation. Note the paper informally labels gbpC/gbpD as guanylate cyclases, whereas gbpD is a RasGEF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26317626" target="_blank" class="term-link">
+                                        PMID:26317626
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cells deficient in gbpC-/gbpD (guanylate cyclases), pkgB (serine/threonine-protein kinase), iplA (Ca2+ channel), or pi3k (phosphatidylinositol 3-kinase) extended blebs more frequently than wild type cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005085" target="_blank" class="term-link">
+                                    GO:0005085
+                                </a>
+                            </span>
+                            <span class="term-label">guanyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16769729
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the GbpD-activated Rap1 pathway regulati...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0005085" data-r="PMID:16769729" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical evidence shows GbpD activates Rap1 (and specifically not the other five characterized Ras proteins) both in vivo and in vitro. The guanyl-nucleotide exchange factor activity is accepted as annotated; the Rap1 specificity is recorded in the reason and core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct assay establishes that GbpD is a Rap1-specific GEF. The annotated GEF term (GO:0005085) is accurate; the more specific Rap-GEF child term (GO:0017034) is obsolete/absent from the ontology used for validation, so the generic GEF term is retained with the Rap1 specificity noted here.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007163" target="_blank" class="term-link">
+                                    GO:0007163
+                                </a>
+                            </span>
+                            <span class="term-label">establishment or maintenance of cell polarity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15827084
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RasGEF-containing proteins GbpC and GbpD have differential e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0007163" data-r="PMID:15827084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD is a negative regulator of cell polarity. Its overexpression induces substrate-attached pseudopodia that suppress polarity, whereas gbpD-null cells are hyperpolar. GbpD thus acts within the establishment/ maintenance of cell polarity, driving it toward a less polarized, more-adhesive state.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reciprocal loss- and gain-of-function phenotypes directly implicate GbpD in the control of cell polarity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GbpD induces the formation of substrate-attached pseudopodia, resulting in increased attachment and suppression of polarity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">gbpD-null mutants exhibit the opposite phenotype: cells display improved chemotaxis and appear hyperpolar, because cells make very few lateral pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031589" target="_blank" class="term-link">
+                                    GO:0031589
+                                </a>
+                            </span>
+                            <span class="term-label">cell-substrate adhesion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15827084
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RasGEF-containing proteins GbpC and GbpD have differential e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0031589" data-r="PMID:15827084" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD promotes cell-substrate adhesion. Overexpressing cells become flat and adhesive due to an increased number of substrate-attached pseudopodia, mediated via Rap1 and its effector Phg2. This is a core biological role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the overexpression phenotype of increased substrate attachment; mechanism traced to the GbpD-Rap1-Phg2 axis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cells are flat and adhesive owing to an increased number of substrate-attached pseudopodia</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                        PMID:16769729
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified Phg2 as Rap1 effector necessary for adhesion, but not cell polarity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050920" target="_blank" class="term-link">
+                                    GO:0050920
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15827084
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RasGEF-containing proteins GbpC and GbpD have differential e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q54S40" data-a="GO:0050920" data-r="PMID:15827084" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GbpD modulates chemotaxis; overexpression severely reduces chemotaxis (through excess adhesion and disorganized protrusions), whereas gbpD-null cells chemotax better and are hyperpolar. This chemotaxis effect is a downstream consequence of GbpD&#39;s control of adhesion and pseudopod dynamics rather than a direct core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chemotaxis regulation is a real and reproducible phenotype but emerges from GbpD&#39;s primary effects on adhesion and polarity; retained as a valid non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Overexpression of GbpD protein results in severely reduced chemotaxis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                        PMID:15827084
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">gbpD-null mutants exhibit the opposite phenotype: cells display improved chemotaxis and appear hyperpolar, because cells make very few lateral pseudopodia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GbpD is a Rap1-specific guanine nucleotide exchange factor that acts at the plasma membrane to convert Rap1-GDP to active Rap1-GTP. Through this activity it drives the formation of substrate-attached pseudopodia, promoting cell-substrate adhesion and suppressing cell polarity (with downstream effects on pseudopod dynamics and chemotactic motility). The Rap1 signal engages the effector kinase Phg2 for adhesion.</h3>
+                <span class="vote-buttons" data-g="Q54S40" data-a="FUNCTION: GbpD is a Rap1-specific guanine nucleotide exchang..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005085" target="_blank" class="term-link">
+                            guanyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010810" target="_blank" class="term-link">
+                                regulation of cell-substrate adhesion
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031272" target="_blank" class="term-link">
+                                regulation of pseudopodium assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007163" target="_blank" class="term-link">
+                                establishment or maintenance of cell polarity
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                                PMID:16769729
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                                PMID:15827084
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GbpD induces the formation of substrate-attached pseudopodia, resulting in increased attachment and suppression of polarity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                                PMID:39746985
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RasGEFU localized almost uniformly to the membrane and did not exhibit traveling waves</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15827084" target="_blank" class="term-link">
+                            PMID:15827084
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RasGEF-containing proteins GbpC and GbpD have differential effects on cell polarity and chemotaxis in Dictyostelium.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GbpD induces substrate-attached pseudopodia that increase adhesion and suppress cell polarity.</div>
+
+                        <div class="finding-text">"GbpD induces the formation of substrate-attached pseudopodia, resulting in increased attachment and suppression of polarity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">gbpD-null cells are hyperpolar, chemotax better, and make few lateral pseudopodia; the phenotype is opposite to overexpression.</div>
+
+                        <div class="finding-text">"gbpD-null mutants exhibit the opposite phenotype: cells display improved chemotaxis and appear hyperpolar, because cells make very few lateral pseudopodia"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The GbpD adhesion/polarity phenotype is independent of intracellular cGMP or cAMP.</div>
+
+                        <div class="finding-text">"This GbpD phenotype is not dependent on intracellular cGMP or cAMP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16769729" target="_blank" class="term-link">
+                            PMID:16769729
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of the GbpD-activated Rap1 pathway regulating adhesion and cell polarity in Dictyostelium discoideum.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GbpD activates Rap1 specifically (not the other five characterized Ras proteins) both in vivo and in vitro.</div>
+
+                        <div class="finding-text">"Here we demonstrate that GbpD activates Rap1 both in vivo and in vitro but not any of the five other characterized Ras proteins"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GbpD overexpression yields flat, strongly adhesive cells with many bifurcated and lateral pseudopodia.</div>
+
+                        <div class="finding-text">"Cells overexpressing GbpD are flat, exhibit strongly increased cell-substrate attachment, and extend many bifurcated and lateral pseudopodia"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Phg2 is the Rap1 effector required for adhesion downstream of GbpD.</div>
+
+                        <div class="finding-text">"identified Phg2 as Rap1 effector necessary for adhesion, but not cell polarity"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26317626" target="_blank" class="term-link">
+                            PMID:26317626
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Microtubule-Mediated Inositol Lipid Signaling Plays Critical Roles in Regulation of Blebbing.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cells deficient in gbpC/gbpD extended blebs more frequently than wild-type in a microsurgery blebbing screen.</div>
+
+                        <div class="finding-text">"cells deficient in gbpC-/gbpD (guanylate cyclases), pkgB (serine/threonine-protein kinase), iplA (Ca2+ channel), or pi3k (phosphatidylinositol 3-kinase) extended blebs more frequently than wild type cells"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39746985" target="_blank" class="term-link">
+                            PMID:39746985
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Excitable Ras dynamics-based screens reveal RasGEFX is required for macropinocytosis and random cell migration.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RasGEFU is the same protein as cGMP-binding protein D (GbpD) and its overexpression enhances cell-substrate adhesion.</div>
+
+                        <div class="finding-text">"RasGEFU enhanced cell adhesion to substrates, consistent with previous reports of cGMP-binding protein D (GbpD), which is the same as RasGEFU"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RasGEFU/GbpD localizes almost uniformly to the plasma membrane without traveling waves.</div>
+
+                        <div class="finding-text">"RasGEFU localized almost uniformly to the membrane and did not exhibit traveling waves"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">RasGEFU overexpression increases adhesion and enlarges pseudopods while reducing motility.</div>
+
+                        <div class="finding-text">"RasGEFU-GFP-expressing cells showed increased adhesion to the substrates and thus less motility as their expression increased"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q54S40
+gene_symbol: gbpD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:44689
+  label: Dictyostelium discoideum
+description: GbpD (also known as GefU/RasGEFU) is a RasGEF-family guanine
+  nucleotide exchange factor in Dictyostelium discoideum that specifically
+  activates the small GTPase Rap1. The protein is a large multidomain molecule
+  containing an N-terminal RasGEF domain pair (RasGEF_N and catalytic RasGEF), a
+  GRAM domain, and cyclic-nucleotide-binding (cNMP/GAF-like) domains that give it
+  cGMP-binding capacity. Acting at the plasma membrane, GbpD activates Rap1 both
+  in vivo and in vitro but not the other characterized Ras proteins, and this
+  Rap1 signal drives the formation of substrate-attached pseudopodia, increasing
+  cell-substrate adhesion while suppressing cell polarity and thereby slowing
+  chemotaxis. Downstream, Rap1 engages the effector kinase Phg2 for adhesion.
+  Although GbpD binds cGMP, its adhesion/polarity phenotype is independent of
+  intracellular cGMP or cAMP levels. Its expression rises during the aggregation
+  phase of starvation-induced development, consistent with a role in regulating
+  motility, spreading and pseudopod dynamics.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: GbpD acts at the plasma membrane, where it encounters and activates
+      membrane-associated Rap1. This phylogenetic inference is corroborated by
+      direct localization data for the same protein.
+    action: ACCEPT
+    reason: Membrane localization is directly confirmed for GbpD/RasGEFU, which
+      localizes almost uniformly to the plasma membrane. This is where a Rap1 GEF
+      would be expected to function.
+    supported_by:
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU localized almost uniformly to the membrane and did
+        not exhibit traveling waves
+- term:
+    id: GO:0007265
+    label: Ras protein signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: GbpD activates the Ras-superfamily small GTPase Rap1, functioning
+      within a Ras/Rap signal transduction pathway. Rap1 is a member of the Ras
+      family, so the general term is accurate, though the more precise process is
+      Rap1-mediated signaling.
+    action: ACCEPT
+    reason: GbpD is a bona fide activator of Rap1 (a Ras-family GTPase), placing
+      it within Ras protein signal transduction. Directly supported by biochemical
+      and genetic evidence.
+    supported_by:
+    - reference_id: PMID:16769729
+      supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo
+        and in vitro but not any of the five other characterized Ras proteins
+- term:
+    id: GO:0005085
+    label: guanyl-nucleotide exchange factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: GbpD is a RasGEF-family guanine nucleotide exchange factor. This
+      molecular function is the protein&#39;s defining activity and is directly
+      demonstrated for its target Rap1.
+    action: ACCEPT
+    reason: Phylogenetic inference of GEF activity is fully consistent with the
+      RasGEF domain architecture and with direct biochemical demonstration that
+      GbpD activates Rap1.
+    supported_by:
+    - reference_id: PMID:16769729
+      supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo
+        and in vitro but not any of the five other characterized Ras proteins
+- term:
+    id: GO:0005085
+    label: guanyl-nucleotide exchange factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO inference from the RasGEF catalytic domain signatures
+      (IPR001895, IPR008937, IPR036964). This correctly captures the core GEF
+      activity.
+    action: ACCEPT
+    reason: The RasGEF catalytic domain is present in GbpD and the GEF activity is
+      experimentally validated on Rap1, so this electronic annotation is correct.
+    supported_by:
+    - reference_id: PMID:16769729
+      supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo
+        and in vitro but not any of the five other characterized Ras proteins
+- term:
+    id: GO:0007264
+    label: small GTPase-mediated signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: GbpD acts as an upstream activator of the small GTPase Rap1, so it
+      participates in small GTPase-mediated signal transduction. This is a correct
+      but general process term.
+    action: ACCEPT
+    reason: Consistent with GbpD&#39;s demonstrated role as a Rap1 GEF driving
+      downstream adhesion/polarity signaling.
+    supported_by:
+    - reference_id: PMID:16769729
+      supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo
+        and in vitro but not any of the five other characterized Ras proteins
+- term:
+    id: GO:0010810
+    label: regulation of cell-substrate adhesion
+  evidence_type: IMP
+  original_reference_id: PMID:39746985
+  qualifier: involved_in
+  review:
+    summary: GbpD/RasGEFU regulates cell-substrate adhesion. Overexpression
+      increases adhesion to the substrate (with a corresponding decrease in
+      motility), consistent with earlier GbpD studies. This is a core biological
+      role of the protein.
+    action: ACCEPT
+    reason: Directly supported by mutant/overexpression phenotypes in which
+      RasGEFU enhances cell-substrate adhesion.
+    supported_by:
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU-GFP-expressing cells showed increased adhesion to
+        the substrates and thus less motility as their expression increased
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU enhanced cell adhesion to substrates, consistent
+        with previous reports of cGMP-binding protein D (GbpD), which is the same
+        as RasGEFU
+- term:
+    id: GO:0031272
+    label: regulation of pseudopodium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:39746985
+  qualifier: involved_in
+  review:
+    summary: GbpD regulates pseudopod formation; RasGEFU overexpression leads to
+      enlarged pseudopods (and reduced motility), consistent with earlier reports
+      that GbpD overexpression induces many bifurcated/lateral pseudopodia.
+    action: ACCEPT
+    reason: Supported by the overexpression phenotype affecting pseudopod size and
+      formation, a well-established GbpD effect on protrusion dynamics.
+    supported_by:
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU overexpression in these cells led to a large
+        pseudopod and also less motility
+    - reference_id: PMID:16769729
+      supporting_text: Cells overexpressing GbpD are flat, exhibit strongly
+        increased cell-substrate attachment, and extend many bifurcated and
+        lateral pseudopodia
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:39746985
+  qualifier: located_in
+  review:
+    summary: Direct imaging shows GbpD/RasGEFU-GFP localizing almost uniformly to
+      the plasma membrane, the site where it activates Rap1. This is a core
+      localization for the protein.
+    action: ACCEPT
+    reason: Direct experimental localization (GFP fusion) places GbpD at the
+      plasma membrane.
+    supported_by:
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU localized almost uniformly to the membrane and did
+        not exhibit traveling waves
+- term:
+    id: GO:2000145
+    label: regulation of cell motility
+  evidence_type: IGI
+  original_reference_id: PMID:39746985
+  qualifier: involved_in
+  review:
+    summary: GbpD/RasGEFU contributes to efficient spontaneous cell motility,
+      shown genetically alongside other RasGEFs (including RasGEFM). Because GbpD
+      acts on motility largely by modulating adhesion and pseudopod dynamics, this
+      is a downstream/secondary consequence of its GEF activity rather than its
+      core molecular role.
+    action: KEEP_AS_NON_CORE
+    reason: Motility regulation is a genuine phenotype but is an emergent
+      consequence of GbpD-driven adhesion and pseudopod changes. Retained as a
+      valid but non-core process annotation.
+    supported_by:
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFX, RasGEFB, RasGEFU and RasGEFM are important for
+        efficient spontaneous motility
+    - reference_id: PMID:39746985
+      supporting_text: RasGEFU-GFP-expressing cells showed increased adhesion to
+        the substrates and thus less motility as their expression increased
+- term:
+    id: GO:0031271
+    label: lateral pseudopodium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:15827084
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: GbpD controls lateral pseudopod formation. gbpD-null cells make very
+      few lateral pseudopodia (and are hyperpolar), whereas GbpD overexpression
+      produces many lateral/bifurcated pseudopodia. This is a well-supported core
+      process for GbpD.
+    action: ACCEPT
+    reason: Loss- and gain-of-function phenotypes directly implicate GbpD in
+      lateral pseudopod assembly.
+    supported_by:
+    - reference_id: PMID:15827084
+      supporting_text: &#39;gbpD-null mutants exhibit the opposite phenotype: cells
+        display improved chemotaxis and appear hyperpolar, because cells make very
+        few lateral pseudopodia&#39;
+    - reference_id: PMID:16769729
+      supporting_text: Cells overexpressing GbpD are flat, exhibit strongly
+        increased cell-substrate attachment, and extend many bifurcated and
+        lateral pseudopodia
+- term:
+    id: GO:0032060
+    label: bleb assembly
+  evidence_type: IGI
+  original_reference_id: PMID:26317626
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: In a microsurgery-based blebbing screen, cells deficient in gbpC/gbpD
+      extended blebs more frequently than wild-type, implicating this cGMP-pathway
+      branch in the suppression/regulation of bleb formation. The evidence is
+      genetic and comes from a double-mutant context (with gbpC), so the effect on
+      bleb assembly is indirect and not a core GbpD function.
+    action: KEEP_AS_NON_CORE
+    reason: The blebbing phenotype is derived from a gbpC/gbpD-deficient background
+      and reflects a modulatory role of the cGMP signaling branch rather than a
+      direct, core molecular function of GbpD. Retained as a valid non-core
+      regulatory annotation. Note the paper informally labels gbpC/gbpD as
+      guanylate cyclases, whereas gbpD is a RasGEF.
+    supported_by:
+    - reference_id: PMID:26317626
+      supporting_text: cells deficient in gbpC-/gbpD (guanylate cyclases), pkgB
+        (serine/threonine-protein kinase), iplA (Ca2+ channel), or pi3k
+        (phosphatidylinositol 3-kinase) extended blebs more frequently than wild
+        type cells
+- term:
+    id: GO:0005085
+    label: guanyl-nucleotide exchange factor activity
+  evidence_type: IDA
+  original_reference_id: PMID:16769729
+  qualifier: enables
+  review:
+    summary: Direct biochemical evidence shows GbpD activates Rap1 (and
+      specifically not the other five characterized Ras proteins) both in vivo and
+      in vitro. The guanyl-nucleotide exchange factor activity is accepted as
+      annotated; the Rap1 specificity is recorded in the reason and core function.
+    action: ACCEPT
+    reason: The direct assay establishes that GbpD is a Rap1-specific GEF. The
+      annotated GEF term (GO:0005085) is accurate; the more specific Rap-GEF child
+      term (GO:0017034) is obsolete/absent from the ontology used for validation,
+      so the generic GEF term is retained with the Rap1 specificity noted here.
+    supported_by:
+    - reference_id: PMID:16769729
+      supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo
+        and in vitro but not any of the five other characterized Ras proteins
+- term:
+    id: GO:0007163
+    label: establishment or maintenance of cell polarity
+  evidence_type: IMP
+  original_reference_id: PMID:15827084
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: GbpD is a negative regulator of cell polarity. Its overexpression
+      induces substrate-attached pseudopodia that suppress polarity, whereas
+      gbpD-null cells are hyperpolar. GbpD thus acts within the establishment/
+      maintenance of cell polarity, driving it toward a less polarized,
+      more-adhesive state.
+    action: ACCEPT
+    reason: Reciprocal loss- and gain-of-function phenotypes directly implicate
+      GbpD in the control of cell polarity.
+    supported_by:
+    - reference_id: PMID:15827084
+      supporting_text: GbpD induces the formation of substrate-attached
+        pseudopodia, resulting in increased attachment and suppression of polarity
+    - reference_id: PMID:15827084
+      supporting_text: &#39;gbpD-null mutants exhibit the opposite phenotype: cells
+        display improved chemotaxis and appear hyperpolar, because cells make very
+        few lateral pseudopodia&#39;
+- term:
+    id: GO:0031589
+    label: cell-substrate adhesion
+  evidence_type: IMP
+  original_reference_id: PMID:15827084
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: GbpD promotes cell-substrate adhesion. Overexpressing cells become
+      flat and adhesive due to an increased number of substrate-attached
+      pseudopodia, mediated via Rap1 and its effector Phg2. This is a core
+      biological role.
+    action: ACCEPT
+    reason: Directly supported by the overexpression phenotype of increased
+      substrate attachment; mechanism traced to the GbpD-Rap1-Phg2 axis.
+    supported_by:
+    - reference_id: PMID:15827084
+      supporting_text: cells are flat and adhesive owing to an increased number of
+        substrate-attached pseudopodia
+    - reference_id: PMID:16769729
+      supporting_text: identified Phg2 as Rap1 effector necessary for adhesion,
+        but not cell polarity
+- term:
+    id: GO:0050920
+    label: regulation of chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:15827084
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: GbpD modulates chemotaxis; overexpression severely reduces chemotaxis
+      (through excess adhesion and disorganized protrusions), whereas gbpD-null
+      cells chemotax better and are hyperpolar. This chemotaxis effect is a
+      downstream consequence of GbpD&#39;s control of adhesion and pseudopod dynamics
+      rather than a direct core function.
+    action: KEEP_AS_NON_CORE
+    reason: Chemotaxis regulation is a real and reproducible phenotype but emerges
+      from GbpD&#39;s primary effects on adhesion and polarity; retained as a valid
+      non-core process annotation.
+    supported_by:
+    - reference_id: PMID:15827084
+      supporting_text: Overexpression of GbpD protein results in severely reduced
+        chemotaxis
+    - reference_id: PMID:15827084
+      supporting_text: &#39;gbpD-null mutants exhibit the opposite phenotype: cells
+        display improved chemotaxis and appear hyperpolar, because cells make very
+        few lateral pseudopodia&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:15827084
+  title: RasGEF-containing proteins GbpC and GbpD have differential effects on cell
+    polarity and chemotaxis in Dictyostelium.
+  findings:
+  - statement: GbpD induces substrate-attached pseudopodia that increase adhesion
+      and suppress cell polarity.
+    supporting_text: GbpD induces the formation of substrate-attached pseudopodia,
+      resulting in increased attachment and suppression of polarity
+  - statement: gbpD-null cells are hyperpolar, chemotax better, and make few
+      lateral pseudopodia; the phenotype is opposite to overexpression.
+    supporting_text: &#39;gbpD-null mutants exhibit the opposite phenotype: cells
+      display improved chemotaxis and appear hyperpolar, because cells make very
+      few lateral pseudopodia&#39;
+  - statement: The GbpD adhesion/polarity phenotype is independent of intracellular
+      cGMP or cAMP.
+    supporting_text: This GbpD phenotype is not dependent on intracellular cGMP or
+      cAMP
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only cache; abstract directly establishes GbpD&#39;s
+      loss-/gain-of-function effects on adhesion, lateral pseudopodia, polarity and
+      chemotaxis. Assigned by dictyBase for multiple IMP annotations.
+- id: PMID:16769729
+  title: Characterization of the GbpD-activated Rap1 pathway regulating adhesion and
+    cell polarity in Dictyostelium discoideum.
+  findings:
+  - statement: GbpD activates Rap1 specifically (not the other five characterized
+      Ras proteins) both in vivo and in vitro.
+    supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo and
+      in vitro but not any of the five other characterized Ras proteins
+  - statement: GbpD overexpression yields flat, strongly adhesive cells with many
+      bifurcated and lateral pseudopodia.
+    supporting_text: Cells overexpressing GbpD are flat, exhibit strongly increased
+      cell-substrate attachment, and extend many bifurcated and lateral pseudopodia
+  - statement: Phg2 is the Rap1 effector required for adhesion downstream of GbpD.
+    supporting_text: identified Phg2 as Rap1 effector necessary for adhesion, but
+      not cell polarity
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only cache; establishes the direct GEF-substrate
+      relationship (GbpD to Rap1 to Phg2) that underpins the IDA GEF-activity
+      annotation and the specificity supporting the MODIFY to Rap-GEF activity.
+- id: PMID:26317626
+  title: Microtubule-Mediated Inositol Lipid Signaling Plays Critical Roles in Regulation
+    of Blebbing.
+  findings:
+  - statement: Cells deficient in gbpC/gbpD extended blebs more frequently than
+      wild-type in a microsurgery blebbing screen.
+    supporting_text: cells deficient in gbpC-/gbpD (guanylate cyclases), pkgB
+      (serine/threonine-protein kinase), iplA (Ca2+ channel), or pi3k
+      (phosphatidylinositol 3-kinase) extended blebs more frequently than wild
+      type cells
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text available. gbpD contribution comes from a gbpC/gbpD
+      double-deficient background and the paper informally labels these as
+      guanylate cyclases; supports a modulatory (non-core) bleb-regulation role.
+- id: PMID:39746985
+  title: Excitable Ras dynamics-based screens reveal RasGEFX is required for macropinocytosis
+    and random cell migration.
+  findings:
+  - statement: RasGEFU is the same protein as cGMP-binding protein D (GbpD) and its
+      overexpression enhances cell-substrate adhesion.
+    supporting_text: RasGEFU enhanced cell adhesion to substrates, consistent with
+      previous reports of cGMP-binding protein D (GbpD), which is the same as
+      RasGEFU
+  - statement: RasGEFU/GbpD localizes almost uniformly to the plasma membrane
+      without traveling waves.
+    supporting_text: RasGEFU localized almost uniformly to the membrane and did not
+      exhibit traveling waves
+  - statement: RasGEFU overexpression increases adhesion and enlarges pseudopods
+      while reducing motility.
+    supporting_text: RasGEFU-GFP-expressing cells showed increased adhesion to the
+      substrates and thus less motility as their expression increased
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available. Explicitly equates RasGEFU with GbpD,
+      confirms plasma-membrane localization and adhesion/pseudopod/motility
+      phenotypes underpinning the dictyBase IMP/IDA/IGI annotations.
+core_functions:
+- description: GbpD is a Rap1-specific guanine nucleotide exchange factor that acts
+    at the plasma membrane to convert Rap1-GDP to active Rap1-GTP. Through this
+    activity it drives the formation of substrate-attached pseudopodia, promoting
+    cell-substrate adhesion and suppressing cell polarity (with downstream effects
+    on pseudopod dynamics and chemotactic motility). The Rap1 signal engages the
+    effector kinase Phg2 for adhesion.
+  molecular_function:
+    id: GO:0005085
+    label: guanyl-nucleotide exchange factor activity
+  directly_involved_in:
+  - id: GO:0010810
+    label: regulation of cell-substrate adhesion
+  - id: GO:0031272
+    label: regulation of pseudopodium assembly
+  - id: GO:0007163
+    label: establishment or maintenance of cell polarity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:16769729
+    supporting_text: Here we demonstrate that GbpD activates Rap1 both in vivo and
+      in vitro but not any of the five other characterized Ras proteins
+  - reference_id: PMID:15827084
+    supporting_text: GbpD induces the formation of substrate-attached pseudopodia,
+      resulting in increased attachment and suppression of polarity
+  - reference_id: PMID:39746985
+    supporting_text: RasGEFU localized almost uniformly to the membrane and did not
+      exhibit traveling waves
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

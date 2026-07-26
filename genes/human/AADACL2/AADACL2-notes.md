@@ -7,7 +7,8 @@ protein level`, Pharos `Tdark`. Reviewed 2026-07-25 for the PAINT + affinage cam
 
 Seven GOA rows, **no experimental evidence of any kind**: 2 IBA (PANTHER) and 5 IEA
 (InterPro ×2, ARBA ×2, UniProt SubCell ×1). Three rows are activities at three levels of
-generality; three are locations, two of which are mutually exclusive.
+generality; three are locations, two of which are incompatible readings of the same
+N-terminal helix.
 
 | term | evidence | source |
 |---|---|---|
@@ -135,6 +136,32 @@ The UniProt record carries two DrugBank cross-references, `DB07814 Gibberellic a
 `DB07815 Gibberellin A4`. The plant gibberellin receptor GID1 is a derivative of this same
 GDXG/HSL-like carboxylesterase clan, so these are almost certainly structure-similarity
 mappings rather than any claim about human ligands. Not used for anything in the review.
+
+## Round-1 review follow-ups (PR #2266, approved with five non-blocking suggestions)
+
+All five were taken:
+
+1. The aggregate 8/15 triad figure understated the nucleophile. `results.json` already had the
+   per-position data: **all 15 sources align their own catalytic serine onto position 189, and
+   14 of 15 carry a Ser there** (the exception is soybean HIDH, whose own nucleophile is Thr —
+   and HIDH is the one source that is a dehydratase, not a hydrolase). The 8/15 figure is
+   driven entirely by the acid and base drifting out of register below 26.5% identity. Added as
+   a table in `RESULTS.md` section 1, computed by the script (`per_target_active_site`), and
+   surfaced in the `GO:0017171` MODIFY reason.
+2. The `GO:0052689` ACCEPT reason called that term "the best available statement of the core
+   function" while `core_functions` uses `GO:0017171`. Reconciled: `GO:0052689` is the most
+   informative *activity* statement on the record, but it is inferred from family membership,
+   whereas the serine-hydrolase mechanism is evidenced on this protein's own residues and is
+   also what survives if AADACL2 prefers amide over ester bonds, as AADAC does.
+3. "Mutually exclusive" overstated GO semantics — `GO:0005576` and `GO:0016020` are not
+   disjoint (a shed ectodomain can be in both). Narrowed everywhere to what is actually
+   claimed: two incompatible readings of one hydrophobic helix, only one of which can describe
+   the mature protein.
+4. The InterPro2GO `GO:0016787` MODIFY now says where the fix lands — the
+   IPR013094→GO:0016787 mapping should *not* change, since a bare alpha/beta-hydrolase-3 match
+   warrants nothing more; the correction is a protein-level annotation on AADACL2.
+5. Added `PMID:16641997` (chromosome 3 sequencing, UniProt `RN[2]`) to `references:` so the
+   "all three UniProt references are large-scale sequencing" claim is self-contained.
 
 ## Actions taken
 

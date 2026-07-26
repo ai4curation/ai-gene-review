@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hmgB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hmgB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88E48" target="_blank" class="term-link">
+                        Q88E48
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hmgB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88E48" data-a="DESCRIPTION: HmgB is the fumarylacetoacetase of the Pseudomonas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HmgB is the fumarylacetoacetase of the Pseudomonas putida KT2440 homogentisate pathway. It hydrolyzes fumarylacetoacetate to fumarate and acetoacetate in the terminal step shared by phenylalanine, tyrosine, and other substrates that are routed through homogentisate.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but uninformative parent-level catalytic annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88E48 has the specific fumarylacetoacetase activity, so that term should replace generic catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgB/hmgB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=fumarylacetoacetase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                                    GO:0004334
+                                </a>
+                            </span>
+                            <span class="term-label">fumarylacetoacetase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:0004334" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for the terminal homogentisate-pathway enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 3.7.1.2 and the exact fumarylacetoacetase name, while the organism-specific pathway study identifies HmgB as fumarylacetoacetate hydrolase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/hmgB/hmgB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=fumarylacetoacetase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">fumarylacetoacetate hydrolase (HmgB)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:0006572" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway annotation for tyrosine degradation through homogentisate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The P. putida pathway study establishes that tyrosine is converted to homogentisate and then catabolized by HmgABC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into 4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as the central intermediate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                    GO:0009072
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:0009072" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad, redundant process annotation for HmgB&#39;s defined pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HmgB can receive homogentisate-derived carbon from aromatic amino-acid catabolism, but this broad umbrella term is redundant with the existing accepted GO:1902000 homogentisate catabolic process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902000" target="_blank" class="term-link">
+                                    GO:1902000
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:1902000" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HmgB is one of the three experimentally identified enzymes of the P. putida central homogentisate-catabolic pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88E48" data-a="GO:0006559" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway annotation for phenylalanine degradation through homogentisate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The P. putida pathway study establishes that phenylalanine is converted through tyrosine to homogentisate and then catabolized by HmgABC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                        PMID:15262943
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into 4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as the central intermediate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes fumarylacetoacetate to fumarate and acetoacetate in the terminal step of the central homogentisate-catabolic pathway.</h3>
+                <span class="vote-buttons" data-g="Q88E48" data-a="FUNCTION: Hydrolyzes fumarylacetoacetate to fumarate and ace..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                            fumarylacetoacetase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902000" target="_blank" class="term-link">
+                                homogentisate catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                                PMID:15262943
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/hmgB/hmgB-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">HmgB catalyzes the last of these three steps, hydrolyzing fumarylacetoacetate to fumarate plus acetoacetate, corresponding to **EC 3.7.1.2**.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hmgB/hmgB-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88E48 for Pseudomonas putida KT2440 hmgB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns fumarylacetoacetase activity to Q88E48.</div>
+
+                        <div class="finding-text">"RecName: Full=fumarylacetoacetase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places Q88E48 in phenylalanine degradation.</div>
+
+                        <div class="finding-text">"PATHWAY: Amino-acid degradation; L-phenylalanine degradation;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15262943" target="_blank" class="term-link">
+                            PMID:15262943
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The homogentisate pathway: a central catabolic pathway involved in the degradation of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HmgB is one of the three enzymes of the P. putida homogentisate pathway.</div>
+
+                        <div class="finding-text">"Homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/hmgB/hmgB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK hmgB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report assigns HmgB the terminal fumarylacetoacetate-cleavage reaction of the homogentisate pathway.</div>
+
+                        <div class="finding-text">"HmgB catalyzes the last of these three steps, hydrolyzing fumarylacetoacetate to fumarate plus acetoacetate, corresponding to **EC 3.7.1.2**."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the relative Ca2+ and Mg2+ requirements and kinetic effects for the KT2440 HmgB enzyme?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E48" data-a="Q: What are the relative Ca2+ and Mg2+ requirements a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88E48 and measure fumarylacetoacetate hydrolysis kinetics with controlled Ca2+ and Mg2+ concentrations, coupled to product quantification.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88E48" data-a="EXPERIMENT: Purify Q88E48 and measure fumarylacetoacetate hydr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hmgB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E48" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *hmgB* (Q88E48 / PP_4620) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-23T13:20:44.457449</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hmgB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="hmgB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-hmgb-q88e48-pp_4620-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>hmgB</em> (Q88E48 / PP_4620) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Target gene:</strong> <em>hmgB</em><br />
+<strong>UniProt accession:</strong> Q88E48<br />
+<strong>Ordered locus name:</strong> PP_4620<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440) (PSEPK)<br />
+<strong>EC number:</strong> 3.7.1.2<br />
+<strong>Protein family:</strong> Fumarylacetoacetate hydrolase (FAH) / hydratase–decarboxylase superfamily</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <em>hmgB</em> of <em>Pseudomonas putida</em> KT2440 (UniProt <strong>Q88E48</strong>, ordered locus <strong>PP_4620</strong>) encodes <strong>fumarylacetoacetate hydrolase</strong> (also called fumarylacetoacetase, <strong>FAH; EC 3.7.1.2</strong>). This enzyme catalyzes the <strong>terminal, committed step of the homogentisate central catabolic pathway</strong>: the hydrolytic cleavage of a carbon–carbon bond in <strong>4-fumarylacetoacetate</strong> to yield <strong>fumarate</strong> and <strong>acetoacetate</strong>. Both products feed directly into central carbon metabolism — fumarate enters the tricarboxylic acid (TCA) cycle, and acetoacetate is activated and consumed as an acetyl-CoA source — so HmgB is the metabolic node at which the carbon skeleton of aromatic substrates is finally delivered into the cell's core energy and biosynthetic economy. This identity is fully consistent with the UniProt annotation (fumarylacetoacetase, EC 3.7.1.2; hydratase/decarboxylase family; FAH N- and C-terminal domains IPR005959/IPR011234/IPR015377) and is directly supported by experimental characterization of the <em>P. putida</em> homogentisate pathway.</p>
+<p>Mechanistically, HmgB belongs to the FAH superfamily of <strong>metal-dependent carbon–carbon bond hydrolases</strong> — a distinctive and comparatively rare enzyme chemistry. FAH-family structures define a novel α/β metalloenzyme fold in which a divalent cation (Ca²⁺ or Mg²⁺) is octahedrally coordinated in the active site adjacent to a <strong>Glu–His catalytic dyad</strong>. Catalysis proceeds through a <strong>Glu–His–water catalytic triad</strong> that activates a water molecule for nucleophilic attack, generating a <strong>tetrahedral alkoxy transition-state intermediate</strong> stabilized within an oxyanion hole. This mechanism, together with the defining HxxE / Hxx…xxE sequence motifs, is conserved across the whole FAH family, so HmgB's catalytic machinery can be inferred with high confidence from the well-resolved crystal structures of human and bacterial FAH orthologues, even though HmgB itself has not been crystallized.</p>
+<p>In its physiological context, <em>hmgB</em> is part of the <strong>hmgABC gene cluster</strong> — a single transcriptional unit encoding homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC). This operon constitutes the <strong>convergent central route</strong> of aromatic catabolism in <em>P. putida</em>, funneling homogentisate derived from <strong>L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate</strong> into fumarate and acetoacetate. Expression of <em>hmgABC</em> is controlled by the IclR-type transcriptional repressor <strong>HmgR</strong>, with <strong>homogentisate</strong> acting as the inducer molecule. The enzyme functions in the <strong>cytoplasm</strong> as a soluble, divalent-metal-dependent hydrolase. Importantly, this bacterial "hmgB" must <strong>not</strong> be confused with the unrelated eukaryotic <strong>HMGB</strong> high-mobility-group chromatin/DNA-binding proteins (HMGB1/2); the two share only a superficial symbol resemblance and have no functional, structural, or evolutionary relationship. The gene symbol, UniProt description, organism, and domain architecture all corroborate the assignment made here.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-hmgb-is-the-fumarylacetoacetate-hydrolase-of-the-homogentisate-central-catabolic-pathway">Finding 1 — HmgB is the fumarylacetoacetate hydrolase of the homogentisate central catabolic pathway</h3>
+<p>The core identity of the gene product is firmly established. In <em>P. putida</em>, the <em>hmgABC</em> genes encode three enzymes that together constitute the central (post-ring-cleavage) catabolic pathway for homogentisate: <strong>homogentisate dioxygenase (HmgA)</strong>, <strong>fumarylacetoacetate hydrolase (HmgB)</strong>, and <strong>maleylacetoacetate isomerase (HmgC)</strong>. HmgB catalyzes the last of these three steps, hydrolyzing fumarylacetoacetate to fumarate plus acetoacetate, corresponding to <strong>EC 3.7.1.2</strong>.</p>
+<p>This assignment comes directly from the experimental characterization of the pathway by Arias-Barrau and colleagues, who state that "homogentisate is then catabolized by a central catabolic pathway that involves three enzymes, homogentisate dioxygenase (HmgA), fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC), finally yielding fumarate and acetoacetate" (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>). This directly assigns to HmgB the function of fumarylacetoacetate hydrolase within the <em>P. putida</em> homogentisate pathway and identifies the reaction products. The UniProt annotation (fumarylacetoacetase; EC 3.7.1.2; hydratase/decarboxylase family; FAH N- and C-terminal InterPro domains IPR005959, IPR011234, IPR015377) is fully concordant with this experimentally grounded assignment.</p>
+<h3 id="finding-2-hmgb-catalyzes-hydrolytic-cc-bond-cleavage-of-fumarylacetoacetate-to-fumarate-acetoacetate">Finding 2 — HmgB catalyzes hydrolytic C–C bond cleavage of fumarylacetoacetate to fumarate + acetoacetate</h3>
+<p>The reaction catalyzed is chemically distinctive. Fumarylacetoacetate hydrolase performs the <strong>hydrolytic cleavage of a carbon–carbon bond</strong> — a rare enzymatic reaction. In the canonical (mammalian) tyrosine/phenylalanine degradation context, this is "the final step of tyrosine and phenylalanine catabolism, the hydrolytic cleavage of a carbon-carbon bond in fumarylacetoacetate, to yield fumarate and acetoacetate" (<a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>). The same chemistry applies to the bacterial enzyme HmgB.</p>
+<p>What makes the FAH family notable is that it "represents the first structure of a hydrolase that acts specifically on carbon-carbon bonds" (<a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>). Most hydrolases cleave C–N, C–O, or C–S bonds (peptidases, esterases, glycosidases); enzymes that hydrolyze C–C bonds are uncommon, and FAH defines a class specialized for this task. Structural studies of the product complex show <strong>fumarate binding near the active-site entrance</strong> and <strong>acetoacetate binding to an octahedrally coordinated metal ion</strong>, delineating the two-product architecture of the reaction. Substrate specificity in the FAH superfamily is driven by the electrophilic β-keto/oxo carbon adjacent to the scissile bond, with the divalent metal ion polarizing the carbonyl and positioning the substrate for nucleophilic water attack. The physiological substrate of HmgB, 4-fumarylacetoacetate, is a β-diketo acid produced by the immediately upstream isomerase HmgC.</p>
+<h3 id="finding-3-hmgb-employs-a-metal-dependent-gluhiswater-catalytic-triad-oxyanion-hole-and-tetrahedral-intermediate">Finding 3 — HmgB employs a metal-dependent Glu–His–water catalytic triad, oxyanion hole, and tetrahedral intermediate</h3>
+<p>The catalytic machinery of the FAH fold is well characterized structurally, and these features are conserved across the family to which HmgB belongs. FAH-family active sites contain a <strong>divalent metal ion</strong> (Ca²⁺ or Mg²⁺) that is <strong>octahedrally coordinated</strong> and positioned next to a <strong>Glu–His catalytic dyad</strong>. Catalysis proceeds via a <strong>Glu–His–water catalytic triad</strong>: the glutamate orients and deprotonates the histidine, which in turn acts as a general base to activate the metal-bound water molecule for nucleophilic attack on the electrophilic carbon of the substrate. The original FAH structure describes "acetoacetate binding to an octahedrally coordinated calcium ion located in close proximity to a Glu-His dyad… FAH also defines a new class of metalloenzymes characterized by a unique alpha/beta fold. A mechanism involving a Glu-His-water catalytic triad is suggested" (<a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>).</p>
+<p>Inhibitor-complex studies further validate the mechanism. A phosphorus-based transition-state mimic bound to FAH "reveals a Mg(2+) bound in the enzyme's active site, [and] supports the proposed formation of a tetrahedral alkoxy transition state intermediate during the FAH catalyzed reaction" (<a href="https://pubmed.ncbi.nlm.nih.gov/11154690/">PMID: 11154690</a>). This confirms both the Mg²⁺ cofactor and the tetrahedral geometry of the reaction's high-energy intermediate, which is stabilized by a charged oxyanion hole. Slow-onset, tight-binding phosphinate mimics of the tetrahedral intermediate (CEHPOBA and COPHPAA) inhibit FAH with nanomolar potency (K_i = 41 nM and 12 nM, respectively), providing kinetic and structural evidence that the reaction passes through a tetrahedral intermediate resembling these compounds (<a href="https://pubmed.ncbi.nlm.nih.gov/17064256/">PMID: 17064256</a>).</p>
+<p>Crucially, the generality of this mechanism to the entire FAH family — and therefore to HmgB — was established by structural studies of Cg1458, which showed that "this catalytic triad is common among FAH family proteins that catalyse the cleavage of the C-C bond of the substrate. Two sequence motifs, HxxE and Hxx…xxE have been identified as the basis for this mechanism" (<a href="https://pubmed.ncbi.nlm.nih.gov/23046410/">PMID: 23046410</a>). Because HmgB carries the FAH fold and these defining motifs, its catalytic triad and metal-dependent mechanism can be inferred with high confidence.</p>
+<h3 id="finding-4-hmgb-operates-in-a-convergent-central-pathway-phe-tyr-3-hpa-encoded-by-the-hmgr-repressed-hmgabc-operon">Finding 4 — HmgB operates in a convergent central pathway (Phe / Tyr / 3-HPA), encoded by the HmgR-repressed hmgABC operon</h3>
+<p><em>hmgB</em> does not act in isolation; it is embedded in a well-defined regulatory and metabolic architecture. The <em>hmgABC</em> genes "appear to form a single transcriptional unit," and regulation is exerted by an adjacent, divergently transcribed regulator: "gel retardation assays and lacZ translational fusion experiments have shown that hmgR encodes a specific repressor that controls the inducible expression of the divergently transcribed hmgABC catabolic genes, and homogentisate is the inducer molecule" (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>). HmgR is an <strong>IclR-type transcriptional repressor</strong> that binds a palindromic operator in the <em>Phmg</em> promoter region; <strong>homogentisate</strong>, the pathway's entry metabolite, relieves this repression and induces expression of the catabolic genes, including <em>hmgB</em>. This substrate-driven induction ensures that HmgB is produced only when its pathway substrate is available.</p>
+<p>The pathway's role is that of a <strong>convergent central (or "lower") route</strong>. Multiple upstream peripheral pathways generate homogentisate, which is then processed by the shared HmgABC enzymes. As shown in studies of 3-hydroxyphenylacetate assimilation, HmgABC constitutes "a central route (convergent route), which catalyzes the transformation of the Hmg generated from 3-OH-PhAc, l-Phe, and l-Tyr into fumarate and acetoacetate (HmgABC)" (<a href="https://pubmed.ncbi.nlm.nih.gov/15866873/">PMID: 15866873</a>). Thus HmgB is the final funnel through which the carbon of at least three aromatic substrates — L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate — is delivered into central metabolism. Homogentisate uptake and pathway operation are also supported by an associated ABC-transporter system (HmgDEFGHI) in <em>P. putida</em>. Physiologically, this enables the organism to use aromatic amino acids and aromatic acids as carbon and energy sources.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<h3 id="position-of-hmgb-in-aromatic-catabolism">Position of HmgB in aromatic catabolism</h3>
+<p>HmgB catalyzes the last of three reactions in the homogentisate central pathway. The overall flow of carbon can be summarized as follows:</p>
+<div class="codehilite"><pre><span></span><code> Peripheral (upstream) routes                Central (convergent) route: hmgABC
+ ────────────────────────────                ───────────────────────────────────
+
+ L-Phenylalanine ─► L-Tyrosine ─┐
+                 │
+ 3-Hydroxyphenylacetate ────────┼──►  HOMOGENTISATE
+                        │
+                        │  HmgA (homogentisate 1,2-dioxygenase)
+                        │     ring cleavage, + O2
+                        ▼
+                   Maleylacetoacetate
+                        │
+                        │  HmgC (maleylacetoacetate isomerase)
+                        │     cis→trans isomerization (GSH-dependent)
+                        ▼
+                   Fumarylacetoacetate
+                        │
+                        │  ►► HmgB (fumarylacetoacetate hydrolase, EC 3.7.1.2) ◄◄
+                        │     hydrolytic C–C bond cleavage + H2O
+                        ▼
+        ┌───────────────┴───────────────┐
+        ▼                                ▼
+    FUMARATE                        ACETOACETATE
+ (→ TCA cycle)              (→ acetoacetyl-CoA → 2 acetyl-CoA)
+</code></pre></div>
+
+<p>HmgB sits at the exit of the aromatic-degradation funnel. By splitting fumarylacetoacetate into two central metabolites, it converts an aromatic ring–derived carbon skeleton into TCA-cycle and acetyl-CoA precursors, completing the assimilation of aromatic carbon.</p>
+<h3 id="catalytic-mechanism-inferred-from-fah-family-structures">Catalytic mechanism (inferred from FAH-family structures)</h3>
+<div class="codehilite"><pre><span></span><code>Glu ──(H-bond)── His ──(general base)──► activates H2O
+                                    │
+                                    ▼ nucleophilic attack
+   Fumarylacetoacetate  ──►  [ tetrahedral alkoxy intermediate ]  ──►  Fumarate + Acetoacetate
+(C–C scissile bond)         stabilized by oxyanion hole
+    │
+     Mg2+/Ca2+ (octahedral) polarizes carbonyl, orients substrate
+</code></pre></div>
+
+<p>The divalent metal ion (Mg²⁺ or Ca²⁺) is octahedrally coordinated by conserved carboxylate residues and a water molecule, and it electrostatically polarizes the substrate's carbonyl group. The His of the Glu–His dyad deprotonates the metal-bound water, generating a hydroxide nucleophile that attacks the electrophilic carbon adjacent to the scissile C–C bond, producing a <strong>tetrahedral alkoxy intermediate</strong>. Collapse of this intermediate cleaves the C–C bond, releasing fumarate and acetoacetate. This model is supported directly by product-complex, Mg²⁺-complex, and transition-state-mimic inhibitor structures across the FAH family.</p>
+<h3 id="comparison-across-the-fah-superfamily">Comparison across the FAH superfamily</h3>
+<p>The FAH fold is a versatile scaffold reused by evolution for diverse metal-dependent reactions on β-keto/oxo-acid substrates. This context supports the confidence of the HmgB annotation:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme (organism)</th>
+<th>Reaction / EC</th>
+<th>Metal</th>
+<th>Catalytic role</th>
+<th>PMID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HmgB / FAH (P. putida, human)</strong></td>
+<td>Fumarylacetoacetate → fumarate + acetoacetate (EC 3.7.1.2)</td>
+<td>Ca²⁺/Mg²⁺</td>
+<td>C–C bond hydrolase</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">10508789</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">15262943</a></td>
+</tr>
+<tr>
+<td>KdaD (S. solfataricus)</td>
+<td>2-keto-3-deoxy-D-arabinonate dehydratase</td>
+<td>Mg²⁺/Ca²⁺</td>
+<td>Base-catalyzed dehydration</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18448118/">18448118</a></td>
+</tr>
+<tr>
+<td>LRA6 (bacteria)</td>
+<td>2,4-diketo-3-deoxy-L-rhamnonate → pyruvate + L-lactate</td>
+<td>divalent</td>
+<td>C–C bond hydrolase</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36563174/">36563174</a></td>
+</tr>
+<tr>
+<td>Cg1458 (Corynebacterium)</td>
+<td>FAH-family hydrolase</td>
+<td>divalent</td>
+<td>Glu–His–water triad; HxxE / Hxx…xxE motifs</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23046410/">23046410</a></td>
+</tr>
+</tbody>
+</table>
+<p>The shared fold, shared metal dependence, and shared Glu–His–water triad across these enzymes provide strong evolutionary and structural corroboration for HmgB's assigned reaction and mechanism.</p>
+<h3 id="localization">Localization</h3>
+<p>HmgB is a <strong>soluble cytoplasmic enzyme</strong>. There is no signal peptide or membrane-spanning region implied by the FAH fold, and its substrate (fumarylacetoacetate) is an intracellular intermediate produced by the upstream cytoplasmic enzymes HmgA and HmgC. FAH-family members are routinely purified as soluble cytosolic proteins for crystallography. The enzyme therefore carries out its function in the <strong>cytoplasm</strong>, where the entire homogentisate central pathway operates and where its products enter central metabolism.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">15262943</a></td>
+<td><em>The homogentisate pathway… in Pseudomonas putida</em></td>
+<td><strong>Primary, organism-specific.</strong> Directly names HmgB as fumarylacetoacetate hydrolase; establishes products (fumarate + acetoacetate), operon structure (single transcriptional unit), and HmgR/homogentisate regulation. Anchors Findings 1 and 4.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15866873/">15866873</a></td>
+<td><em>A two-component hydroxylase… 3-hydroxyphenyl acetate in P. putida</em></td>
+<td>Establishes HmgABC as the convergent central route converting homogentisate from 3-OH-PhAc, L-Phe, and L-Tyr into fumarate + acetoacetate. Supports Finding 4 (pathway convergence).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">10508789</a></td>
+<td><em>Crystal structure and mechanism of a carbon-carbon bond hydrolase</em></td>
+<td><strong>Foundational mechanism paper.</strong> Defines the exact reaction, the C–C bond hydrolase chemistry, the novel α/β metalloenzyme fold, the octahedral metal + Glu–His dyad, and the Glu–His–water triad. Supports Findings 2 and 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11154690/">11154690</a></td>
+<td><em>…FAH with a bound phosphorus-based inhibitor</em></td>
+<td>Confirms Mg²⁺ cofactor and the tetrahedral alkoxy transition-state intermediate. Supports Finding 3. <em>(Study of orthologous FAH, applied to HmgB by family inference.)</em></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17064256/">17064256</a></td>
+<td><em>Slow-onset inhibition of FAH by phosphinate mimics…</em></td>
+<td>Nanomolar transition-state-mimic inhibitors (K_i = 12–41 nM) provide kinetic + structural evidence for the tetrahedral intermediate. Corroborates Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23046410/">23046410</a></td>
+<td><em>Crystal structures of Cg1458… common catalytic mechanism for the FAH family</em></td>
+<td>Generalizes the Glu–His–water triad and defining HxxE / Hxx…xxE motifs to the whole FAH family, licensing inference to HmgB. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18448118/">18448118</a></td>
+<td><em>Novel 2-keto-3-deoxy-D-arabinonate dehydratase… FAH superfamily</em></td>
+<td>Comparative structural context; shows the shared FAH fold and octahedral metal coordination across the superfamily. Supports the mechanistic model.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36563174/">36563174</a></td>
+<td><em>Crystal structure of L-2,4-diketo-3-deoxyrhamnonate hydrolase…</em></td>
+<td>Another FAH-superfamily C–C bond hydrolase; reinforces the family's metal-dependent hydrolase chemistry. Supports the mechanistic model.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evidence strength.</strong> The organism-specific functional and regulatory claims (Findings 1 and 4) rest on direct experimental characterization in <em>P. putida</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15866873/">PMID: 15866873</a>). The detailed catalytic mechanism (Finding 3) is derived from high-resolution crystal structures of orthologous/homologous FAH-family enzymes rather than from HmgB itself; because HmgB carries the diagnostic FAH fold and sequence motifs, this inference is well justified but is structural/evolutionary rather than direct.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>hmgB = fumarylacetoacetate hydrolase (EC 3.7.1.2)</td>
+<td><strong>Supported</strong></td>
+<td>Experimental operon characterization (<a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>); UniProt family/domains</td>
+</tr>
+<tr>
+<td>Reaction = hydrolytic C–C cleavage of fumarylacetoacetate → fumarate + acetoacetate</td>
+<td><strong>Supported</strong></td>
+<td>FAH structural/biochemical studies (<a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>)</td>
+</tr>
+<tr>
+<td>Mechanism = metal-dependent Glu–His–water triad, oxyanion hole, tetrahedral intermediate</td>
+<td><strong>Supported (by homology)</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/11154690/">11154690</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/23046410/">23046410</a></td>
+</tr>
+<tr>
+<td>Terminal step of homogentisate pathway converging Phe/Tyr/3-OH-PhAc catabolism</td>
+<td><strong>Supported</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15262943/">PMID: 15262943</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15866873/">15866873</a></td>
+</tr>
+<tr>
+<td>Cytoplasmic localization</td>
+<td><strong>Supported (inference)</strong></td>
+<td>Soluble FAH-family enzymes; intracellular substrate/products</td>
+</tr>
+<tr>
+<td>hmgB = eukaryotic HMGB chromatin protein</td>
+<td><strong>Refuted</strong></td>
+<td>Different family, EC, organism; no relationship</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct structural or enzymological study of HmgB itself.</strong> The catalytic residues, metal identity (Ca²⁺ vs Mg²⁺), kinetic parameters (k_cat, K_m), and substrate specificity of the <em>P. putida</em> PP_4620 protein have not been experimentally determined. All mechanistic detail is transferred from human FAH and other FAH-family enzymes by homology. A crystal structure or biochemical assay of purified HmgB would confirm the specifics.</p>
+</li>
+<li>
+<p><strong>Substrate specificity boundaries are inferred.</strong> While HmgB is assigned fumarylacetoacetate as its physiological substrate, the FAH superfamily is functionally diverse (dehydratases, other C–C hydrolases). Direct assay would be needed to rule out promiscuous activities and to establish quantitative substrate preference.</p>
+</li>
+<li>
+<p><strong>Metal cofactor identity in vivo.</strong> Structural studies variously report Ca²⁺ or Mg²⁺ in FAH active sites. The physiologically relevant metal for HmgB in <em>P. putida</em> is not established.</p>
+</li>
+<li>
+<p><strong>Regulatory fine structure.</strong> Although HmgR-mediated repression and homogentisate induction are established, the precise operator architecture, affinity constants, and any additional layers of regulation (e.g., global carbon regulation, cross-talk with peripheral pathway regulators) for PP_4620 specifically remain incompletely mapped.</p>
+</li>
+<li>
+<p><strong>Localization is inferred, not measured.</strong> Cytoplasmic localization is deduced from the fold (no signal peptide/TM region) and the intracellular nature of the substrate, but has not been experimentally verified for HmgB by fractionation or imaging.</p>
+</li>
+<li>
+<p><strong>Strain provenance of primary data.</strong> Much of the genetic/biochemical characterization was performed in <em>P. putida</em> systems that are orthologous and identically annotated to KT2440 PP_4620, but strain-specific confirmation (e.g., a PP_4620 knockout growth phenotype on tyrosine) would be ideal.</p>
+</li>
+<li>
+<p><strong>Quantitative flux contribution and knockout phenotype.</strong> The relative contribution of HmgB flux to overall aromatic-carbon assimilation, and phenotypes of an <em>hmgB</em> knockout (e.g., accumulation of the potentially cytotoxic intermediate fumarylacetoacetate, analogous to hereditary tyrosinaemia type 1 in humans), have not been characterized here.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and enzymatic assay.</strong> Clone and express PP_4620, purify the protein, and measure fumarylacetoacetate hydrolase activity (k_cat, K_m) with fumarylacetoacetate. Include the transition-state-mimic inhibitors CEHPOBA/COPHPAA as active-site probes to confirm mechanism.</p>
+</li>
+<li>
+<p><strong>Metal-dependence assay.</strong> Test activity as a function of divalent cations (Ca²⁺, Mg²⁺, Mn²⁺, chelators such as EDTA) to establish the physiological cofactor.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or an AlphaFold model validated against family structures) of HmgB, ideally with a bound product or transition-state mimic, to directly confirm the Glu–His–water triad, octahedral metal site, and oxyanion hole; compare against human FAH (<a href="https://pubmed.ncbi.nlm.nih.gov/10508789/">PMID: 10508789</a>) and Cg1458 (<a href="https://pubmed.ncbi.nlm.nih.gov/23046410/">PMID: 23046410</a>).</p>
+</li>
+<li>
+<p><strong>Active-site residue mapping.</strong> Map the conserved HxxE / Hxx…xxE motifs onto the Q88E48 sequence to pinpoint the specific Glu/His of the catalytic triad; validate by site-directed mutagenesis.</p>
+</li>
+<li>
+<p><strong>Gene knockout / complementation.</strong> Construct a Δ<em>hmgB</em> mutant in <em>P. putida</em> KT2440 and assess growth on L-Phe, L-Tyr, and 3-hydroxyphenylacetate as sole carbon sources; test for accumulation of fumarylacetoacetate/maleylacetoacetate and any associated toxicity, with complementation to confirm causality.</p>
+</li>
+<li>
+<p><strong>Regulatory validation.</strong> Map the HmgR operator and confirm homogentisate induction of <em>hmgB</em> using reporter fusions and electrophoretic mobility shift assays; quantify induction kinetics.</p>
+</li>
+<li>
+<p><strong>Localization confirmation.</strong> Fractionate <em>P. putida</em> lysates or use a fluorescent fusion to confirm cytoplasmic localization of HmgB.</p>
+</li>
+<li>
+<p><strong>Comparative genomics.</strong> Confirm operon synteny (<em>hmgABC</em>, <em>hmgR</em>, and the associated HmgDEFGHI transporter) across <em>Pseudomonas</em> species to strengthen the pathway model and detect any strain-specific variation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene symbol <em>hmgB</em> is unambiguously correct for this target: it matches the UniProt description (fumarylacetoacetase, EC 3.7.1.2), the organism (<em>P. putida</em> KT2440), and the FAH-fold domain architecture, and the primary literature on the <em>P. putida</em> homogentisate pathway describes precisely this protein. <strong>HmgB (Q88E48 / PP_4620) is fumarylacetoacetate hydrolase</strong>, a soluble cytoplasmic, divalent-metal-dependent enzyme that catalyzes the hydrolytic cleavage of a carbon–carbon bond in fumarylacetoacetate to yield fumarate and acetoacetate. It performs the terminal, committed step of the homogentisate central catabolic pathway (HmgABC) — the convergent route by which <em>P. putida</em> degrades L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate — channeling aromatic carbon into central metabolism. Its catalytic mechanism (FAH-fold metalloenzyme, Glu–His–water triad, tetrahedral intermediate, oxyanion hole) is confidently inferred from well-characterized FAH-family structures, and its expression is controlled by the IclR-type repressor HmgR with homogentisate as inducer.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hmgB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="hmgB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:15262943</li>
+<li>PMID:10508789</li>
+<li>PMID:11154690</li>
+<li>PMID:17064256</li>
+<li>PMID:23046410</li>
+<li>PMID:15866873</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hmgB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88E48" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hmgb-curation-notes">hmgB curation notes</h1>
+<p>Q88E48/PP_4620 is annotated as fumarylacetoacetase (EC 3.7.1.2)<br />
+[UniProtKB:Q88E48, "RecName: Full=fumarylacetoacetase"].</p>
+<p>The organism-specific pathway paper identifies HmgB as one of three enzymes<br />
+that catabolize homogentisate and produce fumarate and acetoacetate<br />
+[PMID:15262943, "Homogentisate is then catabolized by a central catabolic<br />
+pathway that involves three enzymes, homogentisate dioxygenase (HmgA),<br />
+fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase (HmgC),<br />
+finally yielding fumarate and acetoacetate."].</p>
+<p>The generic <code>catalytic activity</code> and <code>aromatic amino acid metabolic process</code><br />
+annotations are therefore replaced by the specific molecular function and<br />
+homogentisate-catabolic process rather than retained as redundant core terms.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88E48
+gene_symbol: hmgB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  HmgB is the fumarylacetoacetase of the Pseudomonas putida KT2440
+  homogentisate pathway. It hydrolyzes fumarylacetoacetate to fumarate and
+  acetoacetate in the terminal step shared by phenylalanine, tyrosine, and
+  other substrates that are routed through homogentisate.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but uninformative parent-level catalytic annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Q88E48 has the specific fumarylacetoacetase activity, so that term should
+      replace generic catalytic activity.
+    supported_by:
+    - reference_id: file:PSEPK/hmgB/hmgB-uniprot.txt
+      supporting_text: &#39;RecName: Full=fumarylacetoacetase&#39;
+- term:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function for the terminal homogentisate-pathway enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt assigns EC 3.7.1.2 and the exact fumarylacetoacetase name, while
+      the organism-specific pathway study identifies HmgB as
+      fumarylacetoacetate hydrolase.
+    supported_by:
+    - reference_id: file:PSEPK/hmgB/hmgB-uniprot.txt
+      supporting_text: &#39;RecName: Full=fumarylacetoacetase&#39;
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        fumarylacetoacetate hydrolase (HmgB)
+      full_text_unavailable: true
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct pathway annotation for tyrosine degradation through homogentisate.
+    action: ACCEPT
+    reason: &gt;-
+      The P. putida pathway study establishes that tyrosine is converted to
+      homogentisate and then catabolized by HmgABC.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway
+        involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into
+        4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as
+        the central intermediate.
+      full_text_unavailable: true
+- term:
+    id: GO:0009072
+    label: aromatic amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad, redundant process annotation for HmgB&#39;s defined pathway role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      HmgB can receive homogentisate-derived carbon from aromatic amino-acid
+      catabolism, but this broad umbrella term is redundant with the existing
+      accepted GO:1902000 homogentisate catabolic process annotation.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Homogentisate is then catabolized by a central catabolic pathway that
+        involves three enzymes, homogentisate dioxygenase (HmgA),
+        fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+        (HmgC), finally yielding fumarate and acetoacetate.
+      full_text_unavailable: true
+- term:
+    id: GO:1902000
+    label: homogentisate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Correct and specific core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      HmgB is one of the three experimentally identified enzymes of the
+      P. putida central homogentisate-catabolic pathway.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Homogentisate is then catabolized by a central catabolic pathway that
+        involves three enzymes, homogentisate dioxygenase (HmgA),
+        fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+        (HmgC), finally yielding fumarate and acetoacetate.
+      full_text_unavailable: true
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct pathway annotation for phenylalanine degradation through homogentisate.
+    action: ACCEPT
+    reason: &gt;-
+      The P. putida pathway study establishes that phenylalanine is converted
+      through tyrosine to homogentisate and then catabolized by HmgABC.
+    supported_by:
+    - reference_id: PMID:15262943
+      supporting_text: &gt;-
+        Pseudomonas putida metabolizes Phe and Tyr through a peripheral pathway
+        involving hydroxylation of Phe to Tyr (PhhAB), conversion of Tyr into
+        4-hydroxyphenylpyruvate (TyrB), and formation of homogentisate (Hpd) as
+        the central intermediate.
+      full_text_unavailable: true
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/hmgB/hmgB-uniprot.txt
+  title: UniProtKB entry Q88E48 for Pseudomonas putida KT2440 hmgB
+  findings:
+  - statement: UniProt assigns fumarylacetoacetase activity to Q88E48.
+    supporting_text: &#39;RecName: Full=fumarylacetoacetase&#39;
+    reference_section_type: RESULTS
+  - statement: UniProt places Q88E48 in phenylalanine degradation.
+    supporting_text: &#39;PATHWAY: Amino-acid degradation; L-phenylalanine degradation;&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession; the functional assignment is computational and
+      was checked against the organism-specific HmgABC pathway study.
+- id: PMID:15262943
+  title: &#39;The homogentisate pathway: a central catabolic pathway involved in the degradation
+    of L-phenylalanine, L-tyrosine, and 3-hydroxyphenylacetate in Pseudomonas putida.&#39;
+  findings:
+  - statement: HmgB is one of the three enzymes of the P. putida homogentisate pathway.
+    supporting_text: &gt;-
+      Homogentisate is then catabolized by a central catabolic pathway that
+      involves three enzymes, homogentisate dioxygenase (HmgA),
+      fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+      (HmgC), finally yielding fumarate and acetoacetate.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary P. putida pathway study. The cached record is
+      abstract-only but explicitly identifies HmgB and the pathway products.
+- id: file:PSEPK/hmgB/hmgB-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK hmgB
+  findings:
+  - statement: The report assigns HmgB the terminal fumarylacetoacetate-cleavage reaction of the homogentisate pathway.
+    supporting_text: &#39;HmgB catalyzes the last of these three steps, hydrolyzing fumarylacetoacetate to fumarate plus acetoacetate, corresponding to **EC 3.7.1.2**.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Provider-generated gene report. The exact target accession, EC number,
+      reaction, and pathway role were independently checked against UniProt
+      and the organism-specific PMID:15262943 abstract.
+core_functions:
+- description: &gt;-
+    Hydrolyzes fumarylacetoacetate to fumarate and acetoacetate in the terminal
+    step of the central homogentisate-catabolic pathway.
+  molecular_function:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  directly_involved_in:
+  - id: GO:1902000
+    label: homogentisate catabolic process
+  supported_by:
+  - reference_id: PMID:15262943
+    supporting_text: &gt;-
+      Homogentisate is then catabolized by a central catabolic pathway that
+      involves three enzymes, homogentisate dioxygenase (HmgA),
+      fumarylacetoacetate hydrolase (HmgB), and maleylacetoacetate isomerase
+      (HmgC), finally yielding fumarate and acetoacetate.
+    full_text_unavailable: true
+  - reference_id: file:PSEPK/hmgB/hmgB-deep-research-openscientist.md
+    supporting_text: &#39;HmgB catalyzes the last of these three steps, hydrolyzing fumarylacetoacetate to fumarate plus acetoacetate, corresponding to **EC 3.7.1.2**.&#39;
+suggested_questions:
+- question: &gt;-
+    What are the relative Ca2+ and Mg2+ requirements and kinetic effects for
+    the KT2440 HmgB enzyme?
+suggested_experiments:
+- description: &gt;-
+    Purify Q88E48 and measure fumarylacetoacetate hydrolysis kinetics with
+    controlled Ca2+ and Mg2+ concentrations, coupled to product
+    quantification.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
