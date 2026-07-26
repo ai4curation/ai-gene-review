@@ -47,17 +47,40 @@ jobs:
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
       )
     runs-on: ubuntu-latest
+    # A GitHub App installation token expires 60 minutes after minting and does
+    # not refresh; stay inside that window.
+    timeout-minutes: 55
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write
+      # Scopes the default GITHUB_TOKEN only; the agent works with the ai4c-agent
+      # App token below.
+      contents: read
       actions: read # Required for Claude to read CI results on PRs
     steps:
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+          token: ${{ steps.ai4c-token.outputs.token }}
+          # This agent has Bash(*); do not leave a token in .git/config for it
+          # to read. git authenticates via the gh credential helper below.
+          persist-credentials: false
+
+      - name: Configure git identity and credential helper
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+        run: |
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
 
       - name: Resolve agent config
         uses: ./.github/actions/resolve-agent-config
@@ -73,10 +96,14 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@v1
-        
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.ai4c-token.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ steps.ai4c-token.outputs.token }}
+          allowed_bots: "ai4c-agent,claude,github-actions"
           mcp_config: |
             {
               "mcpServers": {

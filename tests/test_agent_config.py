@@ -99,13 +99,11 @@ def _workflow_texts() -> dict[str, str]:
     return {path.stem: path.read_text() for path in WORKFLOW_DIR.glob("*.y*ml")}
 
 
-# Workflows not yet migrated onto the central config. Delete an entry when its
-# workflow starts resolving its model from .github/agent-config.yaml; the list
-# must only ever shrink, and the test fails if an entry becomes stale. Anything
-# NOT listed here that pins a model fails.
-UNMIGRATED_MODEL_PINS = {
-    "weekly-compliance",
-}
+# Escape hatch for a workflow not yet migrated onto the central config. Now
+# empty: every agentic workflow resolves its model from agent-config.yaml. An
+# entry here must correspond to a real pin (a stale entry fails the test), so
+# the list can only shrink.
+UNMIGRATED_MODEL_PINS: set[str] = set()
 
 # Model families, plus the bare aliases the CLI also accepts (`--model opus`).
 _MODEL_VALUE = (
