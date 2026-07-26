@@ -293,6 +293,33 @@ def q1_catalytic_machinery(target_rec: dict, protein_sources: list[dict]) -> dic
                 and all(m["same_residue"] and m["lands_on_annotated_target_site"] for m in mapped),
             }
         )
+    # Per-residue breakdown. The aggregate "triad complete" count understates the
+    # nucleophile evidence: the serine elbow is the most conserved part of the fold and
+    # never loses alignment register, while the acid and base sit in the C-terminal half
+    # where a global alignment drifts at low identity. Report the three positions
+    # separately so the aggregate cannot be mistaken for a statement about the serine.
+    by_residue = {}
+    with_sites = [s for s in per_source if s["annotated_active_sites"]]
+    for rank, position in enumerate(own_act):
+        landed, identical = 0, 0
+        for s in with_sites:
+            hit = next(
+                (m for m in s["mapped_active_sites"] if m["target_position"] == position), None
+            )
+            if hit is None and rank < len(s["mapped_active_sites"]):
+                hit = s["mapped_active_sites"][rank] if s["mapped_active_sites"][rank]["target_position"] == position else None
+            if hit is None:
+                continue
+            landed += 1
+            if hit["same_residue"]:
+                identical += 1
+        by_residue[str(position)] = {
+            "target_residue": target_seq[position - 1],
+            "sources_landing_here": landed,
+            "sources_with_identical_residue": identical,
+            "n_sources_considered": len(with_sites),
+        }
+
     return {
         "target_length": len(target_seq),
         "target_annotated_active_sites": own_act,
@@ -300,6 +327,10 @@ def q1_catalytic_machinery(target_rec: dict, protein_sources: list[dict]) -> dic
         "target_annotated_motifs": own_motif,
         "gdxg_nucleophile_elbow_matches": gdxg,
         "prosite_gdxg_serine_signature": "PS01174" in json.dumps(target_rec.get("uniProtKBCrossReferences", [])),
+        "per_target_active_site": by_residue,
+        "n_sources_corroborating_full_triad": sum(
+            1 for s in with_sites if s["corroborates_target_triad"]
+        ),
         "per_source": per_source,
     }
 
@@ -535,6 +566,13 @@ def main() -> None:
           f"= {''.join(q1['target_active_site_residues'])}")
     print(f"  GDXG nucleophile-elbow matches: {q1['gdxg_nucleophile_elbow_matches']}")
     print(f"  PROSITE PS01174 (GDXG lipase Ser) on the record: {q1['prosite_gdxg_serine_signature']}")
+    for pos, v in q1["per_target_active_site"].items():
+        print(f"  position {pos} ({v['target_residue']}): {v['sources_landing_here']}"
+              f"/{v['n_sources_considered']} sources align here, "
+              f"{v['sources_with_identical_residue']} with the same residue")
+    print(f"  sources corroborating the complete triad: "
+          f"{q1['n_sources_corroborating_full_triad']}/"
+          f"{len([s for s in q1['per_source'] if s['annotated_active_sites']])}")
     for s in q1["per_source"]:
         if not s["annotated_active_sites"]:
             continue
