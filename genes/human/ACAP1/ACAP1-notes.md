@@ -49,7 +49,23 @@ sorting signal."].
 **Membrane bending.** Unusually for a BAR protein, the curvature work is done by the PH domain
 [PMID:25284369 "Here, we show that this BAR domain can neither bind membrane nor impart curvature, but
 instead requires a neighboring PH (Pleckstrin Homology) domain to achieve these functions."], with the
-BAR domain instead oligomerising ACAP1 into a lattice. Tubulation in cells needs both domains
+BAR domain instead oligomerising ACAP1 into a lattice. The in vitro assay is liposome binding plus
+negative-stain EM of purified BAR-PH [PMID:25284369 "We next found that ACAP1BAR-PH also induces
+membrane curvature, as reflected by the tubulation of liposomes, which was visualized by negative-stain
+electron microscopy (EM)"], and the BAR domain fails it on its own [PMID:25284369 "the BAR domain of
+ACAP1 also showed little affinity to the generated liposomes, regardless of their size"]. The bilayer
+contact comes from PH-domain Loop1, whose distal Phe-280 inserts into one leaflet
+[PMID:25284369 "We found that F280 is also critical for the induction of membrane curvature"] and whose
+mutants titrate the activity [PMID:25284369 "In particular, mutation of this residue to alanine (F280A)
+reduced the ability of ACAP1BAR-PH to induce liposome tubulation, while a more conservative mutation
+(F280W) preserved the ability to tubulate liposomes."]. The cryoEM reconstruction of a coated tubule
+is explicit that the BAR domain never touches the membrane
+[PMID:25284369 "Second, there is no significant interaction between the BAR domain and the underlying
+membrane."] and that its role is the inter-molecular packing
+[PMID:25284369 "Instead, the BAR domain contributes to the packing interfaces among ACAP1BAR-PH protein
+in assembling the coating on liposome membrane."]. One PH domain per dimer suffices
+[PMID:25284369 "this additional finding suggests that one PH domain is sufficient to confer the ability
+of the ACAP1BAR-PH dimer to insert into membrane and impart curvature"]. Tubulation in cells needs both domains
 [PMID:17010122 "Truncated and point mutations in the ACAP1 BAR and PH domains revealed that both BAR and
 PH domains are required for tubulation."] and is strongly enhanced by PIP5K co-expression
 [PMID:17010122 "While there were few tubules induced by the expression of ACAP1 alone, numerous
@@ -182,7 +198,7 @@ proposed: the merge was a deliberate ontology decision, not an omission.
 
 ## 7. Annotations proposed
 
-Six `action: NEW` rows are added, all for terms absent from GOA entirely:
+Seven `action: NEW` rows are added, all for terms absent from GOA entirely:
 
 | Term | Qualifier | Evidence | Reference |
 |---|---|---|---|
@@ -190,6 +206,7 @@ Six `action: NEW` rows are added, all for terms absent from GOA entirely:
 | GO:0140312 cargo adaptor activity | enables | IDA | PMID:22645133 |
 | GO:0030118 clathrin coat | part_of | IDA | PMID:17664335 |
 | GO:0180020 membrane bending activity | enables | IDA | PMID:25284369 |
+| GO:0042803 protein homodimerization activity | enables | IDA | PMID:25284369 |
 | GO:0005546 PIP2 binding | enables | IDA | PMID:17010122 |
 | GO:0072659 protein localization to plasma membrane | involved_in | IMP | PMID:17664335 |
 
@@ -211,3 +228,59 @@ GO:0005096, GO:0010008, GO:0055038, GO:0005886, GO:0005737, GO:0016020, GO:00300
 GO:0140312 (cargo adaptor activity), GO:0180020 (membrane bending activity, added 2023-06-18),
 GO:0030118 (clathrin coat), GO:0005546, GO:0005547, GO:0072659.
 `GO:0031532 actin cytoskeleton reorganization` is **obsolete** and was not used.
+
+## 9. Follow-up round: PMID:25284369 full text, and the BAR-domain question
+
+Three things were fixed or settled after the first review round merged.
+
+**PMID:25284369 is not abstract-only.** The first round marked it `full_text_unavailable: true` and drew
+its quotes from the abstract. `publications/PMID_25284369.md` in fact carries
+`full_text_available: true`, `pmcid: PMC4198613`, `full_text_extraction_method: xml`. The flag is
+removed and nine full-text findings are added. This matters beyond bookkeeping: the abstract states
+the *conclusion* about domain division of labour, but only the Results give the **assay** that makes
+the annotation an IDA — liposome binding plus negative-stain EM tubulation of purified BAR-PH — and
+the negative BAR-domain result in two independent readouts (liposome sedimentation and the cryoEM
+reconstruction). An IDA supported only by a conclusion sentence is weaker than one supported by the
+assay, and here the assay was sitting in the cache unread.
+
+**GO:0180020 landscape (QuickGO, taxon 9606, `goUsage=descendants`).** Four annotations, three gene
+products, all IDA:
+
+| Gene product | Term | Evidence | Reference |
+|---|---|---|---|
+| UniProtKB:O43633 CHMP2A | GO:0180020 | IDA | PMID:36604498 |
+| UniProtKB:Q9Y3E7 CHMP3 | GO:0180020 | IDA | PMID:36604498 |
+| UniProtKB:O60313 OPA1 | GO:0180020 | IDA | PMID:32228866 |
+| UniProtKB:O60313 OPA1 | GO:0180020 | IDA | PMID:37612504 |
+
+CHMP2A and CHMP3 are ESCRT-III subunits; OPA1 is a dynamin-family GTPase. **No BAR-domain protein
+carries the term**, so ACAP1 would be the first — which is precisely why the PH-domain attribution has
+to be spelled out on the row. A reader who sees a BAR protein on a membrane-bending term will assume
+the BAR domain did it, and for ACAP1 that assumption is false.
+
+**Second annotation considered and taken: `GO:0042803 protein homodimerization activity`.** The
+BAR–BAR interaction is the only demonstrated function of ACAP1's BAR domain, and UniProt states it as
+a domain property with experimental evidence for this PMID
+[file:human/ACAP1/ACAP1-uniprot.txt "CC   -!- DOMAIN: The BAR domain mediates homodimerization, it can neither bind"].
+The reason it survives the "co-complex membership is not stoichiometry" objection — the objection that
+sank a heterodimerization claim on ACAP3 — is that three orthogonal readouts here each resolve the
+oligomeric state rather than merely detecting association:
+[PMID:25284369 "Dimerization of ACAP1BAR-PH was confirmed from size exclusion chromatography and light
+scattering"],
+[PMID:25284369 "The dimer interface has a large area (4100 Å2), and contains mainly hydrophobic residues
+that likely mediate dimerization."],
+[PMID:25284369 "The in vitro disassociation constant of the dimerization was calculated to be below
+5 µM, according to the quantitative gel-filtration experiment"].
+Crystallography, static light scattering and a measured Kd say *dimer*; an affinity capture would only
+have said *interacts*.
+
+Two limits are deliberately respected. (i) **Dimer, not lattice.** The paper's own wording for the
+BAR–BAR function is "clustering at the membrane", and it describes tetramers and helical packing — but
+those come from fitting the crystal structure into cryoEM maps of ~14 Å (Class I) and ~17 Å (Class II),
+and "clustering" of an unspecified number of subunits is not a dimer. Reaching for an oligomerisation
+or complex-assembly term would overstate the resolution, so the defensible parent-level dimer claim is
+annotated and the lattice stays in prose. (ii) **Fragment, not full length.** All of this was measured
+on BAR-PH (1–377 in the cryoEM work, 1–364 modelled), so it is a domain-attributed statement about
+ACAP1, not a demonstration on the intact protein. Recorded as non-core: homodimerisation is the
+structural precondition for the curved scaffold, not an output, and it is already described inside the
+membrane-bending core function.
