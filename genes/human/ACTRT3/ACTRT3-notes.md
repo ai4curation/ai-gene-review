@@ -214,8 +214,10 @@ GOA gives ACTRT3 one molecular-function row of experimental grade, and it is bar
 `GO:0005515 protein binding` to PDCL3. Meanwhile the interaction the gene is actually known
 for is absent.
 
-The mouse orthologue carries `GO:0005515 protein binding` **IPI twice** from PMID:18692047,
-with WITH/FROM `UniProtKB:Q9DAD6`, which resolves to `PROF3_MOUSE`, gene `Pfn3`, 137 aa,
+The mouse orthologue carries `GO:0005515 protein binding` by IPI from PMID:18692047 — four
+annotation rows spread over only two entities, i.e. one co-immunoprecipitation logged once by
+UniProt and once by IntAct and recorded reciprocally on Actrt3 and Pfn3, not two experiments (see
+§14b) — with WITH/FROM `UniProtKB:Q9DAD6`, which resolves to `PROF3_MOUSE`, gene `Pfn3`, 137 aa,
 Swiss-Prot — profilin-3 [PMID:18692047 "By co-immunoprecipitation analysis, profilin III was
 identified as ArpM1-interacting protein."]. UniProt carries the human side by similarity:
 `file:human/ACTRT3/ACTRT3-uniprot.txt` line 88, `CC   -!- SUBUNIT: Interacts with PFN3.
@@ -445,8 +447,9 @@ Two of these changed the review.
    Side benefit: it places ACTRT1, ACTRT2 and ACTL9 in the theca by IDA *independently* of the 2026
    co-IPs, which is what turns "the ARP-T clade is a theca clade" from an inference from one paper
    into a curated fact — and it strengthens the `suggested_questions` item addressed to that set.
-2. **"IPI twice" was a mis-statable claim and has been corrected.** The draft said mouse Actrt3
-   carries protein binding by IPI *twice* from that reference, which reads as two experiments. The
+2. **A doubled-count phrasing was mis-statable and has been corrected.** The draft said mouse
+   Actrt3 carries protein binding by IPI two separate times from that reference, which reads as two
+   experiments. The
    reference covers only 2 entities in total, so the rows are one co-immunoprecipitation logged
    once by UniProt and once by IntAct, recorded reciprocally on Actrt3 and Pfn3 — one experiment
    recorded four ways. Exactly the ACRV1 `NbExp=3` shape, in my own review. The `GO:0005522`
@@ -489,6 +492,46 @@ properly:
 3. **`term_list_provably_complete` is the precondition for the projection test**, and stating it
    makes the two theca ACCEPTs rest on a checkable property rather than on the absence of a
    surprise. PMID:35793634 is complete, 35 of 35, so the twelve-versus-one comparison is sound.
+
+### The round-3 correction: an annotation count is not an entity count
+
+The reviewer then caught a subtler version of the same confusion, one level down, and the file
+proved it against itself. `count(reference, goId, goUsage=exact)` returns `numberOfHits` — which
+counts **annotation rows** and never collapses per gene product — but the field holding it was
+called `true_entities_per_term`. The disproof is in this very audit: PMID:18692047's `GO:0005515`
+value read **4** while only **2** entities are involved, Q8BXF8 and Q9DAD6, each logged once by
+UniProt and once by IntAct. The double-logging this whole section is about was mislabelled as an
+entity count inside the JSON that explains it.
+
+Why the biology survived anyway, and it is worth being explicit that this was luck plus an
+asymmetry rather than care:
+
+- **`GO:0007286` = 1 is rigorous either way**, because entities ≤ annotations, so one annotation
+  implies exactly one entity. "Confined to Ccin alone" follows regardless of which quantity the
+  field held. That is the half of the projection argument that carries the weight.
+- **The 12 needed distinct entities**, and it happens to be 12 either way — no theca protein is
+  double-logged in that reference. But the audit guard was confirming the sentence against a field
+  that could have read 12 while the truth was 11, so the guard was right by luck of the data.
+
+Fixed: the field is now `true_annotations_per_term`; a separate `entities_per_term` is computed
+from distinct `geneProductId` values and emitted **only when `term_list_provably_complete`**, since
+a distinct count taken from a sampled page is a lower bound wearing a total's clothes;
+`projection_test_basis` records which of the two the verdict used; and the audit reaches entity
+counts through an accessor that raises a named error rather than a bare `KeyError` when the count
+is unavailable. `unaccounted_annotations` deliberately stays on the annotation counts — it is
+`total - sum(annotations)` and is sound precisely because those are rows.
+
+Two further guard gaps surfaced from break-testing this round, both of the same family as the
+round-2 blindness:
+
+- **The retraction string was too long.** Banning the whole sentence let an emphasised or reworded
+  variant walk past — which is exactly how the phrase survived in §5 while §14b declared it
+  corrected. The banned string is now just the two words that carry the claim, and `norm()` strips
+  markdown emphasis and backticks so `**twice**` and `` `twice` `` cannot bypass it. Both variants
+  now fail.
+- **A guard that runs after the thing it guards is not a guard.** The availability check for
+  `entities_per_term` sat *below* the patterns that indexed into it, so the intended message was
+  unreachable behind a `KeyError`. Moved above, and verified by deleting the field.
 
 The general rule, which is the transferable part: **a count taken from a page and a count taken
 from `numberOfHits` must never be reported side by side without saying which is which.** The

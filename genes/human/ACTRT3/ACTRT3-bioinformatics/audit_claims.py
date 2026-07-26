@@ -51,7 +51,13 @@ def require(path: Path, fix: str) -> Path:
 
 
 def norm(text: str) -> str:
-    return re.sub(r"\s+", " ", text)
+    """Collapse whitespace AND strip markdown emphasis.
+
+    Whitespace collapsing alone let a retracted phrasing survive: the notes wrote it as
+    `**IPI twice**`, and the asterisks defeated a plain substring test on "IPI twice". A
+    retraction guard that any emphasis can bypass is not a guard.
+    """
+    return re.sub(r"\s+", " ", text.replace("**", "").replace("*", "").replace("`", ""))
 
 
 def compat(tally: dict) -> int:
@@ -222,9 +228,9 @@ def main() -> int:
          r"whose (\d+) protein donors are (\d+) conventional actins", (donors(1), donors(1) - 1),
          review, 1),
         ("donors, 'N/N carry their own' (notes)",
-         r"\*\*(\d+)/(\d+) carry their own", (donors(1), donors(1)), notes, 1),
+         r"(\d+)/(\d+) carry their own", (donors(1), donors(1)), notes, 1),
         ("donors, 'Row 1 carries **N** tokens (M protein donors + one PANTHER node)'",
-         r"Row 1 carries \*\*(\d+)\*\* tokens \((\d+) protein donors",
+         r"Row 1 carries (\d+) tokens \((\d+) protein donors",
          (donors(1) + 1, donors(1)), notes, 1),
         ("donors, 'same N WITH/FROM tokens'",
          r"same (\d+) WITH/FROM tokens", (donors(1) + 1,), review, 1),
@@ -256,30 +262,54 @@ def main() -> int:
             return sc[pmid]
 
         bioplex, theca, prof = ref("33961781"), ref("35793634"), ref("18692047")
+
+        def entity_count(block: dict, go_id: str, why: str) -> int:
+            """Distinct-entity count, or a named failure. Never an annotation count by accident."""
+            if not block.get("entities_per_term_available"):
+                raise RuntimeError(
+                    f"PMID:{block['pmid']} no longer yields a distinct-entity count per term "
+                    f"(term_list_provably_complete is false), so {why} is unsupported: an "
+                    "annotation count is not an entity count. Re-run reference_scope.py and "
+                    "re-read the affected prose rather than substituting the annotation count."
+                )
+            if go_id not in block["entities_per_term"]:
+                raise RuntimeError(
+                    f"PMID:{block['pmid']} no longer annotates {go_id}; {why} must be re-read. "
+                    f"Terms present: {sorted(block['entities_per_term'])}"
+                )
+            return block["entities_per_term"][go_id]
+
+        theca_pt = entity_count(theca, "GO:0033011",
+                                "the prose's '12 mouse perinuclear-theca proteins'")
+        theca_pheno = entity_count(theca, "GO:0007286", "the projection argument")
+        prof_pb = entity_count(prof, "GO:0005515", "the annotations-versus-entities sentence")
         P.extend([
             ("scope, BioPlex total annotations",
-             r"PMID:33961781 accounts for (\d+) GOA annotations", 
+             r"PMID:33961781 accounts for (\d+) GOA annotations",
              (bioplex["total_annotations"],), review, 1),
             ("scope, BioPlex exact protein-binding count",
              r"of which (\d+) are GO:0005515 itself",
-             (bioplex["true_entities_per_term"]["GO:0005515"],), review, 1),
+             (bioplex["true_annotations_per_term"]["GO:0005515"],), review, 1),
             ("scope, BioPlex per-database split",
              r"\(IntAct (\d+), ComplexPortal (\d+)\)",
              (bioplex["true_annotations_per_db"]["IntAct"],
               bioplex["true_annotations_per_db"]["ComplexPortal"]), review, 1),
             ("scope, theca proteins carrying GO:0033011 IDA",
              r"carries GO:0033011 by IDA for (\d+) mouse perinuclear-theca proteins",
-             (theca["true_entities_per_term"]["GO:0033011"],), review, 1),
+             (theca_pt,), review, 1),
             ("scope, theca proteins named in the notes table",
              r"by IDA for (\w+) mouse theca proteins",
-             (word(theca["true_entities_per_term"]["GO:0033011"]),), notes, 1),
+             (word(theca_pt),), notes, 1),
             ("scope, profilin reference entity count",
              r"yields (\d+) annotations across just (\d+) entities",
              (prof["total_annotations"], prof["distinct_entities_seen"]), review, 1),
+            ("scope, profilin GO:0005515 annotations vs entities (the double-logging itself)",
+             r"(\d+) protein-binding annotations spread over only (\d+) entities",
+             (prof["true_annotations_per_term"]["GO:0005515"], prof_pb), review, 1),
         ])
         # The projection argument on the two GO:0033011 ACCEPTs depends on three properties of
         # PMID:35793634. If any changes, the prose must be re-read rather than the number bumped.
-        if theca["true_entities_per_term"].get("GO:0007286") != 1:
+        if theca_pheno != 1:
             problems_early.append(
                 "PMID:35793634's GO:0007286 row no longer covers exactly one entity; the "
                 "'not a projection' argument on the GO:0033011 rows depends on it")
@@ -310,8 +340,11 @@ def main() -> int:
         "eleven human genes",
         "covering 11 human genes",
         "11 human genes across",
-        # read as two experiments; it is one co-IP logged by two databases and reciprocally
-        "by IPI twice from PMID:18692047",
+        # Read as two experiments; it is one co-IP logged by two databases and reciprocally on
+        # both partners. Kept SHORT on purpose: the first version retracted the whole sentence
+        # "by IPI twice from PMID:18692047", which a reworded or **emphasised** variant walked
+        # straight past. The claim being retracted is the word "twice", so that is what is banned.
+        "IPI twice",
     ]
 
     ranking = r["divergent_clade_ranking"]

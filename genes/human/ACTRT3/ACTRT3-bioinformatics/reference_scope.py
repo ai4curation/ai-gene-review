@@ -25,7 +25,12 @@ So every count this script reports as a total is obtained from its own **filtere
 (`limit=1`, read `numberOfHits`), never from the sampled page:
 
   * `total_annotations`            - unfiltered
-  * `true_entities_per_term`       - one exact-usage query per term seen
+  * `true_annotations_per_term`    - one exact-usage query per term. These are ANNOTATION ROW
+                                     counts; `numberOfHits` never collapses per gene product.
+                                     `entities_per_term` is the distinct-gene-product count, and
+                                     is emitted ONLY when `term_list_provably_complete`, because a
+                                     distinct count taken from a sampled page is a lower bound.
+                                     The projection test uses the entity counts when available.
   * `true_annotations_per_code`    - one query per evidence code seen. NOTE: these do not
                                      partition the total, because QuickGO's `evidenceCode` filter
                                      is not exact-only; on PMID:35793634 they sum to 57 against a
@@ -141,21 +146,45 @@ def scope(pmid: str) -> dict:
         ASPECT[a]: count(reference=ref, aspect=a) for a in ASPECT
     } if total else {}
     # Now that the term map includes anything the projecting-database probe added, ask for each
-    # term's own true total.
-    true_entities_per_term = {
+    # term's own true total. NOTE the semantics: numberOfHits counts ANNOTATION ROWS, never
+    # distinct gene products. PMID:18692047 proves the distinction against this very file - its
+    # GO:0005515 total is 4 while only 2 entities are involved, each logged once by UniProt and
+    # once by IntAct. Naming this "entities" once caused the review to assert an entity count that
+    # was really an annotation count.
+    true_annotations_per_term = {
         t: count(reference=ref, goId=t, goUsage="exact") for t in sorted(per_term_seen)
     }
     codes_seen = sorted(set(codes_seen) | {r["goEvidence"] for r in extra_rows})
     dbs_seen = sorted(set(dbs_seen) | {r["assignedBy"] for r in extra_rows if r.get("assignedBy")})
-    unaccounted = total - sum(true_entities_per_term.values())
+    # Sound precisely because these are annotation counts, not entity counts.
+    unaccounted = total - sum(true_annotations_per_term.values())
     db_total = sum(true_per_db.values())
 
-    functional = {t: n for t, n in true_entities_per_term.items()
+    # Distinct gene products per term, counted from the rows. Only emitted when the term list is
+    # provably complete, because otherwise the rows are a sample and a distinct-entity count from
+    # a sample is a lower bound masquerading as a total.
+    complete = unaccounted == 0 and total > 0
+    all_rows = rows + extra_rows
+    entities_per_term = {
+        t: len({r["geneProductId"] for r in all_rows if r["goId"] == t})
+        for t in sorted(per_term_seen)
+    } if complete else {}
+
+    # The projection test needs ENTITY counts, so it uses entities_per_term when that is
+    # trustworthy and falls back to annotation counts otherwise -- with the fallback recorded,
+    # since entities <= annotations means a fallback can only overstate the spread.
+    basis = entities_per_term if complete else true_annotations_per_term
+    functional = {t: n for t, n in basis.items()
                   if aspect_of.get(t) in ("MF", "BP") and t != "GO:0005515"}
-    locational = {t: n for t, n in true_entities_per_term.items() if aspect_of.get(t) == "CC"}
+    locational = {t: n for t, n in basis.items() if aspect_of.get(t) == "CC"}
     max_func = max(functional.values(), default=0)
     max_loc = max(locational.values(), default=0)
 
+    proj_line = (
+        f"{ref} projection test on {('entities' if complete else 'annotations')}: "
+        + ", ".join(f"{t}={n}" for t, n in sorted(basis.items()))
+        + f"; max functional {max_func}, max localisation {max_loc}"
+    ) if total else f"{ref} projection test: not curated by GOA"
     summary = (
         f"{ref}: {total} annotations total, {len(rows)} rows examined"
         f"{' (TRUNCATED)' if truncated else ''}, {len(per_term_seen)} terms seen, "
@@ -165,6 +194,7 @@ def scope(pmid: str) -> dict:
     return {
         "pmid": pmid,
         "summary_line": summary,
+        "projection_test_line": proj_line,
         "total_annotations": total,
         "rows_examined": len(rows),
         "truncated": truncated,
@@ -185,7 +215,10 @@ def scope(pmid: str) -> dict:
             for r in sorted(extra_rows, key=lambda x: (x["goId"], x.get("symbol") or ""))
         ],
         "true_annotations_per_aspect": true_per_aspect,
-        "true_entities_per_term": true_entities_per_term,
+        "true_annotations_per_term": true_annotations_per_term,
+        "entities_per_term": entities_per_term,
+        "entities_per_term_available": complete,
+        "projection_test_basis": "entities_per_term" if complete else "true_annotations_per_term",
         "aspect_per_term": dict(sorted(aspect_of.items())),
         "functional_terms_excluding_protein_binding": dict(sorted(functional.items())),
         "max_entities_on_a_functional_term": max_func,
