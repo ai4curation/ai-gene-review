@@ -319,6 +319,55 @@ it matches ACTL8's claim exactly. So the answer to the brief's first lead is a c
 protein sequence.** A negative result from a check is still a finding, which is why it is recorded
 here and in the review rather than dropped.
 
+## 7c. Review round: three non-blocking suggestions, all accepted
+
+PR #2298 was APPROVED with three suggestions. All three were real and all three are addressed.
+
+**(i) Scope the P-loop-1 claims.** The reviewer's sharpest point: "ACTL10 conserves
+phosphate-binding loop 1" is true of the extended reading frame and **false of Q5JWF8 as
+annotated**, which is ABSENT at all five of those positions per my own RESULTS.md. Three sites in
+the review stated it unscoped — the `description`, the `GO:0015629` summary, and the `GO:0005200`
+reason — plus one in these notes. All four now name the sequence.
+
+Because this is one claim asserted at a dozen sites, the invariant is now **mechanical rather than
+hand-checked**: `ACTL10-bioinformatics/check_claim_scoping.py` requires every P-loop-1 mention in
+the review and the notes to sit within 300 characters of a phrase naming which sequence is meant.
+It inspects 12 claims and fails loudly if it finds zero (a lint that inspects nothing passes
+vacuously).
+
+Two bugs in that lint, both found by running it rather than reading it, and both worth recording:
+
+1. **My first draft was defeated by YAML line-wrapping.** Folded scalars store "does not reach" as
+   `does not\n      reach`, so literal matching flagged three *correctly scoped* sites as
+   violations. I nearly widened the regex to make them pass — which would have been rationalising
+   a discrepancy instead of investigating it. The real fix is to whitespace-normalise before
+   matching. Had I "fixed" it the other way I would have shipped a lint that reports false
+   positives, which trains a reader to ignore it.
+2. **The self-test's own mutations reproduced the same bug.** My mutation asserted on *normalised*
+   text and substituted on *raw* text, so the phrases it meant to strip did not match and the
+   mutation silently did nothing. The self-test honestly reported FAILURE rather than passing, but
+   the fault was in the mutation, not the lint. Fixed by mutating normalised text and asserting
+   `detected == changed` — the detector/mutator scope invariant. Also worth noting: my first two
+   mutations deleted *one* scoping phrase from passages containing *two*, so the claims stayed
+   scoped and the lint was right to keep passing. A mutation must remove **all** scope from a
+   claim's window, or add a claim that has none.
+
+**(ii) The `is_active_in` qualifier went undiscussed.** Fair, and it is a genuine
+over-assertion: `is_active_in` states that ACTL10 *carries out its molecular function* in the
+actin cytoskeleton, and no molecular function has been measured for it at all, so the qualifier
+presupposes exactly what is unknown. `located_in` would say what the inference supports. This is a
+transfer artefact of the same kind as the term's breadth — the qualifier is correct for the
+conventional-actin donors — not a curator error, so the action stays `KEEP_AS_NON_CORE` and the
+term is unchanged; a qualifier swap is a GOA-side change. It is now discussed in the row and
+raised for PAINT alongside the node recommendation.
+
+**(iii) Assert page-size saturation.** The orthologue query used `size=500` and read the count
+from `len(results)`. It now takes the authoritative total from the **`x-total-results` header**,
+aborts if a full page comes back, and asserts parsed count equals declared count. Break-tested by
+setting `page_size = 10`, which correctly aborts with "returned a full page (10) ... (87
+declared)". A fresh run reproduces `RESULTS.md` and `results.json` byte-for-byte, so the guard
+changed no number.
+
 ## 8. Negative results, recorded because a null from a check is still a finding
 
 - **IntAct**: `findInteractions/Q5JWF8` returns `totalElements: 0`. No interaction data at all, so
@@ -339,7 +388,8 @@ here and in the review rather than dropped.
   donor set and there is no granularity defect to fix. Non-core because no experiment has placed
   ACTL10 in any compartment — and unlike ACTL8, UniProt does not even offer a by-similarity
   location. Kept because ACTL10 *is* a real divergent actin (34.7% to β-actin over the extended
-  ORF, intact P-loop 1), so the term asserts nothing the sequence contradicts.
+  ORF, with P-loop 1 intact on that extended frame though absent from the annotated 245-residue
+  sequence), so the term asserts nothing the sequence contradicts.
 - **`GO:0005200` structural constituent of cytoskeleton (IBA) → MARK_AS_OVER_ANNOTATED.** The
   route by which real actins earn this term is filament formation, and ACTL10's protomer interface
   — measured on the *repaired* sequence, so the argument does not rest on the annotation artefact

@@ -181,11 +181,27 @@ def orthologue_lengths() -> dict:
     # (Maudiozyma, Didymella), algal (Aureococcus) and Perkinsus entries that are not ACTL10
     # orthologues at all, and short passerine fragments. Every taxon used in the sister-pair
     # test is a mammal, so the clade restriction and the test agree in scope.
+    page_size = 500
     params = {"query": "gene_exact:ACTL10 AND taxonomy_id:40674",
               "fields": "accession,id,length,reviewed,organism_name",
-              "format": "json", "size": "500"}
-    d = get_json(url, params)
-    total = None
+              "format": "json", "size": str(page_size)}
+    # Take the authoritative total from the response header, not from len(results): a single page
+    # that happens to saturate would otherwise silently truncate the distribution and every
+    # downstream count. Reported by the PR reviewer; the query returns far fewer than one page
+    # today, but a silent truncation is exactly the class of bug this script asserts against
+    # everywhere else.
+    r = SESSION.get(url, params=params, timeout=180)
+    r.raise_for_status()
+    d = r.json()
+    declared = r.headers.get("x-total-results")
+    if declared is None:
+        raise RuntimeError("UniProt did not return x-total-results; cannot verify page coverage")
+    declared = int(declared)
+    if len(d.get("results", [])) >= page_size:
+        raise RuntimeError(
+            f"UniProt returned a full page ({page_size}) for the ACTL10 orthologue query, so the "
+            f"result set is truncated ({declared} declared); add pagination before trusting the "
+            "length distribution")
     for r in d.get("results", []):
         rows.append({
             "accession": r["primaryAccession"],
@@ -196,6 +212,9 @@ def orthologue_lengths() -> dict:
         })
     if not rows:
         raise RuntimeError("UniProt returned no ACTL10 entries; the query or the field set is wrong")
+    if len(rows) != declared:
+        raise RuntimeError(
+            f"parsed {len(rows)} entries but UniProt declares {declared}; the page is incomplete")
     total = len(rows)
     by_org: dict[str, list[int]] = defaultdict(list)
     for r in rows:
