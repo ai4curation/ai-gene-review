@@ -149,7 +149,9 @@ cone."), not the endosome.
 `blow` (FBgn0004133) is the WITH/FROM donor for `GO:0030036 actin cytoskeleton
 organization`. Its InterPro content is **IPR011993 + IPR001849 only** — a PH domain and
 nothing else. It has no ACAP1/2/3-like signature, no ArfGAP domain, no BAR domain and no
-ankyrin repeats, so it cannot be an Arf GAP. FlyBase describes it as a cytoplasmic
+ankyrin repeats, so it cannot be an Arf GAP. All four TrEMBL isoform entries (A1Z714,
+P91678, E1JGZ4, Q8MSU1; 532–644 aa) give the same two signatures, so this is not an
+artefact of picking one entry. FlyBase describes it as a cytoplasmic
 myoblast-fusion protein acting through WASp–Vrp1 complex stability, and its actin
 annotation is an IMP from that myoblast-fusion work. PTHR23180 (CENTAURIN/ARF) has
 clustered it in on the PH domain alone.

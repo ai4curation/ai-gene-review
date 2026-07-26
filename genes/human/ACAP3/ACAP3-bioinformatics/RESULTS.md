@@ -81,11 +81,14 @@ uv run check_iba_source_architecture.py --markdown
 
 ## Caveats
 
-- InterPro membership is a signature-match statement, not a structural one; absence of a
-  signature is weaker evidence than presence. For `blow` the absence is nonetheless
-  unambiguous: three independent module families are missing simultaneously, and the
-  protein is far too short to accommodate them.
+- InterPro membership is a signature-match statement, not a structural one, and absence of
+  a signature is weaker evidence than presence. What makes the `blow` result hard to
+  explain away is that **three** independent module families (ArfGAP, BAR, ANK) plus the
+  subfamily signature are missing simultaneously, while the one module it does have is the
+  same one PANTHER could have clustered on. Length does not by itself settle it: `blow` is
+  644 aa against ACAP3's 834 aa, so it is shorter but not too short in principle to carry
+  an ArfGAP domain. The argument is the joint absence of four signatures, not the size.
 - Mouse Acap3 (Q6NXL5) and *Drosophila* `blow` (P91678) have no Swiss-Prot entry; the
-  TrEMBL entries were used. For `blow`, all four TrEMBL isoform entries carry the
-  identical InterPro pair (IPR011993, IPR001849), so the conclusion does not depend on
-  which was chosen.
+  TrEMBL entries were used. For `blow`, all four TrEMBL isoform entries (A1Z714 644 aa,
+  P91678 644 aa, E1JGZ4 637 aa, Q8MSU1 532 aa) carry the identical InterPro pair
+  IPR011993 + IPR001849, so the conclusion does not depend on which was chosen.
