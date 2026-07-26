@@ -38,7 +38,8 @@ cellulose synthesis, and central hexose metabolism are also separate.
 - [x] Complete module + `ppu00500` + PSEPK OpenScientist research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [ ] Open one non-draft PR for this module.
+- [x] Open one non-draft PR for this module:
+  [#2244](https://github.com/ai4curation/ai-gene-review/pull/2244).
 - [ ] Shepherd the PR through review and CI.
 
 ## Focused Genes
