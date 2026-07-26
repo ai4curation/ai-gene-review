@@ -58,12 +58,23 @@ its effector's binding with **anti-Arp1b**:
 
 > [PMID:40186871 "Eluates were immunoblotted with anti-p150glued, anti-p50-dynamitin, anti-dynein 74 kDa, anti-Arp1b, anti-FHL2, anti-Strep, and anti-GAPDH antibodies."]
 
-So beta-centractin is recovered from affinity-purified human dynactin by a reagent
-that cannot be reporting alpha, thirty years after the original result and
-independently of AP-MS. Note the irony: those authors used **anti-Arp1b** as their
-representative Arp1-filament readout while depositing a structure that models all
-eight protomers as alpha. (Missed on the first pass because the paper spells it
-`Arp1b`, lower-case b, and my grep used `Arp1B`; the PR reviewer caught it.)
+Both of those are Methods sentences, so the *result* is carried separately:
+
+> [PMID:40186871 "A single substitution in CR1, in which phenylalanine 195 was changed to proline or to alanine (F195P or F195A) and which is predicted to disrupt the strand fold, decreased binding of endogenous dynactin subunits and dynein to the transfected Dre1 variants"]
+
+Binding can only be *decreased* from a baseline, and a conservative F195Y
+replacement "did not affect Dre1 binding to dynactin" — so the endogenous subunits
+assayed do bind wild-type Dre1. Arp1b is one of the three, detected with a
+paralog-specific antibody. Hence: **endogenous beta-centractin is among the dynactin
+subunits recovered on Dre1** — a modern, human, paralog-resolved result independent
+of AP-MS, thirty years after the 2D-gel work. The per-subunit bands live in Figure
+2D, which the cached text does not render, so the claim is made at exactly that
+strength and no further.
+
+Note the irony: those authors chose **anti-Arp1b** as their representative
+Arp1-filament readout while depositing a structure that models all eight protomers as
+alpha. (Missed on my first pass because the paper spells it `Arp1b`, lower-case b,
+and my context grep used `Arp1B`; the PR reviewer caught it.)
 
 ## 2. Where the two paralogs are, and are not, distinguishable
 
