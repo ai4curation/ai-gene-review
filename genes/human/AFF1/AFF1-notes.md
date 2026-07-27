@@ -440,6 +440,29 @@ review's position stated so the difference is visible:
    in either direction would invert the biology. AFF1 gets `GO:0045668` (negative); AFF4's
    corresponding term would be positive.
 
+## Where the risk actually sat, across six review rounds
+
+Worth recording for whoever reviews AFF2, AFF3 or AFF4 next. **Not one reviewer finding was
+about the curation.** No term, action, evidence code, qualifier, quote or reported biological
+number was ever challenged. All eleven findings were about claims made *about the checks*:
+
+| class | instances |
+|---|---|
+| a count disagreeing with its own enumeration | 3 (the human recipient set; the `MODIFY` row count; the stated total) |
+| a number estimated where a derivable one existed | 1 (disorder coverage: 901, not "~1000") |
+| a guard scoped to the failure already known | 2 (check G's first two clauses; the tally clause) |
+| a check matching only its own exemption, i.e. vacuous | 2 (clause 4's prose regex; the total sub-clause) |
+| a report string asserting what it never read | 1 (the `in_complex`/`locations` live instance) |
+| a silent-nothing lookup where siblings raise | 1 |
+| prose duplicated or narrating process in a biology field | 1 |
+
+Two further defects were found by the guards' own break-tests failing, not by reading the code —
+a case-sensitive number match and an enumeration regex that required the *correct* list, so
+substituting a symbol made the check go silent. The generalisable lesson is the campaign's own:
+a passing self-test proves the guards you thought of fire, and the coverage question stays a
+reading question. The cheapest detector by far was **deriving an expected number independently
+and comparing** — it found four of the eleven.
+
 ## Process
 
 Every claim about provenance in the review YAML is computed by
