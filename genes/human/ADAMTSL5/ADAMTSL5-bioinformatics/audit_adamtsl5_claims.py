@@ -105,10 +105,18 @@ def check(review_path, goa_path, problems):
         problems.append(
             f"coverage: {len(reviewed)} non-NEW existing_annotations vs {n_goa} GOA rows "
             f"({len(new_rows)} NEW proposal(s))")
-    if len(anns) != n_goa + len(new_rows):
-        problems.append(
-            f"reconciliation: {len(anns)} entries != {n_goa} GOA rows + "
-            f"{len(new_rows)} NEW -- unexplained mismatch")
+    # The real invariant a NEW proposal must satisfy: it names a term GOA does not
+    # already have. (An earlier version asserted len(anns) == n_goa + len(new_rows),
+    # which is a TAUTOLOGY -- new_rows and reviewed partition anns, so it restates the
+    # check above and can never fire independently. A guard that cannot fire is worse
+    # than no guard, because it reads as coverage. Caught by the PR reviewer on #2305.)
+    goa_terms = {r["GO TERM"] for r in goa_rows}
+    for a in new_rows:
+        tid = a["term"]["id"]
+        if tid in goa_terms:
+            problems.append(
+                f"NEW proposal {tid} ({a['term']['label']}) is already a GOA row -- "
+                "a NEW entry must name a term GOA lacks")
     goa_key = Counter((r["GO TERM"], r["GO EVIDENCE CODE"]) for r in goa_rows)
     rev_key = Counter((a["term"]["id"], a["evidence_type"]) for a in reviewed)
     if goa_key != rev_key:
@@ -166,6 +174,10 @@ def self_test():
          "root_cause: SOURCE_WEAK_OR_INFERRED", "RETRACTED"),
         ("claim count drift", "no HExxH substring at all",
          "no zinc motif at all", "expected 1"),
+        # NEW proposal naming a term GOA already has (GO:0031012 is a real GOA row).
+        ("NEW duplicates a GOA term", "    id: GO:0001527\n    label: microfibril\n  evidence_type: IDA",
+         "    id: GO:0031012\n    label: extracellular matrix\n  evidence_type: IDA",
+         "already a GOA row"),
     ]
     ok = True
     for name, target, repl, expect in cases:
