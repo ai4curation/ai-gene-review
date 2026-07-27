@@ -35,8 +35,6 @@ import re
 import sys
 from pathlib import Path
 
-import yaml
-
 HERE = Path(__file__).resolve().parent
 GENE_DIR = HERE.parent
 
@@ -104,7 +102,7 @@ WITHDRAWN_SCAN_GLOBS = ["*.md", "*.yaml", "ADCK5-bioinformatics/*.py", "ADCK5-bi
 # for is worse than none, because it reads as coverage. So the hedge must appear in the same
 # paragraph as the topic, or in the one immediately following it.
 #
-# `--self-test` replays that historical paragraph verbatim from git and requires a catch.
+# `--self-test` replays that historical paragraph from a frozen fixture and requires a catch.
 # Residual limit, stated rather than hidden: a hedge more than one paragraph away still
 # evades this, so withdrawing a claim still calls for a human re-read of the prose.
 # ---------------------------------------------------------------------------------------
@@ -141,25 +139,33 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
     over. Markdown keeps blank-line paragraphs.
     """
     if name.endswith((".yaml", ".yml")):
-        try:
-            doc = yaml.safe_load(text)
-        except yaml.YAMLError:
-            # Fall back loudly rather than silently degrading to the broken behaviour.
-            return [f"__UNPARSEABLE_YAML__ {text}"]
-        out: list[str] = []
-
-        def walk(o):
-            if isinstance(o, str):
-                out.append(o)
-            elif isinstance(o, dict):
-                for v in o.values():
-                    walk(v)
-            elif isinstance(o, list):
-                for v in o:
-                    walk(v)
-
-        walk(doc)
-        return out
+        # Split at every mapping key, so each summary / reason / gap_statement / boundary is
+        # its own unit. Done with a line scan rather than a YAML parse for two reasons:
+        # the three sibling scripts in this folder are stdlib-only and RESULTS.md documents a
+        # bare `python3` invocation, so pulling in PyYAML would make the documented command
+        # fail on a clean interpreter; and a parse introduces a failure branch whose only
+        # sane fallback is "treat the file as one blob", which is exactly the file-level
+        # behaviour this function exists to abolish. No parse, no silent fallback.
+        units: list[str] = []
+        cur: list[str] = []
+        for line in text.splitlines():
+            if YAML_KEY_RE.match(line):
+                if cur:
+                    units.append("\n".join(cur))
+                cur = [line]
+            else:
+                cur.append(line)
+        if cur:
+            units.append("\n".join(cur))
+        if len(units) < 2:
+            # A YAML surface that yields one unit means the scan is file-level again.
+            # Fail loudly; this is the bug that shipped twice.
+            raise SystemExit(
+                f"FATAL: {name} split into {len(units)} unit(s). A YAML review file must "
+                f"split per field; one unit means the hedge invariant has silently become "
+                f"file-level. Check YAML_KEY_RE against the file's actual formatting."
+            )
+        return units
     return [b for b in re.split(r"\n\s*\n", text)]
 
 
@@ -243,6 +249,10 @@ FOREIGN_RESIDUE_TOKENS = {
 }
 
 RESIDUE_TOKEN_RE = re.compile(r"\b([A-Z]\d{2,3})\b")
+
+# A YAML mapping key, with or without a leading list dash. Used to split a review file
+# into per-field units without a YAML parser.
+YAML_KEY_RE = re.compile(r"^\s*(?:-\s+)?[A-Za-z_][A-Za-z0-9_]*:")
 
 
 def check_residue_calls(motif: dict, texts: dict[str, str]) -> list[str]:
@@ -550,16 +560,18 @@ def self_test() -> int:
     target = "A209"
     assert any(target in t for t in good.values()), "mutation target absent; guard vacuous"
     drifted = {k: v.replace(target, "A210") for k, v in good.items()}
-    expect_flag("a residue position drifted (A209 -> A210)", drifted)
+    expect_flag("a residue position drifted (A209 -> A210)", drifted, match="unrecognised residue token")
 
     # 2. withdrawn phrasing, plain and quote-split
     expect_flag(
         "withdrawn phrasing reappears",
         {**good, "RESULTS.md": good["RESULTS.md"] + "\n25 mitochondrial proteins\n"},
+        match="withdrawn phrasing reappeared",
     )
     expect_flag(
         "withdrawn phrasing reappears with quotes inserted (bypass attempt)",
         {**good, "RESULTS.md": good["RESULTS.md"] + '\n25 "mitochondrial" proteins\n'},
+        match="withdrawn phrasing reappeared",
     )
 
     # 3. required claim deleted from all but one surface (surface counting, not summing)
@@ -569,44 +581,52 @@ def self_test() -> int:
             stripped[k] = stripped[k].replace("17 of 25", "")
     # and pile extra copies into the remaining surface: a summing lint would pass here
     stripped["RESULTS.md"] = stripped["RESULTS.md"] + "\n17 of 25\n" * 5
-    expect_flag("claim present 6x on ONE surface but deleted from the others", stripped)
+    expect_flag("claim present 6x on ONE surface but deleted from the others", stripped,
+                match="required claim")
 
     # 4. census drift
     bad_census = json.loads(json.dumps(census))
     bad_census["census"]["ADCK5"]["n_iba"] = 3
-    expect_flag("ADCK5 gained IBA annotations", good, census=bad_census)
+    expect_flag("ADCK5 gained IBA annotations", good, census=bad_census,
+                match="only one")
 
     bad_census2 = json.loads(json.dumps(census))
     bad_census2["census"]["ADCK5"]["has_ser_thr_kinase_keyword"] = False
-    expect_flag("UniProt dropped the keyword (correction request now stale)", good, census=bad_census2)
+    expect_flag("UniProt dropped the keyword (correction request now stale)", good,
+                census=bad_census2, match="Ser/Thr-kinase keyword")
 
     bad_census3 = json.loads(json.dumps(census))
     bad_census3["census"]["COQ8A"]["negated_annotations"] = []
-    expect_flag("COQ8A lost its NOT| rows", good, census=bad_census3)
+    expect_flag("COQ8A lost its NOT| rows", good, census=bad_census3, match="NOT| rows")
 
     # 5. partner-number drift
     bad_p = json.loads(json.dumps(partner))
     bad_p["mito_interactome"]["fraction_text"] = "19 of 25"
-    expect_flag("mitochondrial fraction drifted (prose still says 17 of 25)", good, partner=bad_p)
+    expect_flag("mitochondrial fraction drifted (prose still says 17 of 25)", good, partner=bad_p,
+                match="mitochondrial fraction")
 
     bad_p2 = json.loads(json.dumps(partner))
     for k in bad_p2["orthogonal_assay_for_goa_partners"]:
         bad_p2["orthogonal_assay_for_goa_partners"][k] = True
-    expect_flag("an orthogonal assay appeared for the GO:0005515 partner", good, partner=bad_p2)
+    expect_flag("an orthogonal assay appeared for the GO:0005515 partner", good, partner=bad_p2,
+                match="non-two-hybrid assay")
 
     bad_p3 = json.loads(json.dumps(partner))
     bad_p3["orthogonal_assay_for_goa_partners"] = {}
-    expect_flag("no GOA partners in the JSON (claim would be vacuous)", good, partner=bad_p3)
+    expect_flag("no GOA partners in the JSON (claim would be vacuous)", good, partner=bad_p3,
+                match="no GO:0005515 partners")
 
     # The MI-score and per-PMID sub-method checks: each must be REACHABLE, not merely
     # present. A check that can never fire reads as coverage while providing none.
     dropped_label = {
         k: v.replace("two hybrid prey pooling approach", "XXX") for k, v in good.items()
     }
-    expect_flag("a sub-method label vanished from the prose", dropped_label)
+    expect_flag("a sub-method label vanished from the prose", dropped_label,
+                match="sub-method label")
 
     drifted_mi = {k: v.replace("MI score 0.67", "MI score 0.90") for k, v in good.items()}
-    expect_flag("the MI score in the prose drifted from the computed one", drifted_mi)
+    expect_flag("the MI score in the prose drifted from the computed one", drifted_mi,
+                match="MI score")
 
     bad_p4 = json.loads(json.dumps(partner))
     for a in bad_p4["goa_binding_partners"].values():
@@ -615,12 +635,14 @@ def self_test() -> int:
         "IntAct now reports more than one MI score, so 'MI score 0.67 throughout' is false",
         good,
         partner=bad_p4,
+        match="claims a single MI score",
     )
 
     bad_p5 = json.loads(json.dumps(partner))
     for a in bad_p5["goa_binding_partners"].values():
         a["methods_by_pmid"] = {}
-    expect_flag("methods_by_pmid emptied (sub-method argument would be unbacked)", good, partner=bad_p5)
+    expect_flag("methods_by_pmid emptied (sub-method argument would be unbacked)", good,
+                partner=bad_p5, match="methods_by_pmid is empty")
 
     # The withdrawn-phrase scan covers the whole gene folder, and excludes exactly ONE file:
     # this one, which necessarily contains every withdrawn phrase because it defines them.
@@ -632,7 +654,8 @@ def self_test() -> int:
     try:
         throwaway.write_text("# topological objection\n")
         expect_flag(
-            "withdrawn phrasing planted in a sibling .py (scan must not be too narrow)", good
+            "withdrawn phrasing planted in a sibling .py (scan must not be too narrow)", good,
+            match="withdrawn phrasing reappeared",
         )
     finally:
         throwaway.unlink(missing_ok=True)
@@ -647,7 +670,8 @@ def self_test() -> int:
         for r in SIDEDNESS_HEDGE_RES:
             v = r.sub("REDACTED", v)
         unhedged[k] = v
-    expect_flag("compartment argument discussed with every hedge removed", unhedged)
+    expect_flag("compartment argument discussed with every hedge removed", unhedged,
+                match="compartment argument")
 
     # Catch by PARAPHRASE: reinstate the withdrawn conclusion in new words, no pinned literal
     # anywhere, hedges stripped. This is the exact failure that reached RESULTS.md.
@@ -657,7 +681,8 @@ def self_test() -> int:
         + "\n\nY2H removes exactly the targeting constraint that makes the NOTCH2NLA "
         "pairing impossible in vivo.\n"
     )
-    expect_flag("withdrawn claim reinstated as PARAPHRASE with no pinned literal", paraphrased)
+    expect_flag("withdrawn claim reinstated as PARAPHRASE with no pinned literal", paraphrased,
+                match="compartment argument")
 
     # Happy: the real surfaces discuss the topic AND hedge it.
     expect_clean("compartment argument discussed and properly hedged", good)
@@ -690,12 +715,12 @@ def self_test() -> int:
     # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}
     expect_flag("results.json has no positioned residues (guard must not pass vacuously)",
-                good, motif=empty_motif)
+                good, motif=empty_motif, match="residue guard is vacuous")
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them
     # would shrink the scanned corpus and turn a partial dict into a false pass.
-    partial = m_partial = all_surfaces({"ADCK5-notes.md": good["ADCK5-notes.md"]})
+    partial = all_surfaces({"ADCK5-notes.md": good["ADCK5-notes.md"]})
     blanked = [k for k, v in partial.items() if not v.strip()]
     if blanked:
         failures.append(f"all_surfaces() blanked {blanked} when given a partial dict")

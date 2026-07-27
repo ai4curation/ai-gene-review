@@ -15,6 +15,12 @@ Outputs: `results.json`, `family_census.json`, `partner_localisation.json`,
 `ubib_family.fasta`, `ubib_family.aln.fasta`. Deleting the `.json`/`.fasta` files and
 re-running reproduces them byte-for-byte.
 
+All four scripts are **stdlib-only** (plus `mafft` on `PATH` for the alignment), so the bare
+`python3` invocations above work on a clean interpreter. That is deliberate: an interim
+version of the audit imported PyYAML, which would have made the documented command fail for
+anyone without it while working fine on the author's machine — a documentation defect that
+only shows up on someone else's.
+
 `audit_adck5_claims.py` re-reads the three JSON outputs and asserts that every residue call,
 census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
 `ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. It earned its keep, twice:
@@ -43,11 +49,17 @@ mattered most.** `_paragraphs()` split on blank lines, and `ADCK5-ai-review.yaml
 the `GO:0016020` row was silently satisfying the check for an unhedged claim in a *different
 annotation*. Found by the PR reviewer, and it is the fifth instance in this PR of one shape:
 **a check whose unit of analysis is coarser than the unit the claim lives in.** The splitter
-is now structure-aware — YAML is split per *scalar value* (each `summary`, `reason`,
-`gap_statement` is its own unit; 181 units, not 1), markdown keeps blank-line paragraphs —
-and the one-paragraph lookahead applies only to markdown, since an adjacent YAML scalar is
-usually an unrelated key. Fixing it immediately caught the row-3 summary, which had been
-asserting the argument flatly under a renamed label.
+now divides a YAML surface at every mapping key, so each `summary`, `reason` and
+`gap_statement` is its own unit — **233 units, not 1** — while markdown keeps blank-line
+paragraphs, and the one-paragraph lookahead applies only to markdown, since an adjacent YAML
+field is usually an unrelated key. Fixing it immediately caught the row-3 summary, which had
+been asserting the argument flatly under a renamed label.
+
+The split is a line scan rather than a YAML parse, for a reason worth stating: a parse needs
+a failure branch, and the only obvious fallback — treat the file as one blob — silently
+restores exactly the file-level behaviour this function exists to abolish. There is no parse
+and therefore no fallback, and a YAML surface that yields fewer than two units is a hard
+error naming the pattern to check.
 
 Residual limit, stated rather than hidden: in markdown a hedge more than one paragraph away
 still evades this, so withdrawing a claim still needs a human re-read.
@@ -58,9 +70,10 @@ squash-merge, so **the strongest test in the suite would have broken the moment 
 landed**. It is now frozen as
 `fixtures/historical_unhedged_compartment_paragraph.md`, and a self-test asserts that fixture
 is *excluded* from the live scan, since it preserves the bad text on purpose. And
-`expect_flag` now takes a `match=` naming the guard under test: replaying the historical
-paragraph fires **two** messages, only one of which is the compartment guard, so without
-`match=` that test could have passed on an unrelated check.
+`expect_flag` takes a `match=` naming the guard under test, on **all 19** call sites:
+replaying the historical paragraph fires **two** messages, only one of which is the
+compartment guard, so without `match=` that test could have passed on an unrelated check.
+Asserting that *something* failed is not asserting that the thing you were testing failed.
 
 Writing the audit exposed four defects in the audit itself, every one found by running the
 break-tests and none by reading it:
