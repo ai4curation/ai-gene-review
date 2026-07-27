@@ -206,7 +206,6 @@ def main() -> None:
         # the GUCY1B1 evidence-code guard must fire on a code change, not just
         # on absence - this is the distinction the review had to correct, so it
         # is the one that most needs a break test.
-        import unittest.mock
         real = globals()["query"]
 
         def fake_query(**kw):
@@ -268,9 +267,10 @@ def main() -> None:
         # or the verification is structurally blind.
         notes = (Path(__file__).resolve().parent.parent / "ADGB-notes.md").read_text()
         lines = table.split("\n")
-        missing = [ln for ln in lines if ln.strip() and ln not in notes]
+        compared = [ln for ln in lines if ln.strip()]
+        missing = [ln for ln in compared if ln not in notes]
         if missing:
-            print(f"\nNOTES MISMATCH: {len(missing)} of {len(lines)} table lines are "
+            print(f"\nNOTES MISMATCH: {len(missing)} of {len(compared)} table lines are "
                   f"not in ADGB-notes.md - regenerate the table there.")
             for ln in missing:
                 print("  missing:", ln)
@@ -283,8 +283,14 @@ def main() -> None:
                   f"{len(GLOBINS)} globins), built {len(data_rows)} - the "
                   f"comparison would have been vacuous.")
             sys.exit(1)
+        # Report the number actually compared, derived from the same list the
+        # comparison used - never a neighbouring variable. `data_rows` counts
+        # only header+globins and excludes the separator, so quoting it here
+        # understated the check by one and is exactly the hand-written-label-
+        # drifts-from-computed-value defect this campaign keeps hitting.
         print(f"Committed table in ADGB-notes.md matches a fresh query "
-              f"({len(data_rows)} lines compared, all of them).")
+              f"({len(compared)} lines compared, all of them; "
+              f"{len(data_rows)} of them data rows).")
 
 
 if __name__ == "__main__":

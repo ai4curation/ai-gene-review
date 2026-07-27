@@ -248,6 +248,18 @@ def check_core_function_consistency(doc: dict) -> list[str]:
     The reverse direction is the one that would otherwise go unwritten, and it is
     the direction that catches a core_functions entry quietly outliving the row
     that justified it.
+
+    SCOPE CAVEAT before anyone generalises this beyond ADGB. The reverse
+    direction requires every core_functions term to have an annotation row at
+    all, which makes it a *gene-local consistency* check, not a curation rule. A
+    reviewer may legitimately place a well-supported term in core_functions that
+    GOA does not carry - a genuine annotation gap is exactly the thing a review
+    is supposed to surface - and this check would flag it. That is correct here,
+    because every ADGB core term is backed by either a GOA row or an explicit
+    NEW row, which is the discipline this file follows. Generalising the check
+    would mean allowing a core term whose only backing is a NEW row, and
+    rejecting only those with no backing of any kind; the forward direction
+    generalises without change.
     """
     problems: list[str] = []
     core = core_function_terms(doc)
