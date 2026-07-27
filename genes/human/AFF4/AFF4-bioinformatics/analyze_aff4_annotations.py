@@ -680,6 +680,7 @@ AFF4_FUNCTIONAL_LITERATURE: list[tuple[str, str]] = [
     ("25730767", "CHOPS syndrome: gain-of-function AFF4 missense resistant to SIAH1-mediated degradation; altered genome-wide AFF4/cohesin/RNAP2 binding"),
     ("16024815", "Aff4-null mice: azoospermia, spermiogenesis arrest, Sertoli-cell expression"),
     ("36149892", "AFF4 promotes adipogenesis by directly activating ATG5/ATG16L1 transcription; adipose-specific Aff4 knockout"),
+    ("28955517", "AFF4 depletion inhibits and overexpression enhances osteogenic differentiation of human MSCs, with MSC-mediated bone formation in vivo; AFF1 does the opposite"),
     ("37528066", "AFF1 and AFF4 act antagonistically around the TSS to set elongation rate and termination"),
     ("37609817", "AFF4 knockdown lowers Ser2-phosphorylated Pol II and increases promoter-proximal pausing genome-wide"),
     ("39603240", "PNUTS-PP1 dephosphorylates AFF4 Ser-549, promoting Pol II pause release"),
@@ -826,7 +827,7 @@ def run_audit() -> dict:
         + ["20159561", "20471948", "23251033", "23471103", "24843025", "28134250",
            "31147444", "32128251", "25730767", "22483617", "16024815", "39603240",
            "37528066", "22895430", "24985467", "27731797", "37609817", "36149892",
-           "31238957", "17389929", "31466050", "11923441"]
+           "31238957", "17389929", "31466050", "11923441", "28955517", "32257529"]
     ))
     res["corrections"] = correction_status(review_pmids)
 
@@ -1117,6 +1118,11 @@ def render(res: dict) -> str:
         add("")
         add("No cited reference carries a retraction, erratum or expression of concern. Because")
         add("all three controls fired in the same call pattern, this zero is a measurement.")
+    else:
+        add("")
+        add(f"**{len(c['affected'])} cited reference(s) carry a correction and must be flagged in "
+            "the review.** The three controls fired in the same call pattern, so the detector is "
+            "working in both directions rather than only reporting nulls.")
     add("")
 
     add("## 9. Ontology relations the review depends on")

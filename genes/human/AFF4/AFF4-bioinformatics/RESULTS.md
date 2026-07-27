@@ -266,14 +266,15 @@ does GOA carry from it, over how many entities, and is AFF4 one of them? A row w
 | PMID:25730767 | CHOPS syndrome: gain-of-function AFF4 missense resistant to SIAH1-mediated degradation; altered genome-wide AFF4/cohesin/RNAP2 binding | 0 | 0 | **False** |
 | PMID:16024815 | Aff4-null mice: azoospermia, spermiogenesis arrest, Sertoli-cell expression | 2 | 1 | **False** |
 | PMID:36149892 | AFF4 promotes adipogenesis by directly activating ATG5/ATG16L1 transcription; adipose-specific Aff4 knockout | 0 | 0 | **False** |
+| PMID:28955517 | AFF4 depletion inhibits and overexpression enhances osteogenic differentiation of human MSCs, with MSC-mediated bone formation in vivo; AFF1 does the opposite | 0 | 0 | **False** |
 | PMID:37528066 | AFF1 and AFF4 act antagonistically around the TSS to set elongation rate and termination | 0 | 0 | **False** |
 | PMID:37609817 | AFF4 knockdown lowers Ser2-phosphorylated Pol II and increases promoter-proximal pausing genome-wide | 0 | 0 | **False** |
 | PMID:39603240 | PNUTS-PP1 dephosphorylates AFF4 Ser-549, promoting Pol II pause release | 23 | 4 | **False** |
 | PMID:22528490 | AFF4 induces AMPKalpha2 expression in hypothalamic neurons downstream of ghrelin | 0 | 0 | **False** |
 | PMID:31238957 | FUS interacts with AFF4 and forms nuclear condensates with it; FUS restrains AFF4/CDK9 promoter occupancy | 0 | 0 | **False** |
 
-Of **20** papers, **15** have produced no GO annotation anywhere in GOA,
-and **18** have produced none on AFF4 itself.
+Of **21** papers, **16** have produced no GO annotation anywhere in GOA,
+and **19** have produced none on AFF4 itself.
 
 | PMID | terms it did produce (entities each) |
 |---|---|
@@ -292,6 +293,7 @@ and **18** have produced none on AFF4 itself.
 | PMID:25730767 | *nothing* |
 | PMID:16024815 | GO:0007286 IMP (1); GO:0005634 IDA (1) |
 | PMID:36149892 | *nothing* |
+| PMID:28955517 | *nothing* |
 | PMID:37528066 | *nothing* |
 | PMID:37609817 | *nothing* |
 | PMID:39603240 | GO:0001111 IDA (4); GO:0032968 IDA (4); GO:0072357 IDA (4); GO:0004722 IDA (1); GO:0019888 IDA (1); GO:0140767 IDA (1); GO:0000785 IDA (1); GO:0005694 EXP (1) |
@@ -501,12 +503,13 @@ Spoke-expansion-only is SUFFICIENT to explain a specific absence such as ELL2's,
 
 ## 8. Retraction / erratum / expression-of-concern check
 
-- PMIDs checked: **30**
+- PMIDs checked: **32**
 - positive controls that fired: ['17994018', '32125225', '36563143'] (a retraction, an erratum with a PMID, and a corrigendum with a NULL PMID)
-- PMIDs with any flag: **0**
+- PMIDs with any flag: **2**
+    - 28955517: {'pubtype_flags': [], 'comments_corrections': [{'ref_type': 'ErratumIn', 'pmid': '32257529'}]}
+    - 32257529: {'pubtype_flags': ['Published Erratum'], 'comments_corrections': [{'ref_type': 'ErratumFor', 'pmid': '28955517'}]}
 
-No cited reference carries a retraction, erratum or expression of concern. Because
-all three controls fired in the same call pattern, this zero is a measurement.
+**2 cited reference(s) carry a correction and must be flagged in the review.** The three controls fired in the same call pattern, so the detector is working in both directions rather than only reporting nulls.
 
 ## 9. Ontology relations the review depends on
 

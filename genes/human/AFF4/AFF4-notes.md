@@ -35,7 +35,8 @@ of the five partners on the single reference `PMID:25416956`, four are unreplica
 screen hits and one (SIAH1) is independently confirmed by a purified-protein binding
 assay and is the mechanistic basis of the CHOPS disease mutations.
 
-Final `existing_annotations` count is **43 + 5 `NEW` proposals = 48**.
+Final `existing_annotations` count is **43 + 8 `NEW` proposals = 51**. Two of the eight
+(`GO:0045600`, `GO:0045669`) were added in response to review; see §14.
 
 ## 2. What AFF4 is
 
@@ -93,11 +94,11 @@ The mechanism, in the authors' words:
 
 ## 3. The headline finding: AFF4's GO record has almost none of this
 
-`AFF4-bioinformatics/RESULTS.md` §5b measures it. For each of 20 papers that
+`AFF4-bioinformatics/RESULTS.md` §5b measures it. For each of 21 papers that
 establish something about human AFF4, how many GO annotations exist anywhere in GOA
 from that reference, and is AFF4 among the annotated entities?
 
-**15 of 20 have produced no GO annotation anywhere in GOA; 18 of 20 have produced
+**16 of 21 have produced no GO annotation anywhere in GOA; 19 of 21 have produced
 none on AFF4.** The exceptions are `PMID:12065898` (nucleus + chromosome EXP) and
 `PMID:22195968` (`GO:0008023` IDA).
 
@@ -122,7 +123,7 @@ is the substrate UniProt curates from it.
 
 This is the inverse of the usual finding in this campaign. There is no
 over-propagation to unwind here; there is a **coverage gap**, and it is the review's
-main deliverable. Five `NEW` rows are proposed to close the part of it that current
+main deliverable. Eight `NEW` rows are proposed to close the part of it that current
 GO terms can express.
 
 ## 4. WITH/FROM: every token resolved
@@ -465,12 +466,21 @@ Subcellular additional location:  Nucleoli fibrillar center, Nuclear bodies
 
 ## 12. Cross-checks run, including the ones that came back empty
 
-- **Retraction / erratum / expression-of-concern**: 30 PMIDs checked by two routes
+- **Retraction / erratum / expression-of-concern**: **32** PMIDs checked by two routes
   (PublicationType *and* `CommentsCorrections/RefType`, because a Publisher Correction
-  is invisible to a pubtype search and a corrigendum can carry a null PMID). **Zero
-  flagged.** Three positive controls fired in the same call pattern — `32125225`
-  (retracted), `36563143` (`ErratumIn` with a PMID), `17994018` (corrigendum with a
-  **null** PMID) — so this zero is a measurement rather than a broken query.
+  is invisible to a pubtype search and a corrigendum can carry a null PMID). Three
+  positive controls fired in the same call pattern — `32125225` (retracted), `36563143`
+  (`ErratumIn` with a PMID), `17994018` (corrigendum with a **null** PMID) — so the
+  detector is demonstrably working in both directions.
+
+  It reported a clean zero over the first 30. Adding `PMID:28955517` in response to
+  review took it to **2 of 32**: that paper carries a **2020 erratum**
+  (`PMID:32257529`), which the check found rather than I did. The erratum's cached
+  record says only *"This corrects the article"*, so what was corrected cannot be
+  established from anything available here; that is stated as unknown in the reference
+  review and in the `GO:0045669` row rather than assumed immaterial. This is why the
+  check must be re-run whenever a reference is added, and why the report now renders a
+  non-zero result explicitly instead of only announcing nulls.
 - **Logical-opposite citation cross-product** (positive vs negative regulation of the
   same process sharing references): AFF4's GOA contains **no** positive/negative
   regulation pair at all, so the check is vacuous here. Stated rather than skipped.
@@ -625,7 +635,25 @@ by its passing:
    refinement: on a MODIFY row the subject is the **proposed replacement**, not the term
    being moved away from.
 
-7. **A one-directional check that licensed a tidy story — caught by hand, not by a gate,
+7. **A duplicate YAML key that silently deleted a curated field — invisible to
+   `just validate` and to `checkquotes.py`, caught only by the strict loader.** While
+   inserting the erratum reference, my anchor matched an *entry prefix* (`- id:` plus
+   `title:`) rather than a complete record, so the new block landed **inside**
+   `PMID:32128251`'s record and orphaned that record's `reference_review` as a second
+   `reference_review:` key on the new entry. PyYAML keeps the **last** occurrence, so
+   `PMID:32128251` silently lost its review and `PMID:32257529` acquired the wrong one.
+   `just validate` reported `✓ Valid`; `checkquotes.py` reported 116 quotes and 0
+   problems. **Both walk the parsed document, and the data was gone before either ran.**
+   Only check A saw it. Two rules follow: anchor an insertion on a record's **last**
+   line, never its first; and reconcile the **raw** count of a key against the parsed
+   count after any structural edit — 42 vs 42 is what confirms the fix, and it is the
+   only signal available.
+8. **A ` #` inside a plain YAML scalar starts a comment and truncates the value.**
+   Writing "PR #2348" into a `core_functions` description silently ended the scalar at
+   "PR", which surfaced as a parser error two lines later rather than at the cause. The
+   sweep now asserts every `core_functions` description ends with a full stop, which
+   catches truncation regardless of what caused it.
+9. **A one-directional check that licensed a tidy story — caught by hand, not by a gate,
    and worth recording as such.** The explanation offered for the missing ELL2 row was
    "GOA does not export spoke-expanded IntAct records as IPI". Measuring only the forward
    direction (do GOA's partners have binary records? yes, all nine) made that read as the
@@ -669,3 +697,53 @@ uv run --with requests python audit_aff4_review.py --self-test          # break-
 
 `RESULTS.md` is generated; do not hand-edit it, and re-run `checkquotes.py` after any
 regeneration, because a `file:` quote into a generated artifact is a two-way dependency.
+
+## 16. Review round: the two items the reviewer was right about
+
+Both blocking items were correct and both are now addressed. Recording them because the
+second one changed the review's factual content, not just its citations.
+
+**1. `GO:0045600 positive regulation of fat cell differentiation` — proposed.** The
+reviewer's argument was an internal-consistency one and it lands: this review proposed a
+`NEW` row for `GO:0043923`, a viral hijack it calls non-core, while leaving the
+best-evidenced endogenous human process to a curation request. `PMID:36149892` is the one
+AFF4 process paper carrying **requirement and sufficiency and an in vivo test** — siRNA
+knockdown in human MSCs and 3T3-L1, overexpression, and an adipose-specific `Aff4`
+knockout mouse — with the mechanism mapped to direct activation of `ATG5`/`ATG16L1`. If
+that combination does not earn a row, nothing in this gene's record does.
+
+**2. `PMID:28955517` — cached, cited, and it produced a second row plus an erratum.** The
+`description` asserted an osteogenic role whose only source in this PR was the affinage
+record: the single provider-only claim in a review that spends a commit tightening exactly
+that practice elsewhere, and in the one field that is supposed to be project-independent.
+Reading the paper made three things true that I had not known:
+
+- The evidence is stronger than "in vitro only". siRNA depletion of AFF4 in **human** MSCs
+  inhibits osteogenic potential, overexpression enhances it, and both are confirmed *in
+  vivo* by MSC-mediated bone formation. So `GO:0045669 positive regulation of osteoblast
+  differentiation` is proposed too, on the same footing as the adipogenic row. My
+  pre-reading plan had been to withhold it as in vitro-only — a plan the abstract refuted.
+- It is the cleanest evidence anywhere that **AFF4 and AFF1 are not interchangeable**:
+  depleting AFF1 *increases* alkaline phosphatase activity and mineralisation while
+  depleting AFF4 does the opposite. That is the differentiation counterpart of the
+  elongation antagonism in `PMID:37528066`, and the concurrent AFF1 review independently
+  records `GO:0045668` — the *negative* term — for that gene. Two independently derived
+  reviews landing on opposite-signed terms for the same process is the strongest
+  cross-check this pair has produced.
+- **It carries a 2020 erratum**, `PMID:32257529`, which the committed check found rather
+  than I did — the corrections check went from 0 of 30 to **2 of 32** purely by adding the
+  reference. The erratum's cached record says only *"This corrects the article"*, so the
+  scope is unknown and is stated as unknown in both the reference review and the
+  `GO:0045669` row, which is flagged `DISPUTED` rather than `VERIFIED` for that reason.
+
+The four non-blocking items were also taken. `GO:0050877`'s CHOPS clause is **withdrawn**
+(§5) because using a gain-of-function developmental phenotype as evidence of molecular
+involvement is the move the `GO:0032968` row explicitly refuses, and a review cannot
+refuse it in one place and rely on it in another; the row stays `KEEP_AS_NON_CORE` on the
+donors' own evidence and the term's breadth. `GO:0003712` moved from `molecular_function`
+to `contributes_to_molecular_function`, removing an unexplained asymmetry with
+`GO:0003711` and converging with the AFF1 review. The nine `GO:0030674` MODIFY rows now
+state what licenses the replacement — the gene's aggregate structural evidence, not each
+row's own reference. And the `GO:0006354` reason now rests its verdict on the WITH/FROM
+fact that is checkable from the committed GOA tables, citing the sibling review as a
+cross-reference rather than as evidence.
