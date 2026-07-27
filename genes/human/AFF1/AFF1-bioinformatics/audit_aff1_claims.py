@@ -654,8 +654,14 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
                       "would pass vacuously")
     doc = yaml.load(REVIEW.read_text(), Loader=StrictLoader)
 
+    # Only genuinely multivalued slots. `contributes_to_molecular_function`,
+    # `molecular_function` and `in_complex` are SINGLE-valued in the schema, so
+    # including them could never yield a pair -- an unreachable branch that reads as
+    # coverage is worse than no branch, because it looks like protection.
     MULTI = ("directly_involved_in", "locations", "anatomical_locations",
-             "substrates", "contributes_to_molecular_function")
+             "substrates")
+    single_valued_skipped = ("molecular_function",
+                             "contributes_to_molecular_function", "in_complex")
     pairs_checked = 0
     hits = []
     for i, cf in enumerate(doc.get("core_functions") or []):
@@ -689,12 +695,17 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
     for h in sorted(set(hits)):
         problems.append(f"redundant ancestry inside one slot: {h}")
     return {"pairs_checked": pairs_checked, "closures_available": len(cl),
+            "slots_checked": list(MULTI),
+            "single_valued_slots_not_applicable": list(single_valued_skipped),
             "hits": sorted(set(hits))}
 
 
 # ---------------------------------------------------------------------------
 # I. shared append-only cache: ask the two questions separately
 # ---------------------------------------------------------------------------
+
+CACHE_PATH_OVERRIDE: list[Path | None] = [None]
+
 
 def check_shared_cache(problems: list[str]) -> dict[str, Any]:
     """`cache/go/terms.csv` is shared, append-only state, and the naive check gives
@@ -723,7 +734,10 @@ def check_shared_cache(problems: list[str]) -> dict[str, Any]:
         return r.stdout
 
     rel = "cache/go/terms.csv"
-    path = REPO / rel
+    # Overridable so the break-test can point at a temp COPY. Mutating shared,
+    # cross-branch state in place and relying on a finally-block to put it back is
+    # one interpreter crash away from leaving another gene's row deleted.
+    path = CACHE_PATH_OVERRIDE[0] or (REPO / rel)
     if not path.exists():
         raise Problem(f"missing {rel}")
 
@@ -1056,36 +1070,40 @@ def self_test() -> int:
     run_case("a slot lists a term together with its own ancestor",
              mut_redundant_ancestor, "redundant ancestry inside one slot")
 
-    def mut_delete_cache_row() -> None:
-        # Delete a row that exists at the MERGE BASE, which is a real clobber, and
-        # assert the check distinguishes it from the moving-tip artefact.
-        cache = REPO / "cache/go/terms.csv"
-        lines = cache.read_text().splitlines(keepends=True)
+    print("self-test: shared-cache deletion guard (on a COPY, never the real file)")
+    import tempfile
+    real_cache = REPO / "cache/go/terms.csv"
+    original_cache_bytes = real_cache.read_bytes()
+    with tempfile.TemporaryDirectory() as td:
+        copy = Path(td) / "terms.csv"
+        lines = real_cache.read_text().splitlines(keepends=True)
         victim = next((i for i, l in enumerate(lines)
                        if l.startswith("GO:0005634,")), None)
         if victim is None:
-            raise Problem("no GO:0005634 row to delete; fixture drifted")
-        cache_backup.append(cache.read_text())
-        cache.write_text("".join(lines[:victim] + lines[victim + 1:]))
-    # This mutation touches a file outside REVIEW/NOTES, so run_case's restore does
-    # not cover it -- restore explicitly.
-    cache_backup: list[str] = []
-    try:
-        before_problems, _ = audit()
-        mut_delete_cache_row()
-        if not cache_backup:
-            failures.append("cache-deletion mutation was a no-op")
+            failures.append("no GO:0005634 row to delete; cache fixture drifted")
         else:
-            problems, _ = audit()
-            hit = [x for x in problems if "DELETED curies present at the merge base" in x]
-            if hit:
-                print(f"  ok   deleted a shared-cache row: {hit[0][:100]}")
+            copy.write_text("".join(lines[:victim] + lines[victim + 1:]))
+            if copy.read_text() == real_cache.read_text():
+                failures.append("cache-deletion mutation was a no-op")
             else:
-                failures.append("shared-cache deletion guard did not fire; got "
-                                f"{[x[:60] for x in problems][:3]}")
-    finally:
-        if cache_backup:
-            (REPO / "cache/go/terms.csv").write_text(cache_backup[0])
+                CACHE_PATH_OVERRIDE[0] = copy
+                try:
+                    problems, _ = audit()
+                finally:
+                    CACHE_PATH_OVERRIDE[0] = None
+                hit = [x for x in problems
+                       if "DELETED curies present at the merge base" in x]
+                if hit:
+                    print(f"  ok   deleted a shared-cache row: {hit[0][:95]}")
+                else:
+                    failures.append(
+                        "shared-cache deletion guard did not fire; got "
+                        f"{[x[:60] for x in problems][:3]}")
+    # The real cache must be byte-identical: the break-test never touched it.
+    if real_cache.read_bytes() != original_cache_bytes:
+        failures.append("the shared cache was modified by the self-test")
+    else:
+        print("  ok   the real cache/go/terms.csv is byte-identical afterwards")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making

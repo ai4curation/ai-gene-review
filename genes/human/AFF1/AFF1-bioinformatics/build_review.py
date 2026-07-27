@@ -479,13 +479,11 @@ verdict(("GO:0010468", "IEA", "GO_REF:0000002"),
         "reported role in translation, RNA stability or any other post-transcriptional "
         "layer, and the family's defining biochemistry is occupancy of a "
         "transcription-elongation complex. So IPR007797 supports the more precise term "
-        "for every protein it matches, and the mapping is what should move. Noted "
-        "rather than claimed as a benefit, because the PR reviewer was right to press "
-        "on it: on THIS gene the row is redundant either way - today it is an ancestor "
-        "of the GO:0006355 the gene already holds by IBA, and after the refinement it "
-        "would duplicate that row exactly. Removing a redundancy is therefore doing no "
-        "work here, and the reason it is still worth filing is the family-wide "
-        "precision gain."),
+        "for every protein it matches, and the mapping is what should move. On THIS "
+        "gene the row is redundant either way - today it is an ancestor of the "
+        "GO:0006355 the gene already holds by IBA, and after the refinement it would "
+        "duplicate that row exactly - so no gene-level redundancy is removed by the "
+        "change, and the family-wide precision gain is the whole of the case for it."),
     proposed_replacement_terms=[dict(GO0006355)],
     supported_by=sb(Q_SEC_PURIFIED),
     propagation_review=prop("NO_FAILURE_CORE", ["GRANULARITY_MISMATCH"],
@@ -1144,13 +1142,11 @@ def build() -> dict:
                 "vivo, and removing DKK1 abolishes the effect of excess AFF1. This is "
                 "a tissue-specific output of the same elongation activity rather than "
                 "a separate biochemistry, and it is one of the places where AFF1 and "
-                "its closest paralogue AFF4 act in opposite directions. It is kept as "
-                "a core function, unlike the nervous-system row which uses similar "
-                "language and is not, because of the evidence rather than the "
-                "tissue-specificity: this rests on human loss- and gain-of-function in "
-                "the cell type concerned plus an intermediate whose removal abolishes "
-                "the effect, where the nervous-system claim has no human data and no "
-                "identified mechanism."),
+                "its closest paralogue AFF4 act in opposite directions. The axis is "
+                "established in both directions in human cells: reducing AFF1 raises "
+                "the osteogenic markers and raising it lowers them, and removing DKK1 "
+                "abolishes the effect of excess AFF1, so DKK1 is the operative "
+                "intermediate rather than a correlate."),
             "supported_by": sb(Q_KD_ALP, Q_OE_ALP, Q_CHIP_DKK1, Q_RESCUE, Q_INVIVO,
                                Q_OPPOSITE),
             "directly_involved_in": [
@@ -1174,10 +1170,9 @@ def build() -> dict:
         "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
         "description": (
             "AFF1 (also called AF4, and the founding member of the AF4/FMR2 family) is "
-            "a large, largely intrinsically disordered nuclear protein - about "
-            "three-quarters of its 1210 residues are intrinsically disordered - that "
-            "works as a scaffold rather than as an enzyme or a sequence-specific "
-            "DNA-binding factor. It is the subunit that holds together one branch of "
+            "a large nuclear protein, about three-quarters of whose 1210 residues are "
+            "intrinsically disordered, that works as a scaffold rather than as an "
+            "enzyme or a sequence-specific DNA-binding factor. It is the subunit that holds together one branch of "
             "the super elongation complex: it is constitutively bound to the "
             "CDK9-cyclin T kinase P-TEFb and is present in every major P-TEFb "
             "assembly, and a short motif in its middle folds onto the ANC1-homology "
