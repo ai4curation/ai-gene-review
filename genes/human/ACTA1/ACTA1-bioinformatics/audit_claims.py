@@ -128,8 +128,14 @@ def required_claims() -> list[tuple[str, str, int]]:
         ("eight descendant nodes", "the IRD negation count that places ACTA1 on the accepting side", 2),
         ("PTN000940351", "the conventional-actin node asserting GO:0005200", 3),
         ("PTN000233075", "the self-referential PAN-GO node behind the stress fiber row", 3),
-        ("F-actin (all)", "Reactome's generic polymer, the vehicle for the epithelial pathways", 3),
-        ("0.56", "the IntAct MI-score shared by all seven two-hybrid partners", 3),
+        # Minimums are SURFACE counts. These two are review-and-notes claims: the Reactome
+        # generic-polymer finding and the IntAct MI-score are curation evidence, not outputs
+        # of any script in this directory, so requiring them in RESULTS.md would be requiring
+        # the wrong thing - and padding RESULTS.md to satisfy a lint is how a lint starts
+        # shaping the prose instead of checking it. They were only ever reaching 3 because
+        # the old check summed occurrences across surfaces.
+        ("F-actin (all)", "Reactome's generic polymer, on the review and the notes", 2),
+        ("0.56", "the IntAct MI-score shared by all seven two-hybrid partners", 2),
     ]
     if NUCLEOTIDE.exists():
         nt = json.loads(NUCLEOTIDE.read_text())
@@ -231,10 +237,17 @@ def check(surfaces: dict[str, str]) -> list[str]:
         # lint that insists on one spelling reports a false positive rather than a
         # regression. Satisfied if ANY variant reaches the minimum.
         variants = claim if isinstance(claim, tuple) else (claim,)
-        best = max(sum(t.count(v) for t in surfaces.values()) for v in variants)
-        if best < minimum:
+        # Count SURFACES that contain the claim, not total occurrences summed across them.
+        # Summing defeats the whole point of this lint: P08023 occurs 13/2/2 across the
+        # three surfaces, so a minimum of 3 was satisfied 17 times over and would still
+        # have passed with every mention deleted from the review YAML - which is exactly
+        # the corrected-at-all-but-one-site failure the module docstring is about.
+        present = [n for n, t in surfaces.items() if any(v in t for v in variants)]
+        if len(present) < minimum:
+            missing = sorted(set(surfaces) - set(present))
             problems.append(
-                f"claim {variants!r} appears {best}x at best, expected >= {minimum} ({why})"
+                f"claim {variants!r} is on {len(present)} surface(s) {sorted(present)}, "
+                f"expected >= {minimum}; missing from {missing} ({why})"
             )
 
     # The action tally in the notes must match the YAML it describes.

@@ -279,7 +279,12 @@ def main() -> None:
             if i != -1:
                 positions[pep] = i + 1 + (0 if form == "orf" else MATURE_START - 1)
                 break
-    confined = bool(diff) and all(v <= n_term_limit for v in positions.values())
+    # NOT `bool(diff) and all(...)`: with that, a run in which the two forms agree
+    # completely - an empty symmetric difference, the best possible outcome - evaluates
+    # False and is reported as corruption. `all()` over an empty set is already True,
+    # which is the correct reading: nothing disagrees, so nothing disagrees off the
+    # N-terminus.
+    confined = all(v <= n_term_limit for v in positions.values())
     counts_agree = len(orf_unique) == len(unique)
 
     print(f"  (ORF form gives {len(orf_unique)} distinguishing peptides; counts "

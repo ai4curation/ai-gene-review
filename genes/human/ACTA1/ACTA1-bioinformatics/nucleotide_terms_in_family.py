@@ -8,7 +8,8 @@ narrower than "the family".
 SCOPE. The member list comes from interpro/panther/PTHR11937/PTHR11937-entries.csv,
 which this repo builds from InterPro's **reviewed-only** protein endpoint
 (fetch_interpro_family_simple.py: /protein/reviewed/entry/...). That is 533 Swiss-Prot
-entries, against the 88,887 proteins PTHR11937's own metadata reports - about 0.6%. So
+entries, against the ~88,887 proteins PTHR11937's own metadata reports (parsed from
+PTHR11937-metadata.yaml, not transcribed) - about 0.6%. So
 every count here is over the REVIEWED subset, and the script says so in its output and
 in its JSON keys. A claim about the whole family is not something this measurement makes.
 
@@ -41,6 +42,7 @@ a member annotated only to a child term is counted rather than missed.
 """
 import csv
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -49,7 +51,9 @@ import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ENTRIES = HERE.parents[3] / "interpro" / "panther" / "PTHR11937" / "PTHR11937-entries.csv"
+FAMILY_DIR = HERE.parents[3] / "interpro" / "panther" / "PTHR11937"
+ENTRIES = FAMILY_DIR / "PTHR11937-entries.csv"
+METADATA = FAMILY_DIR / "PTHR11937-metadata.yaml"
 OUT = HERE / "nucleotide_terms_in_family.json"
 
 TERMS = {
@@ -72,6 +76,23 @@ def get(url: str) -> dict:
             last = exc
             time.sleep(3)
     raise RuntimeError(f"failed after 4 attempts: {url}") from last
+
+
+def family_protein_total() -> int:
+    """Total proteins in PTHR11937, PARSED from the family metadata.
+
+    The numerator (533 reviewed members) is read from a file, so the denominator must be
+    too. Transcribing it would leave the only hand-typed number in this script free to go
+    stale: a refreshed member list would move the numerator and fire the audit, while the
+    denominator and the derived percentage silently would not.
+    """
+    if not METADATA.exists():
+        raise SystemExit(f"missing {METADATA}; the PANTHER family cache is required")
+    for line in METADATA.read_text().splitlines():
+        m = re.match(r"\s*proteins:\s*(\d+)\s*$", line)
+        if m:
+            return int(m.group(1))
+    raise RuntimeError(f"no `proteins:` count found in {METADATA.name}")
 
 
 def members() -> list[str]:
@@ -121,9 +142,10 @@ def holders(accs: list[str], go_id: str) -> dict[str, dict]:
 
 def main() -> None:
     accs = members()
+    total = family_protein_total()
     print(f"{len(accs)} REVIEWED (Swiss-Prot) PTHR11937 members, batched {BATCH} at a time")
-    print(f"  scope: {len(accs)} of the 88,887 proteins PTHR11937 metadata reports "
-          f"({len(accs) / 88887:.1%}); InterPro's /protein/reviewed/ endpoint is "
+    print(f"  scope: {len(accs)} of the {total:,} proteins PTHR11937 metadata reports "
+          f"({len(accs) / total:.1%}); InterPro's /protein/reviewed/ endpoint is "
           "reviewed-only, so nothing here is a claim about the whole family")
     per_term = {go: holders(accs, go) for go in TERMS}
 
@@ -148,8 +170,8 @@ def main() -> None:
         "member_scope": "reviewed (Swiss-Prot) members only, from InterPro's "
                         "/protein/reviewed/ endpoint",
         "n_reviewed_members_queried": len(accs),
-        "n_proteins_in_family_per_panther_metadata": 88887,
-        "fraction_of_family_measured": round(len(accs) / 88887, 4),
+        "n_proteins_in_family_per_panther_metadata": total,
+        "fraction_of_family_measured": round(len(accs) / total, 4),
         "terms": TERMS,
         "holders": {
             go: {a: {"symbol": r["symbol"], "evidence": sorted(r["evidence"])}
