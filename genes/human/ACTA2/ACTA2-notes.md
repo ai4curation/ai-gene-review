@@ -261,11 +261,15 @@ peritubular myoid cells and myofibroblasts. Several GOA rows are the residue of 
   seed, rat Acta2 — whose own evidence for that exact term is itself only an `IBA`. The
   descendant IDA it does hold is the basement-membrane row above. **This row is the review's one
   `REMOVE`, and I changed my mind about it.** My first pass wrote `MARK_AS_OVER_ANNOTATED` on the
-  ground that ACTA2 really is detected extracellularly. Two checks dissolved that ground. (The
-  single-seed fact itself is readable from the cached PAINT export —
-  `PTHR11937  PTN004322804  GO:0005576  C  IBD  false  RGD:621676` — and *not* from the GOA
-  WITH/FROM field, which names the node and the rat gene without distinguishing donor from
-  co-recipient.) First,
+  ground that ACTA2 really is detected extracellularly. Two checks dissolved that ground.
+  (Two facts here, kept apart. *Who seeded the node* is readable **directly from the GOA row** —
+  the WITH/FROM is two tokens, `PANTHER:PTN004322804|RGD:621676`, one tree node and exactly one
+  gene product — and the cached PAINT export
+  `PTHR11937  PTN004322804  GO:0005576  C  IBD  false  RGD:621676` says it independently. The
+  *circularity* is a different claim: that seed is also a co-recipient, carrying the identical
+  `GO:0005576` IBA from the same node, so its own evidence for the exact term is an IBA. I had
+  wrongly hedged the first as unreadable from GOA; the seed id simply arrives in RGD's namespace
+  rather than as a UniProt accession.) First,
   the detection is already carried by this gene's own two HDA rows (`GO:0005576` from tears,
   `GO:0070062` from urinary exosomes) under `located_in` — the correct, weaker qualifier — so
   removing the IBA deletes an unsupported *functional* claim and keeps every observation. Second,
