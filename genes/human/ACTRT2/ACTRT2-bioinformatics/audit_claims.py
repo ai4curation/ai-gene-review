@@ -9,8 +9,10 @@ separate sweeps. The reviewer's diagnosis is the reason this file exists:
 
 So a per-string grep is structurally the wrong check. This lint works on **claims**: each entry
 pairs a set of retracted *patterns* (regexes, so paraphrases are caught) with an optional required
-counter-claim and an expected occurrence count. Every text field of the review YAML and the whole
-notes file are scanned, so a claim cannot hide in a field nobody thought to grep.
+counter-claim and the number of distinct text **surfaces** that must carry it - surfaces, not
+occurrences, which is what `required_min_surfaces` is named for. Every text field of the review YAML
+plus the whole notes file and RESULTS.md are scanned, so a claim cannot hide in a field nobody
+thought to grep.
 
 Design notes, each from something that actually went wrong here:
 
@@ -22,10 +24,18 @@ Design notes, each from something that actually went wrong here:
 * **Require the replacement, not just the absence of the error.** Deleting a wrong sentence and
   writing nothing is also a defect, so load-bearing corrections carry a `required` pattern with a
   minimum count.
-* **Fail loudly, and test by breaking.** `--selftest` injects each retracted phrasing into a copy
-  of the text and asserts the lint catches it, because a checker that reports zero on a broken
-  input is worse than no checker. This file's own predecessors in this campaign "reached 'reports
-  zero on a broken file' three times in development, each caught by trying to break it".
+* **Fail loudly, and test by breaking.** `--selftest` does four things, and the third is the one
+  that does the real work. It (1) checks a literal probe can be built from each pattern, (2) injects
+  that probe as a surface and requires `audit()` to report it, (3) **asserts scan coverage** - that
+  the walk actually reaches `review.description`, a list-nested review path, the notes and
+  RESULTS.md - and (4) sabotages the scan and requires `audit()` to stop passing. Step 3 is not
+  decoration: injection alone passes even when the real-file scan is gutted, because
+  `audit(extra=...)` appends to `surfaces()`, so of the three ways this lint was deliberately broken
+  during development (`surfaces()` returning `[]`, `review_strings()` losing its list recursion, and
+  inverting the search) injection caught only the third. An earlier version of this mode did none of
+  (2)-(4) at all: it compared a regex against a string built from that same regex, and so printed
+  success without testing anything - the "reports zero on a broken input" state the mode exists to
+  prevent, committed inside the file added to prevent it.
 
 Usage:
     uv run python audit_claims.py            # lint; exit 1 on any violation

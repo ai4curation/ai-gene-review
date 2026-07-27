@@ -465,6 +465,23 @@ def probe_named_sites(struct_seq, struct_numbers) -> dict:
     return out
 
 
+# The three reference sets that carry arguments. Module-level, so `panel_length_audit` can ASSERT
+# that no length-flagged member is in them rather than claim it in a note string, and so
+# `synthesise` cannot drift from a second copy.
+FILAMENT_BUILDERS = {
+    "P60709", "P63261", "P68133", "P68032",  # conventional actins: extend F-actin
+    "P45891",  # Arp53D: a divergent actin that polymerises
+    "P61163",  # ACTR1A: builds the dynactin minifilament
+}
+NUCLEATORS_NOT_POLYMERISERS = {"P61160", "P61158"}  # Arp2, Arp3
+PT_COMPLEX_ARPS = {"Q8TDG2", "Q8TDY3", "Q9BYD9", "Q9Y615", "Q8TC94"}
+ARGUMENT_CARRYING_SETS = {
+    "filament_builders": FILAMENT_BUILDERS,
+    "nucleators_not_polymerisers": NUCLEATORS_NOT_POLYMERISERS,
+    "pt_complex_arps": PT_COMPLEX_ARPS,
+}
+
+
 def panel_length_audit(struct_seq: str) -> dict:
     """Flag panel members too short to contain the fold, BEFORE their tallies are believed.
 
@@ -482,6 +499,22 @@ def panel_length_audit(struct_seq: str) -> dict:
     cutoff = ref * 0.75
     flagged = {acc: lengths[acc] for acc in lengths if lengths[acc] < cutoff}
     ok = sorted(v for a, v in lengths.items() if a not in flagged)
+    if not ok:
+        raise RuntimeError(
+            f"every panel member is shorter than the {cutoff:.1f} aa cutoff; the panel or the "
+            "structure is wrong and no tally from it can be trusted"
+        )
+    # ASSERTED, not asserted-in-prose: a flagged member must not appear in any set that carries an
+    # argument. If a future panel change puts one there, this fails here rather than shipping a
+    # conclusion drawn from absent residues.
+    for name, members in ARGUMENT_CARRYING_SETS.items():
+        overlap = sorted(set(flagged) & members)
+        if overlap:
+            raise RuntimeError(
+                f"length-flagged panel member(s) {overlap} are in the argument-carrying set "
+                f"{name!r}; their tallies partly reflect absent residues, so a conclusion drawn "
+                "from that set would be unsound"
+            )
     return {
         "structure_observed_length": ref,
         "cutoff_length": round(cutoff, 1),
@@ -490,10 +523,11 @@ def panel_length_audit(struct_seq: str) -> dict:
         f"{max(flagged.values()) if flagged else 'n/a'} aa, so the cut lies in an observed gap",
         "lengths": {targets[a]: lengths[a] for a in sorted(lengths, key=lambda x: lengths[x])},
         "flagged_too_short_for_the_fold": {targets[a]: v for a, v in flagged.items()},
+        "flagged_accessions": sorted(flagged),
         "note": "Tallies for a flagged member are NOT comparable: gaps and apparent substitutions "
-        "may reflect absent residues rather than divergence. No conclusion in this analysis rests "
-        "on a flagged member - the filament-builder, nucleator and PT-complex reference sets are "
-        "listed explicitly in `synthesis` and contain none of them.",
+        "may reflect absent residues rather than divergence.",
+        "argument_carrying_sets_checked": sorted(ARGUMENT_CARRYING_SETS),
+        "flagged_members_in_argument_carrying_sets": [],  # asserted empty above, not merely claimed
     }
 
 
@@ -1305,7 +1339,11 @@ def main() -> None:
 # ---------------------------------------------------------------------- report
 
 
-def _panel_table(panel: dict, scheme: str, subset_label: str | None = None) -> list[str]:
+def _panel_table(panel: dict, scheme: str, subset_label: str | None = None,
+                 flagged: set[str] | None = None) -> list[str]:
+    """`flagged` marks members too short to contain the fold, in the table where a reader compares
+    their numbers - a warning several hundred lines earlier is not where the row is read."""
+    flagged = flagged or set()
     rows = panel[scheme]
     header = "| protein | % id (full length) | identical | conservative | non-conservative | gap |"
     sep = "|---|---|---|---|---|---|"
@@ -1314,9 +1352,11 @@ def _panel_table(panel: dict, scheme: str, subset_label: str | None = None) -> l
         sep = sep[:-1] + "---|"
     lines = [header, sep]
     for acc, rec in sorted(rows.items(), key=lambda kv: -kv[1]["identical"]):
+        mark = " **[TRUNCATED - not comparable]**" if acc in flagged else ""
         line = (
-            f"| {rec['label']} ({acc}) | {rec['pct_identity_full_length']} | {rec['identical']} | "
-            f"{rec['conservative']} | {rec['non_conservative']} | {rec['gap']} |"
+            f"| {rec['label']} ({acc}){mark} | {rec['pct_identity_full_length']} | "
+            f"{rec['identical']} | {rec['conservative']} | {rec['non_conservative']} | "
+            f"{rec['gap']} |"
         )
         if subset_label:
             s = rec["subset"]
@@ -1333,18 +1373,14 @@ def synthesise(r: dict) -> dict:
     but is NOT a reported member of that complex, which makes it the internal control that
     distinguishes "the PT complex" from "expressed in testis".
     """
-    pt_arps = {"Q8TDG2", "Q8TDY3", "Q9BYD9", "Q9Y615", "Q8TC94"}
+    pt_arps = PT_COMPLEX_ARPS
     # Two classes that must NOT be merged. The first draft of this function put Arp2 and Arp3
     # into a single "known polymerisers" set, which made the report assert that ACTRT2's
     # 14/38 interface was "below" Arp3's 5/38 - false, and caught only by reading the rendered
     # sentence. Arp2/3 nucleate a filament without extending one, and their own protomer
     # interface is correspondingly degenerate, so they bound the wrong side of the comparison.
-    filament_builders = {
-        "P60709", "P63261", "P68133", "P68032",  # conventional actins: extend F-actin
-        "P45891",  # Arp53D: a divergent actin that polymerises
-        "P61163",  # ACTR1A: builds the dynactin minifilament
-    }
-    nucleators_not_polymerisers = {"P61160", "P61158"}  # Arp2, Arp3
+    filament_builders = FILAMENT_BUILDERS
+    nucleators_not_polymerisers = NUCLEATORS_NOT_POLYMERISERS
     his161_reference_set = filament_builders | nucleators_not_polymerisers
     probe = r["nucleotide_site"]["named_site_probe"]
     h161 = {acc: rec["sites"]["H161"]["aligned_residue"] for acc, rec in probe.items()}
@@ -1465,6 +1501,8 @@ def render(r: dict) -> str:
     L: list[str] = []
     a = L.append
     inp = r["inputs"]
+    # Accessions too short to contain the fold, marked in every table where their numbers are read.
+    FLAGGED = set(r["nucleotide_site"]["panel_length_audit"]["flagged_accessions"])
     a("# ACTRT2: does the actin fold still do actin things, and does the GO record hold up?")
     a("")
     a("All numbers below are computed by `analyze_actrt2.py` from live UniProt, RCSB, QuickGO and")
@@ -1520,12 +1558,12 @@ def render(r: dict) -> str:
     first = list(ALIGNMENT_SCHEMES)[0]
     a(f"Scheme {first}:")
     a("")
-    L.extend(_panel_table(ns["panel"], first))
+    L.extend(_panel_table(ns["panel"], first, flagged=FLAGGED))
     a("")
     second = list(ALIGNMENT_SCHEMES)[1]
     a(f"Robustness, scheme {second}:")
     a("")
-    L.extend(_panel_table(ns["panel"], second))
+    L.extend(_panel_table(ns["panel"], second, flagged=FLAGGED))
     a("")
     calls = ns["panel"][first][ACTRT2]["calls"]
     lost = [f"{v['actin_residue']}->{v['aligned_residue']}" for v in calls.values()
@@ -1546,11 +1584,11 @@ def render(r: dict) -> str:
     a("")
     a(f"Scheme {first}:")
     a("")
-    L.extend(_panel_table(fi["panel"], first, subset_label="D-loop"))
+    L.extend(_panel_table(fi["panel"], first, subset_label="D-loop", flagged=FLAGGED))
     a("")
     a(f"Robustness, scheme {second}:")
     a("")
-    L.extend(_panel_table(fi["panel"], second, subset_label="D-loop"))
+    L.extend(_panel_table(fi["panel"], second, subset_label="D-loop", flagged=FLAGGED))
     a("")
     a("A tally can hide which residues were lost, so the D-loop contact positions are also")
     a("printed as a motif. This is where the comparison discriminates: both")
