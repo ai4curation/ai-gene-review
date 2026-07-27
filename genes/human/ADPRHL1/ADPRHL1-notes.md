@@ -36,6 +36,20 @@ catalytic loss correctly and deliberately gave the ARH2 clade nothing.** That is
 control that makes the rest of this review an argument rather than an opinion: a curation body
 *can* get this right, and one did.
 
+**All 20 recipients were resolved individually rather than read off the symbol column**, and
+the Swiss-Prot/TrEMBL split is stated because an unreviewed entry's *name* is an automatic
+label and must not be cited as evidence of what a protein does:
+
+| status | n | detail |
+|---|---|---|
+| reviewed (Swiss-Prot) | 4 | P54922 human, P54923 mouse, Q02589 rat, Q32KR8 bovine — all `ADPRH` |
+| unreviewed (TrEMBL) with gene name `ADPRH`/`adprh` | 11 | macaque, opossum, platypus, dog, chicken, pig, gorilla, chimp, *X. tropicalis*, *X. laevis* adprh.L and adprh.S |
+| unreviewed, no gene name | 5 | sea urchin, horse, anole, spotted gar, amphioxus `LOC118404985` |
+
+Every one of the 20 is named "ADP-ribosylhydrolase ARH1" and **none is an ARH2**. The
+gene-name column carries the claim for 15 of 20; for the remaining 5 it rests on the PANTHER
+node placement plus the automatic name, which is weaker — and saying so is the point.
+
 ## The central question: does the pseudoenzyme premise hold?
 
 It holds, on four independent lines, one of which is a direct measurement.
@@ -67,8 +81,10 @@ annotatable.
 `[file:human/ADPRHL1/ADPRHL1-uniprot.txt "lacks the metal-binding and substrate-binding residues"]`
 (CAUTION) and
 `[file:human/ADPRHL1/ADPRHL1-uniprot.txt "showing no activity against O-acetyl-ADP-ribose"]`
-(FUNCTION). The feature table carries **zero** `BINDING` and **zero** `ACT_SITE` features,
-against **20** on ADPRH (P54922) and **17** on ADPRS/ARH3 (Q9NX46).
+(FUNCTION). The feature table carries **zero** `BINDING` and **zero** `ACT_SITE` features.
+For comparison ADPRH (P54922) has 14 such features spanning **20 distinct residue
+positions**, and ADPRS/ARH3 (Q9NX46) 14 spanning **17** — the census works in positions,
+because `binding_sites()` expands ranged features.
 
 ### 3. My own residue census, with an identity-matched positive control
 

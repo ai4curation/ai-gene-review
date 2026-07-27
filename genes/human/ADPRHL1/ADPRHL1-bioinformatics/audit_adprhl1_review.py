@@ -352,8 +352,8 @@ def self_test() -> list[str]:
 
     # G: prose contradicting its own action must fire...
     contra = raw.replace(
-        "    reason: >-\n      A fold-derived metal-binding term",
-        "    reason: >-\n      Accepted. A fold-derived metal-binding term",
+        "    reason: >-\n      Removed on the term's own provenance",
+        "    reason: >-\n      Accepted. Removed on the term's own provenance",
         1,
     )
     assert contra != raw, "self-test G: anchor string absent, mutation was a no-op"
@@ -362,9 +362,9 @@ def self_test() -> list[str]:
     # G2: ...but an ATTRIBUTED cross-reference must NOT fire. A guard that forbids
     #     legitimate practice gets circumvented rather than obeyed.
     ok = raw.replace(
-        "    reason: >-\n      A fold-derived metal-binding term",
-        "    reason: >-\n      Unlike the sarcomere rows, which are accepted, this is a "
-        "fold-derived metal-binding term",
+        "    reason: >-\n      Removed on the term's own provenance",
+        "    reason: >-\n      Unlike the sarcomere rows, which are accepted, this row is "
+        "removed on the term's own provenance",
         1,
     )
     assert ok != raw, "self-test G2: anchor string absent, mutation was a no-op"

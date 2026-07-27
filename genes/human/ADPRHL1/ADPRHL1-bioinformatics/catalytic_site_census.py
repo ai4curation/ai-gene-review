@@ -17,9 +17,10 @@ measurement rather than by family name.
 Method
 ------
 1. The reference site set is taken from UniProt's OWN annotated ``Binding site``
-   features on P54922 (ADPRH_HUMAN) -- 13 distinct positions, split into the
-   Mg(2+) ligands and the substrate-contacting residues. Nothing here is
-   hand-assigned.
+   features on P54922 (ADPRH_HUMAN). Those 14 features include ranges, which
+   ``binding_sites()`` expands, giving **20 distinct positions** -- 6 Mg(2+)
+   ligands and 14 substrate-contacting residues. Nothing here is hand-assigned,
+   and the number is printed in the report rather than asserted here.
 2. Every member is globally aligned to P54922 (BLOSUM62, gap open -11, extend
    -1) and each reference position is mapped through the alignment.
 3. Each mapped residue is scored identical / conservative (BLOSUM62 > 0) /
@@ -30,10 +31,14 @@ Method
 
 Controls, because a zero and a broken query look identical
 ----------------------------------------------------------
-* POSITIVE (must score high): the four other reviewed ADPRH orthologues,
-  including *Dictyostelium* at ~30% identity. If a genuine ARH1 at 30% identity
-  scores as badly as ADPRHL1 at 46%, the measurement is reporting alignment
-  noise, not biology.
+* POSITIVE (must score high): the four other reviewed ADPRH orthologues. The
+  one that carries the argument is *Dictyostelium* Q54H71, which **measures
+  48.4% identity** to human ADPRH -- essentially the same distance as ADPRHL1's
+  42.6-47.7%, so it is an **identity-matched** control, not a low-identity one.
+  (The design was drafted expecting ~30%; the measurement moved it, and the
+  matched comparison is the stronger test: if a genuine ARH1 at the same
+  distance scored as badly as ADPRHL1, the result would be alignment noise
+  rather than biology.)
 * POSITIVE at low identity: *R. rubrum* DraG (P14300, 294 aa), a
   characterised ADP-ribosylarginine hydrolase with its own EXP evidence.
 * DISCRIMINATING: ADPRS/ARH3 orthologues -- genuinely active enzymes that sit at
@@ -84,7 +89,7 @@ PANEL: dict[str, list[str]] = {
         "P54923",  # mouse
         "Q02589",  # rat
         "Q32KR8",  # bovine
-        "Q54H71",  # Dictyostelium discoideum -- distant positive control
+        "Q54H71",  # Dictyostelium discoideum -- IDENTITY-MATCHED positive control (48.4%)
     ],
     "ARH2 / ADPRHL1 (SUBJECT clade)": [
         "Q8NDY3",  # human -- the gene under review
