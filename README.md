@@ -398,3 +398,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines incl
 ## Credits
 
 This project uses the template [monarch-project-copier](https://github.com/monarch-initiative/monarch-project-copier)
+
