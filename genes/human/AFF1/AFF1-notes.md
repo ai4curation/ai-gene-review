@@ -486,6 +486,40 @@ gene-level differences, not propagation defects.
 AFF1 and AFF4 have **opposite** effects on osteogenesis (`PMID:28955517`), so any term moved
 between them in either direction inverts the biology. Neither review does this.
 
+## Two findings from merging after AFF4 landed
+
+**A byte-identical WITH/FROM field can mean different things on two genes — AFF4's observation, and
+it sharpens this review's own.** The shared `GO:0006354` IBA row carries
+`PANTHER:PTN000829417|UniProtKB:P51825` on *both* genes. Verified here rather than taken on report:
+the two GOA fields are byte-identical, and `P51825` **is AFF1** — so on AFF1's row that token is the
+**target itself** (a self-referential IBD, a PAINT curator judging the function core) while on AFF4's
+row the same token is a **paralogue**. Same field, different evidential status. That is a genuinely
+useful distinction this review did not draw, and it does not change the verdict here: the
+polymerase-specificity argument for `GO:0006368` rests on the node asserting a Pol II-specific
+complex term of the same 79 recipients, not on who the seed is. Both positions are on the record in
+the two merged reviews, which is the right outcome.
+
+**Reviewing two members of one family concurrently duplicates the shared term cache by
+construction.** Predicted by the campaign brief and observed exactly. AFF4 needed the same two GO
+terms this gene needed — `GO:0003711` and `GO:0032783` — and appended them independently. When AFF4
+merged first, `git merge origin/main` produced a **line-based union that kept both copies**:
+`GO:0003711` ×2 and `GO:0032783` ×2, caught by `cache_lint` exiting non-zero and by a multiset
+(not set) comparison. A set comparison would have sailed straight through, since both curies were
+present.
+
+The resolution was to **rebuild rather than merge**: take main's file verbatim, append only rows
+whose curie main lacks, and assert the four union properties before writing. Here the append set was
+**empty** — main already carried both curies — so `cache/go/terms.csv` became byte-identical to main
+and dropped out of this PR's diff entirely. Note this is *not* the forbidden
+`git checkout origin/main -- cache/go/terms.csv` clobber: that is unsafe when the branch holds rows
+main lacks, and the precondition `set(mine) - set(main) == {}` was checked before relying on it.
+
+The same-folder PANTHER artefacts collided the same way, harmlessly: both agents fetched
+`PTHR10528` within 13 microseconds of each other, so `PTHR10528-metadata.yaml` conflicted add/add on
+its `fetched_date` line alone — verified as the *only* difference by diffing the two blobs before
+accepting main's copy, with `PTHR10528-entries.csv` byte-identical. Five publications AFF4 also
+fetched were byte-identical too, so no full-text downgrade was possible on any of them.
+
 ## Where the review effort actually went
 
 For whoever reviews AFF2, AFF3 or AFF4 next. This section has been rewritten twice and the file's
