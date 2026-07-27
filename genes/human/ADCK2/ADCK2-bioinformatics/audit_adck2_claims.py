@@ -282,19 +282,34 @@ def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
 _DIST_TO_IMPORT = {"biopython": "Bio", "pyyaml": "yaml", "requests": "requests"}
 
 
-def _declared_dependencies(directory: Path) -> set[str]:
-    """Top-level import names declared in this directory's pyproject.toml."""
+def _declared_dependencies(directory: Path) -> tuple[set[str], list[str]]:
+    """Top-level import names declared in this directory's pyproject.toml.
+
+    Returns (import names, unmapped distribution names). Anchored on a line-initial
+    ``dependencies`` key so a ``dev-dependencies``/``optional-dependencies`` table
+    appearing first is not parsed instead. Every degenerate path yields an empty set,
+    which makes the caller REPORT rather than excuse -- the correct bias for a classifier
+    whose failure mode is excusing a defect.
+    """
     pyproject = directory / "pyproject.toml"
     if not pyproject.exists():
-        return set()
-    block = re.search(r"dependencies\s*=\s*\[(.*?)\]", pyproject.read_text(), re.S)
+        return set(), []
+    block = re.search(r"^dependencies\s*=\s*\[(.*?)\]", pyproject.read_text(),
+                      re.S | re.M)
     if not block:
-        return set()
-    names = set()
+        return set(), []
+    names: set[str] = set()
+    unmapped: list[str] = []
     for raw in re.findall(r"[\"']([^\"']+)[\"']", block.group(1)):
-        dist = re.split(r"[<>=!~\[; ]", raw.strip(), 1)[0].lower()
-        names.add(_DIST_TO_IMPORT.get(dist, dist.replace("-", "_")))
-    return names
+        dist = re.split(r"[<>=!~\[; ]", raw.strip(), maxsplit=1)[0].lower()
+        if dist not in _DIST_TO_IMPORT:
+            # An unmapped dist is not silently guessed at: guessing would drop it from the
+            # declared set on the next dependency whose import name differs from its
+            # distribution name, quietly re-opening the failure this classifier fixes.
+            unmapped.append(dist)
+            continue
+        names.add(_DIST_TO_IMPORT[dist])
+    return names, unmapped
 
 
 def _is_missing_declared_dep(exc: BaseException, path: Path, module_name: str) -> bool:
@@ -306,7 +321,15 @@ def _is_missing_declared_dep(exc: BaseException, path: Path, module_name: str) -
         return False
     if (path.parent / f"{missing}.py").exists():
         return False  # a sibling script, so a genuine intra-repo break
-    return missing.split(".")[0] in _declared_dependencies(path.parent)
+    top = missing.split(".")[0]
+    declared, _unmapped = _declared_dependencies(path.parent)
+    if top not in declared:
+        return False
+    # A bad SUBMODULE of a dependency that IS installed is a defect in the sibling script,
+    # not a missing wheel: "import requests.sessionz" raises with name requests.sessionz,
+    # whose top-level component is declared and present. Only an absent top-level package
+    # is an environment fact.
+    return importlib.util.find_spec(top) is None
 
 
 _MODULE_CACHE: dict[str, object] = {}
@@ -445,20 +468,47 @@ def check_import_failure_reporter(problems: list[str]) -> None:
                 f"import reporter: two calls emitted {notices} SKIPPED notices, expected "
                 f"exactly 1 (announce once per path, not once per run)"
             )
-        # And the classifier must not call an undeclared module a dependency.
-        undeclared = ModuleNotFoundError("No module named 'definitely_not_declared'")
-        undeclared.name = "definitely_not_declared"
-        if _is_missing_declared_dep(undeclared, fake, "_x"):
+        # The classifier must excuse exactly one thing: a declared dependency that is
+        # genuinely absent. Everything else is a defect in the code under audit.
+        def _mnfe(name: str) -> ModuleNotFoundError:
+            exc = ModuleNotFoundError(f"No module named '{name}'")
+            exc.name = name
+            return exc
+
+        if _is_missing_declared_dep(_mnfe("definitely_not_declared"), fake, "_x"):
             problems.append(
                 "import classifier: an UNDECLARED missing module was classified as an "
                 "environment fact; an undeclared or misspelled import is a code defect."
             )
-        declared = ModuleNotFoundError("No module named 'requests'")
-        declared.name = "requests"
-        if not _is_missing_declared_dep(declared, fake, "_x"):
+        if _is_missing_declared_dep(_mnfe("requests.sessionz"), fake, "_x"):
             problems.append(
-                "import classifier: a DECLARED dependency (requests) was not recognised, "
-                "so a missing wheel would report as a claim defect."
+                "import classifier: a bad SUBMODULE of an installed declared dependency "
+                "was excused as a missing wheel; requests is present, so that is a typo "
+                "in the sibling script."
+            )
+        # The absent-wheel branch depends on the environment, so it is unreachable while
+        # every declared dependency is installed. Reached by scoping find_spec to report
+        # the package absent, restored immediately -- the only way to exercise it at all.
+        real_find_spec = importlib.util.find_spec
+        try:
+            importlib.util.find_spec = (
+                lambda n, *a, **k: None if n == "requests" else real_find_spec(n, *a, **k)
+            )
+            if not _is_missing_declared_dep(_mnfe("requests"), fake, "_x"):
+                problems.append(
+                    "import classifier: a DECLARED dependency that is absent was not "
+                    "recognised, so a missing wheel would report as a claim defect."
+                )
+        finally:
+            importlib.util.find_spec = real_find_spec
+        # Every declared distribution must be mapped, or it silently leaves the declared
+        # set and re-opens the failure this classifier exists to fix.
+        _declared, unmapped = _declared_dependencies(HERE)
+        if unmapped:
+            problems.append(
+                f"import classifier: declared distributions with no entry in "
+                f"_DIST_TO_IMPORT: {sorted(unmapped)}. Add their import names; guessing "
+                f"would drop them from the declared set silently."
             )
     finally:
         for k, v in saved.items():
@@ -566,9 +616,12 @@ def run(review_text: str | None = None, notes_text: str | None = None) -> list[s
     check_motif_claims(doc, notes, results, problems)
     check_retracted_phrasings(raw, notes, problems)
     check_sweep_exclusions_disclosed(raw, notes, problems)
-    # None of the three below needs a gate: the two unit pins inspect sibling modules
-    # rather than the document, and the raw/parsed check now inspects whichever document
-    # run() was given instead of re-reading REVIEW from disk.
+    # None of the checks below needs a gate, for two reasons. The unit pins inspect
+    # sibling modules or this file's own helpers rather than the document, so the
+    # caller's overrides cannot affect them. And the raw/parsed check now inspects
+    # whichever document run() was given instead of re-reading REVIEW from disk.
+    # Deliberately phrased without a count: two earlier versions of this comment named a
+    # number that the next commit changed, which is the N-1 shape the header opens with.
     check_import_failure_reporter(problems)
     check_false_friend_helper(problems)
     check_prose_join_helper(problems)
