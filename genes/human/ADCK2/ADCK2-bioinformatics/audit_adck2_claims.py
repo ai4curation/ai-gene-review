@@ -282,10 +282,12 @@ def _load_local_module(path: Path):
     --self-test), returning None if it cannot be imported.
 
     Two non-obvious requirements. The module must be registered in ``sys.modules`` before
-    execution, because ``@dataclass`` resolves its class's ``__module__`` through it and
-    dies with an opaque AttributeError otherwise. And an import failure is returned rather
-    than raised, because a check that raises aborts every later check in this harness --
-    the rule this file states in its own header.
+    execution -- documented practice for ``spec_from_file_location`` generally, and the
+    observed failure here was ``@dataclass`` resolving its class's ``__module__`` through
+    ``sys.modules`` and dying with an opaque ``AttributeError``; that was the symptom that
+    surfaced it, not necessarily the only consumer. And an import failure is returned
+    rather than raised, because a check that raises aborts every later check in this
+    harness -- the rule this file states in its own header.
     """
     key = str(path)
     if key not in _MODULE_CACHE:
@@ -299,6 +301,16 @@ def _load_local_module(path: Path):
             sys.modules.pop(name, None)
             _MODULE_CACHE[key] = None
             _MODULE_CACHE[key + ":error"] = f"{type(exc).__name__}: {exc}"
+            # A third-party import the sibling script needs but this environment lacks is
+            # an environment fact, not a defect in the review. Conflating the two would
+            # make a missing wheel read as a claim failure and, because run(base) is
+            # evaluated before every mutation, abort --self-test entirely -- turning a
+            # degraded harness into an unrunnable one.
+            _MODULE_CACHE[key + ":environmental"] = (
+                isinstance(exc, ModuleNotFoundError)
+                and getattr(exc, "name", None) not in (None, name)
+                and not (path.parent / f"{exc.name}.py").exists()
+            )
         else:
             _MODULE_CACHE[key] = mod
     return _MODULE_CACHE[key]
@@ -307,6 +319,19 @@ def _load_local_module(path: Path):
 def _import_problem(path: Path) -> str:
     return (f"could not import {path.name}: "
             f"{_MODULE_CACHE.get(str(path) + ':error', 'unknown error')}")
+
+
+def _report_import_failure(path: Path, problems: list[str]) -> None:
+    """Append a problem for a genuine break; announce loudly and skip for a missing
+    third-party dependency, so a degraded environment never masquerades as a defect and
+    never silently reduces coverage either."""
+    err = _MODULE_CACHE.get(str(path) + ":error", "unknown error")
+    if _MODULE_CACHE.get(str(path) + ":environmental"):
+        print(f"  SKIPPED unit pin on {path.name}: {err} "
+              f"(environment lacks a dependency; this is not a claim defect, but the "
+              f"check did NOT run)")
+        return
+    problems.append(_import_problem(path))
 
 
 def check_prose_join_helper(problems: list[str]) -> None:
@@ -323,7 +348,7 @@ def check_prose_join_helper(problems: list[str]) -> None:
         return
     mod = _load_local_module(motif)
     if mod is None:
-        problems.append(_import_problem(motif))
+        _report_import_failure(motif, problems)
         return
     fn = getattr(mod, "_english_list", None)
     if fn is None:
@@ -355,7 +380,7 @@ def check_false_friend_helper(problems: list[str]) -> None:
         return
     mod = _load_local_module(sweep)
     if mod is None:
-        problems.append(_import_problem(sweep))
+        _report_import_failure(sweep, problems)
         return
     fn = getattr(mod, "matched_only_via_quinoline", None)
     if fn is None:
@@ -438,9 +463,9 @@ def run(review_text: str | None = None, notes_text: str | None = None) -> list[s
     check_motif_claims(doc, notes, results, problems)
     check_retracted_phrasings(raw, notes, problems)
     check_sweep_exclusions_disclosed(raw, notes, problems)
-    # Neither of these depends on the caller's overrides, and neither needs a gate:
-    # the helper check inspects the sweep module, and the raw/parsed check now inspects
-    # whichever document run() was given.
+    # None of the three below needs a gate: the two unit pins inspect sibling modules
+    # rather than the document, and the raw/parsed check now inspects whichever document
+    # run() was given instead of re-reading REVIEW from disk.
     check_false_friend_helper(problems)
     check_prose_join_helper(problems)
     check_raw_vs_parsed(raw, problems)

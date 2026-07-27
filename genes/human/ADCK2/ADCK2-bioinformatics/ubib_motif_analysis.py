@@ -494,8 +494,9 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
         else:
             L.append(
                 f"At the adjacent `Arich_A1` position Gly is carried by "
-                f"{_english_list(sorted(a1_gly))}, a subset of the A339-equivalent Gly "
-                f"set, so that column neither supports nor contradicts the pairing."
+                f"{_english_list(sorted(a1_gly)) if a1_gly else 'no protein'}, a subset "
+                f"of the A339-equivalent Gly set, so that column neither supports nor "
+                f"contradicts the pairing."
             )
     else:
         L.append(
