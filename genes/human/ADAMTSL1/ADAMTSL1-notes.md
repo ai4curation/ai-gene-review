@@ -282,6 +282,42 @@ dropped because the UniProt `CC` block wraps mid-list. Corrected by hand in the 
   evidence, rather than no functional observation of any kind. `PMID:39880678` is likewise
   now a `references` entry rather than a notes-only mention.
 
+## 8b. The one molecular-function experiment ever done on ADAMTSL1, and it is negative
+
+Found late, and not by me: the concurrent ADAMTSL3 review surfaced it. `PMID:22242013` is
+titled *"Microenvironmental regulation by fibrillin-1"*, so no ADAMTSL1-keyed search reaches
+it; it is absent from ADAMTSL1's GOA and from the affinage record. It is the campaign's
+"a paper titled for something else holds your gene's answer" lesson in its partner-named form.
+
+Two direct SPR negatives for human ADAMTSL1, in a panel where its relatives were positive:
+
+- [PMID:22242013 "ADAMTSL-2, -3, and papilin polypeptides interacted with the N-terminal half of fibrillin-1, while ADAMTSL-1 did not."]
+- [PMID:22242013 "However, neither ADAMTSL-2 nor -1 bound to ADAMTS-10, indicating that ADAMTS enzymes may partner only with specific ADAMTSL proteins."]
+
+So the two partners that place ADAMTSL2, ADAMTSL3 and ADAMTSL6/THSD4 in the fibrillin-1
+pathway have both been tested for ADAMTSL1 and both were negative. This is a **measured
+negative, not an absence**, which makes it much stronger than the silence this review was
+otherwise working against.
+
+**The caveat is the isoform question again.** The methods say
+*"Recombinant full length ADAMTSL-1, -2, LTBP-1, -4 ... were covalently coupled to CM5 sensor
+chips"* but never give a length, and the Apte lab stated five years later that no construct
+for the 1762-residue form existed. Both RefSeqs were available in 2012 (`NP_443098` = isoform 1,
+525 aa; `NP_001035362` = isoform 3, 1762 aa), so the paper alone does not settle it, and the
+balance of evidence favours punctin-1. Recorded as a **bounded** negative: firm for whatever
+was assayed, and probably untested for the nine extra TSRs, four Ig-like domains and PLAC
+domain of the long form.
+
+**What it changed in this review.** Ground two of the `GO:0030198` reason — "a non-catalytic
+route to the term is available to this architecture" — is now explicitly qualified, because
+the specific route the relatives use is excluded for this protein. It does not flip the verdict
+to `MARK_AS_OVER_ANNOTATED`: `GO:0030198` is far broader than fibrillin-1 binding, and
+excluding one mechanism is not refuting the process. But it removes the strongest mechanistic
+analogy, and it is a further reason the term cannot be called core. The MF `knowledge_gap` is
+now bounded on both sides — what is established, *and* what has been measured and excluded —
+and the proposed binding experiment became an unbiased partner search rather than the
+candidate SPR I had originally proposed, which would have repeated a published negative.
+
 ## 9. What ADAMTSL1 is, in one paragraph
 
 A large secreted ADAMTS-like glycoprotein of the extracellular matrix, built from
