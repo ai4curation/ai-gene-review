@@ -687,6 +687,15 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
                     if not RETRACTION_CONTEXT.search(ctx_ok):
                         n_tally_claims_enforced += 1
         # And any stated total must equal the number of entries.
+        # Deliberately NO RETRACTION_CONTEXT exemption here, unlike the tally
+        # sub-clause beside it. The asymmetry is intentional: nothing in either
+        # surface states a total inside retraction context, and an exemption with no
+        # live instance is a bypass waiting to be used rather than coverage -- the
+        # same reason the retraction predicate was not widened into a general
+        # "quotation" exemption. If a retracted total is ever written, the guard
+        # firing is the correct outcome and the exemption can be added then, with a
+        # break-test for it.
+        #
         # Stated totals. The prose form ("N annotation entries") matched NOTHING in
         # either surface, so this sub-clause was silently checking zero -- the same
         # vacuity the table branch above was written to fix. Match the table row
@@ -843,7 +852,18 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
         ic_id = ic.get("id") if isinstance(ic, dict) else None
         if not ic_id:
             continue
-        anc = cl.get(ic_id) or []
+        # `cl.get(ic_id) or []` would silently report "none in the current
+        # document" for a MISSING closure -- the same silent-nothing class fixed one
+        # level down in this file, and inconsistent with every other closure lookup
+        # here, which raises a problem. Be loud instead.
+        anc = cl.get(ic_id)
+        if anc is None:
+            problems.append(
+                f"core_functions[{i}].in_complex asserts {ic_id} but no closure was "
+                f"fetched for it, so the in_complex/locations rationale would report "
+                f"'none' for a reason that is really 'not checked' -- re-run the "
+                f"analysis script")
+            continue
         locs = cf.get("locations") or []
         loc_ids = [(x.get("id") if isinstance(x, dict) else x) for x in locs]
         for lid in loc_ids:
