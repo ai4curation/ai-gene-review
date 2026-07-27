@@ -163,19 +163,37 @@ stellate cells.
 
 ## 6. `GO:0005576 extracellular region` IBA — the full chain
 
-`PTN004322804` has a **single** IBD seed, `RGD:621676` = rat `Acta2`. Rat Acta2's own annotation
-under `GO:0005576` is `GO:0005604 basement membrane` IDA from `PMID:30476341`, a fetal-rat-testis
-retinoic-acid/phthalate toxicology study
-[PMID:30476341 "Humans are universally exposed to low levels of phthalate esters (phthalates),
-which are used to plasticize polyvinyl chloride."]. The reference-projection check on it comes
-back **negative** for projection — 13 annotations over 7 entities, and only Acta2 got the
-localisation IDA while the other six got retinoic-acid-response IEP terms — so this is genuine
-per-protein curation, not a complex-to-subunit spread. That negative is worth recording: the
-problem is not that the source is fabricated, it is that
+`PTN004322804` has a **single** IBD seed, `RGD:621676` = rat `Acta2`. The chain has to be stated
+carefully, because the first version of these notes ran two independent routes together and a
+cross-check against the parallel ACTA2 review caught it.
+
+- **The seed gene is also a recipient.** Rat Acta2's own `GO:0005576` annotation is
+  `GO:0005576 IBA GO_REF:0000033` with `PANTHER:PTN004322804` and `RGD:621676` — the identical
+  row human ACTG2 carries, citing this node and rat Acta2's own identifier. A self-referential
+  IBA is a normal PAINT construct, not by itself a defect, but it means the seed's exact-term
+  annotation is the node's own output and is not independent support.
+- **No non-IBA evidence for the exact term exists in the chain.** Rat Acta2's only non-IBA
+  annotation anywhere under `GO:0005576` is `GO:0005604 basement membrane` IDA from
+  `PMID:30476341`, a fetal-rat-testis retinoic-acid/phthalate toxicology study
+  [PMID:30476341 "Humans are universally exposed to low levels of phthalate esters (phthalates),
+  which are used to plasticize polyvinyl chloride."]. The PAINT table records which *gene* seeded
+  an IBD, not which of its annotations justified it, so identifying that IDA as the underlying
+  basis is an inference — the only candidate, but an inference.
+- **That IDA reaches human by a different route, and not to ACTG2.** Human ACTA2 carries
+  `GO:0005604` IEA from `GO_REF:0000107` with `UniProtKB:P62738` — Ensembl Compara, a different
+  term, evidence code and reference from the IBA. Human ACTG2 carries **no** `GO:0005604` row at
+  all. The two chains are independent and must not be merged.
+
+The reference-projection check on `PMID:30476341` comes back **negative** for projection — 13
+annotations over 7 entities, and only Acta2 got the localisation IDA while the other six got
+retinoic-acid-response IEP terms — so this is genuine per-protein curation, not a
+complex-to-subunit spread. That negative is worth recording: the problem is not that the source
+is fabricated, it is that
 
 1. the source is the **paralog** (Acta2), in **rat**, in **fetal testis**;
-2. the term was **generalised upward** from `basement membrane` to `extracellular region`, the
-   inverse of the ACRV1 case where a propagation landed above its donor; and
+2. the only experimental anchor sits three levels below the term the node asserts, so the node
+   asserts something no experiment in the chain measured — the inverse of the ACRV1 case, where
+   a propagation landed above its donor; and
 3. the qualifier is `is_active_in`, which asserts that ACTG2 performs its molecular function in
    the extracellular region.
 
