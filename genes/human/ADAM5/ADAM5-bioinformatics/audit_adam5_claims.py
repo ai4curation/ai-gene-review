@@ -72,6 +72,7 @@ def check_numbers(res: dict, problems: list) -> int:
     """Every figure the prose asserts, re-derived from results.json."""
     aln = res["alignment_to_macaque"]
     panel, census = res["panel"], res["go_census"]
+    fam = res["family_wide"]
     cov = aln["reference_feature_coverage"]
     deletion = aln["internal_reference_deletions"][0]
 
@@ -93,6 +94,27 @@ def check_numbers(res: dict, problems: list) -> int:
         "detector fires (7)": (len(res["detector"]["fires"]), 7),
         "detector clean (5)": (len(res["detector"]["clean"]), 5),
         "analysis reported no problems": (res["problems"], []),
+        # Signature ids named in suggested_questions and the notes. Before with_from was
+        # added to the projection these two were the only figures in the package not pinned
+        # by the artifact -- grepping results.json for either returned nothing.
+        "IPR001590 is a GO:0004222 source on mouse Adam5": (
+            "InterPro:IPR001590" in census["Q3TTE0"]["GO:0004222"]["with_from"], True),
+        "PTN000224844 is a GO:0004222 source on mouse Adam5": (
+            "PANTHER:PTN000224844" in census["Q3TTE0"]["GO:0004222"]["with_from"], True),
+        "IPR001590 is a GO:0004222 source on ADAM2": (
+            "InterPro:IPR001590" in census["Q99965"]["GO:0004222"]["with_from"], True),
+        "PTN000224844 is a GO:0004222 source on ADAM2": (
+            "PANTHER:PTN000224844" in census["Q99965"]["GO:0004222"]["with_from"], True),
+        # Family-wide figures quoted in suggested_questions, the notes and RESULTS.md.
+        "reviewed family members measured (331)": (fam["reviewed_members_measured"], 331),
+        "family total proteins (29886)": (fam["family_total_proteins"], 29886),
+        "fold+zinc annotated (204/204)": (
+            (fam["fold_with_zinc_site_annotated_GO_0004222"], fam["fold_with_zinc_site"]), (204, 204)),
+        "fold-no-zinc annotated (37/40)": (
+            (fam["fold_without_zinc_site_annotated_GO_0004222"], fam["fold_without_zinc_site"]), (37, 40)),
+        "panel members reproduced family-wide (10)": (fam.get("panel_members_reproduced"), 10),
+        "panel members absent from family (ADAM10, ADAM17)": (
+            fam.get("panel_members_absent_from_family"), ["O14672", "P78536"]),
     }
     for label, (observed, want) in expected.items():
         if observed != want:
@@ -124,8 +146,11 @@ def check_required(texts: dict[str, str], problems: list) -> int:
     correction would satisfy the retracted-phrase check trivially.
     """
     required = {
-        REVIEW.name: ["dispersed across", "ADAM6 (14q32.33)"],
-        NOTES.name: ["16q12.1", "14q32.33", "not* one contiguous cluster"],
+        REVIEW.name: ["dispersed across", "ADAM6 (14q32.33)", "331 Swiss-Prot reviewed members",
+                      "PTN000224844", "IPR001590"],
+        NOTES.name: ["16q12.1", "14q32.33", "not* one contiguous cluster",
+                     "331 Swiss-Prot reviewed members", "29,886"],
+        RESULTS_MD.name: ["Swiss-Prot reviewed members", "reviewed subset"],
     }
     n = 0
     for name, needles in required.items():
@@ -192,6 +217,20 @@ def self_test() -> int:
     check_numbers(perturbed, probs)
     if not probs:
         failures.append("number check did not fire on a perturbed deletion length")
+
+    perturbed2 = json.loads(json.dumps(res))
+    perturbed2["family_wide"]["fold_without_zinc_site_annotated_GO_0004222"] = 0
+    probs = []
+    check_numbers(perturbed2, probs)
+    if not probs:
+        failures.append("number check did not fire on a perturbed family-wide figure")
+
+    perturbed3 = json.loads(json.dumps(res))
+    perturbed3["go_census"]["Q3TTE0"]["GO:0004222"]["with_from"] = []
+    probs = []
+    check_numbers(perturbed3, probs)
+    if not probs:
+        failures.append("number check did not fire when the signature ids were removed")
 
     # ...and must stay silent on the real one (a check can be wrong about success too).
     probs = []

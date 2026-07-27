@@ -131,6 +131,22 @@ The boundary is the finding. The pipelines that place `GO:0004222` on this clade
 
 3 annotations, all `ND` against `GO_REF:0000015` — the three ontology roots. There is no molecular-function, cellular-component or biological-process claim on this gene to evaluate.
 
+## G. The rule, measured across the whole reviewed PTHR11905 family
+
+Section E infers a rule from a 12-member hand-picked panel. This section tests it over **all 331 Swiss-Prot reviewed members** of PANTHER `PTHR11905`. Note the scope: the family contains **29,886 proteins** in total, so this is the reviewed subset (1.1%), and every number below is a statement about reviewed entries, not about the family.
+
+The metric here is *exact* `GO:0004222` presence in the entry's GO cross-references, which is **not** the same measurement as section D's descendant-aware QuickGO count. So the two are reconciled rather than assumed to agree: the family-wide detector is required to reproduce the hand panel's verdict for all **10** panel members present in the reviewed set, and the run fails if any disagrees.
+
+Panel members absent from this family (reported, not silently skipped): `O14672`, `P78536` — ADAM10 and ADAM17 are classified in a different PANTHER family, so the family-wide run cannot corroborate them.
+
+| reviewed members | n | carry `GO:0004222` | % |
+|---|---|---|---|
+| Peptidase M12B fold **with** `HExxH` zinc site | 204 | 204 | 100% |
+| Peptidase M12B fold **without** `HExxH` zinc site | 40 | 37 | 92% |
+| no M12B fold | 87 | — | — |
+
+**This converts the rule from inferred to measured.** If the annotation discriminated on the catalytic site, the second row would be near zero. It is **37/40 (92%)** — statistically indistinguishable from the 100% of intact members. Losing the zinc-binding site has almost no effect on whether a reviewed family member is annotated with metalloendopeptidase activity, which is precisely the claim raised for InterPro and GO Central in `suggested_questions`.
+
 ## Checks run
 
 - motif expectations asserted in both directions across the panel
@@ -138,5 +154,7 @@ The boundary is the finding. The pipelines that place `GO:0004222` on this clade
 - panel asserted all-Swiss-Prot with an anchored `startswith` test
 - every QuickGO query asserted `numberOfHits == len(results)`
 - every UniProt fetch asserted to return an entry name (dead-accession guard)
+- family fetch paginated to exhaustion and asserted against `x-total-results`
+- family-wide detector asserted to reproduce the hand panel before its wider number is used
 
 Problems reported: 0

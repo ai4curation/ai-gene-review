@@ -170,7 +170,20 @@ metalloendopeptidase activity` by `IEA:InterPro` from `IPR001590` *and* by `IBA`
 UniProt.
 
 The boundary identifies the rule the pipeline applied: **it keys on presence of the M12B
-fold, not on integrity of the zinc-binding site.** Human ADAM5 escaped not because any
+fold, not on integrity of the zinc-binding site.**
+
+**Measured, not just inferred.** The panel above is hand-picked, so the rule was re-tested
+over **all 331 Swiss-Prot reviewed members** of PANTHER PTHR11905 — the reviewed subset of a
+**29,886-protein** family, so these are statements about reviewed entries, not about the
+family. Of the members carrying the Peptidase M12B fold, **204/204 (100%)** with an intact
+`HExxH` site carry `GO:0004222`, and **37/40 (92%)** *without* any `HExxH` site carry it too.
+If the annotation discriminated on the catalytic site the second figure would be near zero.
+Note the family-wide measure (exact `GO:0004222` in the UniProt GO cross-references) is a
+*different metric* from the panel's descendant-aware QuickGO count, so the script requires the
+family run to reproduce the panel's verdict on all 10 panel members present in the reviewed
+set before the wider number is reported. ADAM10 and ADAM17 turn out not to be in PTHR11905 at
+all — they are classified in another PANTHER family — which is recorded rather than quietly
+dropped. Human ADAM5 escaped not because any
 pipeline recognised it as non-catalytic, but because pseudogenisation deleted the very fold
 the pipeline matches on. That inverts the campaign's usual finding — the pseudogene is the
 *clean* member of its family — and it means the correctable defect is real but sits on

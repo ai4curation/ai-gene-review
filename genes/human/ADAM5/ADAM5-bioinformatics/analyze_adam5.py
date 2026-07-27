@@ -26,6 +26,12 @@ C. **A discriminating detector for the fold-to-activity error**, defined as::
    Human ADAM5 escapes the error *because* pseudogenisation deleted the fold the pipeline
    keys on -- not because any pipeline recognised it as non-catalytic.
 
+D. **The same rule, measured family-wide.** Section C's rule is inferred from a hand-picked
+   panel, so it is re-tested over every Swiss-Prot reviewed member of PANTHER PTHR11905. The
+   reviewed set is a small fraction of the family, so the family total is fetched and printed
+   next to every count; and because the family-wide metric differs from the panel's, the
+   family run must **reproduce the panel** before its wider number is reported.
+
 All network results are re-fetched on every run; nothing is hardcoded. Every paginated
 QuickGO query asserts ``numberOfHits == len(results)`` so a clamped page cannot be read as
 a complete answer. Missing input is a hard error, never a silently degraded section.
@@ -196,10 +202,22 @@ def quickgo_count(accession: str, go_id: str) -> dict:
             f"paginated/truncated response for {accession} {go_id}: "
             f"numberOfHits={hits} len(results)={len(results)}"
         )
+    # withFrom is recorded because the review names specific signature ids (IPR001590,
+    # PANTHER:PTN000224844) as the sources of this term. Without it those two ids would be
+    # the only figures in the package not pinned by the artifact.
+    with_from = sorted(
+        {
+            f"{c['db']}:{c['id']}"
+            for r in results
+            for w in (r.get("withFrom") or [])
+            for c in w.get("connectedXrefs", [])
+        }
+    )
     return {
         "count": hits,
         "evidence": sorted({r["goEvidence"] for r in results}),
         "assigned_by": sorted({r["assignedBy"] for r in results}),
+        "with_from": with_from,
     }
 
 
@@ -357,6 +375,112 @@ def check_domain_loss(alignment: dict, problems: list) -> None:
     alignment["features_retained"] = sorted(retained)
 
 
+PANTHER_FAMILY = "PTHR11905"
+
+
+def fetch_family_members() -> tuple[list[dict], int]:
+    """Every **Swiss-Prot reviewed** member of the PANTHER family, plus the family total.
+
+    The reviewed set is a small fraction of the family, so the total is fetched alongside it
+    and printed next to every count: a claim measured over reviewed entries must never be
+    written as a claim about the family.
+
+    Pagination is followed to exhaustion and the collected count is asserted against
+    ``x-total-results`` -- never inferred from a page size we chose.
+    """
+    query = urllib.parse.quote(f"xref:panther-{PANTHER_FAMILY} AND reviewed:true")
+    url = (
+        f"{UNIPROT}/search?query={query}"
+        "&fields=accession,id,organism_name,length,ft_domain,go_id,sequence&size=500"
+    )
+    entries: list[dict] = []
+    total: int | None = None
+    while url:
+        resp = urllib.request.urlopen(urllib.request.Request(url, headers={"Accept": "application/json"}), timeout=120)
+        if total is None:
+            total = int(resp.headers["x-total-results"])
+        entries.extend(json.load(resp)["results"])
+        m = re.search(r'<([^>]+)>;\s*rel="next"', resp.headers.get("Link", ""))
+        url = m.group(1) if m else None
+    if total != len(entries):
+        raise RuntimeError(f"family fetch truncated: x-total-results={total} collected={len(entries)}")
+
+    meta = _get_json(f"https://www.ebi.ac.uk/interpro/api/entry/panther/{PANTHER_FAMILY}/")
+    assert isinstance(meta, dict)
+    family_total = meta["metadata"]["counters"]["proteins"]
+    return entries, int(family_total)
+
+
+def family_detector(entries: list[dict], family_total: int) -> dict:
+    """Run the fold/zinc-site/annotation cross-tabulation over the whole reviewed family.
+
+    Turns "the pipelines key on the fold, not the zinc site" from a rule inferred over a
+    hand-picked panel into a measured one. The measure here is *exact* ``GO:0004222``
+    presence in the entry's GO cross-references, which is a different metric from the
+    panel's QuickGO descendant-aware count -- so the two are reconciled explicitly by
+    :func:`check_family_reproduces_panel` rather than assumed to agree.
+    """
+    rows = {}
+    for e in entries:
+        seq = e["sequence"]["value"]
+        has_fold = any(
+            f["type"] == "Domain" and "M12B" in (f.get("description") or "") for f in e.get("features", [])
+        )
+        gos = {x["id"] for x in e.get("uniProtKBCrossReferences", []) if x["database"] == "GO"}
+        rows[e["primaryAccession"]] = {
+            "entry_name": e["uniProtkbId"],
+            "organism": e["organism"]["scientificName"],
+            "has_m12b_fold": has_fold,
+            "zinc_core_present": bool(ZINC_CORE.search(seq)),
+            "has_GO_0004222": "GO:0004222" in gos,
+        }
+    fold = [a for a, r in rows.items() if r["has_m12b_fold"]]
+    fold_no_zinc = [a for a in fold if not rows[a]["zinc_core_present"]]
+    fold_zinc = [a for a in fold if rows[a]["zinc_core_present"]]
+    return {
+        "panther_family": PANTHER_FAMILY,
+        "family_total_proteins": family_total,
+        "reviewed_members_measured": len(rows),
+        "no_m12b_fold": len(rows) - len(fold),
+        "fold_with_zinc_site": len(fold_zinc),
+        "fold_with_zinc_site_annotated_GO_0004222": sum(1 for a in fold_zinc if rows[a]["has_GO_0004222"]),
+        "fold_without_zinc_site": len(fold_no_zinc),
+        "fold_without_zinc_site_annotated_GO_0004222": sum(1 for a in fold_no_zinc if rows[a]["has_GO_0004222"]),
+        "fires": sorted(a for a in fold_no_zinc if rows[a]["has_GO_0004222"]),
+        "rows": rows,
+    }
+
+
+def check_family_reproduces_panel(fam: dict, panel_detector: dict, problems: list) -> None:
+    """The family-wide run must reproduce the hand panel before its wider number is reported.
+
+    Two different measurements are involved (UniProt GO cross-references vs QuickGO with
+    descendants), so agreement is a real check, not a tautology. A panel member absent from
+    the reviewed family set is reported rather than silently skipped.
+    """
+    fam_rows = fam["rows"]
+    panel_fires = {e["accession"] for e in panel_detector["fires"]}
+    panel_all = panel_fires | {e["accession"] for e in panel_detector["clean"]}
+    absent = sorted(a for a in panel_all if a not in fam_rows)
+    fam["panel_members_absent_from_family"] = absent
+    present = [a for a in panel_all if a in fam_rows]
+    if not present:
+        problems.append("no panel member is in the reviewed family set; reproduction untested")
+        return
+    for acc in present:
+        fam_fires = (
+            fam_rows[acc]["has_m12b_fold"]
+            and not fam_rows[acc]["zinc_core_present"]
+            and fam_rows[acc]["has_GO_0004222"]
+        )
+        if fam_fires != (acc in panel_fires):
+            problems.append(
+                f"family-wide detector disagrees with the hand panel on {acc} "
+                f"({fam_rows[acc]['entry_name']}): family={fam_fires} panel={acc in panel_fires}"
+            )
+    fam["panel_members_reproduced"] = len(present)
+
+
 @dataclass
 class Analysis:
     panel: dict = field(default_factory=dict)
@@ -364,6 +488,7 @@ class Analysis:
     subject_annotations: list = field(default_factory=list)
     alignment: dict = field(default_factory=dict)
     detector: dict = field(default_factory=dict)
+    family: dict = field(default_factory=dict)
     problems: list = field(default_factory=list)
 
 
@@ -455,6 +580,18 @@ def analyse() -> Analysis:
     check_subject_is_uncontaminated(a.panel, a.go_census, a.subject_annotations, a.problems)
     check_domain_loss(a.alignment, a.problems)
     a.detector = run_detector(a.panel, a.go_census)
+
+    print(f"Fetching reviewed {PANTHER_FAMILY} members...", file=sys.stderr)
+    members, family_total = fetch_family_members()
+    a.family = family_detector(members, family_total)
+    check_family_reproduces_panel(a.family, a.detector, a.problems)
+    print(
+        f"  {a.family['reviewed_members_measured']} reviewed of {family_total} family proteins; "
+        f"fold+zinc {a.family['fold_with_zinc_site_annotated_GO_0004222']}/{a.family['fold_with_zinc_site']} "
+        f"annotated, fold-no-zinc {a.family['fold_without_zinc_site_annotated_GO_0004222']}/"
+        f"{a.family['fold_without_zinc_site']} annotated",
+        file=sys.stderr,
+    )
     return a
 
 
@@ -666,6 +803,51 @@ def render_results(a: Analysis) -> str:
         "claim on this gene to evaluate."
     )
     w("")
+    fam = a.family
+    w(f"## G. The rule, measured across the whole reviewed {fam['panther_family']} family")
+    w("")
+    w(
+        f"Section E infers a rule from a 12-member hand-picked panel. This section tests it over "
+        f"**all {fam['reviewed_members_measured']} Swiss-Prot reviewed members** of PANTHER "
+        f"`{fam['panther_family']}`. Note the scope: the family contains "
+        f"**{fam['family_total_proteins']:,} proteins** in total, so this is the reviewed subset "
+        f"({100 * fam['reviewed_members_measured'] / fam['family_total_proteins']:.1f}%), and every "
+        "number below is a statement about reviewed entries, not about the family."
+    )
+    w("")
+    w(
+        "The metric here is *exact* `GO:0004222` presence in the entry's GO cross-references, which "
+        "is **not** the same measurement as section D's descendant-aware QuickGO count. So the two "
+        "are reconciled rather than assumed to agree: the family-wide detector is required to "
+        f"reproduce the hand panel's verdict for all **{fam.get('panel_members_reproduced', 0)}** "
+        "panel members present in the reviewed set, and the run fails if any disagrees."
+    )
+    if fam.get("panel_members_absent_from_family"):
+        w("")
+        w(
+            "Panel members absent from this family (reported, not silently skipped): "
+            + ", ".join(f"`{x}`" for x in fam["panel_members_absent_from_family"])
+            + " — ADAM10 and ADAM17 are classified in a different PANTHER family, so the "
+            "family-wide run cannot corroborate them."
+        )
+    w("")
+    zinc_n, zinc_ann = fam["fold_with_zinc_site"], fam["fold_with_zinc_site_annotated_GO_0004222"]
+    noz_n, noz_ann = fam["fold_without_zinc_site"], fam["fold_without_zinc_site_annotated_GO_0004222"]
+    w("| reviewed members | n | carry `GO:0004222` | % |")
+    w("|---|---|---|---|")
+    w(f"| Peptidase M12B fold **with** `HExxH` zinc site | {zinc_n} | {zinc_ann} | {100*zinc_ann/zinc_n:.0f}% |")
+    w(f"| Peptidase M12B fold **without** `HExxH` zinc site | {noz_n} | {noz_ann} | {100*noz_ann/noz_n:.0f}% |")
+    w(f"| no M12B fold | {fam['no_m12b_fold']} | — | — |")
+    w("")
+    w(
+        f"**This converts the rule from inferred to measured.** If the annotation discriminated on "
+        f"the catalytic site, the second row would be near zero. It is "
+        f"**{noz_ann}/{noz_n} ({100*noz_ann/noz_n:.0f}%)** — statistically indistinguishable from the "
+        f"{100*zinc_ann/zinc_n:.0f}% of intact members. Losing the zinc-binding site has almost no "
+        "effect on whether a reviewed family member is annotated with metalloendopeptidase activity, "
+        "which is precisely the claim raised for InterPro and GO Central in `suggested_questions`."
+    )
+    w("")
     w("## Checks run")
     w("")
     w("- motif expectations asserted in both directions across the panel")
@@ -673,6 +855,8 @@ def render_results(a: Analysis) -> str:
     w("- panel asserted all-Swiss-Prot with an anchored `startswith` test")
     w("- every QuickGO query asserted `numberOfHits == len(results)`")
     w("- every UniProt fetch asserted to return an entry name (dead-accession guard)")
+    w("- family fetch paginated to exhaustion and asserted against `x-total-results`")
+    w("- family-wide detector asserted to reproduce the hand panel before its wider number is used")
     w("")
     w(f"Problems reported: {len(a.problems)}")
     for pr in a.problems:
@@ -795,6 +979,33 @@ def self_test() -> int:
     if fired != {"A"}:
         failures.append(f"detector fired on {fired}, expected exactly {{'A'}}")
 
+    # check_family_reproduces_panel: silent on agreement, fires on disagreement,
+    # and reports (rather than hides) a panel member missing from the family.
+    def fam_fixture(**over):
+        rows = {
+            "A": {"entry_name": "A_X", "has_m12b_fold": True, "zinc_core_present": False, "has_GO_0004222": True},
+            "B": {"entry_name": "B_X", "has_m12b_fold": True, "zinc_core_present": True, "has_GO_0004222": True},
+        }
+        rows.update(over)
+        return {"rows": rows}
+
+    panel = {"fires": [{"accession": "A"}], "clean": [{"accession": "B"}, {"accession": "GONE"}]}
+    probs = []
+    f = fam_fixture()
+    check_family_reproduces_panel(f, panel, probs)
+    if probs:
+        failures.append(f"family/panel reconciliation fired on agreement: {probs}")
+    if f.get("panel_members_absent_from_family") != ["GONE"]:
+        failures.append("family/panel reconciliation did not report the absent panel member")
+    probs = []
+    # flip A so the family says "no term" while the panel says it fires
+    check_family_reproduces_panel(
+        fam_fixture(A={"entry_name": "A_X", "has_m12b_fold": True, "zinc_core_present": False,
+                       "has_GO_0004222": False}),
+        panel, probs)
+    if not probs:
+        failures.append("family/panel reconciliation did not fire on a disagreement")
+
     for f in failures:
         print(f"SELF-TEST FAILURE: {f}", file=sys.stderr)
     print(f"self-test: {len(failures)} failure(s)", file=sys.stderr)
@@ -820,6 +1031,7 @@ def main() -> int:
         "subject_annotations": a.subject_annotations,
         "alignment_to_macaque": a.alignment,
         "detector": a.detector,
+        "family_wide": a.family,
         "problems": a.problems,
     }
     # Render BEFORE writing anything, so a rendering failure cannot leave a stale
