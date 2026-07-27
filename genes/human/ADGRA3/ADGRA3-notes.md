@@ -19,7 +19,7 @@ No distinct GO term was lost. All 31 rows are restored one-per-line, so every pa
 verdict, and `existing_annotations` is generated *from* the TSV by
 `/tmp/adgra3/build.py` with `assert len(annotations) == 31` rather than assembled by hand.
 
-Final counts: **31 GOA-derived rows + 6 `NEW` proposals = 37 entries**.
+Final counts: **31 GOA-derived rows + 7 `NEW` proposals = 38 entries** (9 ACCEPT, 22 MODIFY, 7 NEW).
 
 ## 2. The gene is not dark. GOA makes it look dark.
 
@@ -51,7 +51,7 @@ PAINT partitions this family cleanly:
 
 | node | reach (reviewed members of PTHR45930) | terms it propagates |
 |---|---|---|
-| `PTN001738137` | **all 8** — ADGRA1/2/3 in human, mouse, zebrafish | `GO:0005886`, `GO:0007166` |
+| `PTN001738137` | **all 8** — ADGRA1/2/3 in human and mouse, plus adgra2 and adgra3 in zebrafish (which has no adgra1 in the family) | `GO:0005886`, `GO:0007166` |
 | `PTN002914520` | **exactly the 3 ADGRA2 orthologs** | `GO:0002040`, `GO:0007417`, `GO:0090263`, `GO:1990909` |
 | `PTN002914505` | **exactly the 2 ADGRA1 orthologs** | `GO:0014069`, `GO:0098978` |
 | `PTN002914494` | **exactly the 3 ADGRA3 orthologs** | `GO:0009897` — and nothing else |
@@ -209,9 +209,17 @@ All three → **MODIFY → `GO:0005886`**, each for its own reason:
 
 - **ISS** (`GO_REF:0000024`, from `UniProtKB:S4X0Q8`): the donor is the reviewed zebrafish
   orthologue — correct entity type for ISS, per the ADAMTSL3 rule — and QuickGO shows it holds
-  `GO:0005886` by **IDA** (`PMID:23821037`). The inference therefore landed three levels *above* its
-  own donor, with exactly one donor and no heterogeneous clade to blame. Same shape as ACRV1.
+  `GO:0005886` by **IDA** (`PMID:23821037`). The inference therefore landed *one is_a step above*
+  its own donor: `GO:0005886 --is_a--> GO:0016020` is a single edge on the QuickGO graph endpoint.
+  (An earlier draft of this review said "three levels", in three places; the reviewer on #2315
+  flagged it and the graph query confirms one. The verdict is unaffected — the MODIFY rests on the
+  donor's IDA, not on the size of the gap — but the number was wrong and is corrected here, in the
+  YAML and in the PR body.) With exactly one donor and no heterogeneous clade to blame, the step is
+  small but free. Same shape as ACRV1, where the loss was larger.
   `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`.
+
+  For reference, the measured distances to `GO:0016020` over `is_a`/`part_of`: `GO:0005886` = 1,
+  `GO:0009897` = 2, `GO:0016323` = 2.
 - **IEA** (`GO_REF:0000120`): WITH/FROM includes `UniProtKB-SubCell:SL-0162`, i.e. it is the machine
   reflection of the same by-similarity UniProt line.
 - **TAS** (`PMID:15203201`): the paper's only bearing on the term is the definitional
@@ -252,6 +260,38 @@ data or anything ADGRA3-specific, so **nothing in this review rests on corrected
 in `reference_review.review_notes` rather than `is_invalid`.
 
 All other 15 cited PMIDs: clean, no retraction, erratum or expression of concern.
+
+## 10b. Constitutive internalisation — `GO:0031623`, and why not `GO:0072583`
+
+Added after the #2315 review pointed out that this review asserted constitutive clathrin-dependent
+endocytosis in both `description` and `core_functions`, with quotes attached, and then proposed no
+term for it — an omission that reads badly in a review whose thesis is that *absence* is this gene's
+dominant defect. Fair, and fixed.
+
+Both candidate terms were checked against their **definitions and their actual curated usage**, not
+their labels:
+
+- **`GO:0072583 clathrin-dependent endocytosis` — rejected.** QuickGO returns 246 human annotations
+  over 19 distinct gene products, and every one is endocytic **machinery**: AP2A1/A2/B1/S1, FCHO1/2,
+  PICALM, SGIP1, SNAP91, HSPA8, ARHGEF37. No cargo. Annotating a receptor there would be role
+  conflation.
+- **`GO:0031623 receptor internalization` — chosen.** GO does use it for cargo: **TFRC holds it
+  `involved_in` by IDA**, and TFRC is precisely the constitutively recycling receptor used as the
+  colocalisation marker in this very experiment. CD36 likewise.
+
+One honest caveat, recorded rather than smoothed away: `GO:0031623`'s **definition** says the process
+"begins when cell surface receptors are monoubiquitinated following ligand-induced activation", and
+ADGRA3's internalisation is neither ligand-induced nor β-arrestin-dependent
+[PMID:31659746 "Moreover, we show that the internalization of GPR125 happens in a
+β‐arrestin−independent, but TfR1 colocalizing/clathrin‐dependent manner."]. GO's curated usage is
+plainly broader than its own definition here — TFRC is the proof — so the term is used as curators
+use it, and the definition/usage mismatch is filed as an ontology question rather than being quietly
+ignored.
+
+Evidence is IDA on the human protein: surface ELISA on non-permeabilised HEK293 cells, loss of
+surface signal over 30 min at 37 °C, and appearance in puncta overlapping GFP-TfR1
+[PMID:31659746 "These data support that the constitutive internalization of GPR125 contributes to
+its biological functions by controlling receptor surface expression"].
 
 ## 11. Provenance discipline on the `NEW` rows
 
@@ -294,7 +334,29 @@ validate and this branch touches no shared cache state. Both directions checked 
 against the **merge base** (not the moving `origin/main` tip) are none, and the only duplicated
 curies are the two that predate this campaign, `GO:0001675` and `GO:0009566`, left alone.
 
-## 14. Tooling note — `checkquotes.py` cannot see `knowledge_gaps[].provenance`
+## 14. Tooling note — `xref:zfin-<gene id>` misses the *reviewed* entry
+
+The first draft reported zebrafish `adgra2` as lacking a Swiss-Prot record and resolving only to two
+unreviewed TrEMBL accessions. **That was wrong**, and the #2315 reviewer caught it from the committed
+`PTHR45930-entries.csv`. The reviewed entry is `E7FBY6` / `AGRA2_DANRE`, Swiss-Prot, 1367 aa — but:
+
+```
+xref:zfin-ZDB-GENE-081104-363  ->  ['A0A0U2ULT4', 'A0A8M1P7B9']     # both TrEMBL; E7FBY6 absent
+```
+
+So UniProt's `xref:zfin-` index, queried on a **ZFIN gene id**, does not return the Swiss-Prot entry
+at all. This is the same class of resolver limit the campaign brief already records for WormBase
+(`WB:WBGene…` absent from `xref:wormbase-`, which holds protein ids), and it is more dangerous,
+because it does not fail loudly — it returns *plausible* accessions, so the reviewed/unreviewed
+printout the brief mandates ends up lying in the direction of understating the source. Cross-check
+any MOD-gene-id resolution against the cached PANTHER member table, which is derived from InterPro's
+reviewed-protein endpoint and had the right answer sitting in this branch the whole time.
+
+All five non-node donors on the ADGRA3 IBA rows are reviewed Swiss-Prot entries. Their *evidence*
+claims were unaffected — those QuickGO queries were run on `E7FBY6` directly, not through the ZFIN
+index — so only the provenance labels needed correcting.
+
+## 15. Tooling note — `checkquotes.py` cannot see `knowledge_gaps[].provenance`
 
 Found by a count that refused to add up: the file has **150** `reference_id` entries but
 `checkquotes.py` reported **135** checked. The gap is exactly the **15** quotes in
@@ -304,21 +366,51 @@ and the repo's own reference validator has the same shape of scope. All 15 were 
 an extended walker that adds `provenance` and then asserts `raw_reference_id_count == checked`, so
 the blind spot cannot recur silently. Worth folding into the campaign checker.
 
-## 15. Verdict summary
+## 16. Verdict summary
 
 | rows | term(s) | evidence | action |
 |---|---|---|---|
 | 1 | `GO:0005886` | IBA | ACCEPT (core) |
 | 1 | `GO:0007166` | IBA | ACCEPT — refinement to `GO:0016055` considered and rejected |
 | 1 | `GO:0009897` | IBA | ACCEPT — donor holds the identical term by IDA |
-| 1 | `GO:0004888` | IEA | MODIFY → `GO:0004930` (redundant parent) |
+| 1 | `GO:0004888` | IEA | ACCEPT — correctly scoped to a 7TM-only signature |
+| 1 | `GO:0007166` | IEA | ACCEPT — same signature, same reasoning |
+| 1 | `GO:0007166` | IBA | ACCEPT — genuine LCA of a heterogeneous clade |
 | 2 | `GO:0004930` | IEA, TAS | ACCEPT (core) — now experimentally demonstrated |
-| 2 | `GO:0007166`, `GO:0007186` | IEA | ACCEPT |
-| 1 | `GO:0007186` | TAS | ACCEPT |
+| 2 | `GO:0007186` | IEA, TAS | ACCEPT |
+| 1 | `GO:0005886` | IBA | ACCEPT (core) |
+| 1 | `GO:0009897` | IBA | ACCEPT |
 | 3 | `GO:0016020` | IEA, ISS, TAS | MODIFY → `GO:0005886` |
 | 19 | `GO:0005515` | IPI | MODIFY → `GO:0030165 PDZ domain binding` |
-| **31** | | | |
-| +6 | `GO:0030165`, `GO:0016323`, `GO:0016540`, `GO:0007189`, `GO:0007193`, `GO:0045197` | IPI/IDA/ISS | NEW |
+| **31** | | | **9 ACCEPT, 22 MODIFY** |
+| +7 | `GO:0030165`, `GO:0016323`, `GO:0016540`, `GO:0007189`, `GO:0007193`, `GO:0031623`, `GO:0045197` | IPI/IDA/ISS | NEW |
+
+### The `IPR017981` question, and how it resolved the *other* way
+
+The first draft MODIFYed `GO:0004888` (redundant parent of `GO:0004930`) while ACCEPTing the IEA
+`GO:0007166` (redundant parent of `GO:0007186`) — opposite reasoning applied to two identical
+situations arising from the **same** InterPro signature. The #2315 reviewer caught it. My first fix
+harmonised in the MODIFY direction; running `just validate` then produced a *second* warning —
+*"Inconsistent review actions for term GO:0007166: ACCEPT (IBA); MODIFY (IEA)"* — because the repo
+enforces same-term-same-action regardless of evidence code.
+
+Two consistency pressures pointing opposite ways forced the question of which action is actually
+*right*, and the answer is ACCEPT for both. **`IPR017981` is a 7TM-domain signature.** A
+seven-transmembrane bundle cannot by itself tell you a receptor couples to a heterotrimeric G
+protein — plenty of 7TM proteins do not. InterPro mapping it to the non-committal parents
+`GO:0004888` and `GO:0007166` is therefore *the most that signature can honestly support*, not a
+curator stopping short; the specific children arrive from `IPR000832` (GPCR family 2, secretin-like),
+a family-level signature that does support them. Modifying a correctly-conservative signature mapping
+downward would attribute to it evidence it does not carry — the AADACL4 lesson ("a GENERAL term can
+be correct because the source is not specific — not lazy curation") arriving in a new guise, and my
+initial MODIFY was the error, not the asymmetry.
+
+The discriminator now applied uniformly across the review: **accept a general term when it is the
+most its own source can support; modify it when the specific term is established for this gene and
+the general row merely restates a compartment or activity now known precisely.** The three
+`GO:0016020` rows sit on the other side of that line — they are superseded statements about where
+this protein is, all three get the same action, and the ISS one additionally sits above its own
+donor. Both warnings are gone and no term carries two actions.
 
 No `REMOVE` and no `MARK_AS_OVER_ANNOTATED`: nothing in this record is false. The defects are
 imprecision (three membrane rows, one redundant parent), uninformativeness (nineteen bare
