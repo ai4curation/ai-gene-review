@@ -423,22 +423,59 @@ No affinage sentence is used as `supporting_text` anywhere in this review, and n
 from it — the ADPRS lesson is that a provider's *arithmetic* contaminates even when none of its text
 is quoted, so every figure here is re-derived from the primary source or computed by the script.
 
-## Disagreement watch with the concurrent AFF4 review
+## Disagreement with the concurrent AFF4 review — MEASURED, not predicted
 
-At the time of writing, `genes/human/AFF4/` does not exist on `main` and no `paint/AFF4` PR is open,
-so there is nothing to compare against yet. The three places the two reviews could diverge, with this
-review's position stated so the difference is visible:
+`paint/AFF4` (PR #2349) opened while this review was in its sixth round, so the comparison the
+brief asks for could be run rather than left conditional. Ten rows are byte-identical between the
+two genes (same term, evidence code, reference and WITH/FROM). **Seven agree; three diverge.**
 
-1. **`GO:0008023` IDA from `PMID:22195968`.** AFF4 carries the identical row. This review marks it
-   `MODIFY → GO:0032783` on the within-reference clade asymmetry. If AFF4's review accepts it, the
-   two are inconsistent on one shared datum and the fix belongs upstream for all eleven human
-   recipients at once.
-2. **Whether AFF1 and AFF4 share a complex.** This review treats it as unresolved. A review that
-   asserts mutual exclusivity flatly would be over-reading `PMID:28955517`'s discussion against
-   IntAct's measured association.
-3. **Osteogenesis sign.** The paralogues have **opposite** effects; a term transferred between them
-   in either direction would invert the biology. AFF1 gets `GO:0045668` (negative); AFF4's
-   corresponding term would be positive.
+| shared row | AFF1 | AFF4 |
+|---|---|---|
+| `GO:0008023` IDA `PMID:22195968` | **MODIFY → `GO:0032783`** | ACCEPT |
+| `GO:0006354` IBA `GO_REF:0000033` | **MODIFY → `GO:0006368`** | ACCEPT + separate `NEW` `GO:0006368` |
+| `GO:0010468` IEA `GO_REF:0000002` | **MODIFY → `GO:0006355`** | ACCEPT |
+| `GO:0003712`, `GO:0005634`, `GO:0006355`, `GO:0032783`, `GO:0050877`, and both shared `GO:0005515` rows | — | agree |
+
+Read carefully, only the first is a substantive disagreement; the other two are the *same
+assessment implemented differently*, which is still an inconsistency worth resolving because the
+two reviews recommend different things for identical rows.
+
+**`GO:0006354`** — we agree on the biology. AFF4's review independently reaches `GO:0006368` as
+the right term on its own human evidence, and verified the same ancestor closure. It implements
+that as a `NEW` row while keeping the IBA at `ACCEPT`; this review implements it as a `MODIFY` of
+the IBA. Convergent conclusion, divergent action. Since the WITH/FROM is byte-identical
+(`PANTHER:PTN000829417` + `UniProtKB:P51825`), one node-level recommendation should cover both.
+
+**`GO:0010468`** — both reviews call the term correct-but-uninformative and both note it is a
+verified ancestor of terms the gene already holds. AFF4 accepts on that basis; this review
+MODIFYs on the upstream argument that `IPR007797` supports the more precise term for every
+protein it matches. Again a mechanism difference on a shared assessment.
+
+**`GO:0008023` — the real divergence, and I think both checks are right about different
+questions.** AFF4's review ran the *projection* test (does the phenotype spread across the
+subunits?) and reports a clean negative, which this review's own data confirms: the paper's
+functional term `GO:0042795` sits on 7 entities and reaches neither AFF4 nor AFF1. That is
+sound. But it is not the question this review asked. The *granularity* question — which
+recipients of this reference got the child term `GO:0032783` — has a different answer: **10 of
+the 11 Drosophila recipients did, and none of the 11 human ones.** The two tests are orthogonal,
+and a negative on projection does not bear on granularity.
+
+One checkable correction for that review: it states this term reaches **16** entities and
+enumerates 16. The fully-paginated count is **17** — the enumeration omits **human ICE2
+(`Q659A1`)**, which is in the recipient set. Its other two figures for this reference (61
+annotations, 26 entities) match this review's computation exactly, so the discrepancy is confined
+to that one list, and it does not affect its "no bystander in the list" conclusion, since ICE2 is
+a genuine elongation-complex subunit. The likely cause is a mental filter to SEC members: ICE2 is
+a *little* elongation complex subunit.
+
+**Two further asymmetries where the reviews agree and should:** AFF4 carries `GO:0034976 response
+to ER stress` and nucleoplasm/nuclear-body localisations that AFF1 does not, and AFF1 carries the
+entire seven-row DNA-damage block from `PMID:41062835` that AFF4 does not. Those are real
+gene-level differences, not propagation defects.
+
+**And the sign trap this family sets, restated because it is the one that would do real damage:**
+AFF1 and AFF4 have **opposite** effects on osteogenesis (`PMID:28955517`), so any term moved
+between them in either direction inverts the biology. Neither review does this.
 
 ## Where the risk actually sat, across six review rounds
 
