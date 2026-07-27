@@ -163,6 +163,75 @@ label alone:
   it. Proposed the bare parent `GO:0010526` and filed the missing "reader-mediated, assembly-independent
   silencing" term as an ontology gap.
 
+## TFClass node reach — the pipeline supplies its own negative control
+
+Added after the first review round, following the brief's "which node's reach is exactly my gene set,
+and what did it give them?" question. `tfclass:3.1.8` reaches exactly **14 human gene products** —
+ADNP, ADNP2, HOMEZ, TSHZ1/2/3, ZEB1/2, ZFHX2/3/4, ZHX1/2/3 — a coherent zinc-finger/homeodomain set,
+and it gives **every one of them the identical pair** `{GO:0000785, GO:0000981}`. So `GO:0000981` on
+ADNP2 is a property of class membership, not a judgement about ADNP2. Two members of that set cannot
+both be right: ADNP's `GO:0000981` is independently supported by a measured motif, ADNP2's is
+contradicted by the documented failure to find one.
+
+Widening to the whole import: **`GO_REF:0000113` is 1436 annotations over 727 distinct entities, 100%
+ISA**, of which **709 receive the identical `{GO:0000785, GO:0000981}` doublet and 18 receive chromatin
+alone.** Those 18 are the pipeline's own negative control, and they are exactly the non-DNA-binding
+members: SMAD6/SMAD7 (inhibitory SMADs), NR0B1/NR0B2 (nuclear receptors lacking a DNA-binding domain),
+NCOA1/2/3 (coactivators), ZFPM1/ZFPM2 (GATA cofactors), AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1,
+ZC3H6/ZC3H8 — and **HOPX**.
+
+HOPX is the precedent that makes this filable rather than rhetorical. UniProt describes it as an
+*"Atypical homeodomain protein which does not bind DNA"*, it carries a `DNA_BIND` feature over its
+homeodomain **exactly as ADNP2 does** (HOPX 3–62; ADNP2 1043–1102), and NTNU_SB still withheld
+`GO:0000981` from it while keeping `GO:0000785`. So the discrimination already exists inside this
+import, the criterion is "does it actually bind DNA" rather than "does it have the fold", and the ask
+becomes concrete: **add ADNP2 to the existing 18-member exclusion set.** This is the interpro2go
+negative-control method from the brief, transplanted to TFClass — the entries that behave correctly are
+what prove the point.
+
+Note what this does *not* say: it is not a claim that the TFClass classification is wrong. Placing
+ADNP2 among the ZF-homeodomain proteins is correct taxonomy, and the same node's `GO:0000785` is
+right. Only the molecular-function step is over-read.
+
+## Review round 2
+
+Reviewer `ai4c-reviewer` returned `CHANGES_REQUESTED` with one blocking item and three suggestions. I
+verified each checkable premise before acting; all four held.
+
+- **Blocking, and correct.** `core_functions[1]` had `GO:0140110` in `molecular_function`, which the
+  schema defines as "*has the activity independently*", while my own description said the repressive
+  step is unresolved and `knowledge_gaps[0]` said ADNP2 may be a pure scaffold. A structured field was
+  asserting more than the prose allowed. Fixed by **merging the two core functions into one** rather
+  than keeping a second entry with an empty `molecular_function`: `GO:0070087` stays as the activity
+  ADNP2 genuinely enables, `GO:0140110` moves to `contributes_to_molecular_function`. Merging avoided
+  the alternative failure of inventing a subunit-specific MF — the honest candidates
+  (`GO:0140463` chromatin-protein adaptor, `GO:0030674` protein-macromolecule adaptor) are respectively
+  wrong for ADNP2 (HP1β does the chromatin targeting, not ADNP2) and untested (the missing control is
+  in `suggested_experiments`).
+- **`GO:0006357` → `MODIFY` to `GO:0000122`.** Accepted on the merits after checking: `GO:0000122` is a
+  descendant of `GO:0006357` (so a refinement, not a sideways move); its definition — "*stops, prevents,
+  or reduces*" — matches a de-repression result, whereas the undirected parent discards the direction;
+  and it neither subsumes nor is subsumed by the `NEW GO:0010526` row, so the two are non-redundant.
+  The second half of the reviewer's argument is the better one: as written, the row's only stated
+  antecedent was `GO:0000981`, the term this PR modifies, so it was hanging off a premise the same
+  review rejects.
+- **Off-topic quote dropped.** The `RESULTS.md` PxVxL line on the `GO:0003677` row was about HP1
+  docking and said nothing about DNA binding — a straightforward violation of "every quote must contain
+  the entity its row is about", in a slot I filled because the citation was available rather than
+  because it supported the claim.
+- **`in_complex`** now carries an explicit comment pointing at `proposed_new_terms[0]`, so the empty
+  slot reads as a pending ontology dependency rather than an omission.
+- **Filing the `O15507` finding as an issue** — declined, with reasoning given in the thread. It is
+  already durable and in-repo here and in the guard's own code comment; opening an issue from a gene PR
+  fires the mention workflow, which competes with the review jobs this campaign is bottlenecked on.
+
+**Two of my own verification probes were wrong in the same sitting, both the same way**: an unanchored
+substring (`contributes_to_molecular_function`, which also appears in the comment explaining the change)
+and an under-scoped regex (`^- description: >-$`, which also matches `suggested_experiments` entries).
+Neither corrupted anything, because both fired as failures rather than passing silently — but the
+lesson is the brief's: check structure against the *parsed object*, and reserve regex for facts that are
+genuinely textual, like a removed quote.
+
 ## affinage
 
 `gates_passed: True`, 6 citations, all six genuinely about ADNP2 or the ADNP2 orthologues — no
