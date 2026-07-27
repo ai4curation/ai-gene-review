@@ -1178,18 +1178,39 @@ def render(d: dict) -> str:
         (g for g in subset if g["node"].startswith("3.1.")),
         key=lambda x: -x["node_members"],
     )
-    # Count and enumerate the SAME list. Previously the count was over `same_class` while
-    # the enumeration filtered to single-exclusion nodes, so the two could diverge silently.
-    same_class = [g for g in same_class if len(g["node_members_excluded"]) == 1]
+    # Count, enumerate AND LABEL the same list. Two earlier revisions were wrong here in
+    # sequence: first the count was over all same-class strict-subset nodes while the
+    # enumeration filtered to single-exclusion ones (so they could diverge); then the count
+    # was narrowed to match but the LABEL still said "strict-subset nodes", so a node
+    # excluding two members would silently drop from the count, the list and the label
+    # together. The label now names the filter. This matters because the inputs are live
+    # QuickGO queries, so "true today" is not a property of the code.
+    same_class_all = same_class
+    same_class = [g for g in same_class_all if len(g["node_members_excluded"]) == 1]
+    dropped = [g for g in same_class_all if g not in same_class]
     phrases = [
         f"**{', '.join(g['node_members_excluded'])} excluded alone out of "
         f"{g['node_members']} members of `tfclass:{g['node']}`**"
         for g in same_class
     ]
-    assert len(phrases) == len(same_class)
+    dropped_note = (
+        ""
+        if not dropped
+        else (
+            " ("
+            + ", ".join(
+                f"`tfclass:{g['node']}` excludes "
+                f"{len(g['node_members_excluded'])} and is not counted here"
+                for g in dropped
+            )
+            + ")"
+        )
+    )
     add(
-        f"{len(same_class)} of the strict-subset nodes sit in the same TFClass class as "
-        f"ADNP2: {', and '.join(phrases)} — while ADNP2's own node "
+        f"{len(same_class)} of the **single-exclusion** strict-subset nodes sit in the same "
+        f"TFClass class as ADNP2{dropped_note}"
+        f"{'. ' if dropped_note else ': '}"
+        f"{', and '.join(phrases)} — while ADNP2's own node "
         f"`tfclass:{gr['subject_node']}` currently has "
         f"{gr['subject_node_members_with_mf']}/{gr['subject_node_members']} members holding "
         f"the term. So single-entity exclusion inside a populated homeodomain node is "
