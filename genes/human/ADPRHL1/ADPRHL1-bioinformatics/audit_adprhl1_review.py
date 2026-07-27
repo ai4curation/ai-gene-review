@@ -27,9 +27,12 @@ E. **``supporting_entities`` must be derived from GOA, not maintained by hand.**
    source lists have drifted on every gene in this campaign that tried it. Same for
    ``propagation_review.source_entities``.
 
-F. **Every ACCEPT/NEW term must appear in ``core_functions`` or be justified as a
-   non-core/location row, and every ``core_functions`` term must be backed by an ACCEPT or
-   NEW row.** The second direction is the one that otherwise goes unwritten.
+F. **Both directions between ``core_functions`` and the kept rows.** Every
+   ``core_functions`` term must be backed by an ACCEPT or NEW row, *and* every ACCEPT/NEW
+   term must either appear in ``core_functions`` or be listed in ``CORE_FUNCTION_EXEMPT``
+   with a written reason. The second direction is the one that otherwise goes unwritten,
+   and silence there would be the check's absence rather than its passing. Stale
+   exemptions are reported too, so the dict cannot quietly accumulate.
 
 G. **Prose must not contradict its own action** -- the recurring "summary still says
    Accepted after the action became REMOVE" defect. Checked per ``review`` block, keyed on
@@ -63,9 +66,16 @@ DECLARED_NEW = {
     ("GO:0051894", "IMP", "PMID:37880701", "involved_in"),
 }
 
-# core_functions terms that are deliberately not required to have their own ACCEPT row
-# because they are locations reached through two GOA rows already covered above.
-QUOTE_KEYS = ("supporting_text",)
+# ACCEPT/NEW terms that are deliberately absent from core_functions, each with the reason.
+# Check F asserts BOTH directions, so anything kept but not core must be listed here or the
+# check fires. Removing an entry from this dict must make the check fire - break-tested.
+CORE_FUNCTION_EXEMPT = {
+    "GO:0055003": (
+        "Its child GO:0055005 carries it in core_functions; listing the parent as well "
+        "would be redundant there. Both remain in existing_annotations because they have "
+        "different donors and different references."
+    ),
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -235,6 +245,17 @@ def audit(review_text: str | None = None, goa_rows: list[dict] | None = None) ->
         problems.append("F: no core_functions defined - state explicitly if the gene is dark")
     for t in sorted(cf_terms - kept):
         problems.append(f"F: core_functions cites {t} but no ACCEPT/NEW annotation carries it")
+    # The direction that would otherwise go unwritten: every kept term must either appear in
+    # core_functions or be explicitly exempted with a reason. "Unwritten" is not "passing" -
+    # and this file created exactly that case by dropping GO:0055003 from core_functions.
+    for t in sorted(kept - cf_terms):
+        if t not in CORE_FUNCTION_EXEMPT:
+            problems.append(
+                f"F: {t} is ACCEPT/NEW but appears in neither core_functions nor "
+                f"CORE_FUNCTION_EXEMPT - state which, do not leave it silent"
+            )
+    for t in sorted(set(CORE_FUNCTION_EXEMPT) - kept):
+        problems.append(f"F: {t} is exempted from core_functions but is not an ACCEPT/NEW term")
     removed = {a["term"]["id"] for a in anns if a["review"].get("action") == "REMOVE"}
     for t in sorted(cf_terms & removed):
         problems.append(f"F: core_functions cites {t} which this review REMOVEs")
@@ -349,6 +370,26 @@ def self_test() -> list[str]:
     )
     assert orphan != raw, "self-test F: anchor string absent, mutation was a no-op"
     expect("F", orphan, rows, "no ACCEPT/NEW annotation carries it")
+
+    # F2: the reverse direction. Dropping the exemption for a kept-but-not-core term must
+    #     fire; a mutation that emptied core_functions entirely would be caught by a much
+    #     weaker implementation, so mutate only the exemption dict.
+    #     NB: mutate THIS module's global in place. `import audit_adprhl1_review` from
+    #     inside the script creates a SECOND module object with its own globals when the
+    #     file is run as __main__, so patching that copy leaves audit() reading the
+    #     original and the break-test silently reports nothing. (Found by running it.)
+    saved = dict(CORE_FUNCTION_EXEMPT)
+    assert "GO:0055003" in saved, "self-test F2: exemption target has drifted"
+    try:
+        CORE_FUNCTION_EXEMPT.pop("GO:0055003")
+        expect("F2", raw, rows, "appears in neither core_functions nor CORE_FUNCTION_EXEMPT")
+        # ...and an exemption for a term that is NOT kept must also be reported, so the
+        # dict cannot silently accumulate stale entries.
+        CORE_FUNCTION_EXEMPT["GO:0016787"] = "not a kept term"
+        expect("F3", raw, rows, "is exempted from core_functions but is not an ACCEPT/NEW term")
+    finally:
+        CORE_FUNCTION_EXEMPT.clear()
+        CORE_FUNCTION_EXEMPT.update(saved)
 
     # G: prose contradicting its own action must fire...
     contra = raw.replace(
