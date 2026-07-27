@@ -339,6 +339,18 @@ against this review**, not for it — the better-supported gene is the one takin
 action. That does not change the verdict here, but it converts the family-wide line-drawing
 question from a tie into an argument, and it is carried into `suggested_questions` as such.
 
+## 8c. A gap in `checkquotes.py` worth knowing about
+
+Reconciling a count that did not add up (I added three quotes and the checker's total rose by
+one) turned up a real scope gap rather than an arithmetic slip. `checkquotes.py` walks
+`supported_by` and `findings` only; **`provenance` lists inside `knowledge_gaps` are invisible
+to it**, as is any other `reference_id` + `supporting_text` pair under a differently-named key.
+For this file: 17 `supported_by` + 32 `findings` = 49, exactly what the checker reports, and
+**6 `provenance` quotes are unchecked**. They were verified here with a walker that matches on
+the *shape* of the entry rather than on its parent key, and all 6 pass. Anyone relying on
+`checkquotes.py` alone for a review that uses `knowledge_gaps` provenance is not checking those
+quotes.
+
 ## 9. What ADAMTSL1 is, in one paragraph
 
 A large secreted ADAMTS-like glycoprotein of the extracellular matrix, built from
