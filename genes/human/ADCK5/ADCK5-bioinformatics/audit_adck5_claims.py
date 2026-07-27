@@ -134,9 +134,11 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
     was written to fix. The hedge in the GO:0016020 row was silently satisfying the check for
     an unhedged claim in a different annotation 60 lines away.
 
-    So YAML is split by *scalar value*: each summary, reason, gap_statement, boundary,
-    question and so on is its own unit, which is the granularity a reader actually reasons
-    over. Markdown keeps blank-line paragraphs.
+    So a YAML surface is split at every mapping key: each summary, reason, gap_statement,
+    boundary, question and so on becomes its own unit, which is the granularity a reader
+    actually reasons over. Markdown keeps blank-line paragraphs. The split is a line scan
+    rather than a parse, so there is no failure branch whose fallback would silently restore
+    the file-level behaviour.
     """
     if name.endswith((".yaml", ".yml")):
         # Split at every mapping key, so each summary / reason / gap_statement / boundary is
@@ -157,14 +159,9 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
                 cur.append(line)
         if cur:
             units.append("\n".join(cur))
-        if len(units) < 2:
-            # A YAML surface that yields one unit means the scan is file-level again.
-            # Fail loudly; this is the bug that shipped twice.
-            raise SystemExit(
-                f"FATAL: {name} split into {len(units)} unit(s). A YAML review file must "
-                f"split per field; one unit means the hedge invariant has silently become "
-                f"file-level. Check YAML_KEY_RE against the file's actual formatting."
-            )
+        # NOTE: deliberately does NOT raise. A check that raises from inside a helper aborts
+        # every later check and the self-test baseline, while the harness still prints as
+        # though it ran. The under-split condition is reported by check_compartment_hedge().
         return units
     return [b for b in re.split(r"\n\s*\n", text)]
 
@@ -178,13 +175,22 @@ def check_compartment_hedge(texts: dict[str, str]) -> list[str]:
     real defect.
     """
     problems: list[str] = []
-    triggered = 0
+    triggered_by_surface: dict[str, int] = {}
     for name, text in texts.items():
         paras = _paragraphs(text, name)
+        # A YAML surface that does not split means the invariant has silently gone
+        # file-level - the bug that shipped twice. Report it; do not raise.
+        if name.endswith((".yaml", ".yml")) and len(paras) < 2:
+            problems.append(
+                f"{name} split into {len(paras)} unit(s). A YAML review file must split per "
+                f"field; one unit means the hedge invariant has become file-level again. "
+                f"Check YAML_KEY_RE against the file's actual formatting."
+            )
+        triggered_by_surface.setdefault(name, 0)
         for i, para in enumerate(paras):
             if not (COMPARTMENT_TOPIC_RE.search(para) and COMPARTMENT_CONTEXT_RE.search(para)):
                 continue
-            triggered += 1
+            triggered_by_surface[name] += 1
             # Markdown paragraphs often continue an argument into the next block, so allow a
             # one-paragraph lookahead there. A YAML scalar is a self-contained field written
             # by one author about one thing, and the next scalar is usually an unrelated key -
@@ -201,11 +207,17 @@ def check_compartment_hedge(texts: dict[str, str]) -> list[str]:
                     f"The review withdrew the unhedged form of this claim. Paragraph starts: "
                     f"{para.strip()[:90]!r}"
                 )
-    if triggered == 0:
-        problems.append(
-            "compartment-hedge guard is vacuous: no paragraph matched the topic, so the "
-            "invariant proved nothing. Check the topic pattern before trusting a pass."
-        )
+    # Vacuity is checked PER SURFACE, not corpus-wide. A corpus-wide counter stays non-zero
+    # as long as ANY surface still discusses the topic, so the guard could go silently blind
+    # on the review YAML - the surface where the annotation claims actually live - while
+    # reporting itself exercised.
+    for required in ("ADCK5-ai-review.yaml", "ADCK5-bioinformatics/RESULTS.md"):
+        if triggered_by_surface.get(required, 0) == 0:
+            problems.append(
+                f"compartment-hedge guard matched nothing in {required}, where the compartment "
+                f"argument is made. Either the argument was removed from that surface, or the "
+                f"topic pattern no longer matches it and the guard is now vacuous there."
+            )
     return problems
 
 # Claims that must appear on at least `min_surfaces` of the prose surfaces.
@@ -716,6 +728,24 @@ def self_test() -> int:
     empty_motif = {"columns": []}
     expect_flag("results.json has no positioned residues (guard must not pass vacuously)",
                 good, motif=empty_motif, match="residue guard is vacuous")
+
+    # An under-splitting YAML surface must be REPORTED, not raised - a helper that raises
+    # aborts every later check while the harness still prints as though it ran.
+    unsplittable = {**good, "ADCK5-ai-review.yaml": "no mapping keys here at all, just prose"}
+    expect_flag(
+        "a YAML surface that does not split per field (invariant gone file-level)",
+        unsplittable,
+        match="split into 1 unit",
+    )
+
+    # Per-surface vacuity: the guard must notice if it stops matching the review YAML, even
+    # though other surfaces still discuss the topic. A corpus-wide counter would not.
+    no_topic_in_yaml = {**good, "ADCK5-ai-review.yaml": "summary: >-\n  nothing on topic here\n"}
+    expect_flag(
+        "compartment topic vanished from the review YAML while other surfaces still match",
+        no_topic_in_yaml,
+        match="matched nothing in ADCK5-ai-review.yaml",
+    )
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them

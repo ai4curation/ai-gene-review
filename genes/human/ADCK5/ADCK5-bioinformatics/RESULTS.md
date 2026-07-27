@@ -89,7 +89,7 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-24 self-tests, each exercised in the direction it exists to catch and in the happy
+26 self-tests, each exercised in the direction it exists to catch and in the happy
 direction, plus two invariants about the harness itself.
 
 ## Question
@@ -190,6 +190,25 @@ Two findings, both asserted by the script so they fail loudly if the databases m
    kinase keyword, and both carry `NOT|enables GO:0004672` plus `NOT|involved_in GO:0006468`
    (IDA, PMID:27499294). ADCK5 and ADCK2, never assayed, still carry `EC 2.7.11.-` and the
    keyword. ADCK1 is intermediate: `EC 2.7.-.-` but the keyword retained.
+
+### Why ADCK1 and ADCK2 get a mitochondrial UniProt annotation and ADCK5 does not
+
+Worth stating precisely, because the obvious reading is wrong. All three genes carry the same
+MitoCoP HTP row (`PMID:34800366`), so it looks as though UniProt is treating identical evidence
+differently. It is not: `ADCK1-uniprot.txt:117` reads
+`SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:33988507}` and ADCK2's entry carries
+the same evidence tag, while MitoCoP is **not cited in either entry**. Both paralogs have a
+dedicated *experimental* localisation from the subcellular kinome atlas that ADCK5 lacks.
+
+**But ADCK5 lacks it because it was never assayed**, not because it was assayed and found
+elsewhere. That paper says so: *"ADCK5 and OBSCN were absent from the library"*. QuickGO returns
+**0** annotations for Q3MIX3 from `PMID:33988507`, consistent with absence of testing.
+
+So the UniProt correction request in the review is posed on ADCK5's own evidence — its MitoCoP
+membership, 17 of 25 mitochondrial interactome partners, and the family's exclusively
+mitochondrial distribution — and not on a parity with its paralogs that does not hold. An
+earlier draft made the parity claim on three surfaces, including in text addressed to UniProt
+curators who would have checked it.
 
 ### An unflagged contradiction in a neighbouring gene, visible in this census
 
