@@ -44,6 +44,9 @@ autolink_gene_symbols: false
 2026-07-26: OpenScientist reports completed for `pssA` and `psd`.
 The `PP_4677` request timed out after 7200s without producing a report.
 
+2026-07-26: The generic module-level OpenScientist run timed out after 7200s
+without producing a report.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
