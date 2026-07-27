@@ -1250,7 +1250,17 @@ def raw_vs_parsed_counts() -> dict:
             for v in o:
                 walk(v)
     walk(doc)
-    goa_rows = len(parse_goa(GOA_TSV))
+    goa_lines = [ln for ln in GOA_TSV.read_text().splitlines()[1:] if ln.strip()]
+    goa_rows = len(goa_lines)
+    # A raw line count and a distinct-annotation count can differ legitimately, and two merged
+    # genes in this campaign reconciled only after deduping. Assert they agree here rather than
+    # letting the coverage arithmetic below rest on an unstated assumption.
+    n_distinct = len(set(goa_lines))
+    if n_distinct != goa_rows:
+        raise RuntimeError(
+            f"{GOA_TSV.name} has {goa_rows} data lines but only {n_distinct} distinct ones; the "
+            "coverage arithmetic compares existing_annotations against DISTINCT GOA rows and must "
+            "be recomputed against the deduped set")
     n_entries = len(doc.get("existing_annotations") or [])
     n_new = sum(1 for a in (doc.get("existing_annotations") or [])
                 if (a.get("review") or {}).get("action") == "NEW")
@@ -1260,6 +1270,7 @@ def raw_vs_parsed_counts() -> dict:
         "parsed_reference_id_count": parsed_ref,
         "balanced": raw_ref == parsed_ref,
         "goa_data_rows": goa_rows,
+        "goa_distinct_data_rows": n_distinct,
         "existing_annotations": n_entries,
         "existing_annotations_marked_NEW": n_new,
         "goa_rows_covered": n_entries - n_new,

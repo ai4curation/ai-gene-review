@@ -248,7 +248,12 @@ peritubular myoid cells and myofibroblasts. Several GOA rows are the residue of 
   "juxtaglomerular-like cells".
 - `GO:0005604 basement membrane` transfers from a rat IDA whose source (PMID:30476341) is a fetal
   rat testis toxicology study, where α-SMA stains the peritubular myoid cell layer that lies
-  *against* the seminiferous tubule basement membrane. Adjacency, not localisation.
+  *against* the seminiferous tubule basement membrane. Adjacency, not localisation. **This row is
+  ACTA2-specific: ACTG2 does not carry it**, so basement membrane is not a smooth-muscle-actin-wide
+  annotation the way the extracellular HDA rows are. And it must be kept apart from the
+  `GO:0005576` IBA below: the IDA is on a different term and reaches human ACTA2 by Ensembl
+  Compara, not through PAINT, so "the seed's basement-membrane IDA was generalised upward into the
+  IBA" is a reconstruction that neither source records.
 - `GO:0006936 muscle contraction` transfers from a rat IDA whose source (PMID:11953441) is a
   paper on transcriptional regulation of the *Acta2 promoter* in osteoblasts. The conclusion is
   right for ACTA2 on entirely independent grounds; the donor row is not what makes it right.
@@ -256,7 +261,11 @@ peritubular myoid cells and myofibroblasts. Several GOA rows are the residue of 
   seed, rat Acta2 — whose own evidence for that exact term is itself only an `IBA`. The
   descendant IDA it does hold is the basement-membrane row above. **This row is the review's one
   `REMOVE`, and I changed my mind about it.** My first pass wrote `MARK_AS_OVER_ANNOTATED` on the
-  ground that ACTA2 really is detected extracellularly. Two checks dissolved that ground. First,
+  ground that ACTA2 really is detected extracellularly. Two checks dissolved that ground. (The
+  single-seed fact itself is readable from the cached PAINT export —
+  `PTHR11937  PTN004322804  GO:0005576  C  IBD  false  RGD:621676` — and *not* from the GOA
+  WITH/FROM field, which names the node and the rat gene without distinguishing donor from
+  co-recipient.) First,
   the detection is already carried by this gene's own two HDA rows (`GO:0005576` from tears,
   `GO:0070062` from urinary exosomes) under `located_in` — the correct, weaker qualifier — so
   removing the IBA deletes an unsupported *functional* claim and keeps every observation. Second,
@@ -328,7 +337,16 @@ used here only as variant positions, not as evidence for any GO term.
    The gap is family-wide rather than gene-specific (ACTA1 has it by TAS, ACTC1 by IDA; ACTA2,
    ACTB, ACTG1, ACTG2 have none). Likely cause: `GO_REF:0000043`, the Swiss-Prot-keyword route,
    now returns **zero** human annotations — verified, so the keyword no longer produces a GO row
-   for any human protein. Proposed by ISS from the same donor as the ATP-hydrolysis row.
+   for any human protein.
+
+   **The obvious donor for the ISS is wrong, and checking it is the point.** The natural choice
+   was `P68137` (Sus scrofa ACTA1), which already supplies this gene's `GO:0016887` ISS. But
+   QuickGO returns **zero** `GO:0005524` rows for `P68137` and zero annotations anywhere under
+   `GO:0000166 nucleotide binding` — so an ISS from it would have transferred an annotation the
+   donor does not hold. That is the same shape as the WITH/FROM discipline applied to incoming
+   rows, turned on an outgoing proposal. The donor used instead is **human ACTC1 (`P68032`), which
+   holds `GO:0005524` by IDA** from [PMID:16611632], a same-species conventional actin with direct
+   experimental evidence.
 
 ## Cross-gene note for the ACTG2 reviewer (a claim, not a fact — please verify)
 

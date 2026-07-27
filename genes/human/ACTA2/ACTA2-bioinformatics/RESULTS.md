@@ -683,6 +683,7 @@ For each literature reference on an ACTA2 row: how many annotations does it carr
 | parsed_reference_id_count | 32 |
 | balanced | True |
 | goa_data_rows | 50 |
+| goa_distinct_data_rows | 50 |
 | existing_annotations | 53 |
 | existing_annotations_marked_NEW | 3 |
 | goa_rows_covered | 50 |
