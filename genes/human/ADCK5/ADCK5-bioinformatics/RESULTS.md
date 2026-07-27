@@ -1,6 +1,6 @@
 # ADCK5 (Q3MIX3) — is the "protein serine/threonine kinase" assignment supported?
 
-Two reproducible analyses, both runnable from this directory with no arguments:
+Four reproducible analyses, all runnable from this directory with no arguments:
 
 ```bash
 python3 ubib_motif_analysis.py              # diagnostic residue columns
@@ -15,7 +15,7 @@ Outputs: `results.json`, `family_census.json`, `partner_localisation.json`,
 `ubib_family.fasta`, `ubib_family.aln.fasta`. Deleting the `.json`/`.fasta` files and
 re-running reproduces them byte-for-byte.
 
-`audit_adck5_claims.py` re-reads the two JSON outputs and asserts that every residue call,
+`audit_adck5_claims.py` re-reads the three JSON outputs and asserts that every residue call,
 census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
 `ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. Writing it exposed
 three defects in itself, all found by running the break-tests and none by reading: a residue
@@ -170,10 +170,13 @@ of which 17 are annotated to the mitochondrion. Y2H places both proteins in the 
 nucleus and so removes exactly the targeting constraint that makes the pairing implausible
 in vivo.
 
-Both numbers above are computed by `partner_localisation.py`, not typed: it re-pulls all 54
+Every number above is computed by `partner_localisation.py`, not typed: it re-pulls all 54
 IntAct records (asserting `len(rows) == totalElements`), resolves every partner by **UniProt
-accession** rather than gene symbol, and reports `17 of 25` plus
-`orthogonal_assay_for_goa_partners: {Q7Z3S9: false}`. `audit_adck5_claims.py` then holds this
+accession** rather than gene symbol, and emits `17 of 25`,
+`orthogonal_assay_for_goa_partners: {Q7Z3S9: false}`, `mi_scores: [0.67]` (one distinct score
+across every row — itself evidence the rows are not independent observations) and
+`methods_by_pmid`, which is what shows `25416956` contributing three sub-method labels and
+`31515488` one. `audit_adck5_claims.py` then holds this
 file, the notes and the review YAML to those values, and fails if an orthogonal assay ever
 appears for Q7Z3S9 — which would make the `MARK_AS_OVER_ANNOTATED` verdict stale.
 

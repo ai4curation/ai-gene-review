@@ -27,6 +27,13 @@ phosphorylate (Ser, Thr or Tyr)."* GOA no longer imports keyword-derived (SPKW) 
 so the GO record is clean while the UniProt record is not. Reported as a UniProt correction
 request rather than a GO action.
 
+**Verified rather than assumed, with a control.** QuickGO returns **0** human annotations for
+`GO_REF:0000043` (the Swiss-Prot-keyword pipeline, retired ~April 2026), against **139,714**
+for `GO_REF:0000044` (SubCell) and **1,862** for `GO_REF:0000041` (UniPathway) — so the zero is
+specific to the keyword pipeline, not an artefact of the query. And `GO:0004674` itself is
+alive in GOA: PRKACA (P17612) carries 31 annotations to it, by ARBA and by many IDAs. ADCK5
+receives it by no route at all.
+
 ## Family and structural basis (see `ADCK5-bioinformatics/`)
 
 ADCK5 is a UbiB-family atypical kinase. Stefely et al. defined the UbiB-specific features
@@ -112,7 +119,17 @@ lineage. MI score 0.67 throughout; no orthogonal assay in any of ADCK5's 54 IntA
 Third occurrence of this `NbExp` trap in the campaign (after ACRV1, ADAMTSL5).
 
 NOTCH2NLA is `Secreted`/`Cytoplasm`, human-specific, and functions in neural progenitor
-proliferation — a compartment ADCK5 does not occupy. Y2H removes the targeting constraint.
+proliferation. Y2H places both proteins in the yeast nucleus and so removes the targeting
+constraint.
+
+**The compartment objection is an assumption, and is stated as one.** It holds if ADCK5's
+kinase-like domain faces the matrix, as COQ8A's C-terminus is measured to do [PMID:27499294
+"endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus
+facing the matrix"] — but ADCK5's own sidedness has never been measured, and an outer-membrane
+anchor presenting the domain to the cytosol is not excluded. That is the same uncertainty that
+stops this review proposing `GO:0031966`, so leaning on the compartment argument while
+declining the localisation refinement would be inconsistent. The verdict does not need it: the
+method-replication argument stands alone. (Caught by the PR reviewer; conceded.)
 
 Checks that came back **negative** (recorded so they are not re-run blindly):
 - NOTCH2NLA resolves to a reviewed, canonical, full-length Swiss-Prot entry — no
@@ -152,6 +169,13 @@ No `core_functions` are asserted. ADCK5's molecular activity is genuinely undete
 UniProt says so, Pharos calls it Tdark, and this review found no measurement to replace
 that. Per CLAUDE.md the "No core functions defined" warning is left standing rather than
 silenced with invented content.
+
+That absence is now recorded positively rather than only as a warning: two `knowledge_gaps`
+entries carry it, a `BIOLOGY`/`WHOLLY_DARK` gap for the undetermined activity, substrate and
+process, and an `ONTOLOGY`/`MF_DARK` gap for GO's inability to express the UbiB
+occluded-pocket architecture. Both are grounded in quotes already verified in this review.
+(The reviewer's point, and a good one: as prose in `suggested_questions` the finding is read
+once; in `knowledge_gaps` it feeds the Function Knowledge Gaps project.)
 
 ## Reconciliation
 

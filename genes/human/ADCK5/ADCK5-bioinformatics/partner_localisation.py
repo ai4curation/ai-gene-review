@@ -153,11 +153,24 @@ def main() -> int:
         if pmid_of(r) in GOA_BINDING_PMIDS:
             acc, sym = partner_of(r)
             g = goa_partners.setdefault(
-                acc, {"symbol": sym, "rows": [], "pmids": set(), "methods": set()}
+                acc,
+                {
+                    "symbol": sym,
+                    "rows": [],
+                    "pmids": set(),
+                    "methods": set(),
+                    # Per-PMID method split: this is what shows that one screen is logged
+                    # under several sub-method labels, as opposed to several screens agreeing.
+                    "methods_by_pmid": defaultdict(set),
+                    "mi_scores": set(),
+                },
             )
             g["rows"].append(r.get("detectionMethod"))
             g["pmids"].add(pmid_of(r))
             g["methods"].add(r.get("detectionMethod"))
+            g["methods_by_pmid"][pmid_of(r)].add(r.get("detectionMethod"))
+            if r.get("intactMiscore") is not None:
+                g["mi_scores"].add(r["intactMiscore"])
 
     out = {
         "subject": SUBJECT,
@@ -177,6 +190,12 @@ def main() -> int:
                 "n_distinct_pmids": len(g["pmids"]),
                 "pmids": sorted(g["pmids"]),
                 "distinct_methods": sorted(m for m in g["methods"] if m),
+                "methods_by_pmid": {
+                    pm: sorted(ms) for pm, ms in sorted(g["methods_by_pmid"].items())
+                },
+                # A single distinct score across every row is itself evidence that the rows
+                # are not independent observations.
+                "mi_scores": sorted(g["mi_scores"]),
             }
             for acc, g in goa_partners.items()
         },
@@ -202,8 +221,10 @@ def main() -> int:
         orth = out["orthogonal_assay_for_goa_partners"][acc]
         print(
             f"  {g['symbol']} ({acc}): {g['n_intact_rows']} IntAct rows across "
-            f"{g['n_distinct_pmids']} publication(s); methods = {g['distinct_methods']}"
+            f"{g['n_distinct_pmids']} publication(s); MI scores = {g['mi_scores']}"
         )
+        for pm, ms in g["methods_by_pmid"].items():
+            print(f"    PMID:{pm}: {len(ms)} method label(s) -> {ms}")
         print(f"    any non-two-hybrid assay anywhere in IntAct for this pair? {orth}")
     print(f"\nWrote {OUT}")
     return 0

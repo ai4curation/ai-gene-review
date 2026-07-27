@@ -228,6 +228,47 @@ def check_partner_numbers(partner: dict, texts: dict[str, str]) -> list[str]:
             f"computed IntAct record count ({n_rec}) is not stated on any prose surface"
         )
 
+    # The MI score, and the per-PMID method split that carries the "one screen, three
+    # sub-method labels" argument. Both were prose-only until partner_localisation.py emitted
+    # them; the expected strings are derived from the JSON here rather than typed, so the
+    # prose and the check cannot drift apart independently.
+    for acc, g in partner["goa_binding_partners"].items():
+        scores = g.get("mi_scores") or []
+        if len(scores) == 1:
+            score_str = f"MI score {scores[0]}"
+            if not any(score_str in t for t in texts.values()):
+                problems.append(
+                    f"{acc}: computed single MI score {scores[0]} is not stated as "
+                    f"{score_str!r} on any prose surface"
+                )
+        else:
+            # More than one distinct score means "0.67 throughout" is no longer true.
+            for name, text in texts.items():
+                if "MI score 0.67" in text:
+                    problems.append(
+                        f"{name}: claims a single MI score but the computation now returns "
+                        f"{scores} for {acc}"
+                    )
+
+        split = g.get("methods_by_pmid") or {}
+        if not split:
+            problems.append(f"{acc}: methods_by_pmid is empty, so the sub-method argument is unbacked")
+        for pm, methods in split.items():
+            if len(methods) > 1:
+                # The prose must name this reference as the multi-sub-method one.
+                if not any(pm in t for t in texts.values()):
+                    problems.append(
+                        f"{acc}: PMID:{pm} carries {len(methods)} sub-method labels "
+                        f"({methods}) but is not named on any prose surface"
+                    )
+                for m in methods:
+                    if not any(m in t for t in texts.values()):
+                        problems.append(
+                            f"{acc}: sub-method label {m!r} from PMID:{pm} is not stated on "
+                            f"any prose surface, so the 'three labels, one screen' claim is "
+                            f"not fully evidenced"
+                        )
+
     # The load-bearing negative: no orthogonal (non-two-hybrid) assay for the GOA partner.
     orth = partner["orthogonal_assay_for_goa_partners"]
     if not orth:
@@ -368,6 +409,30 @@ def self_test() -> int:
     bad_p3 = json.loads(json.dumps(partner))
     bad_p3["orthogonal_assay_for_goa_partners"] = {}
     expect_flag("no GOA partners in the JSON (claim would be vacuous)", good, partner=bad_p3)
+
+    # The MI-score and per-PMID sub-method checks: each must be REACHABLE, not merely
+    # present. A check that can never fire reads as coverage while providing none.
+    dropped_label = {
+        k: v.replace("two hybrid prey pooling approach", "XXX") for k, v in good.items()
+    }
+    expect_flag("a sub-method label vanished from the prose", dropped_label)
+
+    drifted_mi = {k: v.replace("MI score 0.67", "MI score 0.90") for k, v in good.items()}
+    expect_flag("the MI score in the prose drifted from the computed one", drifted_mi)
+
+    bad_p4 = json.loads(json.dumps(partner))
+    for a in bad_p4["goa_binding_partners"].values():
+        a["mi_scores"] = [0.67, 0.42]
+    expect_flag(
+        "IntAct now reports more than one MI score, so 'MI score 0.67 throughout' is false",
+        good,
+        partner=bad_p4,
+    )
+
+    bad_p5 = json.loads(json.dumps(partner))
+    for a in bad_p5["goa_binding_partners"].values():
+        a["methods_by_pmid"] = {}
+    expect_flag("methods_by_pmid emptied (sub-method argument would be unbacked)", good, partner=bad_p5)
 
     # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}
