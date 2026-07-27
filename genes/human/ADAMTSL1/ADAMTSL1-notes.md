@@ -351,6 +351,15 @@ the *shape* of the entry rather than on its parent key, and all 6 pass. Anyone r
 `checkquotes.py` alone for a review that uses `knowledge_gaps` provenance is not checking those
 quotes.
 
+**But it is a local-script gap, not a project-gate gap** — I initially implied the wider risk and
+that was wrong. The gate that actually runs in CI is `linkml-reference-validator` via
+`just validate`, and it *does* walk provenance. Established by breaking it rather than by reading
+code: injecting `THIS SENTENCE APPEARS IN NO PUBLICATION ANYWHERE ZZQQXX.` as a provenance
+`supporting_text` turns `just validate` from `✓ Valid` into
+`✗ Invalid ... Text part not found as substring`. The probe asserted its anchor was present before
+mutating, and the file was restored to a clean `git diff` afterwards. So provenance quotes in this
+repo are gated; it is only the scratch checker that misses them.
+
 ## 9. What ADAMTSL1 is, in one paragraph
 
 A large secreted ADAMTS-like glycoprotein of the extracellular matrix, built from
