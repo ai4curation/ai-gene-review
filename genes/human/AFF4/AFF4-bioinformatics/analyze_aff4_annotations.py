@@ -884,12 +884,26 @@ def run_audit() -> dict:
         "goUsageRelationships": "is_a,part_of", "taxonId": "9606"})
     if not complete:
         raise AuditError("GO:0043923 query truncated")
+    # An annotation count is NOT an entity count: one entity can hold several rows for
+    # the same term, and the recipient set here includes a complex as well as proteins.
+    # Reported separately, and the distinction asserted, because a first draft of this
+    # review wrote the annotation total as a count of proteins.
+    entities = {a["geneProductId"] for a in anns}
+    complexes = {e for e in entities if not e.startswith("UniProtKB:")}
     res["host_activation_of_viral_transcription"] = {
         "human_annotations": total,
+        "human_entities": len(entities),
+        "human_protein_entities": len(entities - complexes),
+        "human_complex_entities": sorted(complexes),
         "holders": sorted({(a["symbol"], a["goEvidence"], a["reference"], a["assignedBy"])
                            for a in anns}),
         "subject_holds_it": any(a["geneProductId"] == f"UniProtKB:{SUBJECT}" for a in anns),
     }
+    if len(entities) == total:
+        raise AuditError(
+            "annotation total equals entity total for GO:0043923, which makes the two "
+            "indistinguishable in the report; check the derivation before trusting either."
+        )
     return res
 
 
@@ -1133,8 +1147,13 @@ def render(res: dict) -> str:
     h = res["host_activation_of_viral_transcription"]
     add("## 11. `GO:0043923 host-mediated activation of viral transcription`")
     add("")
-    add(f"- human annotations: **{h['human_annotations']}**")
+    add(f"- human **annotations**: **{h['human_annotations']}**")
+    add(f"- human **entities**: **{h['human_entities']}** "
+        f"({h['human_protein_entities']} proteins + complexes {h['human_complex_entities']})")
     add(f"- AFF4 holds it: **{h['subject_holds_it']}**")
+    add("")
+    add("An annotation count is not an entity count; both are reported so the table below "
+        "cannot be read as a count of proteins.")
     add("")
     add("| symbol | evidence | reference | assigned by |")
     add("|---|---|---|---|")

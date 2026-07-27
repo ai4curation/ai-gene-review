@@ -541,8 +541,11 @@ are a measurement rather than a failed query.
 
 ## 11. `GO:0043923 host-mediated activation of viral transcription`
 
-- human annotations: **20**
+- human **annotations**: **20**
+- human **entities**: **18** (17 proteins + complexes ['ComplexPortal:CPX-222'])
 - AFF4 holds it: **False**
+
+An annotation count is not an entity count; both are reported so the table below cannot be read as a count of proteins.
 
 | symbol | evidence | reference | assigned by |
 |---|---|---|---|
