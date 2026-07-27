@@ -81,10 +81,46 @@ an associated Gα, and nucleotide exchange. For ADGRA2:
   [`file:human/ADGRA2/ADGRA2-uniprot.txt` CC FUNCTION, lines 221–224 — the sentence spans three
   `CC ` continuation lines and cannot be quoted verbatim on one line].
 
-Conclusion: the GPCR-activity claim is **unmeasured**, not refuted. Hence
-`MARK_AS_OVER_ANNOTATED`, not `REMOVE`, on both `GO:0004930` rows and both `GO:0007186` rows. The
-architecture is real and a coupling assay has never been run and failed; per the ACBD3 lesson, an
-absence of reports is not a demonstration of absence.
+Conclusion: the GPCR-activity claim is **unmeasured**, not refuted. The architecture is real and a
+coupling assay has never been run and failed; per the ACBD3 lesson, an absence of reports is not a
+demonstration of absence.
+
+**But the four rows are not equally defective, and the actions are calibrated to the difference.**
+
+| route | rows | action | why |
+|---|---|---|---|
+| InterPro2GO | `GO:0004930` IEA, `GO:0007186` IEA | `MARK_AS_OVER_ANNOTATED` | The signature genuinely matches ADGRA2. The inference has a real, if over-extended, basis. |
+| GDB `TAS` | `GO:0004930` TAS, `GO:0007186` TAS | **`REMOVE`** | `TAS` asserts a *traceable author statement*, and the cited paper contains no such statement about ADGRA2 or any other receptor. **The stated evidence does not exist.** |
+
+The `REMOVE` is on **evidentiary** grounds, not on the grounds that ADGRA2 provably lacks GPCR
+activity — the two are different claims and conflating them is what makes the calibration look
+inconsistent. Because the InterPro rows remain, removing the TAS rows does not erase the claim from
+GOA; it removes two rows whose cited support is absent. This is complementary to, not a substitute
+for, the `suggested_questions` item asking GO whether the whole 78-annotation GDB block across 27
+entities should be retired: that is a consortium-level decision, this is the gene-level one.
+
+### A reviewer suggestion that is factually wrong: `GO:0060070` and `GO:0090263` are not redundant
+
+Core function 1 lists both `GO:0060070 canonical Wnt signaling pathway` and
+`GO:0090263 positive regulation of canonical Wnt signaling pathway` under `directly_involved_in`, and
+this was flagged as listing a term together with its child. It is not. QuickGO
+`/ontology/go/terms/GO:0090263/ancestors?relations=is_a,part_of` returns 18 ancestors and
+**`GO:0060070` is not among them**; `GO:0060828 regulation of canonical Wnt signaling pathway` is.
+Reading it from the other end, `GO:0060070`'s child list gives the relation explicitly:
+
+```
+GO:0090263  positively_regulates
+GO:0090090  negatively_regulates
+GO:0060828  regulates
+GO:0061316 / GO:0044336 / GO:0044337 / GO:0044338   is_a
+```
+
+GO deliberately keeps regulation terms out of the subsumption hierarchy of the process they
+regulate, so neither term entails the other: `GO:0060070` says ADGRA2 participates in the pathway,
+`GO:0090263` says it increases its output. Both are separately annotated in GOA (IDA and IBA
+respectively) and both are retained. Same shape as the ABR lesson (GO keeps the Rac and Rho
+regulation branches disjoint) and the ACTMAP one (proteolysis and protein-modification disjoint) —
+a `positively_regulates` edge in a child listing reads like subsumption and is not.
 
 ### Where the claim actually enters GOA — and it is NOT the retired SPKW route
 
