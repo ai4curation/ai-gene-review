@@ -117,6 +117,21 @@ Two features of this table are the finding:
    SGTB's presence is *consistent* with the same explanation, by family membership and
    shared architecture, but it is not curated evidence for it.
 
+   **This asymmetry is computed from the cached records, not read off the prose.** Check H
+   scans the two entries' `FUNCTION` comments and reports:
+
+   | | `FUNCTION` cues found | `SIMILARITY` | first 90 chars of `FUNCTION` |
+   |---|---|---|---|
+   | **SGTA** `O43765` | `hydrophobic`, `transmembrane` | Belongs to the SGT family | *"Co-chaperone that binds misfolded and hydrophobic patches-containing client proteins…"* |
+   | **SGTB** `Q96EQ0` | **none** | Belongs to the SGT family | *"Co-chaperone that binds directly to HSC70 and HSP70 and regulates their ATPase activity"* |
+
+   Four directions are break-tested: stripping `FUNCTION` from the cache, giving SGTB the
+   hydrophobic-client role, taking it away from SGTA, and breaking the family statement. The
+   first of those reproduces a defect that actually shipped in this PR — a narrowed cache
+   projection had dropped `FUNCTION`, the very field this correction rests on, so the claim was
+   right while the evidence for it had left with the projection. **When narrowing a cached
+   projection, check that nothing you assert still depends on the fields you dropped.**
+
 So every partner in the set is either a hydrophobic-helix-bearing membrane protein or an
 SGT-family TPR co-chaperone, and the family's curated member binds exposed transmembrane
 helices. The set has a single shared property, and it is hydrophobicity rather than a

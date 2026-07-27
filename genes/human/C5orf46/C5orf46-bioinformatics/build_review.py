@@ -110,7 +110,9 @@ SET_CONTEXT = (
     "segments between them; the other two are SGTA and SGTB, the two human members of the SGT "
     "family of TPR co-chaperones, and the hydrophobic-client function is curated for SGTA only - "
     "SGTB's entire UniProt FUNCTION is HSC70/HSP70 ATPase regulation, so it is consistent with "
-    "the reading rather than a second curated instance. C5orf46 is the bait in 26 of the 38 "
+    "the reading rather than a second curated instance, and that asymmetry is computed from the "
+    "cached UniProt records rather than asserted (check H, four directions break-tested). "
+    "C5orf46 is the bait in 26 of the 38 "
     "two-hybrid records, and that bait is the full open reading frame, whose most hydrophobic "
     "19-residue window (Kyte-Doolittle +2.51) is the uncleaved signal peptide - more hydrophobic "
     "than anything in the mature chain (+1.08). A bait presenting the most hydrophobic segment in "
@@ -311,6 +313,8 @@ def binding_row(partner: str, reference: str) -> dict:
                   "| SGTA | O43765 | Swiss-Prot | 313 | 0 | Cytoplasm; Nucleus | 281 | 1 |"),
                 q(RESULTS_FILE_REF,
                   "| SGTB | Q96EQ0 | Swiss-Prot | 304 | 0 | (none stated) | 202 | 1 |"),
+                q(RESULTS_FILE_REF,
+                  "| **SGTB** `Q96EQ0` | **none** | Belongs to the SGT family |"),
                 q(UNIPROT_FILE_REF, "FT   SIGNAL          1..23"),
             ],
         },

@@ -192,8 +192,13 @@ def fetch_uniprot(acc: str, refresh: bool = False) -> dict:
     A merged or secondary accession returns HTTP 200 with a complete, normal-looking
     reviewed record for a *different* protein; only primaryAccession reveals it.
     """
+    # `cc_function` and `cc_similarity` are retained deliberately. A PR review caught that a
+    # narrowed projection had dropped FUNCTION, which is exactly the field the SGTA-versus-SGTB
+    # correction rests on - "the claim is right; the evidence for it left with the projection".
+    # When narrowing a cache, check that nothing asserted still depends on the dropped fields.
     fields = ("accession,id,protein_name,gene_names,length,sequence,"
-              "cc_subcellular_location,ft_transmem,ft_signal,ft_chain")
+              "cc_subcellular_location,cc_function,cc_similarity,"
+              "ft_transmem,ft_signal,ft_chain")
     url = f"https://rest.uniprot.org/uniprotkb/{acc}.json?fields={fields}"
     d = _get_json(url, f"uniprot_{acc}", refresh)
     got = d.get("primaryAccession")
@@ -690,6 +695,63 @@ def check_g_precedents(problems: list[str], refresh: bool, report: dict) -> None
             f"proposals are not new - re-check before proposing them")
 
 
+# The two co-chaperone partners, and the distinction the review's argument turns on. SGTA's
+# curated FUNCTION includes hydrophobic-client / transmembrane-domain binding; SGTB's does not.
+SGT_PAIR = {"O43765": "SGTA", "Q96EQ0": "SGTB"}
+HYDROPHOBIC_CLIENT_CUES = ("hydrophobic", "transmembrane")
+
+
+def _function_texts(entry: dict) -> list[str]:
+    return [txt["value"] for c in entry.get("comments", [])
+            if c["commentType"] == "FUNCTION" for txt in c.get("texts", [])]
+
+
+def check_h_sgt_pair(problems: list[str], refresh: bool, report: dict) -> None:
+    """Verify from the cached records which of SGTA/SGTB carries the hydrophobic-client role.
+
+    The review states this asymmetry in fourteen places. It must be checkable from the tree.
+    """
+    out = {}
+    for acc, label in SGT_PAIR.items():
+        entry = fetch_uniprot(acc, refresh)           # asserts primaryAccession
+        funcs = _function_texts(entry)
+        if not funcs:
+            problems.append(
+                f"H: no FUNCTION comment cached for {acc} ({label}) - the SGTA-versus-SGTB "
+                f"claim is not verifiable from this cache, so either widen the projection or "
+                f"stop asserting it")
+            continue
+        joined = " ".join(funcs).lower()
+        cues = sorted(c for c in HYDROPHOBIC_CLIENT_CUES if c in joined)
+        sims = [txt["value"] for c in entry.get("comments", [])
+                if c["commentType"] == "SIMILARITY" for txt in c.get("texts", [])]
+        out[acc] = {
+            "label": label,
+            "n_function_comments": len(funcs),
+            "hydrophobic_client_cues": cues,
+            "similarity": sims,
+            "function_first_120": funcs[0][:120],
+        }
+    report["sgt_pair"] = out
+    if set(out) != set(SGT_PAIR):
+        return                                        # a missing record was already reported
+    a, b = out["O43765"], out["Q96EQ0"]
+    if not a["hydrophobic_client_cues"]:
+        problems.append(
+            "H: SGTA's cached FUNCTION contains neither 'hydrophobic' nor 'transmembrane', so "
+            "the claim that the hydrophobic-client role is curated FOR SGTA is unsupported")
+    if b["hydrophobic_client_cues"]:
+        problems.append(
+            f"H: SGTB's cached FUNCTION does contain {b['hydrophobic_client_cues']}, so the "
+            f"claim that the role is curated for SGTA ONLY is false and must be corrected")
+    # The pair must also genuinely be one family, which is the corroboration half of the claim.
+    if not all("SGT family" in s for v in (a, b) for s in v["similarity"]):
+        problems.append(
+            f"H: the SGT-family similarity statement is not present on both entries "
+            f"(SGTA: {a['similarity']}, SGTB: {b['similarity']}), so describing SGTB as a "
+            f"same-family paralogue is not supported by the cache")
+
+
 CHECKS = [
     ("A molecular identity of the assayed peptide", check_a_identity),
     ("B amphipathicity / hydrophobic maximum", check_b_hydropathy),
@@ -698,6 +760,7 @@ CHECKS = [
     ("E partner promiscuity", check_e_promiscuity),
     ("F annotation coverage gap", check_f_coverage),
     ("G curatorial precedents", check_g_precedents),
+    ("H SGTA/SGTB hydrophobic-client asymmetry", check_h_sgt_pair),
 ]
 
 
@@ -944,6 +1007,99 @@ def self_test() -> int:
     for acc, v in rep["precedents"].items():
         assert v["expected_term_rows"], acc
     print("  ok   both real precedents verify and the subject holds no defence/killing term")
+
+    # 9. Check H, one break-test per direction it advertises, plus the defect that shipped.
+    import copy as _copy
+
+    def _with_patched_uniprot(mutator):
+        """Run check_h_sgt_pair against a mutated copy of the cached records."""
+        saved = globals()["fetch_uniprot"]
+        cache = {acc: _copy.deepcopy(saved(acc)) for acc in SGT_PAIR}
+        mutator(cache)
+        globals()["fetch_uniprot"] = lambda acc, refresh=False: cache.get(acc, saved(acc, refresh))
+        try:
+            probs, rep = [], {}
+            check_h_sgt_pair(probs, False, rep)
+            return probs, rep
+        finally:
+            globals()["fetch_uniprot"] = saved
+
+    # 9a. THE DEFECT THAT SHIPPED: the narrowed projection dropped FUNCTION entirely, so the
+    #     cache could not support the claim the same commit was making. Reproduce it exactly.
+    def strip_function(cache):
+        for acc, e in cache.items():
+            before = len([c for c in e.get("comments", []) if c["commentType"] == "FUNCTION"])
+            assert before, f"fixture invalid: {acc} had no FUNCTION comment to strip"
+            e["comments"] = [c for c in e.get("comments", []) if c["commentType"] != "FUNCTION"]
+    def shipped_defect():
+        probs, _ = _with_patched_uniprot(strip_function)
+        hit = [x for x in probs if "no FUNCTION comment cached" in x]
+        if not hit:
+            raise AssertionError(f"the dropped-FUNCTION guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(shipped_defect, "no FUNCTION comment cached",
+            "a cache projection that drops FUNCTION is caught (the defect that shipped)")
+
+    # 9b. The asymmetry itself: if SGTB's FUNCTION acquired a hydrophobic-client claim, the
+    #     "SGTA only" statement would be false and must be reported as false.
+    def give_sgtb_the_role(cache):
+        e = cache["Q96EQ0"]
+        fn = [c for c in e["comments"] if c["commentType"] == "FUNCTION"]
+        assert fn, "fixture invalid: SGTB has no FUNCTION comment"
+        fn[0]["texts"][0]["value"] += " Also binds hydrophobic transmembrane segments."
+    def false_asymmetry():
+        probs, _ = _with_patched_uniprot(give_sgtb_the_role)
+        hit = [x for x in probs if "curated for SGTA ONLY is false" in x]
+        if not hit:
+            raise AssertionError(f"the asymmetry guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(false_asymmetry, "curated for SGTA ONLY is false",
+            "SGTB acquiring the hydrophobic-client role is reported as falsifying the claim")
+
+    # 9c. The mirror: SGTA losing it must also be caught, not just SGTB gaining it.
+    def take_role_from_sgta(cache):
+        e = cache["O43765"]
+        fn = [c for c in e["comments"] if c["commentType"] == "FUNCTION"]
+        assert fn, "fixture invalid"
+        for c in fn:
+            for txt in c["texts"]:
+                new_v = txt["value"].replace("hydrophobic", "polar").replace("transmembrane", "soluble")
+                assert new_v != txt["value"] or "hydrophobic" not in txt["value"].lower(), \
+                    "fixture invalid: nothing to replace"
+                txt["value"] = new_v
+    def sgta_loses_role():
+        probs, _ = _with_patched_uniprot(take_role_from_sgta)
+        hit = [x for x in probs if "curated FOR SGTA is unsupported" in x]
+        if not hit:
+            raise AssertionError(f"the SGTA-side guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(sgta_loses_role, "curated FOR SGTA is unsupported",
+            "SGTA losing the hydrophobic-client cues is caught (the mirror direction)")
+
+    # 9d. The family-corroboration half.
+    def drop_family(cache):
+        e = cache["Q96EQ0"]
+        sims = [c for c in e["comments"] if c["commentType"] == "SIMILARITY"]
+        assert sims, "fixture invalid: SGTB has no SIMILARITY comment"
+        for c in sims:
+            for txt in c["texts"]:
+                txt["value"] = "Belongs to some other family"
+    def family_broken():
+        probs, _ = _with_patched_uniprot(drop_family)
+        hit = [x for x in probs if "same-family paralogue is not supported" in x]
+        if not hit:
+            raise AssertionError(f"the family guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(family_broken, "same-family paralogue is not supported",
+            "losing the SGT-family similarity statement is caught")
+
+    # 9e. Happy direction, run against the real cache.
+    probs, rep = [], {}
+    check_h_sgt_pair(probs, False, rep)
+    assert not probs, f"the real SGT records do not support the asymmetry: {probs}"
+    assert rep["sgt_pair"]["O43765"]["hydrophobic_client_cues"] == ["hydrophobic", "transmembrane"], rep
+    assert rep["sgt_pair"]["Q96EQ0"]["hydrophobic_client_cues"] == [], rep
+    print("  ok   the real cache supports the SGTA-only asymmetry and the SGT-family pairing")
 
     print("\nAll break-tests fired for the right reason.")
     return 0

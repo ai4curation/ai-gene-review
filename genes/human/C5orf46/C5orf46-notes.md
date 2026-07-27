@@ -331,6 +331,40 @@ the break-test reported it as broken. Fixed by dropping whatever the first locat
 and asserting the mutation changed something. Third time today that "assert the target is present
 before mutating" earned its place.
 
+### The sharpest item: my cache narrowing removed the evidence for the claim the same commit made
+
+The reviewer's formulation is the one to keep: *"The claim is right; the evidence for it left with
+the projection."*
+
+Commit `98c086d` corrected the SGTA-versus-SGTB claim — the hydrophobic-client function is curated
+for SGTA only — and the same body of work had narrowed the cached UniProt projection to the fields
+the analysis read. `FUNCTION` was not among them. So the correction was right, was stated in
+fourteen places, and **could not be verified from the committed tree at all**: only 1 of 18 cached
+UniProt records retained a `FUNCTION` comment, and neither SGT entry was that one.
+
+This is a failure mode worth naming, because it is the inverse of the usual one. The usual defect
+is a claim without evidence. Here the evidence existed, was correct, was checked interactively —
+and was then removed by a *separate, individually justified* optimisation whose interaction with
+the claim nobody looked for. Narrowing a projection is a reduction of a set, and this brief's own
+`no-silent-caps` rule says every stage that reduces a set must state what it dropped. A cache
+projection is such a stage, and I did not apply the rule to it.
+
+Fixes: `cc_function` and `cc_similarity` are retained in the projection (cache 588K → 604K, so the
+cost was nothing), and the asymmetry is now **computed** as check H rather than asserted — it scans
+both entries' `FUNCTION` comments for hydrophobic-client cues and their `SIMILARITY` statements for
+SGT-family membership. Four directions are break-tested, and the first of them **reproduces the
+defect that shipped**: stripping `FUNCTION` from the cache must raise "no FUNCTION comment cached"
+rather than passing quietly. The other three are SGTB gaining the role, SGTA losing it, and the
+family statement breaking — because a guard that only checks the direction you happened to fear is
+the guard that fails next time.
+
+Result from the cache: SGTA's `FUNCTION` contains both `hydrophobic` and `transmembrane`, SGTB's
+contains neither, and both carry `Belongs to the SGT family`.
+
+**Generalisable rule: when you narrow a cached projection, list what each committed claim depends
+on and confirm none of it is in the dropped set.** The check that enforces it here is the one that
+fails loudly when the field is absent, rather than a comment saying which fields matter.
+
 ### The three non-blocking suggestions
 
 1. **The dermcidin precedent was asserted, not queried — and querying it weakened it.** Every
