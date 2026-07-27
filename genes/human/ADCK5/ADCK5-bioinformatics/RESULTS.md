@@ -6,12 +6,14 @@ Two reproducible analyses, both runnable from this directory with no arguments:
 python3 ubib_motif_analysis.py              # diagnostic residue columns
 python3 ubib_motif_analysis.py --self-test  # break-tests its guards, both directions
 python3 family_annotation_census.py         # human UbiB family GO/EC census
+python3 partner_localisation.py             # IntAct partners: topology and assay independence
 python3 audit_adck5_claims.py               # prose surfaces must not drift from the JSON
 python3 audit_adck5_claims.py --self-test   # break-tests the audit, both directions
 ```
 
-Outputs: `results.json`, `family_census.json`, `ubib_family.fasta`, `ubib_family.aln.fasta`.
-Deleting the `.json`/`.fasta` files and re-running reproduces all four byte-for-byte.
+Outputs: `results.json`, `family_census.json`, `partner_localisation.json`,
+`ubib_family.fasta`, `ubib_family.aln.fasta`. Deleting the `.json`/`.fasta` files and
+re-running reproduces them byte-for-byte.
 
 `audit_adck5_claims.py` re-reads the two JSON outputs and asserts that every residue call,
 census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
@@ -168,10 +170,17 @@ of which 17 are annotated to the mitochondrion. Y2H places both proteins in the 
 nucleus and so removes exactly the targeting constraint that makes the pairing implausible
 in vivo.
 
-(The 17/25 figure was measured, not asserted; a first draft of this file claimed all 25
-partners were mitochondrial and the measurement refused it. Two gene symbols, `HARS2` and
-`MRPL2`, return two reviewed Swiss-Prot entries each; the canonical mitochondrial entry was
-taken in both cases and the ambiguity is recorded rather than hidden.)
+Both numbers above are computed by `partner_localisation.py`, not typed: it re-pulls all 54
+IntAct records (asserting `len(rows) == totalElements`), resolves every partner by **UniProt
+accession** rather than gene symbol, and reports `17 of 25` plus
+`orthogonal_assay_for_goa_partners: {Q7Z3S9: false}`. `audit_adck5_claims.py` then holds this
+file, the notes and the review YAML to those values, and fails if an orthogonal assay ever
+appears for Q7Z3S9 — which would make the `MARK_AS_OVER_ANNOTATED` verdict stale.
+
+(A first draft of this file claimed all 25 partners were mitochondrial and the measurement
+refused it. Resolving by accession also removes a real ambiguity: the symbols `HARS2` and
+`MRPL2` each match two reviewed Swiss-Prot entries, so a symbol-keyed lookup would have
+silently picked one.)
 
 **Negative results from this check, recorded so the next reviewer knows it was run:**
 NOTCH2NLA resolves to a *reviewed, canonical, full-length* Swiss-Prot entry — no TrEMBL or

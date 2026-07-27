@@ -43,6 +43,7 @@ NOTES_MD = GENE_DIR / "ADCK5-notes.md"
 REVIEW_YAML = GENE_DIR / "ADCK5-ai-review.yaml"
 MOTIF_JSON = HERE / "results.json"
 CENSUS_JSON = HERE / "family_census.json"
+PARTNER_JSON = HERE / "partner_localisation.json"
 
 PROSE_SURFACES = [RESULTS_MD, NOTES_MD, REVIEW_YAML]
 
@@ -193,6 +194,57 @@ def check_census_numbers(census: dict, texts: dict[str, str]) -> list[str]:
     return problems
 
 
+def check_partner_numbers(partner: dict, texts: dict[str, str]) -> list[str]:
+    """The partner-topology numbers in the prose must equal the computed ones.
+
+    These were asserted from an ad-hoc query before `partner_localisation.py` existed, which
+    is precisely the "hand-written label drifts from the computed one" failure.
+    """
+    problems: list[str] = []
+    mi = partner["mito_interactome"]
+
+    # The exact phrase the prose uses, derived from the computation rather than typed.
+    expected_fraction = mi["fraction_text"]  # e.g. "17 of 25"
+    surfaces = [n for n, t in texts.items() if expected_fraction in t]
+    if not surfaces:
+        problems.append(
+            f"computed mitochondrial fraction {expected_fraction!r} appears on no prose "
+            f"surface - either the prose drifted or the measurement changed"
+        )
+
+    # Any OTHER "N of 25"/"N of M" fraction about this partner set would be a stale value.
+    for name, text in texts.items():
+        for m in re.finditer(r"\b(\d+) of (\d+)\b", text):
+            if m.group(0) != expected_fraction and m.group(2) == str(mi["n_partners"]):
+                problems.append(
+                    f"{name}: stale partner fraction {m.group(0)!r}; computed value is "
+                    f"{expected_fraction!r}"
+                )
+
+    # The IntAct record total, also restated in prose.
+    n_rec = partner["n_intact_records"]
+    if not any(f"{n_rec} IntAct" in t or f"all {n_rec} IntAct" in t for t in texts.values()):
+        problems.append(
+            f"computed IntAct record count ({n_rec}) is not stated on any prose surface"
+        )
+
+    # The load-bearing negative: no orthogonal (non-two-hybrid) assay for the GOA partner.
+    orth = partner["orthogonal_assay_for_goa_partners"]
+    if not orth:
+        problems.append(
+            "partner JSON lists no GO:0005515 partners at all - the 'no orthogonal assay' "
+            "claim would be vacuous"
+        )
+    for acc, has_orth in orth.items():
+        if has_orth:
+            problems.append(
+                f"partner {acc} now HAS a non-two-hybrid assay in IntAct - the review's "
+                f"'no orthogonal assay' argument for MARK_AS_OVER_ANNOTATED is stale and "
+                f"the verdict must be revisited"
+            )
+    return problems
+
+
 def check_withdrawn(texts: dict[str, str]) -> list[str]:
     problems = []
     for name, text in texts.items():
@@ -219,10 +271,11 @@ def check_required_claims(texts: dict[str, str]) -> list[str]:
     return problems
 
 
-def run_checks(texts: dict[str, str], motif: dict, census: dict) -> list[str]:
+def run_checks(texts: dict[str, str], motif: dict, census: dict, partner: dict) -> list[str]:
     problems: list[str] = []
     problems += check_residue_calls(motif, texts)
     problems += check_census_numbers(census, texts)
+    problems += check_partner_numbers(partner, texts)
     problems += check_withdrawn(texts)
     problems += check_required_claims(texts)
     return problems
@@ -240,20 +293,21 @@ def read_surfaces() -> dict[str, str]:
 def self_test() -> int:
     motif = load_json(MOTIF_JSON)
     census = load_json(CENSUS_JSON)
+    partner = load_json(PARTNER_JSON)
     good = read_surfaces()
 
     failures: list[str] = []
 
-    def expect_clean(desc: str, texts, motif=motif, census=census):
-        probs = run_checks(texts, motif, census)
+    def expect_clean(desc: str, texts, motif=motif, census=census, partner=partner):
+        probs = run_checks(texts, motif, census, partner)
         if probs:
             failures.append(f"{desc}: expected clean, got {probs}")
             print(f"  FAIL (flagged good input): {desc} -> {probs}")
         else:
             print(f"  PASS (accepted good input): {desc}")
 
-    def expect_flag(desc: str, texts, motif=motif, census=census):
-        probs = run_checks(texts, motif, census)
+    def expect_flag(desc: str, texts, motif=motif, census=census, partner=partner):
+        probs = run_checks(texts, motif, census, partner)
         if probs:
             print(f"  PASS (caught): {desc}")
         else:
@@ -301,7 +355,21 @@ def self_test() -> int:
     bad_census3["census"]["COQ8A"]["negated_annotations"] = []
     expect_flag("COQ8A lost its NOT| rows", good, census=bad_census3)
 
-    # 5. the residue guard must not silently pass when it has nothing to check
+    # 5. partner-number drift
+    bad_p = json.loads(json.dumps(partner))
+    bad_p["mito_interactome"]["fraction_text"] = "19 of 25"
+    expect_flag("mitochondrial fraction drifted (prose still says 17 of 25)", good, partner=bad_p)
+
+    bad_p2 = json.loads(json.dumps(partner))
+    for k in bad_p2["orthogonal_assay_for_goa_partners"]:
+        bad_p2["orthogonal_assay_for_goa_partners"][k] = True
+    expect_flag("an orthogonal assay appeared for the GO:0005515 partner", good, partner=bad_p2)
+
+    bad_p3 = json.loads(json.dumps(partner))
+    bad_p3["orthogonal_assay_for_goa_partners"] = {}
+    expect_flag("no GOA partners in the JSON (claim would be vacuous)", good, partner=bad_p3)
+
+    # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}
     expect_flag("results.json has no positioned residues (guard must not pass vacuously)",
                 good, motif=empty_motif)
@@ -320,9 +388,10 @@ def main() -> int:
         return self_test()
     motif = load_json(MOTIF_JSON)
     census = load_json(CENSUS_JSON)
+    partner = load_json(PARTNER_JSON)
     texts = read_surfaces()
-    problems = run_checks(texts, motif, census)
-    print(f"audited {len(texts)} prose surfaces against 2 computed JSON outputs")
+    problems = run_checks(texts, motif, census, partner)
+    print(f"audited {len(texts)} prose surfaces against 3 computed JSON outputs")
     if problems:
         print(f"\n{len(problems)} problem(s):")
         for p in problems:
