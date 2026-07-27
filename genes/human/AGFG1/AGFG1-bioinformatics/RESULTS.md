@@ -5,7 +5,8 @@ matter; each script is standalone and fetches its own inputs.
 
 | script | question | output |
 |---|---|---|
-| `arfgap_motif.py` | is the ArfGAP catalytic apparatus intact? | `arfgap_motif.json` |
+| `arfgap_motif.py` | is the zinc finger + arginine finger intact? (necessary, not sufficient) | `arfgap_motif.json` |
+| `catalytic_residues.py` | are ALL THREE catalytically required residues present? | `catalytic_residues.json` |
 | `zinc_site.py` | which residues hold the zinc in the AGFG1 structures? | `zinc_site.json` |
 | `paralogy.py` | are AGFG1 and AGFG2 really paralogues? | `paralogy.json` |
 | `paralog_goa.py` | which GO terms reach both, and from where? | `paralog_goa.json` |
@@ -23,7 +24,17 @@ matter; each script is standalone and fetches its own inputs.
 | `check_candidate_quotes.py` | pre-checks `candidate_quotes.tsv` before quotes enter the YAML | (stdout) |
 | `patch_affinage_ref.py` | anchor-asserting, idempotent edit that added the affinage reference | (stdout) |
 
-## 1. The ArfGAP catalytic apparatus is intact — the pseudoenzyme hypothesis is NOT confirmed
+## 1. The arginine finger and zinc finger are intact — but that is ONE of three required residues
+
+> **RETRACTION, and it is the headline result of this review.** This section originally
+> concluded *"the pseudoenzyme hypothesis is NOT confirmed"* on the strength of the
+> arginine finger being present. That conclusion was an artefact of testing only the
+> residue the 2008 consensus-nomenclature paper happens to name. The field identifies
+> **three** catalytically required positions, AGFG1 retains **one**, and section 1b measures
+> it. The verdict on `GO:0005096` moved from `KEEP_AS_NON_CORE` to
+> `MARK_AS_OVER_ANNOTATED` as a result. The table below is still correct about what it
+> tests; it is simply not sufficient, and the sentence above is why. Read 1b before drawing
+> anything from 1.
 
 The anchor is published, not remembered. `PMID:18809720` (the consensus-nomenclature
 paper for the 31 human ArfGAPs) states the domain contains *"a characteristic C4-type
@@ -71,9 +82,66 @@ measurement:
    promoting GTP hydrolysis"*, which is exactly the distinction a subfamily-level summary
    cannot settle.
 
-So the blanket clause raises the **prior** that some AGFG member is catalytically active —
-part of why the row is kept rather than marked over-annotated — without supplying the
-measurement that would make it core.
+So the blanket clause raises the **prior** that some AGFG member is catalytically active,
+without supplying the measurement — and section 1b shows why that prior does not survive
+for this subfamily.
+
+## 1b. Two of the three catalytically required residues are substituted in every AGFG protein tested
+
+`catalytic_residues.py`. The decisive source is `PMID:23433073`, which was surfaced by the
+concurrent AGFG2 review and which this review verified independently rather than inheriting.
+It names three positions in ASAP3 — the ArfGAP with a solved Arf6 complex — and states:
+
+> *"The three that are found in our analyses (W451, R469, and D484 in ASAP3 correspond to
+> W14, R32, and D47 in Figure S4) are each closely involved in catalysis. R469/R32 is the
+> arginine finger. D484/D47 contacts the main chain of Arf6-Q67 plus D68 and the side chain
+> of Q67, stabilizing switch 2 and catalytic glutamine in Arf6. W451/W14 is centrally
+> located in the binding interface between the Arf and Arf GAP. **Mutation of any one of
+> these three residues leads to severe loss in Arf GAP activity**"*
+
+Three controls, all of which must pass before any absence is reported, and the script raises
+if they do not:
+
+0. ASAP3's own residues 451/469/484 are still **W/R/D** in the current UniProt sequence, so
+   the paper's numbering has not drifted;
+1. **every GAP-competent member of the panel must recover all three** — if the alignment
+   cannot find these residues in proteins known to have them, an absence in AGFG1 would be
+   an artefact rather than a result;
+2. the arginine this alignment finds must equal the one the independent `CX2CX16CX2CX4R`
+   scan finds — two methods, one residue. **8 of 9 entries agree.**
+
+| protein | W451 | R469 | D484 | n/3 |
+|---|---|---|---|---|
+| ASAP3 human (reference; Arf6 complex) | W451 | R469 | D484 | 3/3 |
+| ARFGAP1 human | W32 | R50 | D65 | 3/3 |
+| ASAP1 human | W464 | R482 | D497 | 3/3 |
+| SMAP1 human | W43 | R61 | D76 | 3/3 |
+| ARFGAP3 human | W35 | R53 | D68 | 3/3 |
+| **AGFG1 human (SUBJECT)** | Y39 | R57 | T71 | **1/3** |
+| AGFG2 human (paralogue) | Y57 | R75 | T89 | 1/3 |
+| Agfg1 mouse | Y39 | R57 | T71 | 1/3 |
+| drongo *D. melanogaster* isoform F | Y40 | R58 | A72 | 1/3 |
+
+**5/5 GAP-competent controls at 3/3; 0/4 AGFG-family members at 3/3; 4/4 retain the
+arginine finger alone.** This is exactly the subfamily-wide loss the source paper predicts
+from 40 AGFG sequences — *"Only two of the 40 AGFG sequences contain an aspartate at the
+position homologous to D47 in the other subfamilies"* and *"The AGFG consensus also uniquely
+lacks W14"* — and its conclusion names the subfamily: *"the ArfGAP is a very highly
+conserved structural domain that is predicted to have lost substantial levels of GAP
+activity in at least one subfamily (AGFG)"*.
+
+**The reversal resolves a tension rather than creating one.** Section 14's ARF-proximity
+datum (AGFG1 with ARF1, ARF3 and ARF6) had looked like support for catalysis. The same paper
+is explicit that it is not: *"These predicted changes (including complete loss, potentially)
+in GAP activity or its regulation should not be confused with consequent changes in the
+ability to bind Arf family GTPases."* Binding retained plus catalysis lost is one coherent
+picture — an Arf **effector**, not an Arf GAP.
+
+**Cross-review agreement, reached independently.** The concurrent `paint/AGFG2` review
+derived Thr89 for AGFG2 from the same paper; this panel reproduces that number exactly, and
+adds AGFG1, mouse Agfg1 and drongo. Two independently-produced reviews of the identical GOA
+row now agree, which matters because a divergence between them would itself have been a
+defect.
 
 ## 2. The zinc is really there, and it is held by the four predicted cysteines
 
@@ -340,5 +408,12 @@ component would have been.
 among them: `PMID:18775314` (the VAMP7 structure, ITC and depletion phenotype) and
 `PMID:11711676` (the mouse null with no acrosome). Nor is `PMID:18809720`, the family
 reference that supplies the catalytic-motif anchor, nor `PMID:38606629`, the only human
-dataset placing AGFG1 with ARF1/ARF3/ARF6. A passing gate bounds precision and says
-nothing about recall.
+dataset placing AGFG1 with ARF1/ARF3/ARF6, nor `PMID:23433073`, the paper that decides the
+catalytic question. A passing gate bounds precision and says nothing about recall.
+
+**And the provider is not the only thing whose recall failed here.** `PMID:23433073` was
+fetched by this review, judged to be a family-classification paper with "nothing resting on
+it", and deleted before the first commit. It contains the residue-level analysis that
+reverses the review's headline verdict, and it came back only through the concurrent AGFG2
+review. The lesson is the campaign's own, learned the hard way: a paper titled for the family
+holds the gene's answer, and an absence created by not reading is not evidence.

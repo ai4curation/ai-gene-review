@@ -328,6 +328,14 @@ RETRACTED_PHRASES = {
     "no GAP assay has been reported on either human AGFG protein": (
         "states a search-derived negative as an existence claim"
     ),
+    "complete catalytic apparatus": (
+        "AGFG1 retains 1 of the 3 catalytically required residues; the apparatus is "
+        "structurally genuine but not catalytically complete"
+    ),
+    "pseudoenzyme hypothesis was tested and NOT confirmed": (
+        "retracted - it was confirmed once all three required residues were tested, "
+        "not just the arginine finger"
+    ),
 }
 # The patch scripts must name the strings they replace, so they are exempt by
 # design rather than by accident.

@@ -68,10 +68,34 @@ core, which is valid. The byte-identical field on AGFG2 makes those rows
 **paralogue-derived**. Same bytes, different evidential status; this is the AFF1/AFF4
 pattern from the campaign brief, seen from the donor side.
 
-## The "GAP domain in the name" lead: NOT confirmed, and the negative control matters
+## The "GAP domain in the name" lead: CONFIRMED after all — my first answer was wrong
 
-The brief flagged `PSEUDOENZYME_OVERANNOTATION` as the shape to look for. It is absent
-here, and the check is worth recording because the anchor is published rather than
+> **Retraction, recorded rather than quietly overwritten.** The section below originally
+> concluded that the pseudoenzyme hypothesis was NOT confirmed, because the arginine finger
+> is intact. That was an artefact of testing **one** of the **three** residues the field says
+> Arf GAP catalysis requires. AGFG1 retains one of three. `GO:0005096` moved from
+> `KEEP_AS_NON_CORE` to `MARK_AS_OVER_ANNOTATED`. The reasoning below is preserved because
+> it is still correct about what it tested and it is instructive about how the error
+> happened; the correction is in the subsection that follows it.
+>
+> How the error happened, precisely: I anchored on `PMID:18809720`, which names the arginine
+> and the four cysteines, and treated "the apparatus" as exhausted by what that paper names.
+> The decisive paper — `PMID:23433073` — I had **fetched and then deliberately deleted**,
+> reasoning that "nothing rests on it" because it looked like a family-classification paper.
+> It contains the residue-level analysis that decides the question. The campaign brief's own
+> warning applies exactly: a paper titled for the family holds the gene's answer, and an
+> absence I created by not reading is not evidence.
+>
+> It was surfaced by the **concurrent AGFG2 review**, which is the strongest argument for
+> reviewing paralogues in parallel that this gene produced. I verified it independently
+> rather than inheriting it — see the subsection below — and the verification reproduced the
+> sibling's AGFG2 number (Thr89) exactly while adding AGFG1, mouse Agfg1 and drongo.
+
+## The original reasoning, preserved: the arginine finger is intact and the ADAP control matters
+
+The brief flagged `PSEUDOENZYME_OVERANNOTATION` as the shape to look for. ~~It is absent
+here~~ — **this sentence is the retracted claim; it is present here, see the correction
+below** — and the check is still worth recording because the anchor is published rather than
 remembered: `PMID:18809720` gives the ArfGAP catalytic spacing as
 [PMID:18809720 "They contain a characteristic C4-type zinc finger motif and a conserved
 arginine that is required for activity, within a particular spacing (CX2CX16CX2CX4R)."]
@@ -120,8 +144,46 @@ What tips `GO:0005096` to "keep, non-core" rather than "over-annotated":
   [PMID:18809720 "Much less information is available on AGFG2."] and says nothing about
   GAP activity for either.
 
-That is *unmeasured*, not refuted, so the campaign's rule points at keeping the row and
-filing the assay as a suggested experiment.
+That was the reasoning for `KEEP_AS_NON_CORE`, and it is superseded by the measurement below.
+
+## The correction: two of three required residues are gone, subfamily-wide
+
+`PMID:23433073` names three catalytically required positions in ASAP3 and states
+[PMID:23433073 "Mutation of any one of these three residues leads to severe loss in Arf GAP
+activity"]. R469 is the arginine finger; D484 contacts the Arf6 catalytic glutamine Q67 and
+stabilises switch 2; W451 sits in the Arf–ArfGAP interface.
+
+Measured in `catalytic_residues.py` with three controls that must all pass first — ASAP3's
+own numbering still holding, **every GAP-competent panel member recovering all three**, and
+the arginine agreeing with the independent motif scan (8/9 entries):
+
+| protein | W451 | R469 | D484 | n/3 |
+|---|---|---|---|---|
+| ASAP3, ARFGAP1, ARFGAP3, ASAP1, SMAP1 | W | R | D | **3/3** each |
+| **AGFG1 human** | **Y39** | R57 | **T71** | **1/3** |
+| AGFG2 human | Y57 | R75 | T89 | 1/3 |
+| Agfg1 mouse | Y39 | R57 | T71 | 1/3 |
+| drongo | Y40 | R58 | A72 | 1/3 |
+
+The source paper predicts exactly this from 40 AGFG sequences
+[PMID:23433073 "Only two of the 40 AGFG sequences contain an aspartate at the position
+homologous to D47 in the other subfamilies"] and
+[PMID:23433073 "The AGFG consensus also uniquely lacks W14, which we predict to play a role in
+hydrophobic interactions with Arfs."], and concludes
+[PMID:23433073 "the ArfGAP is a very highly conserved structural domain that is predicted to
+have lost substantial levels of GAP activity in at least one subfamily (AGFG)"].
+
+**The reversal resolves the tension in my own evidence rather than creating one.** The ARF
+proximity result had looked like support for catalysis; the same paper says it is not
+[PMID:23433073 "These predicted changes (including complete loss, potentially) in GAP activity
+or its regulation should not be confused with consequent changes in the ability to bind Arf
+family GTPases."]. Binding retained + catalysis lost = an Arf **effector**. And the fly
+genetics is reinterpreted rather than discarded: drongo scores 1/3 too, and an effector that
+antagonises an Arf-GEF without hydrolysing GTP fits that genetics as well as a GAP does.
+
+`MARK_AS_OVER_ANNOTATED` rather than `REMOVE`: the domain is genuine, the zinc is really
+bound, Arf binding is real, and no assay has been run on the human protein in either
+direction.
 
 Note GO has merged the substrate-specific GAP terms (`GO:0008060` and eight others are
 `secondaryIds` of `GO:0005096`), so `GO:0005096` is already maximal and no substrate-
