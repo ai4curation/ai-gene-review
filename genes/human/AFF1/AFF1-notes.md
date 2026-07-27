@@ -488,12 +488,14 @@ between them in either direction inverts the biology. Neither review does this.
 
 ## Where the review effort actually went
 
-For whoever reviews AFF2, AFF3 or AFF4 next. **Corrected three times.** The first draft claimed no
-curation field was ever challenged (false), the second mis-stated what the sibling review had done
-(false), and the third stated counts it could not enumerate — in a section whose leading defect class
-is "a count disagreeing with its own enumeration". So this version **enumerates and does not count**:
-every list below is the list, not a tally of one, which removes the failure mode rather than
-correcting its latest instance.
+For whoever reviews AFF2, AFF3 or AFF4 next. This section has been rewritten twice and the file's
+retrospective claims corrected three times: one draft claimed no curation field was ever challenged
+(false); one stated counts it could not enumerate, in a section whose leading defect class is "a count
+disagreeing with its own enumeration"; and the AFF4 comparison above mis-stated what the sibling
+review had done (also false, and corrected there rather than here — the distinction matters, because
+an earlier version of this paragraph counted that one as a correction to *this* section, which it was
+not). So this version **enumerates and does not count**: every list below is the list, which removes
+the failure mode rather than correcting its latest instance.
 
 **What is true, and it is the load-bearing claim.** Diffing the review YAML from the commit that
 first created it (`83165cac`) to HEAD, exactly two structured-field lines change anywhere in the
@@ -513,8 +515,17 @@ failure the rest of the section is about.
 - *A count disagreeing with its own enumeration* — the human recipient set of `PMID:22195968`
   ("12" beside eleven names); the `MODIFY` row count ("6" beside seven rows); and the counts in
   earlier drafts of this very section.
-- *A number estimated where a derivable one existed* — disorder coverage, written "~1000 of 1210"
-  where the feature table gives 901.
+- *A number estimated where a derivable one existed* — disorder coverage. The feature table gives
+  **901** residues of 1210; the shipped text rounded up by roughly a tenth, at all four of these
+  sites: the top-level `description` (a qualitative overstatement, "almost entirely" rather than the
+  three-quarters it is); the `GO:0003712` row's `reason`; `knowledge_gaps[2]`; and this file's own
+  domain-content bullet. The sites are named rather than quoted deliberately: reproducing the four
+  retracted figures verbatim would trip clause 3 of the guard, and the alternative — widening the
+  retraction exemption to admit them — is the bypass anyone smuggling the number back would use, so
+  the prose moves and the guard stays strict. A first attempt to locate the sites found only one of
+  the four, because the YAML wraps the others across lines and the search was not
+  whitespace-normalised; that is the same trap that hides a wrapped claim from a naive
+  `"..." in text`, and it is why clause 3 fires on more than one instance.
 - *A guard scoped to the failure already known* — check G's first clauses covered only the recipient
   claim; then the tally clause covered only the actions and not the total.
 - *A check that matched nothing but its own exemption* — clause 4's prose regex, whose only matches
