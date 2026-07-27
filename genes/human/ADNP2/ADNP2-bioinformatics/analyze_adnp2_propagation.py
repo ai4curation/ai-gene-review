@@ -1198,8 +1198,17 @@ def self_test() -> int:
         failures.append("HOPX degeneracy flag is False; the asymmetry claim is stale")
     if tf["hopx_precedent"]["adnp2_domain_is_degenerate"]:
         failures.append("ADNP2 domain now reads degenerate; the contrast is stale")
-    md = (HERE / "RESULTS.md")
-    if md.exists():
+    #     A missing RESULTS.md must FAIL, not pass silently: `if md.exists()` made this
+    #     check vacuous whenever the artifact it polices was absent, which is the fifth
+    #     vacuous-pass this campaign has recorded and the most common way a guard
+    #     reports coverage it does not have.
+    md = HERE / "RESULTS.md"
+    if not md.exists():
+        failures.append(
+            f"{md} is missing, so the rendering check cannot run -- generate it with a "
+            f"plain run before self-testing"
+        )
+    else:
         text = md.read_text()
         if "degenerate" not in text:
             failures.append("RESULTS.md does not surface the degenerate note")

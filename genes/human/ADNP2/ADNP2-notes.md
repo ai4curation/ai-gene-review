@@ -175,10 +175,12 @@ contradicted by the documented failure to find one.
 
 Widening to the whole import: **`GO_REF:0000113` is 1436 annotations over 727 distinct entities, 100%
 ISA**, of which **709 receive the identical `{GO:0000785, GO:0000981}` doublet and 18 receive chromatin
-alone.** Those 18 are the pipeline's own negative control, and they are exactly the non-DNA-binding
-members: SMAD6/SMAD7 (inhibitory SMADs), NR0B1/NR0B2 (nuclear receptors lacking a DNA-binding domain),
-NCOA1/2/3 (coactivators), ZFPM1/ZFPM2 (GATA cofactors), AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1,
-ZC3H6/ZC3H8 — and **HOPX**.
+alone.** Those 18 are the pipeline's own negative control: SMAD6/SMAD7 (inhibitory SMADs), NR0B1/NR0B2
+(nuclear receptors lacking a DNA-binding domain), NCOA1/2/3 (coactivators), ZFPM1/ZFPM2 (GATA cofactors),
+AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1, ZC3H6/ZC3H8 and HOPX. **They are not "the non-DNA-binding
+members"** — an earlier draft of this paragraph said that, and the table below refutes it: three of the
+18 carry an annotated DNA-binding domain. What unites them is that none is a *sequence-specific
+polymerase II transcription factor*, which is a different and weaker claim.
 
 **Corrected in round 4 — I had picked the weaker of two available precedents.** My first framing was
 that HOPX makes this filable: UniProt describes it as an *"Atypical homeodomain protein which does not
@@ -189,10 +191,26 @@ ADNP2's reads plain `Homeobox`. A curator would have replied, correctly, that HO
 its homeodomain is broken — which does not transfer to ADNP2's intact one.
 
 Settled by measuring the whole exclusion set instead of asserting one case. Of the 18 excluded entities,
-**3** carry an annotated `DNA_BIND` feature: TFDP3 (108-341, no note), **HMBOX1 (267-341, `Homeobox`)**
-and HOPX (3-62, `Homeobox; degenerate`). So **HMBOX1 is the fold-symmetry precedent** — an intact
-homeodomain, annotated with the *identical* note to ADNP2's, already excluded from `GO:0000981` — and
-HOPX carries only the biological half. The two do different work and the review now says so.
+**3** carry an annotated `DNA_BIND` feature: TFDP3 (108-190, no note), **HMBOX1
+(267-341, `Homeobox`)** and HOPX (3-62, `Homeobox; degenerate`). So **HMBOX1 is the
+fold-symmetry precedent** — an intact homeodomain, annotated with the *identical* note to ADNP2's,
+already excluded from `GO:0000981` — and HOPX carries only the biological half. The two do different work
+and the review now says so.
+
+*(These spans are copied from `results.json` programmatically. An earlier revision of this paragraph
+hand-typed TFDP3's end as 341 — HMBOX1's end — i.e. a number contradicting the committed artifact, in
+the paragraph correcting exactly that defect class. Retyping a number you have already computed is the
+mistake; the fix is to not retype it.)*
+
+**And the repo already adjudicates HMBOX1, which sharpens the ask rather than weakening it.**
+`projects/TRANSCRIPTION_FACTORS/dbTF-discrepancy-analysis.md` lists HMBOX1 among proteins *"correctly
+excluded"* with the reason *"Telomere binding, not gene regulation"*, under the heading **`DBD ≠ dbTF`**.
+So HMBOX1 is not excluded for failing to bind DNA — it does bind DNA, at telomeric repeats — but for
+not being a *DNA-binding transcription factor*. That is precisely the criterion in force, and it is a
+better fit for ADNP2 than "does not bind DNA" ever was: ADNP2's homeodomain and zinc fingers are intact
+and `GO:0003677` stands, while what the ChIP-seq refutes is specifically the sequence-specific
+polymerase II transcription-factor reading. Citing this pre-empts the obvious NTNU_SB reply that
+HMBOX1's exclusion is a pipeline gap rather than a judgement.
 
 The corrected shape of the ask: the discrimination already exists inside this import and already reaches
 an intact-domain homeodomain protein, so **add ADNP2 to the existing 18-member exclusion set**. But the
