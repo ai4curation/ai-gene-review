@@ -277,11 +277,19 @@ PMID:38479840 (SINE B2 / CTCF in blastocysts), PMID:41174994 (methyltransferase 
   itself — the valid self-referential PAINT pattern, not circularity.
 - Row reconciliation: TSV 53 data lines, 53 distinct, stub 47, gap = 6 collapsed `GO:0005515`
   rows. Reconciled before reviewing.
-- `just validate` added `GO:0070087` to `cache/go/terms.csv` on a cache miss and, as documented,
-  silently collapsed main's two pre-existing duplicates (`GO:0001675`, `GO:0009566`, 2→1 each).
-  Caught by a **multiset** `Counter` comparison; a set comparison would have sailed through.
-  Repaired by restoring the branch-point file and appending only the one new row at the end
-  (never re-sorting), then re-validating and re-checking both directions.
+- `cache/go/terms.csv`, in two acts. **Act 1:** `just validate` added `GO:0070087` on a cache
+  miss and, as documented, silently collapsed main's two then-existing duplicate curies
+  (`GO:0001675`, `GO:0009566`, 2→1 each). Caught by a **multiset** `Counter` comparison; a set
+  comparison would have sailed straight through, because the whole failure is two copies
+  becoming one. **Act 2, and the more useful finding:** merging `origin/main` forward showed
+  that main has since landed `src/ai_gene_review/tools/cache_lint.py` and
+  `tests/test_cache_sorted.py`, which require every `cache/**/*.csv` to be **sorted by CURIE and
+  deduplicated**. That **supersedes the append-at-the-end convention** this campaign has been
+  following. The two orderings mis-aligned under git's line-based merge and silently duplicated
+  **24** curies. Correct resolution is now: reset the file to main's version, let validate
+  re-insert your row in sorted position, and verify with
+  `uv run python -m ai_gene_review.tools.cache_lint`. Asserted afterwards four ways — nothing
+  from main dropped, exactly one curie added, nothing invented, no duplicate anywhere.
 - Quote surfaces: `checkquotes.py` checks 138; the committed `audit_adnp_review.py` checks 145.
   The 7-quote difference is exactly the `knowledge_gaps[].provenance` entries that
   `checkquotes.py` does not walk — derived independently from the parsed document rather than
