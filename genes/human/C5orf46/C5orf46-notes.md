@@ -398,6 +398,52 @@ fails loudly when the field is absent, rather than a comment saying which fields
    cached abstract is checked and safe. All 62 `file:` quotes here are single physical lines and
    were additionally hand-verified with `grep -F`.
 
+## Review round 2: implicit string concatenation, three times, and the guard that ends it
+
+The remaining item was one word — `"…of the body surfaces.surfaces. The core location is…"` in the
+curator-facing `core_functions` description. The cause is Python's implicit concatenation of
+adjacent string literals: correcting the exosome call, I added the new sentence as a **fresh
+literal without removing the `"surfaces."` it was meant to extend**, so the two joined and doubled
+the word.
+
+It reached the shipped artifact because it is **invisible in the builder source** — two adjacent
+string literals look exactly like two lines of one paragraph. This was the third instance of the
+class in one PR: the dangling "That role" antecedent, this one, and one more that nobody had
+reported.
+
+**Scripting the check found the unreported one.** Re-reading the tree caught `surfaces.surfaces`;
+a sweep over the *assembled* prose then found a second, in `suggested_questions[0]`: *"…there is
+none anywhere in the family.and there is none anywhere in the family. What makes…"*. Same cause,
+same edit session, and reading had missed it because it sits 1,400 characters into a long
+question. That is the campaign's "anything you can compute, compute — then compare it against
+what you wrote", earning its place again: reading found one, computing found two.
+
+The sweep is now committed in `check_document`, and getting it right took three attempts, each
+instructive:
+
+1. **A window-based whitelist let a false positive through.** `core_functions.locations` trips a
+   naive "period followed by lower case" rule, and my ±12-character window clipped the leading
+   `core_`, so the allowance never matched. Replaced with **exact-token masking**, which cannot
+   be defeated that way. A generic "dotted lowercase word" allowance is deliberately *not* used —
+   it would whitelist `surfaces.surfaces`, which is the defect itself. If a new identifier appears
+   in prose the check fires and the token is added: a loud failure, which is the right default.
+2. **A fixture below the threshold made a direction silently untested.** My repeated-word
+   break-test used `"is is"`, and the regex requires 3+ characters, so it never fired — the guard
+   looked broken when the fixture was. Fixed to `"peptide peptide"`, and a companion assertion now
+   documents the threshold by checking that a two-character repeat is *not* flagged, so the limit
+   is stated in code rather than discovered later.
+3. **Both defects that actually shipped are now fixtures.** `shipped_surfaces` and
+   `shipped_clause` reproduce them by mutating the real document, each asserting its anchor is
+   present first so the mutation cannot become a no-op. Running a guard against the defect that
+   shipped is a stronger claim than any synthetic case.
+
+The offsets are asserted to survive masking (`len(scan) == len(s)`), so the excerpt a problem
+reports still points at the right place in the unmasked text.
+
+**Generalisable rule: when you extend a wrapped string constant, delete the fragment you are
+extending — and check the assembled output, not the source, because implicit concatenation is
+invisible where you are typing.**
+
 ## Terms proposed, and terms deliberately declined
 
 Proposed (both as `NEW` rows, `IDA`, from `PMID:33804835`):

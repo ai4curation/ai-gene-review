@@ -1125,7 +1125,6 @@ def build_core_functions() -> list[dict]:
                 "detected in human plasma by mass spectrometry and catalogued in parotid-saliva "
                 "exosomes, and expression is concentrated in skin, salivary gland and blood "
                 "vessel, which is a coherent distribution for a host-defence peptide of the body "
-                "surfaces."
                 "surfaces. The core location is the extracellular region and not the exosome: the "
                 "exosome detection corroborates secretion, but every measurement of activity used "
                 "free peptide, and the SUMO-fusion control implies the functional species is free "
@@ -1376,7 +1375,6 @@ def build_questions() -> list[dict]:
                 "reports Gm94 itself killing Gram-negative bacteria in vitro and protecting mice "
                 "in vivo. Curating the mouse rows would additionally open an ISO/ISS route to the "
                 "human gene which cannot exist today, because transfer needs a source annotation "
-                "and there is none anywhere in the family."
                 "and there is none anywhere in the family. What makes this a consistency question "
                 "rather than a wish is that the same laboratory's previous paper on the same kind "
                 "of molecule WAS curated: C10orf99, which they named AP-57 and which the AP-64 "
@@ -1670,6 +1668,64 @@ def check_document(doc: dict) -> list[str]:
     if cf_terms - kept:
         problems.append(f"core_functions terms with no ACCEPT/NEW row: {sorted(cf_terms - kept)}")
 
+    # IMPLICIT-CONCATENATION SWEEP. Python joins adjacent string literals silently, so adding
+    # a sentence as a new literal without removing the one it was meant to extend doubles the
+    # text. This bit three times in one PR ("surfaces.surfaces", a duplicated clause in a
+    # suggested_question, and a dangling antecedent), and it reached the shipped artifact each
+    # time because it is invisible in the builder source - the two literals look like two lines
+    # of one paragraph. So the check runs over the ASSEMBLED prose, not the source.
+    #
+    # The legitimate matches are MASKED OUT by exact token rather than excused by a nearby
+    # regex. A window-based whitelist was tried first and let `core_functions.locations`
+    # through, because the window clipped the leading `core_`. Masking cannot be defeated that
+    # way. A generic "dotted lowercase word" allowance is deliberately NOT used: it would
+    # whitelist `surfaces.surfaces`, which is the defect itself. If a new identifier appears in
+    # prose the check fires and the token gets added here - a loud failure, which is correct.
+    IDENTIFIER_TOKENS = (
+        "core_functions.locations", "core_functions.anatomical_locations",
+        "core_functions.directly_involved_in", "core_functions.molecular_function",
+        "review.action", "review.reason", "build_review.py", "analyze_c5orf46.py",
+        "check_document", "RESULTS.md", "results.json", "terms.csv", "goa.tsv",
+        "external2go/interpro2go", "C5orf46-goa.tsv", "e.g.", "i.e.",
+    )
+    range_notation = re.compile(r"\d+\.\.\d+")
+
+    def mask(text: str) -> str:
+        out = text
+        for tok in IDENTIFIER_TOKENS:
+            out = out.replace(tok, " " * len(tok))
+        return range_notation.sub(lambda m: " " * len(m.group(0)), out)
+
+    doubled = re.compile(r"\b(\w{3,})\.\1\b|\b(\w{3,})\s+\2\b", re.I)
+    broken_join = re.compile(r"[a-z]\.[a-z]{2,}")
+    prose_keys = ("description", "summary", "reason", "review_notes", "statement",
+                  "gap_statement", "boundary", "significance", "question", "justification",
+                  "proposed_definition", "resolution", "hypothesis", "experiment_type")
+    fields: list[tuple[str, str]] = []
+
+    def collect(node, path=""):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(v, str) and k in prose_keys:
+                    fields.append((f"{path}.{k}", v))
+                else:
+                    collect(v, f"{path}.{k}")
+        elif isinstance(node, list):
+            for i, e in enumerate(node):
+                collect(e, f"{path}[{i}]")
+
+    collect(doc)
+    if not fields:
+        problems.append("no prose fields found - the concatenation sweep would pass vacuously")
+    for path, s in fields:
+        scan = mask(s)
+        assert len(scan) == len(s), "masking changed the offsets; excerpts would be wrong"
+        for label, rx in (("doubled token", doubled), ("broken sentence join", broken_join)):
+            for m in rx.finditer(scan):
+                problems.append(
+                    f"{label} in {path} - a literal was probably added without removing the one "
+                    f"it extends: ...{s[max(0, m.start()-45):m.end()+45]}...")
+
     # Every cited reference must be declared, and declared ids must be unique.
     ids = [r["id"] for r in doc["references"]]
     dupes = sorted({i for i in ids if ids.count(i) > 1})
@@ -1700,6 +1756,7 @@ def check_document(doc: dict) -> list[str]:
 
 def self_test() -> int:
     """Break-test each enforcement, asserting the message and not merely the failure."""
+    import copy as _copy_module
     def expect(fn, fragment: str, what: str) -> None:
         try:
             fn()
@@ -1825,6 +1882,39 @@ def self_test() -> int:
             {"id": "GO:0005515", "label": "protein binding"})
     mutate_expect(relist_overannotated_process, "whose annotation row is not core",
                   "a MARK_AS_OVER_ANNOTATED term listed as a core process is flagged")
+
+    # The two implicit-concatenation defects that actually shipped in this PR. Reproducing them
+    # is a stronger claim than a synthetic fixture.
+    def shipped_surfaces(m):
+        d = m["core_functions"][0]["description"]
+        assert "body surfaces." in d, "fixture drifted: the anchor sentence changed"
+        m["core_functions"][0]["description"] = d.replace(
+            "body surfaces.", "body surfaces.surfaces.", 1)
+    mutate_expect(shipped_surfaces, "doubled token",
+                  "the 'surfaces.surfaces' defect that shipped is caught")
+
+    def shipped_clause(m):
+        qn = m["suggested_questions"][0]["question"]
+        frag = "there is none anywhere in the family."
+        assert frag in qn, "fixture drifted: the anchor clause changed"
+        m["suggested_questions"][0]["question"] = qn.replace(frag, frag + frag, 1)
+    mutate_expect(shipped_clause, "broken sentence join",
+                  "the duplicated-clause defect that shipped is caught")
+
+    def repeated_word(m):
+        # The regex requires 3+ characters, so "is is" would NOT trip it. Using a two-letter
+        # word here silently made this direction untested on the first attempt.
+        m["core_functions"][0]["description"] += " This peptide peptide is amphipathic."
+    mutate_expect(repeated_word, "doubled token",
+                  "an adjacent repeated word of 3+ characters is caught")
+
+    def short_repeat_is_not_flagged(m):
+        m["core_functions"][0]["description"] += " It is is short."
+    probe = _copy_module.deepcopy(build())
+    short_repeat_is_not_flagged(probe)
+    assert not [x for x in check_document(probe) if "doubled token" in x], (
+        "the 3-character threshold is not behaving as documented")
+    print("  ok   a 2-character repeat is deliberately below the threshold (documented limit)")
 
     def undeclare(m):
         m["references"] = [r for r in m["references"] if r["id"] != RESULTS_FILE_REF]
