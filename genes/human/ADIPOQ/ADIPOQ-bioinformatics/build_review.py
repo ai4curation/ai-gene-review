@@ -149,11 +149,19 @@ D[("GO:0005179", "IDA", "PMID:18703020")]["supported_by"] = [
        "APN up-regulated the expression of ABCA1 in human macrophages")]
 
 _SRB = (
-    "Correct, and experimentally well founded, but it is the coarser grain of "
-    "the same fact that GO:0005179 hormone activity states more precisely. "
     "Adiponectin binds AdipoR1 and AdipoR2 (PMID:12802337) and T-cadherin "
-    "(PMID:15210937); GO:0005179 is a descendant of GO:0048018 receptor "
-    "ligand activity, which is a descendant of this term."
+    "(PMID:15210937), so the term is correct and experimentally well founded. "
+    "It is worth being precise about how it relates to the gene's other "
+    "molecular-function rows, because the two look redundant and are not: "
+    "GO:0005102 signaling receptor binding is a BINDING term, whereas "
+    "GO:0005179 hormone activity sits in the ACTIVITY branch, under GO:0048018 "
+    "receptor ligand activity -> GO:0140677 molecular function activator "
+    "activity -> GO:0098772 molecular function regulator activity. "
+    "GO:0005102 is NOT among GO:0005179's is_a/part_of ancestors (verified "
+    "against QuickGO and recorded under term_relations in "
+    "ADIPOQ-bioinformatics/results.json). The two rows therefore state "
+    "different things - that adiponectin physically engages a receptor, and "
+    "that engaging it activates the receptor - and neither subsumes the other."
 )
 for ref in ["GO_REF:0000024", "PMID:12368907"]:
     dec("GO:0005102", "ISS", ref, action="ACCEPT",
@@ -684,8 +692,10 @@ dec("GO:0120163", "ISS", "PMID:26166748", action="REMOVE",
                             "GO:0120162 and GO:0120163 each by IMP from BOTH "
                             "PMID:24531262 and PMID:26166748"}]},
     supported_by=[st("PMID:26166748",
-                     "adiponectin was recruited to the cell surface of M2 "
-                     "macrophages via its binding partner T-cadherin")])
+                     "Chronic cold exposure-induced accumulation of M2 "
+                     "macrophages, activation of beige cells, and thermogenic "
+                     "program were markedly impaired in scWAT of adiponectin "
+                     "knockout (ADN KO) mice")])
 for term in ("GO:0120162", "GO:0120163"):
     dec(term, "IEA", "GO_REF:0000107", action="KEEP_AS_NON_CORE",
         summary="Ensembl Compara projection of the mouse thermogenesis rows; "
@@ -1293,6 +1303,15 @@ def build() -> dict:
         if term == "GO:0005515":
             partner = r["WITH/FROM"].replace("UniProtKB:", "")
             rev = protein_binding_entry(partner, ref, PARTNER_GENE.get(partner))
+            if partner == "P01127":
+                # Record the sequestered ligand machine-readably.  It is an
+                # INPUT of the binding, not a substrate -- adiponectin has no
+                # catalytic activity, so `substrates` would misdescribe it.
+                entry["extensions"] = [{
+                    "predicate": "RO:0002233",
+                    "term": {"id": "UniProtKB:P01127",
+                             "label": "PDGFB (platelet-derived growth factor "
+                                      "subunit B)"}}]
         else:
             d = D.get((term, ev, ref))
             if d is None:
@@ -1568,9 +1587,6 @@ CORE_FUNCTIONS = [
                       "receptor signaling pathway"},
         ],
         "locations": [{"id": "GO:0005576", "label": "extracellular region"}],
-        "substrates": [{"id": "UniProtKB:P01127",
-                        "label": "PDGFB (platelet-derived growth factor "
-                                 "subunit B)"}],
         "supported_by": [
             st("PMID:12070119",
                "Adiponectin specifically bound to (125)I-PDGF-BB and "
@@ -1588,7 +1604,16 @@ CORE_FUNCTIONS = [
             "assembly state is functionally decisive - trimers activate AMPK "
             "in muscle, hexamers and HMW species activate NF-kB and are the "
             "only forms that bind T-cadherin - so self-association is part of "
-            "the gene's function rather than incidental."),
+            "the gene's function rather than incidental. GO:0042802 is a "
+            "deliberately unspecific term, and it is used here because it is "
+            "the most specific CORRECT molecular function available: "
+            "GO:0042803 protein homodimerization activity names a "
+            "stoichiometry adiponectin does not adopt, and GO:0070207 protein "
+            "homotrimerization - the term that does state it - exists only in "
+            "the biological process branch. A search of the ontology returns "
+            "no molecular function term for homotrimerisation or "
+            "homooligomerisation, so the imprecision is the ontology's, not "
+            "the annotation's."),
         "molecular_function": {"id": "GO:0042802", "label": "identical protein binding"},
         "directly_involved_in": [
             {"id": "GO:0070207", "label": "protein homotrimerization"},
@@ -1885,6 +1910,18 @@ def full_document() -> dict:
     refs = []
     for rid in sorted(REF_TITLES):
         r = {"id": rid, "title": REF_TITLES[rid]}
+        # Read the flag from the cached publication rather than hand-listing
+        # it: a hand-maintained list drifts, and a STALE
+        # full_text_unavailable: true suppresses evidence extraction.
+        if rid.startswith("PMID:"):
+            f = (GENE_DIR.parents[2] / "publications"
+                 / f"PMID_{rid.split(':', 1)[1]}.md")
+            if not f.exists():
+                raise SystemExit(
+                    f"missing {f}; run `just fetch-pmid {rid.split(':')[1]}`")
+            fm = yaml.safe_load(f.read_text().split("---")[1])
+            if fm.get("full_text_available") is False:
+                r["full_text_unavailable"] = True
         if rid in REF_REVIEWS:
             r["reference_review"] = dict(REF_REVIEWS[rid])
         refs.append(r)

@@ -318,11 +318,62 @@ GOA rows and their references, not from the provider.
   in `core_functions[1].directly_involved_in`, then removed them. PDGF-BB
   sequestration acts on the receptor pathway; proliferation and migration are
   consequences of it. Function is not phenotype, including in my own summary.
+- **I asserted a GO ancestry that does not exist, and it reached the shipped
+  YAML.** The `GO:0005102` rows argued the term was the coarser grain of
+  `GO:0005179`, "which is a descendant of GO:0048018 receptor ligand activity,
+  **which is a descendant of this term**". False: `GO:0048018` sits under
+  `GO:0140677 molecular function activator activity` → `GO:0098772 molecular
+  function regulator activity`, in the **activity** branch, while `GO:0005102`
+  is a **binding** term. GO deliberately keeps them apart. Found only by
+  scripting the ancestry check I had been making by eye — the same shape as the
+  regulation-is-not-subsumption trap, one step sideways. The correction
+  *strengthens* the ACCEPT: the two rows are not redundant, they state
+  different things. All ten relations the prose depends on are now fetched,
+  recorded under `term_relations` in `results.json`, and asserted by a guard
+  that fails if any disagrees.
 - My first topology heuristic classified partners by signal peptide or TM helix
   and so counted multipass membrane proteins as "reachable" when only their
   cytosolic loops are Y2H-detectable. The six-partner cytosol-only figure is
   therefore a **floor**, and `RESULTS.md` says so; the argument rests on the
   assay, not the count.
+
+## Review round 1 (PR #2328)
+
+`ai4c-reviewer` approved with no CRITICAL or IMPORTANT findings and four
+non-blocking suggestions. It independently re-derived the per-term multiset
+from the GOA TSV and confirmed the 161 + 1 coverage term by term, confirmed the
+`GO:0033691` reversal, confirmed that "absorption", "reabsorption" and
+"tubular" genuinely do not occur in PMID:18431508's cached full text, and
+confirmed the `GO:0005515` summaries are per-partner rather than boilerplate.
+It also recorded that neither `just` nor `uv` was available in its sandbox, so
+it could not run `just validate` — a useful caveat to have stated.
+
+All four suggestions taken, three as written and one with an argument:
+
+1. **The `GO:0120163`/PMID:26166748 REMOVE quoted a mechanism sentence** (M2
+   recruitment via T-cadherin) rather than the direction-establishing one. Fair
+   — the whole point of that row is that the paper shows *enhancement*, so the
+   quote must carry the direction. Swapped to the impaired-thermogenic-program
+   sentence, the same one the paired KEEP row uses, which is exactly the
+   contrast being drawn.
+2. **`full_text_unavailable`.** Set — but derived from each cached
+   publication's own `full_text_available` field in `build_review.py` rather
+   than hand-listed, so it cannot drift and cannot go stale in the direction
+   that suppresses evidence extraction. That flags 27 of 42 references, not
+   just the three under the REMOVEs.
+3. **`substrates:` was the wrong home for a sequestered ligand.** Correct —
+   adiponectin has no catalytic activity, so PDGF-BB is an input, not a
+   substrate. Replaced with an `extensions` block on the annotation itself
+   (`predicate: RO:0002233` has_input, as a bare CURIE, not an inlined Term).
+4. **`GO:0042802 identical protein binding` is uninformative as a core MF.**
+   True, and kept anyway, with the reason stated in the core function itself:
+   it is the most specific *correct* MF available. `GO:0042803` names a
+   stoichiometry adiponectin does not adopt, and `GO:0070207 protein
+   homotrimerization` — the term that does state it — exists only in the
+   biological process branch. Searching the ontology for a homotrimerisation or
+   homooligomerisation *molecular function* returns nothing. The imprecision is
+   the ontology's, not the annotation's, and dropping the MF would lose the
+   fact entirely.
 
 ## terms.csv
 

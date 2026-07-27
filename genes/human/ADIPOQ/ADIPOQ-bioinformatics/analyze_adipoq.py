@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -134,11 +135,15 @@ def goa_reconciliation(rows: list[dict]) -> dict:
     seeder_key = {(r["GO TERM"], r["GO EVIDENCE CODE"], r["REFERENCE"],
                    r["QUALIFIER"]) for r in rows}
 
-    review_entries = None
+    review_entries = review_new = None
     if REVIEW_YAML.exists():
-        review_entries = sum(
-            1 for ln in REVIEW_YAML.read_text().splitlines()
-            if ln.startswith("- term:"))
+        rtxt = REVIEW_YAML.read_text()
+        review_entries = sum(1 for ln in rtxt.splitlines()
+                             if ln.startswith("- term:"))
+        # NEW rows are the reviewer's own proposals, not GOA rows, so they are
+        # excluded before reconciling.  Counted from the emitted file, which is
+        # the artifact that ships.
+        review_new = len(re.findall(r"^\s*action:\s*NEW\s*$", rtxt, re.M))
 
     return {
         "goa_rows_raw": len(rows),
@@ -146,7 +151,10 @@ def goa_reconciliation(rows: list[dict]) -> dict:
         "seeder_collapsed_to": len(seeder_key),
         "collapse_loss": len(distinct) - len(seeder_key),
         "review_yaml_entries": review_entries,
-        "reconciles": (review_entries == len(distinct)
+        "review_yaml_new_rows": review_new,
+        "review_yaml_from_goa": (None if review_entries is None
+                                 else review_entries - review_new),
+        "reconciles": (review_entries - review_new == len(distinct)
                        if review_entries is not None else None),
     }
 
@@ -404,6 +412,53 @@ def _donor_evidence(gp_id: str, go_id: str) -> list[str] | None:
     return sorted({a["goEvidence"] for a in d["results"]})
 
 
+# Ontology relations the review's prose asserts.  Regulation is NOT subsumption
+# in GO, and the activity branch is NOT under the binding branch -- both traps
+# were live in this review's first draft, which claimed GO:0048018 receptor
+# ligand activity was a descendant of GO:0005102 signaling receptor binding.
+# It is not.  Each entry is (child, ancestor, expected_membership).
+ASSERTED_RELATIONS = [
+    ("GO:0005179", "GO:0048018", True),   # hormone activity IS a receptor ligand activity
+    ("GO:0005179", "GO:0140677", True),   # ... under molecular function activator activity
+    ("GO:0005179", "GO:0005102", False),  # ... but NOT under signaling receptor binding
+    ("GO:0048018", "GO:0005102", False),  # the correction that prompted this check
+    ("GO:0005125", "GO:0048018", True),   # cytokine activity is a sibling of hormone activity
+    ("GO:0042803", "GO:0042802", True),   # homodimerization IS an identical protein binding
+    ("GO:0006635", "GO:0019395", True),   # beta-oxidation IS a fatty acid oxidation
+    ("GO:0046321", "GO:0019395", False),  # regulation is not subsumption
+    ("GO:0090336", "GO:0050873", False),  # regulation is not subsumption
+    ("GO:0010906", "GO:0006006", False),  # regulation is not subsumption
+]
+
+
+def term_relations() -> dict:
+    """Fetch, record and assert the is_a/part_of relations the review claims.
+
+    Evidence must be born in the repository: a relation checked only in
+    conversation is not checkable by a reader of the tree, and a reviewer in a
+    sandbox with no network cannot re-run the query.  The fetched ancestor sets
+    go into results.json.
+    """
+    out = {"asserted": [], "ancestors": {}}
+    for child, ancestor, expected in ASSERTED_RELATIONS:
+        if child not in out["ancestors"]:
+            u = (f"https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/"
+                 f"{child}/ancestors?relations=is_a,part_of")
+            d = _get_json(u)
+            res = d.get("results") or []
+            if not res:
+                raise CheckFailure(f"no ancestor record for {child}")
+            out["ancestors"][child] = sorted(res[0].get("ancestors") or [])
+        observed = ancestor in out["ancestors"][child]
+        out["asserted"].append({
+            "child": child, "ancestor": ancestor,
+            "expected_is_ancestor": expected,
+            "observed_is_ancestor": observed,
+            "agrees": observed == expected,
+        })
+    return out
+
+
 def receptor_coverage(rows: list[dict]) -> dict:
     """Do GO/GOA record adiponectin's three characterised receptors?
 
@@ -565,8 +620,10 @@ def guards(res: dict) -> list[str]:
             problems.append("guard: zero distinct GOA rows")
         if rec["review_yaml_entries"] is not None and not rec["reconciles"]:
             problems.append(
-                f"guard: review YAML has {rec['review_yaml_entries']} entries "
-                f"but GOA has {rec['goa_rows_distinct']} distinct rows")
+                f"guard: review YAML has {rec['review_yaml_from_goa']} "
+                f"GOA-derived entries ({rec['review_yaml_entries']} total, "
+                f"{rec['review_yaml_new_rows']} NEW) but GOA has "
+                f"{rec['goa_rows_distinct']} distinct rows")
 
     ic = res.get("intact_census")
     if not ic:
@@ -609,6 +666,21 @@ def guards(res: dict) -> list[str]:
         # partial overlap is still a defect, just a differently-shaped one
         pass
 
+    tr = res.get("term_relations")
+    if tr is None:
+        problems.append("guard: term_relations missing -- vacuous pass")
+    elif not tr.get("asserted"):
+        problems.append("guard: term_relations asserted[] is empty; the check "
+                        "exists to police prose claims, so an empty list is a "
+                        "defect not a pass")
+    else:
+        for a in tr["asserted"]:
+            if not a["agrees"]:
+                problems.append(
+                    f"guard: prose asserts {a['child']} "
+                    f"{'IS' if a['expected_is_ancestor'] else 'is NOT'} under "
+                    f"{a['ancestor']}, but GO says the opposite")
+
     rc = res.get("receptor_coverage")
     if rc is None:
         problems.append("guard: receptor_coverage missing -- vacuous pass")
@@ -635,8 +707,9 @@ def self_test() -> int:
 
     # 1. happy path must be clean (a check can be wrong about success too)
     happy = {
-        "goa_reconciliation": {"goa_rows_distinct": 5, "review_yaml_entries": 5,
-                               "reconciles": True},
+        "goa_reconciliation": {"goa_rows_distinct": 5, "review_yaml_entries": 6,
+                               "review_yaml_new_rows": 1,
+                               "review_yaml_from_goa": 5, "reconciles": True},
         "intact_census": {"partners_resolved": 2, "goa_ipi_partners": 2,
                           "partner_detail": [
                               {"reviewed": True,
@@ -649,6 +722,10 @@ def self_test() -> int:
                                         "is_full_cross_product": False},
         "reference_projection": {"PMID:1": {}},
         "receptor_coverage": {"ADIPOR1": {}, "ADIPOR2": {}, "CDH13": {}},
+        "term_relations": {"asserted": [{"child": "GO:1", "ancestor": "GO:2",
+                                         "expected_is_ancestor": True,
+                                         "observed_is_ancestor": True,
+                                         "agrees": True}]},
     }
     if guards(happy):
         failures.append(f"happy path should be clean, got {guards(happy)}")
@@ -656,6 +733,7 @@ def self_test() -> int:
     # 2. missing section must fail loudly, not pass vacuously
     for section, needle in [("goa_reconciliation", "goa_reconciliation missing"),
                             ("receptor_coverage", "receptor_coverage missing"),
+                            ("term_relations", "term_relations missing"),
                             ("intact_census", "intact_census missing"),
                             ("iba_donors", "iba_donors missing"),
                             ("reference_projection",
@@ -670,6 +748,8 @@ def self_test() -> int:
     # 4. review/GOA mismatch
     b = dict(happy, goa_reconciliation={"goa_rows_distinct": 5,
                                         "review_yaml_entries": 4,
+                                        "review_yaml_new_rows": 0,
+                                        "review_yaml_from_goa": 4,
                                         "reconciles": False})
     expect("row-mismatch", b, "but GOA has 5 distinct rows")
 
@@ -690,6 +770,17 @@ def self_test() -> int:
     b = dict(happy, iba_donors={"GO:1": {"donors": [{"source_id": "UniProtKB:X"}],
                                          "panther_nodes": []}})
     expect("no-panther", b, "names no PANTHER node")
+
+    # 8c. a prose claim contradicted by the ontology
+    b = dict(happy, term_relations={"asserted": [
+        {"child": "GO:0048018", "ancestor": "GO:0005102",
+         "expected_is_ancestor": True, "observed_is_ancestor": False,
+         "agrees": False}]})
+    expect("relation-contradicted", b, "but GO says the opposite")
+
+    # 8d. empty relation list must not pass vacuously
+    b = dict(happy, term_relations={"asserted": []})
+    expect("relation-empty", b, "asserted[] is empty")
 
     # 8b. receptor_coverage missing one receptor
     b = dict(happy, receptor_coverage={"ADIPOR1": {}, "CDH13": {}})
@@ -713,7 +804,7 @@ def self_test() -> int:
 
     for f in failures:
         print("SELF-TEST FAIL:", f)
-    print(f"self-test: {11 - len(failures)}/11 direction(s) OK"
+    print(f"self-test: {14 - len(failures)}/14 direction(s) OK"
           if not failures else f"self-test: {len(failures)} failure(s)")
     return 1 if failures else 0
 
@@ -742,6 +833,7 @@ def main() -> int:
         res["iba_donors"] = iba_donors(rows)
         res["node_reach"] = node_reach(rows)
         res["receptor_coverage"] = receptor_coverage(rows)
+        res["term_relations"] = term_relations()
 
     problems = guards(res)
     res["guard_problems"] = problems

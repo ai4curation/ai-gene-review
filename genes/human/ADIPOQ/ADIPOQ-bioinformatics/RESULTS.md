@@ -150,6 +150,41 @@ was tested in both directions and **did not confirm**:
 
 Neither a misplaced term nor a mis-clustered member was found.
 
+## F. Ontology relations the review's prose asserts, fetched and checked
+
+Regulation is not subsumption in GO, and — less obviously — the **activity**
+branch is not under the **binding** branch. Both traps were live in this
+review's first draft. Every relation the prose depends on is now fetched,
+recorded in `results.json` under `term_relations`, and asserted:
+
+| child | ancestor | prose claims | GO says |
+|---|---|---|---|
+| `GO:0005179` hormone activity | `GO:0048018` receptor ligand activity | IS | IS |
+| `GO:0005179` | `GO:0140677` molecular function activator activity | IS | IS |
+| `GO:0005179` | `GO:0005102` signaling receptor binding | **is NOT** | **is NOT** |
+| `GO:0048018` | `GO:0005102` | **is NOT** | **is NOT** |
+| `GO:0005125` cytokine activity | `GO:0048018` | IS | IS |
+| `GO:0042803` homodimerization | `GO:0042802` identical protein binding | IS | IS |
+| `GO:0006635` beta-oxidation | `GO:0019395` fatty acid oxidation | IS | IS |
+| `GO:0046321` pos. reg. FA oxidation | `GO:0019395` | is NOT | is NOT |
+| `GO:0090336` pos. reg. brown fat diff. | `GO:0050873` | is NOT | is NOT |
+| `GO:0010906` reg. glucose metabolism | `GO:0006006` | is NOT | is NOT |
+
+**The correction this check was written for.** The first draft of the
+`GO:0005102` rows argued that the term was merely the coarser grain of
+`GO:0005179`, "which is a descendant of GO:0048018 receptor ligand activity,
+which is a descendant of this term". The last clause is false. `GO:0048018`
+sits under `GO:0140677 molecular function activator activity` →
+`GO:0098772 molecular function regulator activity`, in the activity branch;
+`GO:0005102` is a binding term under `GO:0005515`. Neither subsumes the other,
+so the two rows are **not** redundant — they state different things (that
+adiponectin physically engages a receptor, and that engaging it activates the
+receptor), which strengthens the ACCEPT rather than weakening it.
+
+Queries are `is_a,part_of` ancestor closures from QuickGO. The guard fails if
+any observed membership disagrees with what the prose claims, and fails loudly
+rather than vacuously if the assertion list is empty.
+
 ## E. The two cold-thermogenesis terms are a 2 x 2 citation cross-product
 
 `GO:0120162` (**positive** regulation of cold-induced thermogenesis) and

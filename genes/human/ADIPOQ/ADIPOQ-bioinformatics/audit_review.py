@@ -72,12 +72,25 @@ WITHDRAWN = [
     "all partners are cytosolic",
     # T-cadherin was briefly going to be annotated with GO:0045296
     "propose go:0045296 for t-cadherin",
+    # FALSE ancestry claim that reached the shipped YAML: GO:0048018 is in the
+    # activity branch (under GO:0140677), NOT under GO:0005102.  See RESULTS.md
+    # section F and term_relations in results.json.
+    "descendant of go:0048018 receptor ligand activity, which is a descendant",
+    "go:0048018 is a descendant of go:0005102",
 ]
+
+# A withdrawn phrase may be restated when it is being retracted.  One of these
+# cues must appear shortly before it.
+RETRACTION_CUES = {"withdrawn", "false", "first draft", "retract", "corrected",
+                   "was wrong", "does not exist"}
+RETRACTION_WINDOW = 400
 
 REQUIRED_CLAIMS = {
     # claim -> minimum number of surfaces (files) it must appear on
     "self-referential": 2,
     "cross-product": 2,
+    # the correction must stay stated, not merely be absent
+    "go:0005102 is not among go:0005179": 1,
 }
 
 
@@ -305,8 +318,24 @@ def audit(raw: str, doc: dict, notes: str, results_md: str,
                 "RESULTS.md": nres}
     for name, text in surfaces.items():
         for w in WITHDRAWN:
-            if w in text:
-                problems.append(f"I: withdrawn phrasing {w!r} present in {name}")
+            start = 0
+            while True:
+                i = text.find(w, start)
+                if i < 0:
+                    break
+                start = i + len(w)
+                # An ATTRIBUTED mention is legitimate and must not fire:
+                # explaining why a claim was withdrawn requires restating it.
+                # A guard that forbade this would be worked around, not obeyed.
+                # The exception is deliberately narrow -- a retraction cue must
+                # appear in the RETRACTION_WINDOW characters before the phrase.
+                window = text[max(0, i - RETRACTION_WINDOW):i]
+                if any(cue in window for cue in RETRACTION_CUES):
+                    continue
+                problems.append(
+                    f"I: withdrawn phrasing {w!r} present in {name} with no "
+                    "retraction cue nearby (an attributed mention needs one of "
+                    f"{sorted(RETRACTION_CUES)} within {RETRACTION_WINDOW} chars)")
     for claim, min_surfaces in REQUIRED_CLAIMS.items():
         hits = sum(1 for t in surfaces.values() if claim in t)
         if hits < min_surfaces:
@@ -417,6 +446,14 @@ def self_test() -> int:
     # I: withdrawn phrasing
     expect("I-withdrawn", "withdrawn phrasing",
            notes=notes + "\n\nendocrine signaling is non-core\n")
+    # attributed mention (retraction cue nearby) must NOT fire -- the happy
+    # direction, which is the one guards usually get wrong
+    got = audit(raw, doc,
+                notes + "\n\nThis was withdrawn: endocrine signaling is "
+                        "non-core.\n", res, rj)
+    if any("endocrine signaling is non-core" in g for g in got):
+        fails.append("I-attributed: an attributed mention fired; the guard "
+                     "would be worked around rather than obeyed")
     # I: required claim missing from enough surfaces
     expect("I-required", "required claim", notes="", results_md="")
 
