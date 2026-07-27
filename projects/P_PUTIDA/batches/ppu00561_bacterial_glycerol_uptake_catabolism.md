@@ -42,6 +42,9 @@ autolink_gene_symbols: false
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
 
+2026-07-26: The generic module-level OpenScientist run also timed out after
+7200s without producing a report.
+
 2026-07-26: The `glpF` gene-level run timed out after 7200s with no report.
 The `glpD` run persisted a complete report and artifacts despite the wrapper
 returning a timeout status; its reaction and pathway claims were reconciled
