@@ -258,6 +258,20 @@ which any provider returned. Recorded here so the provider's recall is measurabl
   restored and the self-test returns 0.
 - **Report reproducibility.** A fresh `analyze_adam5.py` run reproduces the committed
   `RESULTS.md` and `results.json` byte-identically (verified by `diff`).
+- **A shipped factual error, and a committed guard for it.** The first pushed version of this
+  review described the six human ADAM pseudogenes as a single contiguous cluster at one locus.
+  An HGNC location query refuted it: only ADAM3A and ADAM5 sit at 8p11.22, while ADAM1A and
+  ADAM1B are at 12q24, ADAM3B at 16q12.1 and ADAM6 at 14q32.33 — four chromosomes, so these
+  are independent pseudogenisation events, not one deletion. `audit_adam5_claims.py` now pins
+  every numeric claim in this review to `results.json` and keeps the retracted wording dead;
+  `--against-shipped-defect 4d92ca329` runs it against the exact blob that carried the bug and
+  confirms it fires there while staying clean on the current tree. The audit declares its own
+  limitation: it matches fixed phrases and cannot catch a paraphrase, so prose still needs
+  re-reading when a claim is withdrawn. Note the guard's own side-effect, which caught me
+  immediately: because it forbids the literal string outright, I cannot quote the retracted
+  wording here even to document it, and my first draft of this bullet failed the audit. That
+  is the correct trade — teaching it to permit the phrase "in a citation context" would open
+  exactly the bypass the guard exists to close.
 
 ## 10. Verdicts
 
