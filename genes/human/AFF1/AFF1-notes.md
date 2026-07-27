@@ -488,51 +488,61 @@ between them in either direction inverts the biology. Neither review does this.
 
 ## Where the review effort actually went
 
-Worth recording for whoever reviews AFF2, AFF3 or AFF4 next, and **corrected twice** — the first
-two drafts of this section overstated its own claim in two ways that the PR reviewer caught, which
-is itself the most on-brand thing in this file.
+For whoever reviews AFF2, AFF3 or AFF4 next. **Corrected three times.** The first draft claimed no
+curation field was ever challenged (false), the second mis-stated what the sibling review had done
+(false), and the third stated counts it could not enumerate — in a section whose leading defect class
+is "a count disagreeing with its own enumeration". So this version **enumerates and does not count**:
+every list below is the list, not a tally of one, which removes the failure mode rather than
+correcting its latest instance.
 
-**What is true.** No **GOA row's** term, evidence code or reference was ever challenged, no
-`supporting_text` was ever wrong, no biological claim in the description or the reasons was ever
-refuted, and the seven MODIFY/NEW proposals stand exactly as first written. The curation
-deliverable has been byte-stable in every structured field since round 2.
+**What is true, and it is the load-bearing claim.** Diffing the review YAML from the commit that
+first created it (`83165cac`) to HEAD, exactly two structured-field lines change anywhere in the
+document: the `id` and `label` of `GO:0006355`, removed from
+`core_functions[0].directly_involved_in`. No `action`, `evidence_type`, `term`, `qualifier`,
+`original_reference_id` or `supporting_text` moved anywhere, at any point, across the whole PR. Every
+proposal — the seven `MODIFY` replacement terms and the one `NEW` row, eight in all — stands exactly
+as first written, as does every quote and every biological claim.
 
-**What the first draft got wrong, and why it matters.** It said no term was "ever challenged". That
-is false: round 1 found `core_functions[0].directly_involved_in` carrying `GO:0032968` **together
-with its ancestor** `GO:0006355`, and commit `72c74fa` removed the ancestor. That is a change to a
-structured curation field in response to a review finding, and writing it out of the record to make
-a tidier story is exactly the failure the rest of this file is about. It also attributed *all* the
-findings to the reviewer when two — the 11-vs-12 recipient count (`d4de157`) and the disorder figure
-(`2206410`) — were found here, by deriving a number independently and comparing.
+**The one finding that touched a curation field:** `core_functions[0].directly_involved_in` carried
+`GO:0032968` together with its ancestor `GO:0006355`; the ancestor was removed in `72c74fa`. An
+earlier draft of this section wrote that out of the record to tell a tidier story, which is the
+failure the rest of the section is about.
 
-**The honest shape.** One finding touched a curation field (the redundant ancestor above). Every
-other finding was about a claim made *about the checks*:
+**Everything else was a claim about the checks, not about the biology.** Enumerated:
 
-| class | notes |
-|---|---|
-| a count disagreeing with its own enumeration | three times: the human recipient set, the `MODIFY` row count, the stated total |
-| a number estimated where a derivable one existed | once: disorder coverage was "~1000", the feature table gives 901 |
-| a guard scoped to the failure already known | twice: check G's first clauses, then the tally clause |
-| a check matching only its own exemption, i.e. vacuous | twice: clause 4's prose regex, and the total sub-clause |
-| a report string asserting what it never read | once: the `in_complex`/`locations` live instance |
-| a silent-nothing lookup where its siblings raise | once |
-| prose duplicated, or narrating process in a biology field | three times |
-| a sibling's work characterised without reading far enough into it | once: see the AFF4 section above |
+- *A count disagreeing with its own enumeration* — the human recipient set of `PMID:22195968`
+  ("12" beside eleven names); the `MODIFY` row count ("6" beside seven rows); and the counts in
+  earlier drafts of this very section.
+- *A number estimated where a derivable one existed* — disorder coverage, written "~1000 of 1210"
+  where the feature table gives 901.
+- *A guard scoped to the failure already known* — check G's first clauses covered only the recipient
+  claim; then the tally clause covered only the actions and not the total.
+- *A check that matched nothing but its own exemption* — clause 4's prose regex, whose only matches
+  were the retraction sentence; and the stated-total sub-clause, whose regex matched no surface at
+  all.
+- *A report string asserting what it never read* — the `in_complex`/`locations` live instance, which
+  claimed what `locations` held without opening that slot.
+- *A silent-nothing lookup where its siblings raise* — `cl.get(id) or []` in that same rationale.
+- *Prose duplicated, or narrating process in a field reserved for biology* — the `description`'s
+  "carry a disorder annotation"; "because the PR reviewer was right to press on it" inside a
+  `reason`; a curation comparison inside `core_functions[2].description`; "intrinsically disordered"
+  twice in one sentence; and `core_functions[2].description` paraphrasing its own second sentence.
+- *A sibling's work characterised without reading far enough into it* — the AFF4 `GO:0008023`
+  claim, corrected in the section above.
 
-Two further defects were found only by the guards' own break-tests **failing** — a case-sensitive
-number match, and an enumeration regex that required the *correct* list so substituting a symbol
-made the check go silent. That is the entry to carry forward: a passing self-test proves the guards
-you thought of fire, and coverage stays a reading question.
-
-**The cheapest detector by far was deriving an expected number independently and comparing.** It
-found four defects unaided. The second cheapest was reading a sibling's record rather than
-summarising it from memory — which is how the AFF4 comparison above got fixed, and how it was
-wrong in the first place.
+**How they were found, which is the part worth carrying forward.** Deriving an expected number
+independently and comparing found: the recipient-set count, the disorder figure, the
+`publicationIdentifiers` impossibility ("1 record, 5 publications"), and the 5-of-104 IntAct records
+silently dropped by an accession equality test. Two more surfaced only because a guard's **own
+break-test failed** — a case-sensitive number match that let "ALL ELEVEN" through, and an enumeration
+regex that required the *correct* gene list, so substituting a symbol made the check go silent rather
+than fire. Those two are the entry to keep: **a passing self-test proves the guards you thought of
+fire, and coverage stays a reading question.** The rest came from the PR reviewer.
 
 **One process failure of mine, recorded because it is the kind that repeats.** After posting a
-"stopping here" comment I pushed the AFF4 comparison **without reading the review that had landed
-in between**, so the first of these two corrections sat unaddressed for a whole round. A stopping
-criterion is not a reason to stop reading the thread.
+"stopping here" comment I pushed a further change **without reading the review that had landed in
+between**, so one correction sat unaddressed for a whole round. A stopping criterion is not a reason
+to stop reading the thread.
 
 ## Process
 
