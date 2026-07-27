@@ -257,3 +257,12 @@ heparin, a glycosaminoglycan (`GO:0008201`), not a lipid. Not imported.
 - **That symbol search must use `gene_exact:`.** Fuzzy `gene:mig-6` also returns
   mig-10/mig-5/mig-14/mig-18 and puts the **wrong** entry first. The 16/16 count would
   otherwise have been right for the wrong reason.
+- **QuickGO strips the DB prefix from WITH/FROM tokens.** `withFrom[].connectedXrefs[]`
+  returns `{"db": "FB", "id": "FBgn0003137"}` as *two fields*, so the `id` alone is
+  `FBgn0003137`, not `FB:FBgn0003137`. Comparing that set naively against a GOA TSV
+  WITH/FROM string reports **17 vs 17 tokens that are "not identical"** for data that is
+  in fact the same — the token must be reassembled as `db + ":" + id` first. I hit this
+  while verifying the ADAMTSL3 cross-check; the sibling comparison itself was sound
+  (both sides came from QuickGO, so both were in the stripped serialisation), but the
+  same-size-yet-different result is exactly the kind of discrepancy that must be
+  investigated rather than waved through.

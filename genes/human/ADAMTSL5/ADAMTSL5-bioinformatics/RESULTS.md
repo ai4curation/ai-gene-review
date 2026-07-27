@@ -87,6 +87,20 @@ of 16 donors hold the term itself — so **no downward MODIFY is warranted**.
   reason.
 - 13 of 16 tokens are **multi-hit** (a Swiss-Prot entry plus TrEMBL fragments). All
   candidates are reported; the reviewed entry is the one queried.
+- **QuickGO strips the DB prefix from WITH/FROM tokens.** `withFrom[].connectedXrefs[]`
+  returns `{"db": "FB", "id": "FBgn0003137"}` as two separate fields, so comparing the
+  bare `id` set against a GOA TSV WITH/FROM string yields **17 vs 17 tokens reported as
+  "not identical"** for data that is actually the same. Reassemble as `db + ":" + id`
+  before any set comparison.
+
+### Cross-check against the concurrently reviewed sibling ADAMTSL3
+
+Derived from QuickGO directly rather than read off the sibling branch. ADAMTSL3
+(`P82987`) carries a `GO:0031012` IBA whose WITH/FROM token set is **exactly identical**
+to ADAMTSL5's — same node, same 17 tokens, verified as a set equality in a single
+serialisation. Two independent derivations of one node agree. ADAMTSL3 also shares the
+`GO:0071953` TAS from `PMID:23962539` and the InterPro `GO:0030198` IEA, so all three of
+this review's non-ACCEPT verdicts have a direct counterpart there.
 
 ---
 
