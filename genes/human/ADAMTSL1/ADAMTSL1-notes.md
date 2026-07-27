@@ -396,6 +396,23 @@ the siblings: for the C-terminal widening the sibling set is `references.finding
 `existing_annotations[0].review.knowledge_gaps[0].boundary`, and the edit now asserts that both
 the claim *and* its caveat appear in all three before it is accepted. Two directions, two
 checks: sweep for what should be gone, assert co-occurrence for what should be everywhere.
+
+**And the co-occurrence check failed too, for the reason the reviewer named: it is only as good
+as the hand-authored sibling list, and enumerating siblings is the same judgement that produced
+the six instances.** My list had three members; the widened claim was load-bearing in a fourth —
+the top-level MF boundary, which concluded "what is excluded is fibrillin-1 binding" while
+stating the evidence as the N-terminal half only, so the field used the widened scope without
+carrying what licenses it. Three of four beats the sweep alone, but the residual failure mode
+survived the new control.
+
+The fix is to stop hand-listing. **Derive the sibling set from the document**: collect every
+string field, select those that draw the widened conclusion (`excluded is fibrillin-1 binding`
+or `covers fibrillin-1 entire`), and require each to state the basis (`C-terminal half`). That
+found the missing field immediately and now passes on three. Two further guards make the check
+non-vacuous: it asserts the selector matched something at all, and the selector keys on the
+*conclusion* rather than on a list of field paths, so a claim copied into a new field is caught
+automatically. Generalisable form: **select the fields by what they assert, not by where they
+live.**
 Note the notes file legitimately still contains three of those strings, because explaining why a
 phrasing was retracted requires quoting it — so the sweep belongs on the review YAML, not on
 prose that discusses it.
