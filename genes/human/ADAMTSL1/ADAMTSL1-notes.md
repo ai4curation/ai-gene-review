@@ -294,10 +294,15 @@ Two direct SPR negatives for human ADAMTSL1, in a panel where its relatives were
 - [PMID:22242013 "ADAMTSL-2, -3, and papilin polypeptides interacted with the N-terminal half of fibrillin-1, while ADAMTSL-1 did not."]
 - [PMID:22242013 "However, neither ADAMTSL-2 nor -1 bound to ADAMTS-10, indicating that ADAMTS enzymes may partner only with specific ADAMTSL proteins."]
 
-So the two partners that place ADAMTSL2, ADAMTSL3 and ADAMTSL6/THSD4 in the fibrillin-1
-pathway have both been tested for ADAMTSL1 and both were negative. This is a **measured
-negative, not an absence**, which makes it much stronger than the silence this review was
-otherwise working against.
+This is a **measured negative, not an absence**, which makes it much stronger than the silence
+this review was otherwise working against.
+
+**Only the fibrillin-1 half is discriminating**, and the PR reviewer was right that my first
+write-up read as two independent exclusions. ADAMTSL-2 is *equally* negative against ADAMTS-10
+and still reaches `GO:0030198`; ADAMTS-10 binding was shown only for ADAMTSL-3; THSD4 was never
+tested against it. So the ADAMTS-10 result does not separate ADAMTSL1 from its relatives and
+must not be double-counted. The fibrillin-1 negative alone carries the argument, and it is
+enough.
 
 **The caveat is the isoform question again.** The methods say
 *"Recombinant full length ADAMTSL-1, -2, LTBP-1, -4 ... were covalently coupled to CM5 sensor
@@ -317,6 +322,22 @@ analogy, and it is a further reason the term cannot be called core. The MF `know
 now bounded on both sides — what is established, *and* what has been measured and excluded —
 and the proposed binding experiment became an unbiased partner search rather than the
 candidate SPR I had originally proposed, which would have repeated a published negative.
+
+One more correction from the same round, and it is the lesson of this section applied to
+itself: I wrote that "the LTBPs remain untested". Unsafe. LTBP-1 and LTBP-4 were coupled to
+CM5 chips in these very experiments, and the LTBP results sit in a supplementary table that is
+not in the cached record. "Not reported in the main text" is what the evidence supports. This
+whole section exists because a candidate that looked untested turned out to have been tested,
+so asserting a second one untested on the same paper would have been the same error twice.
+
+**And the parity claim needed narrowing.** I had written that ADAMTSL1 and ADAMTSL5 are "in
+exactly the same evidentiary position" for `GO:0030198`. That was true when I wrote it and this
+paper made it false: the two remain in the same *IBA* position, but ADAMTSL5 has its own IDA to
+`GO:0031012` plus microfibril and heparin binding, while ADAMTSL1 now carries a measured
+negative against the route by which the family reaches `GO:0030198`. **The difference runs
+against this review**, not for it — the better-supported gene is the one taking the harsher
+action. That does not change the verdict here, but it converts the family-wide line-drawing
+question from a tie into an argument, and it is carried into `suggested_questions` as such.
 
 ## 9. What ADAMTSL1 is, in one paragraph
 
