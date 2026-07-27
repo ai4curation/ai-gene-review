@@ -329,12 +329,22 @@ gene is for. The functional consequence is proposed separately as
 contains **no ELL2 row** — despite a 2.0 Å co-crystal of the AFF4-ELL2 interface
 (`5JW9`) and UniProt's `Interacts with ELL2; the interaction is direct`. Nor CDK9,
 EAF1, EAF2, ELL, ELL3, AFF1, MED26 or HEXIM1, all of which are IntAct partners
-(RESULTS.md §7 lists 77 such partners). The reason is mechanical and defensible:
-those IntAct records are **spoke-expanded** from co-immunoprecipitation of a complex,
-and GOA does not export spoke-expanded records as IPI — i.e. the pipeline is correctly
-refusing to turn complex co-purification into pairwise binding. The gap is therefore
-not "GOA is careless" but "the one paper that measured a *binary* AFF4-ELL2 interaction
-and crystallised it (`PMID:28134250`) has never been curated", which is filable.
+(RESULTS.md §7 lists 77 such partners).
+
+The likely reason is mechanical, and I tested it in **both directions** rather than
+stopping at the convenient one (RESULTS.md §7b). Every AFF4-ELL2 record in IntAct is
+**spoke-expanded** from co-immunoprecipitation of a complex, and **every one of the nine
+partners GOA does export has at least one non-spoke-expanded record** — so being
+spoke-expanded-only is *sufficient* to account for ELL2's absence. But the reverse
+direction **fails**: seven further partners (SDCBP, H2AZ1, H1-5, FMR1, BTG3, LRRK2,
+H2BC9) do have non-spoke-expanded records and are *also* absent from GOA. So spoke
+expansion is **not the whole export rule**, and a first draft of this review asserted
+that it was — a one-directional check licensing a tidy story. The claim is now scoped to
+what was measured, the script raises if the forward direction ever fails, and the
+reverse direction is reported as False rather than omitted.
+
+Either way the filable gap is unchanged: **the one paper that measured a *binary*
+AFF4-ELL2 interaction and crystallised it (`PMID:28134250`) has never been curated.**
 
 ## 9. CHOPS syndrome: function is not phenotype, and sufficiency is not requirement
 
@@ -614,6 +624,18 @@ by its passing:
    from an abstract-only cache must carry `full_text_unavailable`. Note the MODIFY
    refinement: on a MODIFY row the subject is the **proposed replacement**, not the term
    being moved away from.
+
+7. **A one-directional check that licensed a tidy story — caught by hand, not by a gate,
+   and worth recording as such.** The explanation offered for the missing ELL2 row was
+   "GOA does not export spoke-expanded IntAct records as IPI". Measuring only the forward
+   direction (do GOA's partners have binary records? yes, all nine) made that read as the
+   export rule. Measuring the reverse direction refuted it: seven other partners have
+   binary records and are also absent. The claim is now scoped to what was measured
+   (§8e), the test is committed and rendered as RESULTS.md §7b, and the script **raises**
+   if the forward direction ever fails rather than reporting a softer conclusion. The
+   general shape — *a check run in the direction that confirms what you already wrote* —
+   is the one no guard here would have caught, because the guard would have been written
+   in the same direction.
 
 Both scripts also refuse vacuous passes: `uniprot_quote_check` raises on an empty
 quote list, `correction_status` raises with no positive controls, and every check that

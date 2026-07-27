@@ -459,9 +459,11 @@ def intact_partners(accession: str, page_size: int = 200, max_pages: int = 60) -
         e = by_partner.setdefault(other, {
             "accession": other, "name": other_name, "records": 0,
             "pmids": set(), "methods": set(), "method_pub_pairs": set(),
-            "expansion": set(), "scores": set(),
+            "expansion": set(), "scores": set(), "has_binary_record": False,
         })
         e["records"] += 1
+        if rec.get("expansionMethod") in (None, "", "null"):
+            e["has_binary_record"] = True
         e["pmids"] |= pmids
         m = rec.get("detectionMethod")
         e["methods"].add(m)
@@ -496,6 +498,53 @@ CORRECTION_CONTROLS = {
     "36563143": "known ErratumIn with a PMID",
     "17994018": "known corrigendum with a NULL PMID",
 }
+
+
+
+def _spoke_expansion_test(ia: dict, goa_partners: list[str]) -> dict:
+    """Does "GOA does not export spoke-expanded IntAct records as IPI" explain the
+    missing GO:0005515 rows?
+
+    Checked in BOTH directions. The forward direction -- every GOA partner has at least
+    one non-spoke-expanded record -- is what licenses the explanation for a specific
+    absence such as ELL2's. The reverse direction -- every partner with a
+    non-spoke-expanded record appears in GOA -- is what would make spoke expansion the
+    whole export rule. Reporting only the forward direction would let a convenient
+    half-truth stand, which is precisely what a first pass of this review did.
+
+    The binary flag is read from ``has_binary_record``, recorded while the records are
+    being collected, because the normalised ``expansion`` list cannot distinguish a
+    partner with a MIX of binary and spoke-expanded records from one with neither.
+    """
+    prot = re.compile(r"(?:[A-NR-Z][0-9][A-Z0-9]{3}[0-9]|[OPQ][0-9][A-Z0-9]{3}[0-9])(?:-\d+)?$")
+    binary = {acc for acc, e in ia["partners"].items() if e["has_binary_record"]}
+    binary_prot = {a for a in binary if prot.fullmatch(a)}
+    goa = set(goa_partners)
+    forward = goa <= binary_prot
+    reverse = binary_prot == goa
+    if not forward:
+        raise AuditError(
+            "a GOA GO:0005515 partner has no non-spoke-expanded IntAct record: "
+            f"{sorted(goa - binary_prot)} -- the explanation offered for ELL2's absence "
+            "does not hold and must be withdrawn."
+        )
+    return {
+        "partners_with_a_non_spoke_expanded_record": sorted(binary_prot),
+        "goa_protein_binding_partners": sorted(goa),
+        "in_goa_but_no_binary_record": sorted(goa - binary_prot),
+        "has_binary_record_but_absent_from_goa": sorted(binary_prot - goa),
+        "forward_every_goa_partner_has_a_binary_record": forward,
+        "reverse_spoke_expansion_is_the_whole_rule": reverse,
+        "ELL2_is_a_partner": "O00472" in ia["partners"],
+        "ELL2_has_a_non_spoke_expanded_record": "O00472" in binary,
+        "interpretation": (
+            "Spoke-expansion-only is SUFFICIENT to explain a specific absence such as "
+            "ELL2's, because every GOA GO:0005515 partner has at least one "
+            "non-spoke-expanded record while ELL2 has none. It is NOT the whole export "
+            "rule: other partners do have non-spoke-expanded records and are still absent "
+            "from GOA, so a further filter operates that this analysis does not identify."
+        ),
+    }
 
 
 def correction_status(pmids: list[str], controls: dict[str, str] | None = None) -> dict:
@@ -765,6 +814,10 @@ def run_audit() -> dict:
         "intact_partners_without_goa_row": sorted(
             f"{acc}:{ia['partners'][acc]['name']}" for acc in intact_accs if acc not in goa_partners
         ),
+        # Is "spoke-expanded records are not exported as IPI" the whole export rule?
+        # Tested in BOTH directions rather than assumed, because a one-directional check
+        # would have let a convenient half-truth stand.
+        "spoke_expansion_test": _spoke_expansion_test(ia, goa_partners),
     }
 
     # Correction status for everything the review leans on.
@@ -1020,6 +1073,21 @@ def render(res: dict) -> str:
     add("")
     for s in ints["intact_partners_without_goa_row"]:
         add(f"- {s}")
+    add("")
+
+    st = ints["spoke_expansion_test"]
+    add("### 7b. Is spoke expansion the whole export rule? Tested in both directions")
+    add("")
+    add(f"- every GOA `GO:0005515` partner has a non-spoke-expanded record: "
+        f"**{st['forward_every_goa_partner_has_a_binary_record']}**")
+    add(f"- spoke expansion is the WHOLE export rule: "
+        f"**{st['reverse_spoke_expansion_is_the_whole_rule']}**")
+    add(f"- ELL2 is an IntAct partner: **{st['ELL2_is_a_partner']}**; has a "
+        f"non-spoke-expanded record: **{st['ELL2_has_a_non_spoke_expanded_record']}**")
+    add(f"- partners with a non-spoke-expanded record yet absent from GOA: "
+        f"{st['has_binary_record_but_absent_from_goa']}")
+    add("")
+    add(st["interpretation"])
     add("")
 
     c = res["corrections"]

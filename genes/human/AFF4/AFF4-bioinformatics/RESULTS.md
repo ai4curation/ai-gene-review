@@ -490,6 +490,15 @@ IntAct partners of AFF4 that carry **no** `GO:0005515` row in AFF4's GOA (spoke-
 - Q9UER7:DAXX
 - Q9Y2J2:EPB41L3
 
+### 7b. Is spoke expansion the whole export rule? Tested in both directions
+
+- every GOA `GO:0005515` partner has a non-spoke-expanded record: **True**
+- spoke expansion is the WHOLE export rule: **False**
+- ELL2 is an IntAct partner: **True**; has a non-spoke-expanded record: **False**
+- partners with a non-spoke-expanded record yet absent from GOA: ['O00560', 'P0C0S5', 'P16401', 'Q06787', 'Q14201', 'Q5S007', 'Q93079']
+
+Spoke-expansion-only is SUFFICIENT to explain a specific absence such as ELL2's, because every GOA GO:0005515 partner has at least one non-spoke-expanded record while ELL2 has none. It is NOT the whole export rule: other partners do have non-spoke-expanded records and are still absent from GOA, so a further filter operates that this analysis does not identify.
+
 ## 8. Retraction / erratum / expression-of-concern check
 
 - PMIDs checked: **30**
