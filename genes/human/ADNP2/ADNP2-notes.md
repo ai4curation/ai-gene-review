@@ -180,14 +180,26 @@ members: SMAD6/SMAD7 (inhibitory SMADs), NR0B1/NR0B2 (nuclear receptors lacking 
 NCOA1/2/3 (coactivators), ZFPM1/ZFPM2 (GATA cofactors), AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1,
 ZC3H6/ZC3H8 — and **HOPX**.
 
-HOPX is the precedent that makes this filable rather than rhetorical. UniProt describes it as an
-*"Atypical homeodomain protein which does not bind DNA"*, it carries a `DNA_BIND` feature over its
-homeodomain **exactly as ADNP2 does** (HOPX 3–62; ADNP2 1043–1102), and NTNU_SB still withheld
-`GO:0000981` from it while keeping `GO:0000785`. So the discrimination already exists inside this
-import, the criterion is "does it actually bind DNA" rather than "does it have the fold", and the ask
-becomes concrete: **add ADNP2 to the existing 18-member exclusion set.** This is the interpro2go
-negative-control method from the brief, transplanted to TFClass — the entries that behave correctly are
-what prove the point.
+**Corrected in round 4 — I had picked the weaker of two available precedents.** My first framing was
+that HOPX makes this filable: UniProt describes it as an *"Atypical homeodomain protein which does not
+bind DNA"*, it carries a `DNA_BIND` feature, and NTNU_SB still withheld `GO:0000981` from it while
+keeping `GO:0000785`. That is true, but I wrote that HOPX carries its feature "exactly as ADNP2 does",
+and **my own committed `results.json` contradicts it**: HOPX's note reads `Homeobox; degenerate` while
+ADNP2's reads plain `Homeobox`. A curator would have replied, correctly, that HOPX is excluded *because*
+its homeodomain is broken — which does not transfer to ADNP2's intact one.
+
+Settled by measuring the whole exclusion set instead of asserting one case. Of the 18 excluded entities,
+**3** carry an annotated `DNA_BIND` feature: TFDP3 (108-341, no note), **HMBOX1 (267-341, `Homeobox`)**
+and HOPX (3-62, `Homeobox; degenerate`). So **HMBOX1 is the fold-symmetry precedent** — an intact
+homeodomain, annotated with the *identical* note to ADNP2's, already excluded from `GO:0000981` — and
+HOPX carries only the biological half. The two do different work and the review now says so.
+
+The corrected shape of the ask: the discrimination already exists inside this import and already reaches
+an intact-domain homeodomain protein, so **add ADNP2 to the existing 18-member exclusion set**. But the
+*positive* argument for ADNP2 is neither precedent — it is the measured failure to find a motif. The
+exclusion set shows the mechanism exists; it does not show ADNP2 belongs there. This is the interpro2go
+negative-control method from the brief transplanted to TFClass, with the correction that a
+negative-control argument still needs the control to be *comparable* to the subject.
 
 Note what this does *not* say: it is not a claim that the TFClass classification is wrong. Placing
 ADNP2 among the ZF-homeodomain proteins is correct taxonomy, and the same node's `GO:0000785` is

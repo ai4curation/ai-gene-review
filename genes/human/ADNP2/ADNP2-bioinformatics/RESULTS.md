@@ -135,7 +135,19 @@ The **18 chromatin-only entities are the import's own negative control** — the
 | UniProtKB:Q9BPY8 | HOPX |
 | UniProtKB:Q9Y6Q9 | NCOA3 |
 
-**The HOPX precedent, checked rather than asserted.** `Q9BPY8` is in that exclusion set (asserted, not assumed — the script fails if it is not), and it carries a `DNA_BIND` feature at 3-62 just as ADNP2 does at 1043-1102. So a homeodomain-bearing protein with an annotated DNA-binding feature is already excluded from `GO:0000981` by this very import, and the criterion in force is whether the protein binds DNA rather than whether it has the fold. That is the basis for asking that ADNP2 join the set.
+**Which excluded entities carry a DNA-binding domain?** Rendering the `DOMAIN` note alongside the span, because the notes are not uniform and the difference matters. Of the 18 excluded entities, 3 carry an annotated `DNA_BIND` feature at all:
+
+| gene product | symbol | DNA_BIND | non-degenerate? | note identical to ADNP2's? |
+|---|---|---|---|---|
+| UniProtKB:Q5H9I0 | TFDP3 | 108-190 | yes | no |
+| UniProtKB:Q6NT76 | HMBOX1 | 267-341 (Homeobox) | yes | **yes** |
+| UniProtKB:Q9BPY8 | HOPX | 3-62 (Homeobox; degenerate) | no | no |
+
+ADNP2's own feature is 1043-1102 (Homeobox). So the fold-symmetry precedent is **HMBOX1** — annotated with the identical note — and not HOPX, whose domain UniProt calls **degenerate** (`3-62 (Homeobox; degenerate)`). That asymmetry is stated here rather than left in the JSON for a reader to find, because it is the first thing a curator would raise: if HOPX were the only precedent, the reply would be that HOPX is excluded *because* its homeodomain is broken, which would not transfer to ADNP2's intact one. The script asserts that at least one excluded entity has a non-degenerate domain and refuses to report if none does.
+
+HOPX still carries the **biological** half of the precedent — UniProt describes it as an atypical homeodomain protein that does not bind DNA, and it is in the exclusion set (asserted, not assumed: the script fails if it is not). What it does not carry is fold symmetry with ADNP2.
+
+**And the positive argument for ADNP2 is neither of those.** It is the measured failure to find a motif: no sequence motif explains ADNP2's ChIP-seq distribution, its peaks avoid transcription start sites, and PxVxL mutation nearly abolishes its chromatin binding. The exclusion set shows only that this import *has* a mechanism for withholding `GO:0000981` and already applies it to intact-domain proteins; it does not itself argue that ADNP2 belongs there.
 
 Note what does **not** depend on any of this: the `GO:0000981` verdict rests on the quoted three-clause failure against `GO:0003700`'s definition. This section supports the upstream ask, not the annotation action.
 

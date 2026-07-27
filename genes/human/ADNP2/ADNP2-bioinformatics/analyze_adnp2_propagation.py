@@ -585,9 +585,14 @@ CC_TERM = "GO:0000785"   # chromatin
 # the same positive-control discipline as the NAP scan.
 TFCLASS_REACH_CONTROLS = {"UniProtKB:Q6IQ32", "UniProtKB:Q9H2P0"}
 
-# The precedent the review's ask to NTNU_SB rests on: a homeodomain protein that
-# UniProt says does not bind DNA, which carries a DNA_BIND feature anyway, and which
-# this import already excludes from GO:0000981.
+# HOPX: a homeodomain protein UniProt says outright does not bind DNA, carrying a
+# DNA_BIND feature anyway, already excluded from GO:0000981 by this import.  It is
+# the precedent for the BIOLOGICAL claim.  It is NOT a good precedent for the
+# fold-symmetry claim, because its DNA_BIND note reads "Homeobox; degenerate" while
+# ADNP2's reads plain "Homeobox" -- an asymmetry a curator would raise immediately.
+# So the fold-symmetry precedent is derived by measurement below instead of asserted:
+# exclusion_set_dna_bind() scans all 18 excluded entities and requires at least one
+# with a NON-degenerate DNA-binding domain.
 HOPX = "Q9BPY8"
 
 
@@ -654,6 +659,38 @@ def tfclass_reach() -> dict:
             f"missing (HOPX={hopx_dna_bind}, ADNP2={adnp2_dna_bind})"
         )
 
+    # Which of the excluded entities carry an annotated DNA-binding domain at all, and
+    # is any of them NON-degenerate?  Without this the fold-symmetry argument rests on
+    # HOPX, whose domain UniProt calls degenerate -- so a curator could reply that HOPX
+    # is excluded BECAUSE its homeodomain is broken, which would not transfer to ADNP2's
+    # intact one.  Measured rather than argued.
+    adnp2_notes = {f["note"] for f in adnp2_dna_bind}
+    excluded_dna_bind = []
+    for e in cc_only:
+        acc = e.split(":", 1)[1]
+        feats = _dna_bind(acc)
+        if not feats:
+            continue
+        excluded_dna_bind.append(
+            {
+                "gene_product": e,
+                "symbol": imp_symbols.get(e),
+                "features": feats,
+                "any_non_degenerate": any(
+                    "degenerate" not in f["note"].lower() for f in feats
+                ),
+                "note_matches_adnp2": any(f["note"] in adnp2_notes for f in feats),
+            }
+        )
+    intact = [r for r in excluded_dna_bind if r["any_non_degenerate"]]
+    same_note = [r for r in excluded_dna_bind if r["note_matches_adnp2"]]
+    if not intact:
+        raise RuntimeError(
+            "no excluded entity carries a non-degenerate DNA-binding domain, so this "
+            "import supplies no precedent for excluding a protein whose fold is intact. "
+            "The fold-symmetry half of the ask would not hold -- rewrite it before filing."
+        )
+
     evidence = Counter(a["goEvidence"] for a in imp)
     return {
         "node": TFCLASS_NODE,
@@ -691,6 +728,19 @@ def tfclass_reach() -> dict:
             "in_exclusion_set": True,
             "dna_bind_features": hopx_dna_bind,
             "adnp2_dna_bind_features": adnp2_dna_bind,
+            # Stated here so the artifact surfaces the asymmetry rather than leaving a
+            # reader to find it: HOPX's domain is annotated degenerate, ADNP2's is not.
+            "hopx_domain_is_degenerate": any(
+                "degenerate" in f["note"].lower() for f in hopx_dna_bind
+            ),
+            "adnp2_domain_is_degenerate": any(
+                "degenerate" in f["note"].lower() for f in adnp2_dna_bind
+            ),
+        },
+        "exclusion_set_dna_bind": {
+            "entities_with_a_dna_bind_feature": excluded_dna_bind,
+            "with_a_non_degenerate_domain": [r["symbol"] for r in intact],
+            "with_a_note_identical_to_adnp2": [r["symbol"] for r in same_note],
         },
     }
 
@@ -919,19 +969,57 @@ def render(d: dict) -> str:
         add(f"| {r['gene_product']} | {r['symbol']} |")
     add("")
     hp = tf["hopx_precedent"]
-    def _spans(feats: list[dict]) -> str:
-        return ", ".join(f"{f['start']}-{f['end']}" for f in feats)
-    hopx_spans = _spans(hp["dna_bind_features"])
-    adnp2_spans = _spans(hp["adnp2_dna_bind_features"])
+    ex = tf["exclusion_set_dna_bind"]
+
+    def _feats(feats: list[dict]) -> str:
+        return ", ".join(
+            f"{f['start']}-{f['end']}" + (f" ({f['note']})" if f["note"] else "")
+            for f in feats
+        )
+
     add(
-        f"**The HOPX precedent, checked rather than asserted.** `{hp['accession']}` is in "
-        f"that exclusion set (asserted, not assumed — the script fails if it is not), and "
-        f"it carries a `DNA_BIND` feature at {hopx_spans} "
-        f"just as ADNP2 does at {adnp2_spans}. "
-        f"So a homeodomain-bearing protein with an annotated DNA-binding feature is already "
-        f"excluded from `{MF_TERM}` by this very import, and the criterion in force is "
-        f"whether the protein binds DNA rather than whether it has the fold. That is the "
-        f"basis for asking that ADNP2 join the set."
+        f"**Which excluded entities carry a DNA-binding domain?** Rendering the `DOMAIN` "
+        f"note alongside the span, because the notes are not uniform and the difference "
+        f"matters. Of the {imp['entities_chromatin_only']} excluded entities, "
+        f"{len(ex['entities_with_a_dna_bind_feature'])} carry an annotated `DNA_BIND` "
+        f"feature at all:"
+    )
+    add("")
+    add("| gene product | symbol | DNA_BIND | non-degenerate? | note identical to ADNP2's? |")
+    add("|---|---|---|---|---|")
+    for r in ex["entities_with_a_dna_bind_feature"]:
+        add(
+            f"| {r['gene_product']} | {r['symbol']} | {_feats(r['features'])} | "
+            f"{'yes' if r['any_non_degenerate'] else 'no'} | "
+            f"{'**yes**' if r['note_matches_adnp2'] else 'no'} |"
+        )
+    add("")
+    add(
+        f"ADNP2's own feature is {_feats(hp['adnp2_dna_bind_features'])}. So the "
+        f"fold-symmetry precedent is **{', '.join(ex['with_a_note_identical_to_adnp2']) or 'none'}** "
+        f"— annotated with the identical note — and not HOPX, whose domain UniProt calls "
+        f"**degenerate** (`{_feats(hp['dna_bind_features'])}`). That asymmetry is stated here "
+        f"rather than left in the JSON for a reader to find, because it is the first thing a "
+        f"curator would raise: if HOPX were the only precedent, the reply would be that HOPX "
+        f"is excluded *because* its homeodomain is broken, which would not transfer to "
+        f"ADNP2's intact one. The script asserts that at least one excluded entity has a "
+        f"non-degenerate domain and refuses to report if none does."
+    )
+    add("")
+    add(
+        f"HOPX still carries the **biological** half of the precedent — UniProt describes it "
+        f"as an atypical homeodomain protein that does not bind DNA, and it is in the "
+        f"exclusion set (asserted, not assumed: the script fails if it is not). What it does "
+        f"not carry is fold symmetry with ADNP2."
+    )
+    add("")
+    add(
+        f"**And the positive argument for ADNP2 is neither of those.** It is the measured "
+        f"failure to find a motif: no sequence motif explains ADNP2's ChIP-seq distribution, "
+        f"its peaks avoid transcription start sites, and PxVxL mutation nearly abolishes its "
+        f"chromatin binding. The exclusion set shows only that this import *has* a mechanism "
+        f"for withholding `{MF_TERM}` and already applies it to intact-domain proteins; it "
+        f"does not itself argue that ADNP2 belongs there."
     )
     add("")
     add(
@@ -1102,11 +1190,49 @@ def self_test() -> int:
     if not tf["hopx_precedent"]["dna_bind_features"]:
         failures.append("HOPX DNA_BIND feature missing on the happy path")
 
+    # 10. The asymmetry the reviewer found must stay VISIBLE in both artifacts. It is
+    #     recorded in results.json as an explicit boolean, and RESULTS.md must render
+    #     the DOMAIN note, not just the span -- dropping the note is exactly how the
+    #     defect arose. Assert against the EMITTED text, not the builder source.
+    if not tf["hopx_precedent"]["hopx_domain_is_degenerate"]:
+        failures.append("HOPX degeneracy flag is False; the asymmetry claim is stale")
+    if tf["hopx_precedent"]["adnp2_domain_is_degenerate"]:
+        failures.append("ADNP2 domain now reads degenerate; the contrast is stale")
+    md = (HERE / "RESULTS.md")
+    if md.exists():
+        text = md.read_text()
+        if "degenerate" not in text:
+            failures.append("RESULTS.md does not surface the degenerate note")
+        if "Homeobox; degenerate" not in text:
+            failures.append("RESULTS.md renders spans without the DOMAIN note")
+
+    # 11. The fold-symmetry precedent must be DERIVED, not assumed: if no excluded
+    #     entity had a non-degenerate domain the section must refuse. Exercise it by
+    #     marking every excluded entity's domain degenerate -- a mutation as fine as
+    #     the claim, since it leaves the query, the counts and HOPX all intact.
+    global _dna_bind
+    real_dna_bind = _dna_bind
+
+    def all_degenerate(acc: str):
+        return [dict(f, note="Homeobox; degenerate") for f in real_dna_bind(acc)]
+
+    _dna_bind = all_degenerate
+    try:
+        tfclass_reach()
+        failures.append(
+            "fold-symmetry precedent passed with every excluded domain degenerate"
+        )
+    except RuntimeError as e:
+        if "non-degenerate" not in str(e):
+            failures.append(f"fold-symmetry guard raised the wrong error: {e}")
+    finally:
+        _dna_bind = real_dna_bind
+
     if failures:
         for f in failures:
             print("SELF-TEST FAILURE:", f, file=sys.stderr)
         return 1
-    print("self-test: 9/9 directions OK")
+    print("self-test: 11/11 directions OK")
     return 0
 
 
