@@ -171,6 +171,13 @@ justified per gene; it is about where the family draws the KEEP_AS_NON_CORE /
 MARK_AS_OVER_ANNOTATED line, and it is filed once in `suggested_questions`. The script now
 asserts the parity so the comparison cannot go stale.
 
+One asymmetry worth recording, raised by the PR reviewer: for `GO:0030198` the IBA misses
+4 of 26 human members (ADAMTSL1, ADAMTSL3, ADAMTSL5, PAPLN), against 2 of 26 for
+`GO:0031012`. So "coverage gap" is a weaker reading for `GO:0030198` than it is for the
+headline `GO:0031012` finding, and this review does not lean on it — the claim made about
+`GO:0030198` is only that the IBD node sits above ADAMTSL1, with the propagation pattern
+itself filed as a question rather than argued as a defect.
+
 Where the two reviews *agree*: ADAMTSL1 has no IBA at all (#2305 flagged this as worth
 checking against my branch — no discrepancy, my review reports the absence, never IBA
 support), and absence of an IBA at an incoherently-propagating node is a coverage gap rather
