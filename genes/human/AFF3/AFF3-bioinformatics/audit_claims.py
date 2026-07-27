@@ -20,19 +20,25 @@ Closes gaps the repo's own checks are known to have (campaign brief):
   G. Prose-vs-action agreement: no review block's prose may name a DIFFERENT action for
      itself. Attributed cross-references to another row's action are legitimate and are
      deliberately exempted.
-  H. Withdrawn-claim guards, for the two claims this review retracted:
+  H. Withdrawn-claim guards, for the three claims this review retracted:
        - the wrong-way-round GO:0030674 / GO:0005515 ancestry claim (phrase-shaped, with
          the negated form explicitly exempted and that exemption break-tested);
        - the hand-counted CDK9 IntAct figure, guarded STRUCTURALLY by checking any stated
          record/publication/method count against intact_partners.json rather than by
          pinning a literal phrase, and break-tested against the version that actually
-         shipped (`git show HEAD:...`) rather than only against a synthetic mutation.
+         shipped (`git show HEAD:...`) rather than only against a synthetic mutation;
+       - the "donors disagree in sign" premise, with a PER-OCCURRENCE narration exemption.
+         The one-shot repair script's exemption was file-scoped, which made it blind to two
+         surviving instances inside the very file it exempted, so the check moved here to
+         run on every audit.
 
-LIMITATION, stated rather than implied: check G and the first half of H match on sentence
-shape and fixed phrases. They cannot catch a paraphrase. When a claim is withdrawn, every
-prose surface still needs re-reading by hand. The second half of H does not have that
-limitation, because it compares the numbers to a computed artifact -- which is why the
-numeric retraction was guarded that way and the ancestry one could not be.
+LIMITATION, stated rather than implied: check G and the first and third parts of H match on
+sentence shape and fixed phrases. They cannot catch a paraphrase. When a claim is withdrawn,
+every prose surface still needs re-reading by hand -- and the low-salience ones (a
+reference_review note, a source_entities comment, a script docstring, a notes bullet) are
+where a retracted claim actually survives; all four of those happened here. The IntAct part
+of H does not have that limitation, because it compares numbers to a computed artifact, which
+is why the numeric retraction could be guarded structurally and the other two could not.
 
 Usage:
     uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py
@@ -95,6 +101,31 @@ CDK9_COUNT_RE = re.compile(
 
 def _as_int(tok: str) -> int | None:
     return int(tok) if tok.isdigit() else WORD_NUM.get(tok.lower())
+
+
+# Third retraction, and the one that survived a whole round on two low-salience surfaces (a
+# reference_review note and a source_entities comment) because `fix_sign_claim.py`'s
+# narration exemption was FILE-scoped: exempting AFF3-ai-review.yaml wholesale made the
+# re-grep blind to every unnarrated instance inside it. The check therefore lives here now,
+# runs on every audit, and the exemption is PER-OCCURRENCE -- a sentence asserting the
+# retracted premise passes only if the surrounding window marks it as retracted.
+SIGN_RE = re.compile(r"[^.]*disagree[sd]? in \*?sign\*?[^.]*\.", re.I)
+RETRACT_RE = re.compile(
+    r"retract|wrong|earlier draft|earlier version|earlier wording|misread|misreading|"
+    r"refuted|was false", re.I)
+
+
+def check_sign_claim(flat: str) -> list[str]:
+    """Every 'donors disagree in sign' sentence must be narrated as retracted."""
+    out = []
+    for m in SIGN_RE.finditer(flat):
+        window = flat[max(0, m.start() - 260): m.end() + 260]
+        if not RETRACT_RE.search(window):
+            out.append(
+                f"H: unnarrated 'donors disagree in sign' claim (retracted in round 2, and "
+                f"GO:0032786 is POSITIVE): {m.group(0).strip()[:150]!r}"
+            )
+    return out
 
 
 def check_intact_counts(flat: str) -> list[str]:
@@ -334,6 +365,7 @@ def audit(text: str) -> list[str]:
                 f"{flat[max(0, m.start() - 60):m.end() + 60]!r}"
             )
     problems.extend(check_intact_counts(flat))
+    problems.extend(check_sign_claim(flat))
 
     # --- row count vs the GOA TSV ---------------------------------------------------
     if not GOA.exists():
@@ -472,6 +504,37 @@ def self_test() -> int:
                             f"version that actually shipped; got {probs[:2]}")
         else:
             print(f"  ok  H shipped IntAct count (run against HEAD): {hit[0][:150]}")
+
+    # H, third retraction: an unnarrated sign-disagreement sentence must fire. Run against
+    # THE DEFECT THAT ACTUALLY SHIPPED - the two instances the round-1 commit left standing -
+    # rather than a synthetic mutation, and fall back to a synthetic one only once HEAD is
+    # clean, saying which path was taken.
+    shipped2 = subprocess.run(
+        ["git", "show", "2bf0d3d5e:genes/human/AFF3/AFF3-ai-review.yaml"],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    if shipped2.returncode == 0 and "donors disagree in sign" in shipped2.stdout:
+        probs = audit(shipped2.stdout)
+        hit = [p for p in probs if p.startswith("H: unnarrated 'donors disagree in sign'")]
+        if not hit:
+            failures.append("H shipped sign claim: guard does NOT fire on 2bf0d3d5e, the "
+                            f"commit that shipped the defect; got {probs[:2]}")
+        else:
+            print(f"  ok  H shipped sign claim (run against 2bf0d3d5e): {hit[0][:150]}")
+    else:
+        inject = text.replace(
+            "reason is the recipient rather than the donors.",
+            "reason is the recipient rather than the donors, who disagree in sign.", 1)
+        expect("H sign claim (synthetic; 2bf0d3d5e unavailable)", inject,
+               "H: unnarrated 'donors disagree in sign'")
+
+    # H, narration exemption for the sign claim must NOT fire on the retracted forms that
+    # remain in the document by design.
+    if any(p.startswith("H: unnarrated 'donors disagree in sign'") for p in audit(text)):
+        failures.append("H sign narration: guard fires on the current file, whose remaining "
+                        "instances are all explicitly marked as retracted")
+    else:
+        print("  ok  H sign narration: guard silent on the narrated retractions")
 
     # H, vacuity direction: if the CDK9 count sentence disappears entirely the guard must
     # SAY so rather than pass. This is the fifth vacuous-pass shape in the campaign.

@@ -2,10 +2,12 @@
 """Derive AFF3's IntAct partner set, and count publications and methods PER PARTNER.
 
 Written because the hand-counted version of this table was WRONG: "5 records across 4
-publications and 4 methods with MI 0.73" for CDK9 is actually 5 records across 5
-publications and 3 methods, with 4 of the 5 at MI 0.73 and one isoform-2 record at 0.35.
-Per the campaign rule, anything computable is computed and then compared against what
-was written.
+publications and 4 methods with MI 0.73" for CDK9 is actually 6 records across
+5 publications and 3 methods, with MI scores of
+0.35 and 0.73 (the lower one is an isoform-2 pairing).
+Per the campaign rule, anything computable is computed and then compared against what was
+written -- and note that this docstring itself said "5 records" for a whole round after the
+prose had been fixed, which is why low-salience surfaces need the same sweep as prose.
 
 Asserts, so a predicate that never fires cannot leave a plausible-looking count:
   - the subject is NOT in its own partner set (a common symptom of a broken id test);

@@ -48,6 +48,19 @@ only reason it has stayed correct through three changes."""),
      f"**{FLAGGED} of {N} flagged; no retractions and no expressions of concern.**"),
 ]
 
+    # A one-shot repair re-run after it has landed must say "already applied" rather than
+    # crash on a consumed anchor -- otherwise the reproduce block in RESULTS.md invites a
+    # traceback that looks like a defect. Detect the applied state explicitly, and require
+    # that ALL targets are in the same state so a half-applied file still fails loudly.
+already = [new in path.read_text() for path, _old, new in EDITS]
+if all(already):
+    print(f"already applied: every target already reads {FLAGGED} of {N}")
+    raise SystemExit(0)
+assert not any(already), (
+    f"HALF-APPLIED: {sum(already)} of {len(EDITS)} targets already updated. Inspect before "
+    f"re-running -- a partially applied repair is exactly the 'landed in N-1' failure."
+)
+
 detected = 0
 for path, old, new in EDITS:
     t = path.read_text()

@@ -79,6 +79,13 @@ CLAIMS: list[tuple[str, str, bool, str]] = [
     ("GO:0003711", "GO:0140110", True,
      "closes the sibling claim on the GO:0003711 NEW row: previously only the GO:0003712 "
      "leg was checked (reviewer point 4)"),
+    # Round 2: the GO:0006355 reason said "GO:0045893, GO:0032786 and GO:0032968 were all
+    # verified to sit under GO:0045893". GO:0032968 was not in this list at all, and
+    # "GO:0045893 under GO:0045893" is vacuous. Both corrected: the third donor term is
+    # checked here, and the prose now names only the two terms that are genuinely below.
+    ("GO:0032968", "GO:0045893", True,
+     "the third signed donor term is also POSITIVE, completing the claim the GO:0006355 "
+     "reason makes"),
 ]
 
 

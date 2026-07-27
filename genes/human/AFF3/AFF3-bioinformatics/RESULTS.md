@@ -18,8 +18,8 @@ uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py --self-test
 uv run python genes/human/AFF3/AFF3-bioinformatics/verify_file_quotes.py
 ```
 
-`fix_intact_counts.py`, `fix_sign_claim.py`, `fix_pmid_count.py` and `apply_review_round1.py` are
-one-shot repairs, already applied. They are committed so that every correction this review made
+`fix_intact_counts.py`, `fix_sign_claim.py`, `fix_pmid_count.py`, `apply_review_round1.py` and
+`apply_review_round2.py` are one-shot repairs, already applied. They are committed so that every correction this review made
 to itself is reproducible and auditable rather than an untraceable hand-edit, and because each
 one records in its docstring what was wrong and how the wrong version arose. Each asserts its
 anchors are present before replacing, re-greps afterwards, and asserts `detected == changed`.
@@ -106,7 +106,7 @@ identical bytes in all three GOA records.
 
 ## 3. Ancestry claims, fetched not assumed (`term_relations.py`)
 
-19 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
+20 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
 edges cannot be mistaken for subsumption). The script exits non-zero if any claim is wrong.
 
 | claim | result |
@@ -130,6 +130,7 @@ edges cannot be mistaken for subsumption). The script exits non-zero if any clai
 | `GO:0007611` is a descendant of `GO:0050890` | true — the donors' term sits one step under cognition |
 | `GO:0021795` is a descendant of `GO:0050877` | **false** — the migration evidence is the off-branch half |
 | `GO:0003711` is a descendant of `GO:0140110` | true — closes the sibling claim's second leg |
+| `GO:0032968` is a descendant of `GO:0045893` | true — the third signed donor term is positive too |
 
 **This guard has now caught two of my own claims, which is the argument for having it.**
 

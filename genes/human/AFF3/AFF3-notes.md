@@ -312,7 +312,10 @@ Queried IntAct anyway (`findInteractions/P51826`, 14 records, all returned):
   which is why the script exists.
 - **MLLT1 (ENL)** in 2 records from 1 publication by anti-tag co-IP (`PMID:33961781`), MI 0.35 -
   a SEC module component.
-- Singletons of unclear relevance: PIP4K2A, SYT2, DISC1 (2-hybrid fragment pooling), and
+- PIP4K2A in 2 records across 2 publications
+  (`PMID:28514442`, `PMID:33961781`), MI 0.35 - not a singleton, as an earlier version of this
+  bullet said.
+- Genuine singletons, of unclear relevance: SYT2, DISC1 (2-hybrid fragment pooling), and
   ERP29/TFRC by crosslinking (`PMID:30021884`).
 
 Two of these — CDK9 and MLLT1 — are the two SEC modules AFF3 is supposed to bridge, replicated
@@ -469,3 +472,45 @@ rows, AFF1 3, AFF3 zero** — so the endpoint works, the term is alive for the s
 same request, and AFF3's zero is a real absence rather than a rejected query. Given that AFF3's
 CDK9 contact is the most replicated of the three in IntAct, that is a curation asymmetry rather
 than a biological one.
+
+## Review round 2: five carried-over items were all the same failure
+
+The round-2 review requested changes for one new issue plus five carried over, and the five
+share a single cause worth naming: **round 1 fixed each claim on the surface the reviewer had
+named and left it standing on a low-salience one.** The surviving instances were a
+`reference_review` note, a `source_entities` comment, a script docstring, a notes bullet and the
+top-level `description` — precisely the surfaces nobody re-reads.
+
+Worse, **my own guard was structurally unable to catch two of them.** `fix_sign_claim.py`'s
+narration exemption was **file-scoped**: it exempted `AFF3-ai-review.yaml` wholesale so that the
+file could narrate its own retraction, which made the re-grep blind to every *unnarrated*
+instance inside that same file. Two survived there. The exemption is now **per-occurrence** — a
+sentence asserting the retracted premise passes only if the surrounding window marks it as
+retracted — and the check has moved out of the one-shot script into `audit_claims.py`, so it runs
+on every audit rather than once. It is break-tested against `git show 2bf0d3d5e:...`, the commit
+that actually shipped the two survivors, and has a companion direction asserting it stays silent
+on the narrated retractions that remain by design.
+
+That is guard-defeat mode number ten for this campaign, and it has a name of its own:
+**an exemption coarser than the thing it exempts.** The narration exemption was correct in
+intent and one scope-level too wide in implementation, which made the guard report success over
+exactly the file it was written for.
+
+**The one new issue, partly declined.** Round 1's `GO:0001822` commit — whose stated purpose was
+to *stop* over-reading the human evidence — changed "named partly for horseshoe kidney" to
+"horseshoe **or hypoplastic** kidney". The reviewer is right that `PMID:33961779` spells the
+acronym "KI for horseshoe kidney" and never says hypoplastic. But the phrase is not unsourced:
+UniProt's DISEASE line for KINSSHIP reads
+[file:human/AFF3/AFF3-uniprot.txt "facial features, horseshoe or hypoplastic kidney, and failure to"].
+So the defect was **attribution, not fabrication** — the phrase sat next to a PMID quote and read
+as the paper's. It is now attributed to UniProt explicitly on both surfaces. The lesson is still
+the reviewer's, and sharper for being narrower: a commit that tightens a claim can loosen it in
+the same breath, and the added words came from a different source than the quote beside them.
+
+The other four: `:414`'s "all verified" was vacuous for `GO:0045893` (verified under itself) and
+untrue of `GO:0032968`, whose ancestry claim was simply missing from the guard — now present, 20
+claims; the speckle P-TEFb co-concentration is qualified on both surfaces, since the
+redistribution of CDK9 and cyclin T1 to AFF3 sites required strong over-production and only
+AFF3's own speckle localisation is a baseline observation; `intact_partners.py`'s docstring still
+said "5 records" a full round after the prose had been corrected to 6; and PIP4K2A was listed as
+a singleton when it has 2 records across 2 publications.
