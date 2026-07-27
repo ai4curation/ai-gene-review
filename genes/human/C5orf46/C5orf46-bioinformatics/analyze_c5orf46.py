@@ -637,6 +637,59 @@ def check_f_coverage(problems: list[str], refresh: bool, report: dict) -> None:
     report["panther_member_annotation_state"] = fam_state
 
 
+# Curatorial precedents the review's prose leans on. Every other quantitative claim here is
+# paired with a cached query; these were originally asserted from an interactive lookup, which
+# the PR review correctly flagged as not checkable by any reader of the tree.
+PRECEDENTS = {
+    "P81605": ("DCD (dermcidin)", "GO:0031640"),   # the anionic cysteine-free comparator
+    "Q6UWK7": ("GPR15LG (C10orf99 / AP-57)", "GO:0050830"),
+}
+
+
+def check_g_precedents(problems: list[str], refresh: bool, report: dict) -> None:
+    """Verify the curated precedents rather than asserting them."""
+    out = {}
+    for acc, (label, expected_term) in PRECEDENTS.items():
+        entry = fetch_uniprot(acc, refresh)           # asserts primaryAccession
+        rows = quickgo_all(refresh, geneProductId=f"UniProtKB:{acc}")
+        if not rows:
+            problems.append(
+                f"G: {acc} ({label}) returned ZERO annotations - a precedent claim cannot rest "
+                f"on an empty query, and the subject's own non-empty result shows the endpoint works")
+            continue
+        holds = sorted({(r["goId"], r["goEvidence"], r["reference"]) for r in rows
+                        if r["goId"] == expected_term})
+        out[acc] = {
+            "label": label,
+            "uniprot_name": (entry.get("proteinDescription", {})
+                             .get("recommendedName", {}).get("fullName", {}).get("value")),
+            "length": entry["sequence"]["length"],
+            "reviewed": is_reviewed(entry),
+            "total_annotations": len(rows),
+            "expected_term": expected_term,
+            "expected_term_rows": holds,
+            "defense_or_killing_terms": sorted({
+                (r["goId"], r["goEvidence"], r["reference"]) for r in rows
+                if r["goId"] in ("GO:0031640", "GO:0042742", "GO:0050829", "GO:0050830",
+                                 "GO:0050832", "GO:0019731", "GO:0061844", "GO:0140367")}),
+        }
+        if not holds:
+            problems.append(
+                f"G: {acc} ({label}) does NOT hold {expected_term} - the precedent asserted in "
+                f"the review prose is false and must be removed")
+    report["precedents"] = out
+    # The subject must NOT hold any of these terms; that absence is the whole point.
+    subj = quickgo_all(refresh, geneProductId=f"UniProtKB:{SUBJECT}")
+    subj_defense = sorted({r["goId"] for r in subj
+                           if r["goId"] in ("GO:0031640", "GO:0042742", "GO:0050829",
+                                            "GO:0050830", "GO:0019731", "GO:0061844")})
+    report["subject_defense_terms"] = subj_defense
+    if subj_defense:
+        problems.append(
+            f"G: the subject already holds defence/killing terms {subj_defense}, so the two NEW "
+            f"proposals are not new - re-check before proposing them")
+
+
 CHECKS = [
     ("A molecular identity of the assayed peptide", check_a_identity),
     ("B amphipathicity / hydrophobic maximum", check_b_hydropathy),
@@ -644,6 +697,7 @@ CHECKS = [
     ("D interaction provenance", check_d_intact),
     ("E partner promiscuity", check_e_promiscuity),
     ("F annotation coverage gap", check_f_coverage),
+    ("G curatorial precedents", check_g_precedents),
 ]
 
 
@@ -842,6 +896,54 @@ def self_test() -> int:
         raise CheckError(hit[0])
     _expect(dead_reference_control, "reference positive control",
             "dead reference control is detected")
+
+    # 8. Check G, both directions. A precedent must be queried, and a false precedent must
+    #    be reported as false rather than quietly omitted.
+    def dead_precedent():
+        probs, rep = [], {}
+        saved = globals()["quickgo_all"]
+        def fake(refresh=False, max_pages=20, **params):
+            if params.get("geneProductId") == f"UniProtKB:{SUBJECT}":
+                return saved(refresh, max_pages, **params)
+            return []
+        globals()["quickgo_all"] = fake
+        try:
+            check_g_precedents(probs, False, rep)
+        finally:
+            globals()["quickgo_all"] = saved
+        hit = [p for p in probs if "returned ZERO annotations" in p]
+        if not hit:
+            raise AssertionError(f"empty-precedent guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(dead_precedent, "returned ZERO annotations",
+            "a precedent whose query comes back empty is reported, not assumed")
+
+    def false_precedent():
+        probs, rep = [], {}
+        saved = dict(PRECEDENTS)
+        try:
+            # Ask dermcidin for a term it does not hold. The guard must say so.
+            PRECEDENTS["P81605"] = ("DCD (dermcidin)", "GO:0004672")
+            check_g_precedents(probs, False, rep)
+        finally:
+            PRECEDENTS.clear(); PRECEDENTS.update(saved)
+        hit = [p for p in probs if "does NOT hold" in p]
+        if not hit:
+            raise AssertionError(f"false-precedent guard did not fire; problems={probs}")
+        raise CheckError(hit[0])
+    _expect(false_precedent, "does NOT hold",
+            "a precedent the source does not actually hold is reported as false")
+
+    # ... and the happy direction: the real precedents must verify.
+    probs, rep = [], {}
+    check_g_precedents(probs, False, rep)
+    assert not probs, f"the real precedents do not verify: {probs}"
+    assert rep["subject_defense_terms"] == [], (
+        f"the subject already holds defence terms {rep['subject_defense_terms']}, "
+        f"so the NEW proposals would be redundant")
+    for acc, v in rep["precedents"].items():
+        assert v["expected_term_rows"], acc
+    print("  ok   both real precedents verify and the subject holds no defence/killing term")
 
     print("\nAll break-tests fired for the right reason.")
     return 0

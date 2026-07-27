@@ -101,30 +101,26 @@ HURI_EVIDENCE = (
     "anywhere in the record."
 )
 
-PARTNER_SET_ARGUMENT = (
-    "What makes the set as a whole uninformative rather than merely thin is its composition. "
-    "Eleven of the thirteen partners are integral membrane proteins, carrying 44 annotated "
-    "transmembrane segments between them, and the two that are not are SGTA and SGTB, the two "
-    "human members of the SGT family of small glutamine-rich TPR co-chaperones. One "
-    "qualification belongs here rather than being smoothed over: the hydrophobic-client "
-    "function is curated for SGTA only. UniProt describes SGTA as binding misfolded and "
-    "hydrophobic-patch-containing client proteins and as binding the transmembrane domain of "
-    "newly synthesized proteins, whereas SGTB's entire FUNCTION is regulation of HSC70/HSP70 "
-    "ATPase activity, with no hydrophobic-client claim at all. SGTB is SGTA's paralogue, 55.6 "
-    "per cent identical over the shorter sequence and with the same TPR repeat architecture, so "
-    "its presence is consistent with the same explanation without being curated evidence for "
-    "it. Taken together, every partner in the set is either a hydrophobic-helix-bearing "
-    "membrane protein or an SGT-family TPR co-chaperone whose curated member binds exposed "
-    "transmembrane helices. In the two-hybrid screen C5orf46 is the bait in 26 of the 38 HuRI "
-    "records - the other twelve are the same interactions re-logged as validated two hybrid "
-    "with both partners as neutral components - and the bait is the full open reading frame, "
-    "whose most hydrophobic 19-residue window (Kyte-Doolittle +2.51) is the uncleaved signal "
-    "peptide, more hydrophobic than any window in the mature chain (+1.08). A bait presenting "
-    "the most hydrophobic segment in the construct, recovering a partner set whose only shared "
-    "property is hydrophobicity, is better explained by the screen's design than by the "
-    "peptide's biology. Twelve of the thirteen partners also exceed the subject's 14 distinct "
-    "IntAct partners, up to AQP6 at 382; the two exceptions are recorded rather than smoothed "
-    "away, PEX12 at 37 and the TBXA2R clone at 13, which is below the subject."
+
+SET_CONTEXT = (
+    "Set-level context, restated on every row so each can be read alone; the full census with "
+    "its tables is in the gene's bioinformatics RESULTS.md, sections C and D. All fourteen rows "
+    "come from two pipelines, and the partner set has a single shared property. Eleven of the "
+    "thirteen partners are integral membrane proteins, carrying 44 annotated transmembrane "
+    "segments between them; the other two are SGTA and SGTB, the two human members of the SGT "
+    "family of TPR co-chaperones, and the hydrophobic-client function is curated for SGTA only - "
+    "SGTB's entire UniProt FUNCTION is HSC70/HSP70 ATPase regulation, so it is consistent with "
+    "the reading rather than a second curated instance. C5orf46 is the bait in 26 of the 38 "
+    "two-hybrid records, and that bait is the full open reading frame, whose most hydrophobic "
+    "19-residue window (Kyte-Doolittle +2.51) is the uncleaved signal peptide - more hydrophobic "
+    "than anything in the mature chain (+1.08). A bait presenting the most hydrophobic segment in "
+    "the construct, recovering a partner set whose only shared property is hydrophobicity, is "
+    "better explained by the screen's design than by the peptide's biology. Twelve of the "
+    "thirteen partners also exceed the subject's 14 distinct IntAct partners, up to AQP6 at 382, "
+    "with PEX12 at 37 and the truncated TBXA2R clone at 13 recorded as the exceptions rather "
+    "than smoothed away. And every interaction in the set was scored either in the "
+    "Saccharomyces cerevisiae nucleus or in a HEK293T lysate, so no partner was tested in its "
+    "native topology."
 )
 
 OVERANN_TAIL = (
@@ -135,16 +131,6 @@ OVERANN_TAIL = (
     "can be substituted, because nothing about the partner tells us what the peptide does."
 )
 
-TOPOLOGY_CAVEAT = (
-    "A compartment-accessibility argument applies to part of the set but is recorded with its "
-    "limits: PEX12 is in the peroxisome membrane and MIMS2 and TIMMDC1 in mitochondrial "
-    "membranes, compartments a signal-peptide-directed secretory protein never enters, while "
-    "SGTA and SGTB are cytosolic - five of thirteen. The ER-membrane partners TMBIM6 and EBP "
-    "are at least on this protein's own biosynthetic route, so accessibility is corroboration "
-    "here and not the main argument. What does apply to all thirteen is that every interaction "
-    "was scored either in the Saccharomyces cerevisiae nucleus or in a HEK293T lysate, so no "
-    "partner was tested in its native topology."
-)
 
 AP57_PRECEDENT = (
     "There is an exact curatorial precedent, and it is what turns this from a request into a "
@@ -316,8 +302,7 @@ def binding_row(partner: str, reference: str) -> dict:
             "summary": verdict_head,
             "action": "MARK_AS_OVER_ANNOTATED",
             "reason": " ".join([
-                PARTNER_NOTE[partner], evidence_para, PARTNER_SET_ARGUMENT,
-                TOPOLOGY_CAVEAT, OVERANN_TAIL,
+                PARTNER_NOTE[partner], evidence_para, SET_CONTEXT, OVERANN_TAIL,
             ]),
             "supported_by": [
                 q(RESULTS_FILE_REF,
@@ -919,29 +904,43 @@ def exosome_row() -> dict:
         "original_reference_id": P_EXOSOME,
         "qualifier": "located_in",
         "review": {
-            "summary": ("Accepted as a core location, and the more informative of the two "
-                        "cellular-component rows: it places the peptide in a specific secreted "
-                        "compartment of a tissue that independently expresses it most highly."),
-            "action": "ACCEPT",
+            "summary": ("Kept as a non-core location. The detection is real and it corroborates "
+                        "secretion, but it records where the peptide was found in one proteomic "
+                        "survey, not where it does its work."),
+            "action": "KEEP_AS_NON_CORE",
             "reason": (
                 "The protein was catalogued in the exosome fraction of human parotid saliva by "
-                "shotgun proteomics. Verified as a descendant of GO:0005576, so this row and the "
+                "shotgun proteomics, and the detection is coherent rather than incidental: HGNC's "
+                "alias name for the gene is skin and saliva secreted protein 1, the Human Protein "
+                "Atlas calls expression group-enriched in blood vessel, salivary gland and skin, "
+                "and the only functional paper reports the same salivary-gland and skin "
+                "distribution. Verified as a descendant of GO:0005576, so this row and the "
                 "extracellular-region row are consistent rather than competing, with this one "
-                "strictly more specific. Three independent lines make the detection coherent "
-                "rather than incidental: HGNC's alias name for the gene is skin and saliva "
-                "secreted protein 1, the Human Protein Atlas calls expression group-enriched in "
-                "blood vessel, salivary gland and skin, and the only functional paper on the gene "
-                "reports the same salivary-gland and skin distribution. A single detection in one "
-                "large-scale dataset is not strong evidence on its own, which the HDA code already "
-                "encodes; the reference-projection check that would have made it worse came back "
-                "clean instead. Fully paginated, this reference carries 396 annotations over 396 "
-                "distinct entities, all to GO:0070062, all HDA, all assigned by UniProt - one "
-                "entity, one annotation, one localisation term - and no functional or phenotype "
-                "term appears anywhere in it. That is a proteomic inventory, not the pattern in "
-                "which a single experiment's phenotype is projected across a set of proteins. One "
-                "limitation stated plainly: the cached copy of this paper does not include the "
+                "strictly more specific. It is retained for that reason. "
+                "Non-core rather than core, on two grounds. The first is what the evidence is: a "
+                "single HDA detection in one large-scale dataset, which the HDA code already "
+                "encodes as such, and an exosome preparation from a secretory fluid co-purifies "
+                "abundant soluble secreted proteins routinely. The second is decisive, and it is "
+                "about what a core location asserts. Every measurement of what this peptide does "
+                "was made on free peptide added to a bacterial culture or injected into an animal, "
+                "and the paper's own SUMO-fusion control - activity abolished by an N-terminal tag "
+                "and restored on cleavage - argues that the functional species is free soluble "
+                "peptide rather than peptide packaged in a vesicle. Nothing shows the peptide "
+                "acting in or on an exosome lumen. Listing it among core locations would therefore "
+                "assert a compartment of action that no experiment supports, so the core location "
+                "is GO:0005576 alone. The wider practice agrees: across the merged human reviews "
+                "GO:0070062 is kept non-core or marked over-annotated about eight times for every "
+                "acceptance, and it appears in core_functions.locations in only two genes, both "
+                "with genuine exosome biology. "
+                "One limitation stated plainly: the cached copy of this paper does not include the "
                 "protein catalogue in which C5orf46 appears, so no sentence of it is quoted about "
-                "this gene, and the row is assessed on its provenance."
+                "this gene and the row is assessed on its provenance. That provenance was checked, "
+                "and the check came back clean rather than damning. Fully paginated, the reference "
+                "carries 396 annotations over 396 distinct entities, all to GO:0070062, all HDA, "
+                "all assigned by UniProt - one entity, one annotation, one localisation term - and "
+                "no functional or phenotype term appears anywhere in it. That is a proteomic "
+                "inventory, not the pattern in which one experiment's phenotype is projected "
+                "across a set of proteins."
             ),
             "supported_by": [
                 q(UNIPROT_FILE_REF, "DR   GO; GO:0070062; C:extracellular exosome; HDA:UniProtKB."),
@@ -950,6 +949,10 @@ def exosome_row() -> dict:
                 q(P_AP64,
                   ("First, the mRNA expression of AP-64 in the skin and salivary gland was "
                    "discovered using the TCGA database")),
+                q(P_AP64,
+                  ("SUMO-AP-64 was expressed in a soluble form but failed to inhibit the growth of "
+                   "DH5α cells. After removal of the SUMO tag, AP-64 exhibited strong antibacterial "
+                   "effects.")),
                 q(RESULTS_FILE_REF,
                   ("**Annotations in all of GOA citing `PMID:33804835`, the sole functional "
                    "characterisation of")),
@@ -999,7 +1002,17 @@ def new_term_rows() -> list[dict]:
         "Deriving a pore-forming or membrane-disrupting activity from it would be reading a "
         "structure prediction as a mechanism. GO offers no term for 'kills bacteria by an "
         "unidentified route', and inventing one would be an over-annotation in the opposite "
-        "direction."
+        "direction. Two neighbouring terms are declined for a reason that belongs in the record "
+        "rather than only in the notes, because declining them while accepting GO:0050829 from "
+        "the same experiments would otherwise look inconsistent. GO:0019731 antibacterial humoral "
+        "response and GO:0061844 antimicrobial humoral immune response mediated by antimicrobial "
+        "peptide both require the response to occur in a BODY FLUID. The peptide is present in "
+        "plasma and in saliva, but every assay was done in culture medium or by injecting peptide "
+        "into an animal, so no experiment shows the endogenous peptide mounting a response in "
+        "either fluid; those two terms would convert a sufficiency result into an organism-level "
+        "process claim, which GO:0050829 and GO:0031640 do not. GO:0140367 antibacterial innate "
+        "immune response is declined on its own differentia, which requires components that "
+        "directly recognise a pathogen component - no target has been identified here."
     )
     return [
         {
@@ -1061,7 +1074,14 @@ def new_term_rows() -> list[dict]:
                     "bacteria collapsing. Curatorial precedent supports the pairing - dermcidin, "
                     "the anionic cysteine-free human antimicrobial peptide the paper itself names "
                     "as its closest comparator, carries GO:0031640 alongside its "
-                    "defence-response annotations. "
+                    "defence-response annotations - though the query behind that, now committed "
+                    "rather than asserted, shows dermcidin holds GO:0031640 by InterPro2GO IEA "
+                    "(GO_REF:0000002) rather than by a curator's experimental call, so it is "
+                    "precedent that the term is used for this class and not that it was assigned "
+                    "from an experiment. Dermcidin's own experimental defence rows are GO:0042742 "
+                    "and GO:0140367, both IDA. The non-redundancy argument therefore rests on the "
+                    "verified closure fetch above and not on this precedent, which is offered as "
+                    "corroboration at its true strength. "
                     + common
                 ),
                 "supported_by": NEW_ROW_SUPPORT,
@@ -1102,6 +1122,11 @@ def build_core_functions() -> list[dict]:
                 "exosomes, and expression is concentrated in skin, salivary gland and blood "
                 "vessel, which is a coherent distribution for a host-defence peptide of the body "
                 "surfaces."
+                "surfaces. The core location is the extracellular region and not the exosome: the "
+                "exosome detection corroborates secretion, but every measurement of activity used "
+                "free peptide, and the SUMO-fusion control implies the functional species is free "
+                "soluble peptide rather than vesicle-packaged peptide, so no compartment of action "
+                "beyond the extracellular region is claimed."
             ),
             "directly_involved_in": [
                 {"id": "GO:0050829", "label": "defense response to Gram-negative bacterium"},
@@ -1109,7 +1134,6 @@ def build_core_functions() -> list[dict]:
             ],
             "locations": [
                 {"id": "GO:0005576", "label": "extracellular region"},
-                {"id": "GO:0070062", "label": "extracellular exosome"},
             ],
             "supported_by": NEW_ROW_SUPPORT + [
                 q(P_AP64, ("we also observed that the yeast cells were unsusceptible to the "
@@ -1595,6 +1619,23 @@ def check_document(doc: dict) -> list[str]:
                     f"withholds a molecular function - a structured field is asserting a "
                     f"hedged claim flatly")
 
+    # SECOND HEDGE SWEEP, added after a PR review found the gap: the first one covered only
+    # the molecular-function slots, so a row whose own summary conceded its evidence was "not
+    # strong evidence on its own" could still be listed as a CORE LOCATION. Any term the review
+    # declines to treat as core must not appear anywhere in core_functions - and `locations`
+    # asserts a compartment of ACTION, not merely of detection.
+    non_core = {a["term"]["id"]: a["term"]["label"] for a in doc["existing_annotations"]
+                if a["review"]["action"] in ("KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED",
+                                             "REMOVE", "UNDECIDED")}
+    for i, c in enumerate(doc["core_functions"]):
+        for slot in ("locations", "anatomical_locations", "directly_involved_in"):
+            for term in (c.get(slot) or []):
+                if term["id"] in non_core:
+                    problems.append(
+                        f"core_functions[{i}].{slot} lists {term['id']} "
+                        f"({non_core[term['id']]}), whose annotation row is not core - a "
+                        f"non-core term must not be asserted as a core location or process")
+
     # Opening clause of every summary must agree with its action. The opener is a
     # stable, greppable position; the reasoning further down is what gets reworded.
     for i, a in enumerate(doc["existing_annotations"]):
@@ -1749,8 +1790,15 @@ def self_test() -> int:
                   "a summary opener disagreeing with its action is flagged")
 
     def drop_cf_term(m):
-        m["core_functions"][0]["locations"] = [
-            t for t in m["core_functions"][0]["locations"] if t["id"] != "GO:0070062"]
+        # Drop whatever the first location actually is, rather than a hard-coded id. The
+        # previous version dropped GO:0070062, and when that term was legitimately removed
+        # from core_functions the mutation became a silent no-op and the break-test reported
+        # the guard as broken. A mutation must be asserted to have changed something.
+        locs = m["core_functions"][0]["locations"]
+        assert locs, "no core location to drop; direction 1 would be untested, not passing"
+        before = len(locs)
+        m["core_functions"][0]["locations"] = locs[1:]
+        assert len(m["core_functions"][0]["locations"]) == before - 1, "mutation was a no-op"
     mutate_expect(drop_cf_term, "missing from core_functions",
                   "an ACCEPT term absent from core_functions is flagged (direction 1)")
 
@@ -1758,6 +1806,21 @@ def self_test() -> int:
         m["core_functions"][0]["locations"].append({"id": "GO:0005886", "label": "plasma membrane"})
     mutate_expect(add_cf_term, "with no ACCEPT/NEW row",
                   "a core_functions term with no ACCEPT/NEW row is flagged (direction 2)")
+
+    # The defect the PR review actually found: a KEEP_AS_NON_CORE term listed as a core
+    # location. The first hedge sweep could not see this, because it only inspected the
+    # molecular-function slots. Run the guard against the shape that shipped.
+    def relist_noncore_location(m):
+        m["core_functions"][0]["locations"].append(
+            {"id": "GO:0070062", "label": "extracellular exosome"})
+    mutate_expect(relist_noncore_location, "whose annotation row is not core",
+                  "a KEEP_AS_NON_CORE term re-listed as a core location is flagged")
+
+    def relist_overannotated_process(m):
+        m["core_functions"][0]["directly_involved_in"].append(
+            {"id": "GO:0005515", "label": "protein binding"})
+    mutate_expect(relist_overannotated_process, "whose annotation row is not core",
+                  "a MARK_AS_OVER_ANNOTATED term listed as a core process is flagged")
 
     def undeclare(m):
         m["references"] = [r for r in m["references"] if r["id"] != RESULTS_FILE_REF]

@@ -252,6 +252,28 @@ So `GO:0050829` proposed here is the exact counterpart of a term the sibling alr
 from an equivalent experiment in an equivalent paper by the same group. The gap is a
 consistency defect, not a request for a novel kind of annotation.
 
+### The two curatorial precedents, queried rather than asserted
+
+A PR review pointed out that these two claims sat in the review prose without a committed
+query behind them, unlike every other quantitative claim here. They are now check **G** in
+`analyze_c5orf46.py`, with both directions break-tested (an empty result is reported, and a
+precedent the source does not actually hold is reported as false). Querying them changed one
+of the two:
+
+| precedent | what the query returns | strength |
+|---|---|---|
+| **C10orf99 / GPR15LG `Q6UWK7`**, 81 aa, reviewed | `GO:0050830` **IDA** and `GO:0050832` **IDA**, both from `PMID:25585381`, both assigned by UniProt | strong — a curator assigned these from the AP-57 experiments |
+| **DCD dermcidin `P81605`**, 110 aa, reviewed | `GO:0031640` by **IEA, `GO_REF:0000002` (InterPro2GO)**; its *experimental* defence rows are `GO:0042742` IDA and `GO:0140367` IDA | **weaker than first stated** — precedent that the term is *used* for this class, not that it was assigned from an experiment |
+
+So the dermcidin precedent is corroboration at reduced strength, and the non-redundancy of
+`GO:0031640` against `GO:0050829` rests on the verified closure fetch (`GO:0031640` under
+`GO:0001906`, not under `GO:0042742`) rather than on it. The C10orf99 precedent is unaffected
+and remains the load-bearing comparison.
+
+The same check also asserts the **subject holds none** of `GO:0031640`, `GO:0042742`,
+`GO:0050829`, `GO:0050830`, `GO:0019731` or `GO:0061844` — because if it did, the two `NEW`
+proposals would not be new. It holds none.
+
 *Accession caution, recorded because it nearly propagated:* C10orf99 is **`Q6UWK7`**. An
 earlier pass in this analysis looked it up as `Q6UWT2`, which is **adropin (ENHO)** — a
 different protein whose record would have supported the opposite conclusion, that the class is

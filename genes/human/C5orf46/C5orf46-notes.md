@@ -288,6 +288,82 @@ limitations: *"the mRNA expression of AP-64 in the skin and salivary gland was d
 the TCGA database"*. It is used here only as agreement with HPA and the HGNC alias, never as
 primary evidence.
 
+## Review round 1: the exosome row was accepted as a core location, and should not have been
+
+The blocking point was right, and it found a hole in a guard I had written for exactly this
+class of defect.
+
+`GO:0070062` was `ACCEPT` and appeared in `core_functions.locations`. The evidence is a single
+HDA detection in one shotgun-proteomics inventory, and **the row's own summary conceded it was
+"not strong evidence on its own"** while the structured field asserted it as a core location.
+That is precisely the hedge-versus-structured-field defect my `check_document` sweep exists to
+catch — and it missed, because the sweep covered only `molecular_function`,
+`contributes_to_molecular_function`, `substrates` and `in_complex`. **`locations` was outside
+its scope.** A guard scoped to the failure I had thought of, run against a document with a
+different one.
+
+The substantive argument is the reviewer's, and it is the better one: `core_functions.locations`
+asserts a compartment of *action*, and nothing shows the peptide acting in an exosome lumen.
+Every activity measurement used free peptide added to a culture or injected into an animal, and
+the paper's own SUMO-fusion control — activity abolished by an N-terminal tag and restored on
+cleavage — argues the functional species is free soluble peptide, not vesicle cargo.
+
+I verified the convention numbers before conceding rather than after. The reviewer said
+`GO:0070062` gets `KEEP_AS_NON_CORE` 342×, `MARK_AS_OVER_ANNOTATED` 158× and `ACCEPT` 43× across
+merged human reviews; I measure **346 / 161 / 42** excluding this gene, so the claim holds.
+**And there is a sharper version of it that the reviewer did not use:** `GO:0070062` appears in
+`core_functions.locations` in only **2 of 1,769** merged reviews — GAPDH and PDCD6IP, both with
+genuine exosome biology. That is a much stronger statement than the row-action ratio, and it
+settled the question.
+
+Fixes: the row is `KEEP_AS_NON_CORE`, it is out of `core_functions.locations` (leaving
+`GO:0005576` alone), the summary no longer calls it core or "more informative", the
+`core_function` description states positively that the core location is the extracellular region
+and not the exosome, and the guard now has a **second hedge sweep** — any term whose row is
+`KEEP_AS_NON_CORE`, `MARK_AS_OVER_ANNOTATED`, `REMOVE` or `UNDECIDED` must not appear in
+`locations`, `anatomical_locations` or `directly_involved_in`. Two new break-tests run it against
+the shape that actually shipped.
+
+One of the existing break-tests then failed, for the right reason: `drop_cf_term` removed
+`GO:0070062` from `core_functions.locations` to test direction 1, and once that term was
+legitimately gone the mutation became a **silent no-op**, so the guard correctly did not fire and
+the break-test reported it as broken. Fixed by dropping whatever the first location actually is
+and asserting the mutation changed something. Third time today that "assert the target is present
+before mutating" earned its place.
+
+### The three non-blocking suggestions
+
+1. **The dermcidin precedent was asserted, not queried — and querying it weakened it.** Every
+   other quantitative claim here has a cached query behind it; this one had an interactive lookup
+   that no reader of the tree could check. It is now check **G**, and the result is not what I
+   wrote: dermcidin holds `GO:0031640` by **InterPro2GO IEA (`GO_REF:0000002`)**, not by a
+   curator's experimental call. Its experimental defence rows are `GO:0042742` and `GO:0140367`,
+   both IDA. So it is precedent that the term is *used* for this class, not that it was assigned
+   from an experiment, and the prose now says so. The reviewer's observation that the
+   non-redundancy argument does not depend on it is correct — that rests on the closure fetch.
+   The same check covers the C10orf99 precedent, which **is** IDA and is unaffected, and it
+   asserts the subject holds none of the six defence/killing terms, because if it did the two
+   `NEW` proposals would not be new.
+2. **Shared boilerplate.** The two long shared blocks are collapsed into one compressed
+   `SET_CONTEXT`: the duplicated trailing text falls from 3,066 to 1,946 characters per row
+   (42,924 → 27,244 across the fourteen) and the file from 1,752 to 1,638 lines. I kept per-row
+   self-containment deliberately, and one part of the stated rationale does not apply: a future
+   correction does **not** have to be made in fourteen places, because the text is a single
+   shared constant. Two corrections today — the bait-count scoping and the SGTA/SGTB
+   qualification — were each made once and landed in all fourteen emitted sites, verified by a
+   whitespace-normalised sweep.
+3. **The body-fluid discriminator now lives in the YAML**, not only here. Both `GO:0019731` and
+   `GO:0061844` require the response to occur in a body fluid, and every assay was in culture
+   medium or by injection; without that sentence, declining them while accepting `GO:0050829`
+   from the same experiments reads as inconsistent.
+4. On the fourth suggestion, about quote line-wrapping: the distinction is deliberate rather
+   than a lapse, and is now stated. The "single physical line" rule applies **only to `file:`
+   quotes**, because the repo's reference validator skips those entirely, so a broken one passes
+   silently and the quote is the only thing standing between prose and fabrication. `PMID:`
+   quotes *are* validated, with whitespace normalisation, so a quote spanning a wrapped line in a
+   cached abstract is checked and safe. All 62 `file:` quotes here are single physical lines and
+   were additionally hand-verified with `grep -F`.
+
 ## Terms proposed, and terms deliberately declined
 
 Proposed (both as `NEW` rows, `IDA`, from `PMID:33804835`):
