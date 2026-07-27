@@ -101,10 +101,30 @@ was never in.) Fixing these one at a time was losing to the rate of discovery.
 
 So `check_cross_gene_claims` closes the class. Every cross-gene *record* claim must be
 **covered**: the fact lives in `family_census.json` and is re-asserted against the committed
-JSON, or against the committed PAINT table — **nine dimensions**: IBA rows, the MitoCoP
+JSON, or against the committed PAINT table — **ten dimensions**: IBA rows, the MitoCoP
 `GO:0005739` HTP row, EC numbers, the Ser/Thr keyword, `SUBCELLULAR LOCATION`, `NOT|` rows,
 the screen-provenance partition, the exact per-gene tag sets pinned by the table in the
-localisation section below, and the PAINT node's terms and seed.
+localisation section below, the PAINT node's terms and seed, and the exact kinase-row sets
+(term, evidence, qualifier and reference) for COQ8A and COQ8B. The PAINT table is **shared
+repo state this review does not own**: if another branch re-fetches the family, this gene's
+audit will fail, and that failure should be read as "the upstream table moved", not "the
+review drifted".
+
+**Routing is per sentence, not per unit — and that mattered.** The first version routed per
+*unit*, so one covered token gave a blanket pass to every other record claim in the same unit.
+The reviewer-predicted fifth instance was already in the tree because of it: the sentence
+stating that GOA carries both a negated and a positive `GO:0004672` IDA row for COQ8B tripped
+the gate, resolved to the `negated` dimension via its `NOT|` token, and passed — while the
+positive row and both PMIDs were asserted nowhere. The self-test had "proved" the catch only
+because its probe was appended as a standalone paragraph carrying no covered token. Both are
+fixed: routing is per sentence (paralog and record token must occur in the *same* sentence),
+and the `kinase_rows` dimension asserts the **exact** kinase-row set, with references, for
+COQ8A and COQ8B.
+
+**Residual limit, stated rather than papered over:** routing is per sentence, not per *claim*.
+A single sentence mixing a covered record claim with an uncovered one still passes. Regex
+cannot do better honestly, and pretending otherwise is how the per-unit version came to claim
+more than it did.
 
 **What makes it close the class rather than enumerate it** is that the *trigger* is generic.
 Any unit naming a paralog alongside a **record-shaped token** — an evidence code, `GO_REF:`,

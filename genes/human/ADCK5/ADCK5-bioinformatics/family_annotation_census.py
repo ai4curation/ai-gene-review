@@ -140,13 +140,25 @@ def main() -> int:
             for r in rows
             if str(r.get("qualifier", "")).startswith("NOT")
         ]
+        # GO:0004672 protein kinase / GO:0004674 protein Ser-Thr kinase /
+        # GO:0016301 kinase activity / GO:0006468 protein phosphorylation
+        KINASE_TERMS = {"GO:0004672", "GO:0004674", "GO:0016301", "GO:0006468"}
         kinase_terms = sorted(
             {
                 f"{r['goId']} {r['goEvidence']} {r['qualifier']}"
                 for r in rows
-                # GO:0004672 protein kinase / GO:0004674 protein Ser-Thr kinase /
-                # GO:0016301 kinase activity / GO:0006468 protein phosphorylation
-                if r["goId"] in {"GO:0004672", "GO:0004674", "GO:0016301", "GO:0006468"}
+                if r["goId"] in KINASE_TERMS
+            }
+        )
+        # WITH the reference, so a claim about *which paper* backs a paralog's kinase row is
+        # checkable. Without it the review could state "COQ8B's positive GO:0004672 row is IDA
+        # from PMID:38425362" - true, and the exact shape this PR retracted three times - with
+        # nothing in the census to check it against.
+        kinase_rows = sorted(
+            {
+                (r["goId"], r["goEvidence"], str(r.get("qualifier", "")), r["reference"])
+                for r in rows
+                if r["goId"] in KINASE_TERMS
             }
         )
 
@@ -178,6 +190,10 @@ def main() -> int:
             "iba_nodes": iba_nodes,
             "negated_annotations": negated,
             "kinase_related_terms": kinase_terms,
+            "kinase_rows": [
+                {"term": g, "evidence": e, "qualifier": q, "reference": ref}
+                for g, e, q, ref in kinase_rows
+            ],
             "n_experimental": sum(1 for r in rows if r["goEvidence"] in EXPERIMENTAL),
         }
 
