@@ -20,7 +20,7 @@ Comparator controls (a broken comparator must not be able to report the number a
 
 ## 2. The ADISSP-PP1 interaction in IntAct, with its null
 
-ADISSP has **27 IntAct records**. 26 of them are interactions of the ADISSP protein; 1 involve the locus but not the protein (a CLASH record pairing the ADISSP mRNA with a miRNA) and are excluded from the partner set rather than counted as partners.
+ADISSP has **27 IntAct records**. 26 of them are interactions of the ADISSP protein. 1 record involves the locus but not the protein (a CLASH record pairing the ADISSP mRNA with a miRNA), and is excluded from the partner set rather than counted as a partner.
 
 Distinct **protein** partners of ADISSP: **13** - ARHGEF7, EPB41L5, FAM133A, FERMT2, P0C6X7-PRO_0000037312, PCDHGA9, PHKB, PPP1CA, PPP1CB, PPP1CC, PPP1R7, RALYL, TMEM69.
 
@@ -45,8 +45,7 @@ The GOA annotation's own reference is PMID:32024300. Is it among the IntAct publ
 This is why the publication count above must not be read as strong replication on its own:
 a protein recovered in a thousand IntAct records will reappear in many tag pulldowns. The
 informative comparison is the subject-centric one - that PP1-module proteins are
-4 of ADISSP's 13 distinct protein
-partners, so the
+4 of ADISSP's 13 distinct protein partners, so the
 PP1 module dominates this small protein's own sparse interactome rather than ADISSP being one
 more name on PP1's long list.
 

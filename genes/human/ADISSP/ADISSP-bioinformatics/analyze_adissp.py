@@ -302,10 +302,12 @@ def render(r: dict) -> str:
         "## 2. The ADISSP-PP1 interaction in IntAct, with its null",
         "",
         f"ADISSP has **{t['total_records']} IntAct records**. "
-        f"{t['subject_protein_records']} of them are interactions of the ADISSP protein; "
-        f"{t['records_not_involving_the_protein']} involve the locus but not the protein (a CLASH "
-        "record pairing the ADISSP mRNA with a miRNA) and are excluded from the partner set rather "
-        "than counted as partners.",
+        f"{t['subject_protein_records']} of them are interactions of the ADISSP protein. "
+        + (f"{t['records_not_involving_the_protein']} record involves the locus but not the protein "
+           if t['records_not_involving_the_protein'] == 1 else
+           f"{t['records_not_involving_the_protein']} records involve the locus but not the protein ")
+        + "(a CLASH record pairing the ADISSP mRNA with a miRNA), and is excluded from the partner "
+        "set rather than counted as a partner.",
         "",
         f"Distinct **protein** partners of ADISSP: **{t['distinct_protein_partners']}** - "
         f"{', '.join(t['partners'])}.",
@@ -340,8 +342,8 @@ def render(r: dict) -> str:
         "This is why the publication count above must not be read as strong replication on its own:",
         "a protein recovered in a thousand IntAct records will reappear in many tag pulldowns. The",
         "informative comparison is the subject-centric one - that PP1-module proteins are",
-        f"{len(t['pp1_module_partners'])} of ADISSP's {t['distinct_protein_partners']} distinct protein",
-        "partners, so the",
+        f"{len(t['pp1_module_partners'])} of ADISSP's {t['distinct_protein_partners']} distinct "
+        "protein partners, so the",
         "PP1 module dominates this small protein's own sparse interactome rather than ADISSP being one",
         "more name on PP1's long list.",
         "",
@@ -399,14 +401,6 @@ def self_test() -> None:
     else:
         print("  OK   direction 1: decorated ids resolve, moleculeB-only partner retained")
 
-    # The same fixture must be caught by the invariant if the resolver regresses. Simulate the
-    # regression directly rather than trusting that the correct path implies the guard works.
-    def regressed():
-        bad = {p: {"m"} for p in ["ADISSP"]}
-        if S in {base_accession(p) for p in bad}:
-            raise RuntimeError(
-                "the subject appears in its own partner set, which means partner resolution failed"
-            )
     # base_accession("ADISSP") is "ADISSP", not the accession, so the invariant as written keys
     # on accessions and would NOT catch a gene-symbol self-entry. Assert that limitation openly
     # rather than claiming coverage it lacks:

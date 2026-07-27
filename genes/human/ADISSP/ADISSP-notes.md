@@ -265,7 +265,8 @@ subunits are among the most frequently recovered proteins in affinity proteomics
 | **ADISSP** | **27** |
 
 Recurring in tag pulldowns is therefore weak evidence on its own. The informative direction is the
-subject-centric one: **4 of ADISSP's 13 distinct IntAct partners are PP1-module components**, so
+subject-centric one: **4 of ADISSP's 13 distinct IntAct protein partners are PP1-module
+components**, so
 the PP1 module dominates this small protein's own sparse interactome, rather than ADISSP being one
 more name on PP1's long list. The term is also correctly left isoform-agnostic, since the paper
 identified only "PP1c" by mass spectrometry and IntAct recovers all three catalytic subunits.
@@ -499,3 +500,53 @@ Regenerating `RESULTS.md` broke a `file:` quote that cited the changed "PP1-modu
 **two** places, and `checkquotes.py` caught both. This is the two-way dependency a quote into a
 generated artifact creates: the prose you will edit is coupled to citations you will forget. It only
 worked because the quote check was re-run *after* regeneration.
+
+## 20. Round 4: three hygiene items, and the recurrence caught twice in one sitting
+
+All three remaining 🔵 items fixed. Two are worth recording for what they show about process rather
+than about ADISSP.
+
+**Dead code with a comment contradicting its neighbour.** `self_test()` contained a nested
+`regressed()` that was defined and never called, left behind when I pivoted from "simulate the
+regression" to "declare that the invariant cannot catch it". Its comment claimed to do the thing the
+comment two lines below explains is not informative. Deleted; the direction-1b declaration is the
+honest version and stands alone.
+
+**"Fixed in N places, landed in N−1", twice, on the round that documents the pattern.** The
+`protein` qualifier on the partner count reached 2 of 4 sites. Then, fixing it, the same thing happened
+again for a new reason: my patch script asserted an anchor in the annotation builder, the anchor had
+drifted, the `AssertionError` aborted the script — and the *later* edit in the same script, to the
+notes file, never ran. Both misses were found the same way: **grep the number (`13`, `thirteen`), not
+the phrase.** The phrase is what gets reworded; the number does not.
+
+The second miss generalises to something I had not thought about. An anchor assertion protects the
+edit it guards, but if several independent edits share one script, a failed assertion silently cancels
+every edit after it. So either put one edit per script, or collect failures and apply what can be
+applied — and in all cases **re-grep afterwards rather than trusting the exit status**, because a
+script that aborts halfway looks the same from outside as one that had nothing to do. The anchor
+assertions still earned their keep: they refused to run against drifted text on three separate
+occasions across rounds 3 and 4, and each refusal was a real drift, not a false alarm.
+
+**Grammar in generated output.** `render()` emitted "1 involve" and pushed a hand-wrapped line past
+its break. Both were string-assembly artefacts with no data behind them; `render()` now selects
+singular or plural from the count.
+
+**On wiring `--self-test` into CI**, which the reviewer rightly notes is not done: deliberately not
+done here. `.github/workflows/` is shared configuration outside the scope of a single gene review, and
+the campaign's standing rule is not to edit it from inside a gene PR. The self-test protects against
+regression when the script is next run, and the script is only ever run to regenerate `RESULTS.md`, at
+which point a regression would surface. That is a real limitation and is stated rather than papered
+over.
+
+### Stopping criterion
+
+Rounds 2 and 3 each changed something substantive — a GO term and an action in round 2, a partner set
+and a verdict-bearing figure in round 3. Round 4 changed no term, no action, no evidence code, no
+quote, and no reported number: the partner count, the identity figure, the seven PMIDs and every
+verdict are identical to round 3. What moved was dead code, a qualifier's coverage, and a plural verb
+in generated prose.
+
+By the campaign's own rule — when the last round moves nothing in a deliverable, the loop has migrated
+from the curation to the harness — this is the line. I will still fix anything that misstates a number,
+breaks a quote, or could misfire on another machine. I will not keep iterating on the phrasing of the
+harness's own commentary.
