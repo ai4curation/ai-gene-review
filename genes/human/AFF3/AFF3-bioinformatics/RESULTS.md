@@ -13,8 +13,13 @@ uv run python genes/human/AFF3/AFF3-bioinformatics/resolve_withfrom.py
 uv run python genes/human/AFF3/AFF3-bioinformatics/reference_projection.py
 uv run python genes/human/AFF3/AFF3-bioinformatics/term_relations.py
 uv run python genes/human/AFF3/AFF3-bioinformatics/corrections_check.py
-uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py
+uv run python genes/human/AFF3/AFF3-bioinformatics/intact_partners.py
+uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py --self-test
+uv run python genes/human/AFF3/AFF3-bioinformatics/verify_file_quotes.py
 ```
+
+`fix_intact_counts.py` is a one-shot repair, already applied; it is committed so the correction
+it made is reproducible and auditable rather than an untraceable hand-edit.
 
 ## 1. WITH/FROM resolution and donor evidence (`resolve_withfrom.py`)
 
@@ -200,11 +205,25 @@ unestablished — and the `REMOVE` verdict on that row deliberately does **not**
 - **Logical-opposite citation cross-product** (a term and its negation sharing a reference set):
   AFF3's 11 terms contain no positive/negative regulation pair. Trivially negative.
 - **Per-partner `GO:0005515` adjudication**: AFF3 has **no** `GO:0005515` rows in GOA, so there
-  is nothing to adjudicate. IntAct nonetheless returns 14 records (all retrieved), with **CDK9
-  in 5 records across 4 distinct publications and 4 distinct methods** (anti-tag co-IP, pull
-  down, TAP x2; MI 0.73) and **MLLT1/ENL** by anti-tag co-IP. The two SEC modules AFF3 bridges
-  are replicated across independent studies and GOA has curated neither — an under-curation
-  datum, not an over-annotation one.
+  is nothing to adjudicate. IntAct nonetheless returns 14 records (all
+  retrieved) over 7 distinct partners. Computed per-partner counts, from
+  `intact_partners.py` / `intact_partners.json`:
+
+  | partner | records | publications | methods | MI scores |
+  |---|---|---|---|---|
+  | CDK9 (P50750) | 6 | 5 | 3 | 0.35 and 0.73 |
+  | PIP4K2A (P48426) | 2 | 2 | 1 | 0.35 |
+  | MLLT1 (Q03111) | 2 | 1 | 1 | 0.35 |
+  | TFRC (P02786) | 1 | 1 | 1 | 0.4 |
+  | ERP29 (P30040) | 1 | 1 | 1 | 0.4 |
+  | SYT2 (Q8N9I0) | 1 | 1 | 1 | 0.35 |
+  | DISC1 (Q9NRI5) | 1 | 1 | 1 | 0.37 |
+
+  The two SEC modules AFF3 bridges, CDK9 and MLLT1/ENL, are both present and GOA has curated
+  neither - an under-curation datum, not an over-annotation one. **The first version of this
+  section was hand-counted and said "5 records across 4 distinct publications and 4 distinct
+  methods with MI 0.73" for CDK9. All four numbers were wrong.** That is why the counts are now
+  derived from a committed script and quoted from its output table rather than written in prose.
 - **GOA-stub under-seeding** (the ADAMTSL5 failure mode): the GOA TSV has 11 data rows and the
   `fetch-gene` stub seeded 11 entries. They reconcile exactly; no `GO:0005515` or
   same-term/different-assigner rows were collapsed.

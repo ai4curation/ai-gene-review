@@ -303,10 +303,14 @@ annotations that no longer exist.
 AFF3 has **no `GO:0005515` rows in GOA at all**, so there are no per-partner verdicts to make.
 Queried IntAct anyway (`findInteractions/P51826`, 14 records, all returned):
 
-- **CDK9 in 5 records across 4 distinct publications and 4 distinct methods** (anti-tag co-IP,
-  pull down, TAP ×2; MI 0.73) — `PMID:23455922`, `PMID:23602568`, `PMID:32707033`,
-  `PMID:33961781`.
-- **MLLT1 (ENL)** by anti-tag co-IP (`PMID:33961781`) — a SEC module component.
+- **CDK9 in 6 records across 5 distinct publications and 3 distinct methods**
+  (anti tag coip, pull down, tap), MI scores 0.35 and 0.73 - `PMID:23455922`, `PMID:23602568`, `PMID:28514442`,
+  `PMID:32707033`, `PMID:33961781`. **These figures are computed** by
+  `intact_partners.py`; the first, hand-counted version of this bullet said "5 records across 4
+  publications and 4 methods with MI 0.73" and was wrong on every one of the four numbers,
+  which is why the script exists.
+- **MLLT1 (ENL)** in 2 records from 1 publication by anti-tag co-IP (`PMID:33961781`), MI 0.35 -
+  a SEC module component.
 - Singletons of unclear relevance: PIP4K2A, SYT2, DISC1 (2-hybrid fragment pooling), and
   ERP29/TFRC by crosslinking (`PMID:30021884`).
 
@@ -350,5 +354,34 @@ activity from it.
   against parsed quote counts, checks `knowledge_gaps[].provenance` which `checkquotes.py` does
   not walk, verifies every `file:` quote with an exact-substring test on a single physical line,
   and asserts every `core_functions` term is backed by an ACCEPT/KEEP_AS_NON_CORE/NEW row and
-  vice versa. Each direction has a break-test that asserts the mutation changed the document
-  before asserting the guard fires.
+  vice versa. `verify_file_quotes.py` re-checks the same `file:` quotes with a **byte-exact**
+  match — a different instrument, since CI checks none of them and normalisation hides a
+  dash or curly-quote substitution. 14 break-test directions, each asserting the mutation
+  changed the document, that the guard fired, and that the message was the expected one.
+
+## The number that refused to add up, and the second retraction
+
+After the PR was opened I re-derived a figure I had counted by eye. The review said IntAct
+records "CDK9 in **five** records across **four** distinct publications and **four** distinct
+methods with a MI score of 0.73". `intact_partners.py` computes **6 records, 5 publications,
+3 methods, MI in {0.35, 0.73}**. Every one of the four numbers was wrong — the publication
+count too low, the method count too high, and the MI presented as uniform when one record
+(an isoform-2 pairing) sits at 0.35.
+
+Two things worth recording about how it happened and how it was fixed:
+
+1. **The wrong version was produced by an ad-hoc query that deduplicated on a composite key**,
+   which silently dropped one CDK9 record, and then by counting the printed lines by eye. The
+   corrected figures come from a committed script that asserts the subject is not in its own
+   partner set and that every record IntAct reports is retrieved.
+2. **The repair script's first anchor did not match**, because the notes use `×` and `—` where
+   I had typed `x` and `-`. The anchor assertion caught it rather than the edit silently
+   landing in 4 of 5 places — which is exactly the hyphen/en-dash trap the campaign brief
+   warns about for quotes, arriving here in a find-and-replace instead.
+
+The guard against the recurrence is **structural, not a phrase pin**: `audit_claims.py` parses
+any prose stating CDK9's counts and compares them against `intact_partners.json`, so a
+rewording cannot evade it. It is break-tested against `git show HEAD:...` — the version that
+actually shipped — and has a vacuity direction that fires if the sentence disappears
+altogether. The correction direction is favourable: 5 independent publications is a *stronger*
+replication claim than 4.

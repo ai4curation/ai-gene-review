@@ -20,12 +20,19 @@ Closes gaps the repo's own checks are known to have (campaign brief):
   G. Prose-vs-action agreement: no review block's prose may name a DIFFERENT action for
      itself. Attributed cross-references to another row's action are legitimate and are
      deliberately exempted.
-  H. Withdrawn-claim guard: the wrong-way-round GO:0030674 / GO:0005515 ancestry claim
-     must not reappear.
+  H. Withdrawn-claim guards, for the two claims this review retracted:
+       - the wrong-way-round GO:0030674 / GO:0005515 ancestry claim (phrase-shaped, with
+         the negated form explicitly exempted and that exemption break-tested);
+       - the hand-counted CDK9 IntAct figure, guarded STRUCTURALLY by checking any stated
+         record/publication/method count against intact_partners.json rather than by
+         pinning a literal phrase, and break-tested against the version that actually
+         shipped (`git show HEAD:...`) rather than only against a synthetic mutation.
 
-LIMITATION, stated rather than implied: checks G and H match on sentence shape and fixed
-phrases. They cannot catch a paraphrase. When a claim is withdrawn, every prose surface
-still needs re-reading by hand.
+LIMITATION, stated rather than implied: check G and the first half of H match on sentence
+shape and fixed phrases. They cannot catch a paraphrase. When a claim is withdrawn, every
+prose surface still needs re-reading by hand. The second half of H does not have that
+limitation, because it compares the numbers to a computed artifact -- which is why the
+numeric retraction was guarded that way and the ancestry one could not be.
 
 Usage:
     uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py
@@ -35,6 +42,7 @@ Usage:
 from __future__ import annotations
 
 import copy
+import json
 import re
 import sys
 from pathlib import Path
@@ -69,6 +77,48 @@ WITHDRAWN_PATTERNS = [
                rf"{_NO_NEG}{{0,30}}GO:0005515", re.I),
     re.compile(rf"GO:0030674{_NO_NEG}{{0,90}}refinement of protein binding", re.I),
 ]
+
+# Second retraction, guarded STRUCTURALLY rather than by phrase pin. The hand-counted
+# claim was "CDK9 in five records across four distinct publications and four distinct
+# methods with a MI score of 0.73"; every one of those four numbers was wrong. A literal
+# phrase pin would be defeated by the next rewording, so instead any prose that states
+# CDK9's record/publication/method counts is checked AGAINST intact_partners.json. Word
+# forms are matched as well as digits, because a number spelled as a word evades a digit
+# grep (the AEBP2 lesson).
+INTACT_JSON = HERE / "intact_partners.json"
+WORD_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+            "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+CDK9_COUNT_RE = re.compile(
+    r"CDK9 in (?P<rec>\d+|[a-z]+) records across (?P<pub>\d+|[a-z]+) distinct "
+    r"publications and\s+(?P<meth>\d+|[a-z]+) distinct methods", re.I)
+
+
+def _as_int(tok: str) -> int | None:
+    return int(tok) if tok.isdigit() else WORD_NUM.get(tok.lower())
+
+
+def check_intact_counts(flat: str) -> list[str]:
+    """Assert every stated CDK9 count matches the computed one."""
+    if not INTACT_JSON.exists():
+        return [f"H: {INTACT_JSON.name} missing -- cannot check the IntAct counts, which "
+                f"is a loud failure rather than a silent skip"]
+    p = json.loads(INTACT_JSON.read_text())["partners"]["P50750"]
+    want = (p["records"], p["n_publications"], p["n_methods"])
+    out = []
+    n = 0
+    for m in CDK9_COUNT_RE.finditer(flat):
+        n += 1
+        got = tuple(_as_int(m.group(k)) for k in ("rec", "pub", "meth"))
+        if got != want:
+            out.append(
+                f"H: retracted IntAct count restated: prose says CDK9 = {got} "
+                f"(records, publications, methods) but intact_partners.json computes "
+                f"{want}: {m.group(0)!r}"
+            )
+    if n == 0:
+        out.append("H: no CDK9 count sentence found to check -- the guard would pass "
+                   "vacuously, so this is reported rather than ignored")
+    return out
 
 ACTION_WORDS = {
     "ACCEPT": ["accepted", "accept"],
@@ -283,6 +333,7 @@ def audit(text: str) -> list[str]:
                 f"H: withdrawn GO:0030674/GO:0005515 ancestry claim reappeared: "
                 f"{flat[max(0, m.start() - 60):m.end() + 60]!r}"
             )
+    problems.extend(check_intact_counts(flat))
 
     # --- row count vs the GOA TSV ---------------------------------------------------
     if not GOA.exists():
@@ -390,6 +441,54 @@ def self_test() -> int:
                         "statement -- it forbids documenting the retraction")
     else:
         print("  ok  H negated form: guard correctly silent on the corrected statement")
+
+    # H, second retraction: the hand-counted IntAct figure, run against THE DEFECT THAT
+    # ACTUALLY SHIPPED rather than a mutation I invented. Git holds the wrong version.
+    import subprocess
+    shipped = subprocess.run(
+        ["git", "show", "HEAD:genes/human/AFF3/AFF3-ai-review.yaml"],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    if shipped.returncode != 0:
+        failures.append("H shipped IntAct count: could not read HEAD version from git, "
+                        "so this direction is vacuous")
+    elif "four distinct publications and four" not in shipped.stdout:
+        # After this fix is committed, HEAD no longer holds the defect; fall back to a
+        # synthetic mutation but say which path was taken rather than passing silently.
+        computed = "records across 5 distinct publications and"
+        if computed not in text:
+            failures.append("H IntAct count: neither HEAD nor the current text carries a "
+                            "checkable form, so this direction is vacuous")
+        else:
+            recount = text.replace(computed,
+                                   "records across 4 distinct publications and", 1)
+            expect("H retracted IntAct count (synthetic; HEAD is already fixed)",
+                   recount, "H: retracted IntAct count restated")
+    else:
+        probs = audit(shipped.stdout)
+        hit = [p for p in probs if p.startswith("H: retracted IntAct count restated")]
+        if not hit:
+            failures.append("H shipped IntAct count: the guard does NOT fire on the "
+                            f"version that actually shipped; got {probs[:2]}")
+        else:
+            print(f"  ok  H shipped IntAct count (run against HEAD): {hit[0][:150]}")
+
+    # H, vacuity direction: if the CDK9 count sentence disappears entirely the guard must
+    # SAY so rather than pass. This is the fifth vacuous-pass shape in the campaign.
+    #
+    # NOTE the mutation operates on the RAW text while the guard runs over the
+    # whitespace-NORMALISED text, so it cannot be done with CDK9_COUNT_RE itself -- the
+    # pattern spans a YAML line wrap in the raw file and matches only after folding. That
+    # is the detector-and-mutator-must-share-a-representation trap; the first version of
+    # this direction fell into it and passed nothing.
+    anchor = "records CDK9 in 6 records across"
+    n_anchor = text.count(anchor)
+    if n_anchor != 2:
+        failures.append(f"H vacuity: anchor found {n_anchor} times, expected 2 -- the "
+                        f"direction would be vacuous")
+    else:
+        stripped = text.replace(anchor, "records CDK9 as an interactor across")
+        expect("H vacuity", stripped, "H: no CDK9 count sentence found")
 
     # GOA reconciliation
     dropped_row = re.sub(
