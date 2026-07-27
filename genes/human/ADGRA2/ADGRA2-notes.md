@@ -99,6 +99,22 @@ GOA; it removes two rows whose cited support is absent. This is complementary to
 for, the `suggested_questions` item asking GO whether the whole 78-annotation GDB block across 27
 entities should be retired: that is a consortium-level decision, this is the gene-level one.
 
+**Stated within what the cache supports.** PMID:15203201 is `full_text_available: false`, so this
+review does *not* claim to know what its full text contains — that would be the same unsupported
+assertion it objects to elsewhere. Two things are claimable and they suffice: the **abstract**
+describes genome-database searching, phylogenetic analysis and EST expression charting and reports
+no functional assay on any receptor; and the **projection test needs no full text at all**, because
+a paper cannot make 25 gene-specific author statements about G-protein coupling — two of them about
+pseudogenes — as a by-product of cataloguing a repertoire.
+
+**And what is deliberately *not* removed.** The `GO:0016020` TAS row from the same GDB block carries
+the **identical** evidentiary defect and would be a legitimate `REMOVE` on the same reasoning. It is
+kept because removing it would achieve nothing: membrane localisation is directly demonstrated for
+ADGRA2 elsewhere in this very GOA record — three `EXP` rows, an `IDA` and an `IBA` to the child term
+`GO:0005886` — so that row is redundant rather than misleading. Leaving the asymmetry unexplained
+would have made the calibration look arbitrary; the rule is *remove where the defective row is
+carrying the claim, flag where it merely duplicates a directly demonstrated one.*
+
 ### A reviewer suggestion that is factually wrong: `GO:0060070` and `GO:0090263` are not redundant
 
 Core function 1 lists both `GO:0060070 canonical Wnt signaling pathway` and
