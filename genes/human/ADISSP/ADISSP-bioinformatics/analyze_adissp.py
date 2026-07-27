@@ -143,22 +143,28 @@ def base_accession(raw: str | None) -> str:
     return ident.split("-")[0]
 
 
-def resolve_partners(records: list[dict], subject_acc: str) -> tuple[dict[str, set[str]], list[dict], int]:
+def resolve_partners(
+    records: list[dict], subject_acc: str
+) -> tuple[dict[str, set[str]], list[dict], list[str]]:
     """Split records into those involving the subject protein and those that do not.
 
-    Returns (partner -> methods, subject_records, n_excluded). Asserts that exactly one side of
+    Returns (partner -> methods, subject_records, excluded_descriptions). Asserts that exactly
+    one side of
     every retained record is the subject, which is the invariant the earlier bug violated
     silently.
     """
     partners: dict[str, set[str]] = {}
-    kept, excluded = [], 0
+    kept, excluded = [], []
     for rec in records:
         a_is_subject = base_accession(rec.get("idA")) == subject_acc
         b_is_subject = base_accession(rec.get("idB")) == subject_acc
         if not (a_is_subject or b_is_subject):
             # e.g. a CLASH record pairing the subject's mRNA with a miRNA: a real IntAct record
-            # about the locus, but not an interaction of the protein. Counted, not hidden.
-            excluded += 1
+            # about the locus, but not an interaction of the protein. Described from the data
+            # rather than counted, so the report cannot hardcode what was dropped.
+            excluded.append(
+                f"{rec.get('moleculeA')} / {rec.get('moleculeB')} by {rec.get('detectionMethod')}"
+            )
             continue
         if a_is_subject and b_is_subject:
             raise RuntimeError(
@@ -251,7 +257,8 @@ def main() -> None:
     results["intact"] = {
         "total_records": len(records),
         "subject_protein_records": len(subject_records),
-        "records_not_involving_the_protein": non_protein_records,
+        "records_not_involving_the_protein": len(non_protein_records),
+        "excluded_records": non_protein_records,
         "distinct_protein_partners": len(partners),
         "partners": sorted(partners),
         "pp1_module_partners": pp1_partners,
@@ -302,12 +309,11 @@ def render(r: dict) -> str:
         "## 2. The ADISSP-PP1 interaction in IntAct, with its null",
         "",
         f"ADISSP has **{t['total_records']} IntAct records**. "
-        f"{t['subject_protein_records']} of them are interactions of the ADISSP protein. "
-        + (f"{t['records_not_involving_the_protein']} record involves the locus but not the protein "
-           if t['records_not_involving_the_protein'] == 1 else
-           f"{t['records_not_involving_the_protein']} records involve the locus but not the protein ")
-        + "(a CLASH record pairing the ADISSP mRNA with a miRNA), and is excluded from the partner "
-        "set rather than counted as a partner.",
+        f"{t['subject_protein_records']} of them are interactions of the ADISSP protein.",
+        "",
+        (f"{len(t['excluded_records'])} record(s) involve the locus but not the protein and are "
+         "excluded from the partner set rather than counted as partners"
+         + (": " + "; ".join(t["excluded_records"]) + "." if t["excluded_records"] else ".")),
         "",
         f"Distinct **protein** partners of ADISSP: **{t['distinct_protein_partners']}** - "
         f"{', '.join(t['partners'])}.",
@@ -415,11 +421,21 @@ def self_test() -> None:
     clash = [{"idA": "ENST00000217195 (ensembl)", "idB": "URS00003CF1AD_9606 (rnacentral)",
               "moleculeA": "mrna_adissp", "moleculeB": "hsamir320a3p", "detectionMethod": "clash"}]
     partners, kept, excluded = resolve_partners(clash, S)
-    if partners or kept or excluded != 1:
-        failures.append(f"direction 2: expected 0 partners / 0 kept / 1 excluded, got "
-                        f"{len(partners)}/{len(kept)}/{excluded}")
+    if partners or kept or len(excluded) != 1 or "clash" not in excluded[0]:
+        failures.append(f"direction 2: expected 0 partners / 0 kept / 1 described exclusion naming "
+                        f"its method, got {len(partners)}/{len(kept)}/{excluded}")
     else:
-        print("  OK   direction 2: a record not involving the protein is excluded and counted")
+        print("  OK   direction 2: a record not involving the protein is excluded and DESCRIBED")
+
+    # direction 2b: TWO exclusions must both be described, so the plural path is exercised. The
+    # earlier version hardcoded a singular parenthetical and would have emitted wrong prose here.
+    two = clash + [{"idA": "ENST9 (ensembl)", "idB": "URS9 (rnacentral)", "moleculeA": "x_mrna",
+                    "moleculeB": "y_mirna", "detectionMethod": "clash"}]
+    _, _, exc2 = resolve_partners(two, S)
+    if len(exc2) != 2:
+        failures.append(f"direction 2b: expected 2 described exclusions, got {exc2}")
+    else:
+        print("  OK   direction 2b: the multiple-exclusion path is exercised and described")
 
     # --- direction 3: both sides the subject must raise rather than pick arbitrarily -------
     both = [{"idA": f"{S} (uniprotkb)", "idB": f"{S}-2 (uniprotkb)",

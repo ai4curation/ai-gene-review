@@ -20,7 +20,9 @@ Comparator controls (a broken comparator must not be able to report the number a
 
 ## 2. The ADISSP-PP1 interaction in IntAct, with its null
 
-ADISSP has **27 IntAct records**. 26 of them are interactions of the ADISSP protein. 1 record involves the locus but not the protein (a CLASH record pairing the ADISSP mRNA with a miRNA), and is excluded from the partner set rather than counted as a partner.
+ADISSP has **27 IntAct records**. 26 of them are interactions of the ADISSP protein.
+
+1 record(s) involve the locus but not the protein and are excluded from the partner set rather than counted as partners: mrna_adissp / (human) hsamir320a3p by clash.
 
 Distinct **protein** partners of ADISSP: **13** - ARHGEF7, EPB41L5, FAM133A, FERMT2, P0C6X7-PRO_0000037312, PCDHGA9, PHKB, PPP1CA, PPP1CB, PPP1CC, PPP1R7, RALYL, TMEM69.
 

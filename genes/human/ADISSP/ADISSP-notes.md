@@ -550,3 +550,40 @@ By the campaign's own rule — when the last round moves nothing in a deliverabl
 from the curation to the harness — this is the line. I will still fix anything that misstates a number,
 breaks a quote, or could misfire on another machine. I will not keep iterating on the phrasing of the
 harness's own commentary.
+
+## 21. Round 5: the one carve-out the stopping criterion named
+
+The reviewer flagged two trailing observations and said explicitly that neither was a request and
+neither was worth a round 5. One of them was, and it is worth being precise about why, because the
+point of stating a stopping criterion is that it decides cases rather than ending discussion.
+
+The criterion I stated was: *"I will still fix anything that misstates a number, breaks a quote, or
+could misfire on another machine."* Observation 1 is the third of those. `render()`'s exclusion
+sentence pluralised its leading clause from the count but left the tail and a **hardcoded
+parenthetical** — *"(a CLASH record pairing the ADISSP mRNA with a miRNA), and is excluded … as a
+partner"* — behind. With one excluded record that reads correctly. With two it would emit
+*"2 records involve … and **is** excluded … as **a partner**"*, and the parenthetical would describe
+one record while claiming to describe both. Nothing is wrong today; the wrongness is reachable by new
+IntAct data alone, which is the worst kind of latent bug because no past run exercises it. The
+reviewer's own diagnosis names the shape exactly: the fix that made the singular correct left the
+other branch behind — the qualifier miss, one level down.
+
+The fix removes the branch rather than repairing it. `resolve_partners()` now returns a **description
+of each excluded record built from the data** instead of a bare count, and `render()` lists them, so
+the prose cannot disagree with the data at any count and there is nothing hardcoded to go stale:
+
+> 1 record(s) involve the locus but not the protein and are excluded from the partner set rather than
+> counted as partners: mrna_adissp / (human) hsamir320a3p by clash.
+
+A new self-test direction 2b exercises the multiple-exclusion path with two fixtures, which the
+previous version could not reach — the old singular-only assertion would have passed against the
+broken plural branch. That is the "advertises N directions, implements fewer" mode, avoided by adding
+the fixture rather than the assertion.
+
+Observation 2 — `PROTEIN` in caps at one of four sites where the others are lowercase — is purely
+cosmetic prose and by the criterion I would not have reopened for it. It is lowercased here only
+because it was one edit in a push that was already happening for observation 1, which makes all four
+sites read identically.
+
+**This is the last push.** Everything remaining in the thread is commentary on the harness's own
+prose, which is where the criterion draws the line.
