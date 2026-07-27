@@ -33,7 +33,8 @@ autolink_gene_symbols: false
 - [ ] Run module-level OpenScientist deep research.
 - [ ] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Run OpenScientist deep research for selected genes.
+- [x] Run bounded OpenScientist deep research for high-priority selected genes
+  and record incomplete runs.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [#2329](https://github.com/ai4curation/ai-gene-review/pull/2329).
@@ -47,9 +48,11 @@ PSEPK report; no report file was produced.
 
 2026-07-26: The `hutH` gene-level run timed out after 7200s with no report.
 The `hutU` run persisted a complete report and artifacts; its direct
-same-species urocanase evidence was reconciled into the review. The remaining
-three selected genes retain their UniProt and family-level evidence in this
-bounded first pass.
+same-species urocanase claims were reconciled against four cached primary
+publication abstracts. The remaining three selected genes have no provider
+report in this bounded first pass; HutF and HutG additionally use the cached
+same-species hut-locus paper, while HutI retains UniProt and family-level
+evidence.
 
 ## Candidate Genes
 
