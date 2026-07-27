@@ -313,6 +313,36 @@ way and the distal-Gln finding was invisible.
 | + | GO:0070026 nitric oxide binding | IDA | **NEW** |
 | + | GO:0098809 nitrite reductase activity | IDA | **NEW** |
 
+## Curator-precedent survey (run to test my own term choices against GOA practice)
+
+Queried QuickGO for what the four characterised human globins already carry, because a term
+choice defended only from definitions is weaker than one that also matches what curators do.
+
+| | GO:0019825 O2 binding | GO:0020037 heme | GO:0098809 nitrite reductase |
+|---|---|---|---|
+| neuroglobin Q9NPG2 | IDA + IEA + IBA | IEA | **IDA** |
+| cytoglobin Q8WWM9 | IDA + IEA | IEA + IBA | **IDA** |
+| myoglobin P02144 | IEA | IEA | **IDA + IBA** |
+| haemoglobin alpha P69905 | IEA | IEA + IBA | - |
+
+Three consequences, each of which strengthens a call I had made on other grounds:
+
+1. **`GO:0019825` KEEP is precedented, not idiosyncratic.** Neuroglobin and cytoglobin are
+   hexacoordinate globins that are not oxygen transporters, and both hold the term by **IDA**.
+   Stripping it from ADGB while its nearest analogues keep it would be inconsistent.
+2. **`GO:0098809` is the term GOA actually uses for globin nitrite reductase activity** - all
+   three characterised globins hold it by IDA - and **none of them uses the `GO:0050421`
+   child**, independently corroborating my rejection of that term on definitional grounds.
+3. **`GO:0070026` is precedented for this exact chemistry.** Human holders are CBS, THAP4
+   (nitrobindin), the haemoglobin complex CPX-2158, and **GUCY1B1** - soluble guanylate
+   cyclase, which is the five-coordinate NO hemoprotein Reeder et al. explicitly name as
+   ADGB's comparator. The comparator named in the paper holds the term I am proposing.
+
+Null part of the same survey, recorded rather than dropped: no individual monomeric globin
+carries `GO:0070026`; only the haemoglobin *complex* does. So ADGB would be the first
+single-chain globin with the term. That is a consequence of how unusual its NO chemistry is
+rather than a reason to withhold it, but it should be visible to whoever curates it.
+
 ## Checks run that came back negative (recorded so the next reviewer knows they were run)
 
 - Paralog transfer into the IBA set — **negative**; the PANTHER family's reviewed membership
