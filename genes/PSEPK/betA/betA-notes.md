@@ -27,11 +27,15 @@ The entry is reviewed, but both reaction claims are explicitly HAMAP/UniRule inf
 
 ### KT2440 pathway assignment
 
-Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230. Full text accessed through the publisher/web search.
+Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230.
 
-- `"the betIBA operon encodes a choline oxidase (BetA) and a betaine aldehyde dehydrogenase (BetB), responsible for the two-step conversion of choline to glycine-betaine"`
-
-This organism-specific reconstruction distinguishes BetA as the first-step choline oxidase/dehydrogenase and BetB as the second-step aldehyde dehydrogenase.
+- The cached record is abstract-only and does not expose a checkable betIBA
+  reaction passage. An earlier working note quoted an inaccessible full-text
+  sentence; that sentence is no longer used as annotation support.
+- The cached abstract of PMID:17116241 directly states that `"the betBA genes
+  were required for choline"` transformation and osmoprotection. This
+  organism-specific genetic evidence supports pathway membership without
+  assigning an unsupported substrate to BetT-I.
 
 ### Family context
 

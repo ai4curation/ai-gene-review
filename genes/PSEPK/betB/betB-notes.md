@@ -24,9 +24,13 @@ Source: `file:PSEPK/betB/betB-uniprot.txt`.
 
 ### KT2440 pathway assignment
 
-Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230. Full text accessed through the publisher/web search.
+Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230.
 
-- `"the betIBA operon encodes a choline oxidase (BetA) and a betaine aldehyde dehydrogenase (BetB), responsible for the two-step conversion of choline to glycine-betaine"`
+- The cached record is abstract-only and does not contain a checkable betIBA
+  reaction passage. The inaccessible sentence retained in an earlier working
+  note is no longer used as annotation support.
+- PMID:17116241 provides checkable KT2440 evidence that `"the betBA genes were
+  required for choline"` transformation and osmoprotection.
 
 Source: Zhang et al., 2024, PMCID:PMC11200750. Full text accessed through PMC/web search.
 

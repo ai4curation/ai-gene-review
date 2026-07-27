@@ -138,10 +138,11 @@ def is_abstract_module(data: dict[str, Any]) -> bool:
 def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
     """Return concrete protein groundings (representative members) for a selector.
 
-    A grounding is a concrete protein example: a ``gene``/``gene_product`` carrying
-    a ``UniProtKB`` term, a ``protein_complex`` active unit that resolves the same
-    way, or a ``family``'s ``representative_members``. Abstract selectors
-    (``FAMILY`` with no representatives, ``ANY_WITH_FUNCTION``, etc.) return [].
+    A grounding is a concrete protein example: a ``gene``/``gene_product``,
+    ``ortholog_of``/``homolog_of`` anchor carrying a ``UniProtKB`` term, a
+    ``protein_complex`` active unit that resolves the same way, or a ``family``'s
+    ``representative_members``. Abstract selectors (``FAMILY`` with no
+    representatives, ``ANY_WITH_FUNCTION``, etc.) return [].
     """
     if not isinstance(selector, dict):
         return []
@@ -160,8 +161,8 @@ def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
         )
         groundings.append({"id": term_id, "label": label})
 
-    # Concrete gene / gene product participants.
-    for slot in ("gene", "gene_product"):
+    # Concrete participants and concrete homology anchors.
+    for slot in ("gene", "gene_product", "ortholog_of", "homolog_of"):
         descriptor = selector.get(slot)
         if isinstance(descriptor, dict):
             add_descriptor(descriptor)
