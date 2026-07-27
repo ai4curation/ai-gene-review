@@ -13,3 +13,15 @@
   selenocysteine-incorporation annotation was narrowed to GO:0001717 because
   ribosomal delivery and UGA/SECIS decoding are SelB functions, not SelA
   functions.
+
+## OpenScientist reconciliation
+
+Source: `file:PSEPK/selA/selA-deep-research-openscientist.md`.
+
+- The report independently supports the PLP-dependent conversion of
+  Ser-tRNA(Sec) to Sec-tRNA(Sec), the bacterial substrate distinction from
+  SepSecS, and the cytoplasmic pathway placement.
+- The Q88QJ8-specific sequence, neighborhood, and structure analyses are
+  computational corroboration, not direct organism-specific experiments.
+- The report found no biochemical or structural study of Q88QJ8 itself. This
+  limitation is retained as a core-function knowledge gap.

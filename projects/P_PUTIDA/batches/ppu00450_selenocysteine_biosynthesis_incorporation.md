@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 8
 - Selected module genes: 4
 - Selected gene reviews curated: 4
-- Selected OpenScientist reports: in progress
+- Selected OpenScientist reports: 1 of 4 complete
 
 ## Curated Boundary
 
@@ -42,11 +42,15 @@ autolink_gene_symbols: false
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
 
+2026-07-26: The gene-level `serS` run timed out after 7200s without producing
+a report. The subsequent `selA` run persisted a complete report and artifacts
+despite the wrapper returning a timeout status.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [x] | `selA` | PP_0493 | Q88QJ8 | kegg:ppu00450 | PRESENT | CURATED | MISSING | L-seryl-tRNA(Sec) selenium transferase (EC 2.9.1.1) (Selenocysteine synthase) (Sec synthase) (Selenocysteinyl-tRNA(Sec)  |
+| [x] | `selA` | PP_0493 | Q88QJ8 | kegg:ppu00450 | PRESENT | CURATED | PRESENT | L-seryl-tRNA(Sec) selenium transferase (EC 2.9.1.1) (Selenocysteine synthase) (Sec synthase) (Selenocysteinyl-tRNA(Sec)  |
 | [x] | `selB` | PP_0494 | Q88QJ7 | module:translation_rna_processing | PRESENT | CURATED | MISSING | Selenocysteyl-tRNA-specific translation elongation factor |
 | [ ] | `metB` | PP_0659 | Q88Q39 | kegg:ppu00450 | PRESENT | CURATED | PRESENT | Cystathionine gamma-synthase |
 | [x] | `selD` | PP_0823 | P59392 | kegg:ppu00450 | PRESENT | CURATED | MISSING | Selenide, water dikinase (EC 2.7.9.3) (Selenium donor protein) (Selenophosphate synthase) |
