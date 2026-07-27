@@ -360,6 +360,35 @@ code: injecting `THIS SENTENCE APPEARS IN NO PUBLICATION ANYWHERE ZZQQXX.` as a 
 mutating, and the file was restored to a clean `git diff` afterwards. So provenance quotes in this
 repo are gated; it is only the scratch checker that misses them.
 
+## 8d. The recurring defect in this review, and what finally caught it
+
+Five of the review rounds on this gene found the **same** defect shape: a claim corrected in the
+field I was thinking about and left standing in a parallel field saying the same thing elsewhere.
+The instances were the `GO:0030198` reason vs `core_functions`; the top-level MF gap boundary vs
+the nested BP gap boundary; the `suggested_questions` tail vs its own narrowed opening; the
+`knowledge_gaps` resolution vs `suggested_experiments`; and the reference `findings` statement vs
+the row reason. The reviewer caught four. **The fifth I found only by giving up on per-field
+fixes and sweeping the whole parsed document for every phrasing I had ever retracted** — it was
+in the top-level MF boundary, which had already been rewritten twice without anyone noticing the
+old double-count framing still sitting in it.
+
+The sweep is seven regexes run over every string value in the parsed YAML:
+
+```
+two partners that place | both been tested for ADAMTSL1 and both were negative |
+exactly the same evidentiary position | well-constructed and unrefuted |
+LTBPs remain untested | no positive binding result of any kind |
+divergence is not attributable to a difference between the genes
+```
+
+It is the ACBD3 lesson (a claim asserted at N sites with no generation relationship between
+them) in a review that had read that lesson and still reproduced it five times. The transferable
+part is not "be careful": it is that **the unit of correction has to be the document, not the
+field**, and a retraction list scanned over all prose is cheap enough to run on every round.
+Note the notes file legitimately still contains three of those strings, because explaining why a
+phrasing was retracted requires quoting it — so the sweep belongs on the review YAML, not on
+prose that discusses it.
+
 ## 9. What ADAMTSL1 is, in one paragraph
 
 A large secreted ADAMTS-like glycoprotein of the extracellular matrix, built from
