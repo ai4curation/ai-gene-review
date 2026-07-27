@@ -120,7 +120,7 @@ VERDICTS: dict[tuple[str, str, str], dict] = {
         "supported": [
             q(
                 "PMID:41961591",
-                "ADGRA1 is selectively enriched in hippocampal PV interneurons and localizes to a subset of synapses.",
+                "Neurons sparsely receiving HA-ADGRA1 overexpression displayed surface HA signals along both MAP2-labeled dendrites and AnkG-labeled axon initial segments, suggesting subcellular localization to both pre- and postsynaptic sites",
             ),
             q(RESULTS_FILE, "**1 of 6** IBA donor tokens are ADGRA1 orthologs"),
         ],
@@ -539,6 +539,53 @@ def build_annotation(r: dict) -> dict:
 # suggested_questions and in each GO:0004930 row's reason instead.
 NEW_ROWS = [
     {
+        "term": {"id": "GO:0098982", "label": "GABA-ergic synapse"},
+        "evidence_type": "ISS",
+        "original_reference_id": "PMID:41961591",
+        "qualifier": "is_active_in",
+        "supporting_entities": ["UniProtKB:Q8C4G9"],
+        "review": {
+            "summary": (
+                "Proposed: the cellular-component half of the same 2026 evidence that "
+                "supports the GO:0032230 row - the receptor is at the inhibitory synapse."
+            ),
+            "action": "NEW",
+            "reason": (
+                "GOA places ADGRA1 only at the glutamatergic synapse and postsynaptic "
+                "density, both by IBA from a 2017 sub-cellular proteomics survey. The "
+                "2026 study localises it directly at the INHIBITORY synapse: HA-ADGRA1 "
+                "delivered ex vivo to the dentate gyrus of PV-Cre and SST-Cre mice "
+                "co-localises with vGAT, the vesicular GABA transporter. Without this "
+                "term the review asserts a molecular function at the glutamatergic "
+                "postsynapse while asserting positive regulation of GABAergic "
+                "transmission as the process, and the compartment and the process do "
+                "not line up. Same reference, same organism, same strength as the "
+                "GO:0032230 row, so the same evidence code: ISS from mouse Adgra1 "
+                "(Q8C4G9). This is additive - the existing GO:0098978 ACCEPT is left "
+                "alone, deferring to the SynGO curator, and the two terms are not "
+                "mutually exclusive for a receptor found at a subset of synapses of "
+                "both kinds. GO:0098793 presynapse was considered and DECLINED: the "
+                "only statement supporting it is hedged ('suggesting subcellular "
+                "localization'), it rests entirely on overexpressed HA-tagged receptor "
+                "because no reliable antibody exists, and the paper's own functional "
+                "controls argue against the presynaptic release apparatus being where "
+                "the receptor acts - paired-pulse ratio and coefficient of variation "
+                "are unchanged and Syt2-labelled PV terminal density is unaltered. "
+                "Recorded as a knowledge gap instead."
+            ),
+            "supported_by": [
+                {
+                    "reference_id": "PMID:41961591",
+                    "supporting_text": "HA-ADGRA1 localized with inhibitory vGAT slightly higher in PV+ neurons than in SST+ neurons",
+                },
+                {
+                    "reference_id": "PMID:41961591",
+                    "supporting_text": "ADGRA1 deletion in PV interneurons impairs intrinsic excitability and reduces inhibitory synaptic strength onto dentate gyrus granule cells.",
+                },
+            ],
+        },
+    },
+    {
         "term": {
             "id": "GO:0032230",
             "label": "positive regulation of synaptic transmission, GABAergic",
@@ -947,6 +994,7 @@ CORE_FUNCTIONS = [
             {"id": "GO:0005886", "label": "plasma membrane"},
             {"id": "GO:0014069", "label": "postsynaptic density"},
             {"id": "GO:0098978", "label": "glutamatergic synapse"},
+            {"id": "GO:0098982", "label": "GABA-ergic synapse"},
         ],
         "supported_by": [
             {
@@ -994,6 +1042,7 @@ CORE_FUNCTIONS = [
         ],
         "locations": [
             {"id": "GO:0005886", "label": "plasma membrane"},
+            {"id": "GO:0098982", "label": "GABA-ergic synapse"},
         ],
         "supported_by": [
             {
@@ -1017,6 +1066,42 @@ CORE_FUNCTIONS = [
 ]
 
 KNOWLEDGE_GAPS = [
+    {
+        "gap_statement": (
+            "Whether ADGRA1 sits on the presynaptic or the postsynaptic side of the "
+            "inhibitory synapse is unresolved, and the available evidence pulls both "
+            "ways. Tagged receptor appears on dendrites and on axon initial segments "
+            "and co-localises with the presynaptic vesicular GABA transporter vGAT, "
+            "and the rescue experiment works when the receptor is restored in the "
+            "presynaptic PV interneuron - but the same study finds paired-pulse ratio, "
+            "coefficient of variation and Syt2-labelled terminal density all "
+            "unaltered, so the presynaptic release apparatus is intact. GO:0098793 "
+            "presynapse was therefore considered and not proposed."
+        ),
+        "boundary": (
+            "Known: the receptor is at inhibitory synapses (vGAT co-localisation) and "
+            "is required in PV cells for their inhibitory output. Unknown: which side "
+            "of the synapse the protein occupies, and by what mechanism a receptor "
+            "that does not change release probability reduces inhibitory strength. "
+            "Every localisation result rests on overexpressed tagged protein, because "
+            "no reliable antibody exists."
+        ),
+        "gap_kind": ["BIOLOGY"],
+        "provenance": [
+            {
+                "reference_id": "PMID:41961591",
+                "supporting_text": "Given the absence of reliable antibodies for ADGRA1, we expressed HA-tagged ADGRA1 in primary hippocampal cultures",
+            },
+            {
+                "reference_id": "PMID:41961591",
+                "supporting_text": "PV-cKO GCs displayed no changes in the PPR or coefficient of variation in eIPSCs, supporting that presynaptic release probability is preserved",
+            },
+            {
+                "reference_id": "PMID:41961591",
+                "supporting_text": "the overall density of PV terminals labeled with synaptotagmin-2 (Syt2) was unaltered throughout the hippocampus",
+            },
+        ],
+    },
     {
         "gap_statement": (
             "No agonist is known for ADGRA1, and unlike every other adhesion GPCR it "
@@ -1182,9 +1267,13 @@ SUGGESTED_QUESTIONS = [
         "one PDZ domain from the same holdup dataset, that filter selects "
         "multi-PDZ-domain scaffolds rather than strong binders. Thirteen of the 21 "
         "selected partners have no quantified affinity at all, while 23 partners "
-        "with a measured Kd are excluded - including the three tightest binders in "
-        "the dataset, SNX27 (3.7 uM), MAST2 (4.9 uM) and MAGI3 (5.1 uM), all at or "
-        "below the best retained partner. Should an affinity-aware criterion be used "
+        "with a measured Kd are excluded. The cleanest statement of the problem is a "
+        "single pair: SNX27, at 3.7 uM the TIGHTEST binder measured anywhere in the "
+        "dataset, is excluded, while DLG1 at 4.6 uM - the second tightest - is "
+        "retained. Affinity is therefore not what separates them; PDZ-domain count "
+        "is. Of the four tightest binders overall (SNX27 3.7, DLG1 4.6, MAST2 4.9, "
+        "MAGI3 5.1 uM) three are excluded and only DLG1 is kept. Should an "
+        "affinity-aware criterion be used "
         "where the source assay reports dissociation constants?",
         ["IntAct curators", "GOA curators"],
     ),

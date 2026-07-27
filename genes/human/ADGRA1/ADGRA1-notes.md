@@ -97,9 +97,24 @@ GOA/UniProt keep 21. Asking *which* 21:
 - Consequence one: **13 of the 21 GOA partners have no quantified affinity.** IntAct carries a
   `kd:1(molar)` placeholder for them, consistent with the paper's own statement that
   [PMID:36115835 "pKd quantification thresholds, defined as the limit above which affinity constants could be quantified in each assay, were mostly comprised between 4 (Kd = 100 μM) and 3.1 (Kd = 800 μM)."]
-- Consequence two: **23 partners with a genuinely measured Kd are excluded**, including the
-  three tightest binders in the whole dataset — SNX27 3.7 µM, MAST2 4.9 µM, MAGI3 5.1 µM — all
-  at or below the best GOA partner (DLG1, 4.6 µM).
+- Consequence two: **23 partners with a genuinely measured Kd are excluded.** The sharpest
+  statement is a single pair, because it isolates the variable: **SNX27, at 3.7 µM the tightest
+  binder measured anywhere in the dataset, is excluded, while DLG1 at 4.6 µM — the second
+  tightest — is retained.** Affinity is not what separates them; PDZ-domain count is (SNX27 has
+  one PDZ domain, DLG1 has three). Of the four tightest binders overall — SNX27 3.7, DLG1 4.6,
+  MAST2 4.9, MAGI3 5.1 µM — three are excluded and only DLG1 is kept.
+
+  *(Corrected in round 2. The first version ranked the three excluded partners against DLG1 in
+  the wrong direction. Lower Kd is tighter, so MAST2 (4.9) and MAGI3 (5.1) are in fact **weaker**
+  than the retained DLG1 (4.6), and DLG1 is itself second-tightest overall rather than a
+  ceiling. The reviewer caught it; I recomputed the full ranking from `results.json` and the
+  reviewer is right. The corrected form is the stronger argument anyway, because one pair
+  isolates the variable where three loosely-ranked numbers did not. The four retracted phrasings
+  are now in `WITHDRAWN_PHRASES` in `audit_adgra1_claims.py`, and that check was verified to fire
+  against the exact blocked revision via `git show 3ce38c99e`. Note the guard's limitation, which
+  this very paragraph ran into: a literal-phrase matcher cannot distinguish a claim being
+  retracted from a claim being asserted, so the retracted wording is described here rather than
+  reproduced. It also cannot catch a paraphrase — prose surfaces still need re-reading by hand.)*
 
 I did **not** convert this into per-row `MARK_AS_OVER_ANNOTATED` verdicts on the 13. The
 `kd:1(molar)` placeholder means "not quantified", and IntAct's `negative` flag is `False` on
@@ -217,6 +232,35 @@ The 2026 Cell Reports work is ortholog-node evidence of exactly the kind that no
 propagate — G-protein coupling and a PV-interneuron-specific conditional-knockout phenotype in
 mouse *Adgra1*, the very gene behind `MGI:MGI:1277167`. Recommending it to PAINT is the single
 highest-value action available on this gene, and it is filed in `suggested_questions`.
+
+## Finding 6 — the compartment and the process did not line up (round-2 fix)
+
+GOA places ADGRA1 at the **glutamatergic** synapse and postsynaptic density, both by IBA from
+the 2017 proteomics survey. The 2026 study localises it at the **inhibitory** synapse:
+[PMID:41961591 "HA-ADGRA1 localized with inhibitory vGAT slightly higher in PV+ neurons than in SST+ neurons"],
+from HA-ADGRA1 delivered by AAV into the dentate gyrus of PV-Cre and SST-Cre mice.
+
+The first version of this review filed the *process* half of that experiment (`GO:0032230`) and
+not the *compartment* half, so `core_functions` asserted a molecular function at the
+glutamatergic postsynapse while asserting positive regulation of GABAergic transmission as the
+process. **`GO:0098982` GABA-ergic synapse is now filed as a second NEW ISS row** on the same
+reference, same organism, same evidence strength, and added to the `locations` of both core
+functions. The existing `GO:0098978` ACCEPT is untouched — deferring to the SynGO curator is
+right, and the two terms are not exclusive for a receptor at a subset of synapses of both kinds.
+
+**`GO:0098793` presynapse was considered and declined**, and the reasons matter more than the
+verdict because they run against the obvious reading. vGAT is a presynaptic marker and the
+rescue works when the receptor is restored in the presynaptic PV cell
+[PMID:41961591 "supporting a role for ADGRA1 in presynaptic PV+ cells that target DG GCs"] — but
+that is a statement about *which cell*, not about which side of the synapse the protein sits on.
+Against it: the localisation sentence is hedged ("suggesting subcellular localization"), it rests
+entirely on overexpressed tagged protein
+[PMID:41961591 "Given the absence of reliable antibodies for ADGRA1, we expressed HA-tagged ADGRA1 in primary hippocampal cultures"],
+and the paper's own controls show the presynaptic release apparatus is intact —
+[PMID:41961591 "PV-cKO GCs displayed no changes in the PPR or coefficient of variation in eIPSCs, supporting that presynaptic release probability is preserved"]
+and [PMID:41961591 "the overall density of PV terminals labeled with synaptotagmin-2 (Syt2) was unaltered throughout the hippocampus"].
+Filed as a knowledge gap rather than a term. Restraint argued per term from the measured
+numbers, not applied uniformly: `GO:0098982` in, `GO:0098793` out.
 
 ## Cross-review check against the concurrent ADGRA2 and ADGRA3 reviews
 
@@ -346,7 +390,7 @@ this protein.
 
 ## Verdict summary
 
-Over the 39 GOA rows: **ACCEPT 11, MODIFY 28**. Plus **1 NEW** proposed row, counted separately (40 `existing_annotations` entries in total).
+Over the 39 GOA rows: **ACCEPT 11, MODIFY 28**. Plus **2 NEW** proposed rows, counted separately (41 `existing_annotations` entries in total).
 
 MODIFY breakdown, summing to 28: 22 × `GO:0005515` → `GO:0030165`; 4 × `GO:0016020` →
 `GO:0005886`; 1 × `GO:0004888` → `GO:0004930`; 1 × `GO:0007165` → `GO:0007166`.
@@ -355,7 +399,9 @@ ACCEPT breakdown, summing to 11: 4 IBA (`GO:0005886`, `GO:0007166`, `GO:0014069`
 `GO:0098978`); 3 InterPro IEA (`GO:0004930`, `GO:0007166`, `GO:0007186`); 2 NAS and 1 TAS
 `GO:0004930`; 1 TAS `GO:0007186`.
 
-NEW: `GO:0032230` ISS from `PMID:41961591` with `UniProtKB:Q8C4G9` as the supporting entity.
+NEW: `GO:0032230` (positive regulation of GABAergic synaptic transmission) and `GO:0098982`
+(GABA-ergic synapse), both ISS from `PMID:41961591` with `UniProtKB:Q8C4G9` as the supporting
+entity — the process and the compartment halves of the same experiment.
 `GO:0004930` is deliberately **not** filed as NEW even though it needs a real evidence line —
 the term is already in GOA four times, and `action: NEW` is for terms GOA lacks (the repo
 validator enforces this, correctly). The request to attach `PMID:41961591` as an ISS evidence

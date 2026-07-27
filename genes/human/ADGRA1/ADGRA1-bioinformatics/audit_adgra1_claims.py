@@ -50,7 +50,7 @@ NOTES = GENE / "ADGRA1-notes.md"
 GOA = GENE / "ADGRA1-goa.tsv"
 UNIPROT = GENE / "ADGRA1-uniprot.txt"
 
-N_NEW_EXPECTED = 1
+N_NEW_EXPECTED = 2
 
 # Framings considered and withdrawn while writing this review. Keeping them out
 # matters because each is a *stronger* claim than the evidence carried.
@@ -66,6 +66,13 @@ WITHDRAWN_PHRASES = [
     # The paralog-transfer hypothesis did NOT confirm; do not state it as found.
     "ADGRA2 biology propagated to ADGRA1",
     "Wnt terms leaked",
+    # Round 2: the affinity ranking was stated inverted. Lower Kd is TIGHTER, so
+    # MAST2 (4.9) and MAGI3 (5.1) are weaker than the retained DLG1 (4.6), and
+    # DLG1 is itself the second-tightest binder in the dataset.
+    "three tightest binders in the dataset",
+    "three tightest binders in the whole dataset",
+    "three tightest in the dataset",
+    "all at or below the best retained partner",
     # The PDZ motif does NOT target the receptor to synapses.
     "PDZ-binding motif targets the receptor to synapses",
     "PDZ motif is required for synaptic localization",
