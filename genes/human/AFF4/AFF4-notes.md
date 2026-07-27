@@ -477,11 +477,56 @@ Subcellular additional location:  Nucleoli fibrillar center, Nuclear bodies
 - **Paralogue transfer in the AFF4 → AFF1 direction**: checked and **absent**. Nothing
   in AFF1's GOA record derives from an AFF4 reference. The traffic runs the other way
   (§3): `PMID:20159561`, an AFF4-titled paper, produced AFF1's `GO:0032783` IDA.
-- **Sibling reviews**: `genes/human/AFF1`, `AFF2`, `AFF3` do not exist on `main`, and no
-  `paint/AFF1` branch was pushed at the time of writing, so the identical-row
-  comparison this campaign recommends could not be run. Flagged for whoever merges
-  second: the five IBA rows on AFF4 are byte-identical in node and term set to AFF1's,
-  so the two reviews must agree on them or explain why not.
+- **Sibling review comparison — run, and it found one divergence worth keeping.**
+  `paint/AFF1` (PR #2348) appeared while this review was being finalised, so the
+  identical-row comparison this campaign recommends was run against it.
+
+  The two reviews were derived independently and **converge on everything that
+  matters**, including the schema question this gene was flagged for: both chose
+  `GO:0030674 protein-macromolecule adaptor activity` as the scaffold's own
+  `molecular_function`, both put `GO:0003711 transcription elongation factor activity`
+  in `contributes_to_molecular_function` rather than claiming it for the subunit, both
+  use `GO:0032783` as `in_complex`, both propose `GO:0006368` + `GO:0032968` as the
+  process terms, and both resolve `GO:0050877 nervous system process` to
+  `KEEP_AS_NON_CORE` with `NO_FAILURE_NON_CORE`. On the five shared IBA rows they agree
+  on four.
+
+  **They differ on `GO:0006354 DNA-templated transcription elongation`**: AFF1 MODIFYs it
+  to `GO:0006368`; this review ACCEPTs it and adds `GO:0006368` as a separate `NEW` row.
+  The net GO content is the same; what differs is whether an IBA may be made more precise
+  than the inference behind it.
+
+  Rather than converge by fiat, I checked whether the two genes differ in a way that
+  justifies differing verdicts, and they do. **The WITH/FROM field is byte-identical on
+  both genes — `PANTHER:PTN000829417|UniProtKB:P51825` — and it is SELF-REFERENTIAL on
+  AFF1 and PARALOGUE-DERIVED on AFF4.** Verified directly:
+
+  ```
+  AFF4 GO:0006354 IBA withFrom=['PANTHER:PTN000829417', 'UniProtKB:P51825']  self-referential? NO
+  AFF1 GO:0006354 IBA withFrom=['PANTHER:PTN000829417', 'UniProtKB:P51825']  self-referential? YES
+  ```
+
+  So on AFF1 the row records a PAINT curator's judgement about AFF1 itself, and refining
+  it stays inside that judgement; on AFF4 the only protein named is a paralogue, and
+  refining it asserts more about AFF4 than the inference carries. That is a real,
+  checkable, gene-specific distinction rather than an inconsistency — and it generalises:
+  **a byte-identical WITH/FROM field can be self-referential on one recipient of a node
+  and paralogue-derived on another, and that changes how much precision the row can
+  carry.** Worth adding to the campaign's WITH/FROM checklist.
+
+  **The AFF1 review also makes an argument against my position that I had not
+  considered, and it is a good one**: the same node hands `GO:0032783` to all 79
+  recipients, and that term's definition is explicitly about RNA polymerase II, so the
+  node is not in fact behaving as though its clade were polymerase-agnostic — which
+  weakens my "heterogeneous node, so the general term is the LCA" framing. I have
+  recorded it in the row's `reason` rather than suppressing it, and declined to lean on
+  it, because this review separately questions whether that complex term should reach
+  AFF2 and AFF3 at all and it would be circular to rest on an assignment it doubts.
+  Flagged for the coordinator to adjudicate; a reviewer who prefers MODIFY here would be
+  taking a defensible position.
+
+  `AFF2` and `AFF3` still have no review on `main`, so no comparison was possible for
+  them.
 
 ## 13. What I would ask, and what the affinage record missed
 
