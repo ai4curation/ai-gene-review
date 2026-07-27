@@ -8,8 +8,14 @@ Checks the things no repo gate checks:
   2. `file:` supporting_text quotes -- the repo validator only verifies `PMID:` quotes,
      so a broken `file:` quote passes silently. Also enforces the one-physical-line rule
      for UniProt quotes, which must not cross a `CC       ` continuation.
-  3. Row coverage -- every GOA row must have exactly one reviewed annotation.
-  4. Required claims and retracted phrasings, by occurrence COUNT, so a claim asserted
+  3. Row coverage -- every GOA row must have exactly one reviewed annotation. NEW
+     entries are our own proposals, NOT GOA rows, and are excluded from this count.
+  4. NEW-proposal validity -- each NEW entry must name a term GOA does not already
+     carry. This is the only assertion a NEW row can falsify, and it is what makes the
+     review's "GOA is missing GO:0001527" claim checkable rather than merely asserted.
+     Listed separately from (3) on purpose: conflating "coverage" with "NEW rows are
+     accounted for" is precisely what produced the tautological guard this replaced.
+  5. Required claims and retracted phrasings, by occurrence COUNT, so a claim asserted
      at N sites cannot silently become N-1.
 
 Run from the repo root:
