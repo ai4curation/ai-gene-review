@@ -35,10 +35,16 @@ This organism-specific reconstruction distinguishes BetA as the first-step choli
 
 ### Family context
 
-The bifunctional BetA statement is experimentally established for some bacterial BetA proteins, including reviewed *E. coli* BetA (UniProt P17444), but no accessible source directly assays both reactions for Q88CW6. Pseudomonad literature generally describes a BetA/BetB enzyme pair.
+The bifunctional BetA statement is experimentally established for some
+bacterial BetA proteins, including reviewed *E. coli* BetA (UniProt P17444),
+where the dedicated BetB protein P17445 also occurs, and a characterized
+*Halomonas* BetA. Co-occurrence of BetB therefore does not argue against BetA
+bifunctionality. No accessible source directly assays both reactions for
+Q88CW6, so the automated family-level assignment remains unresolved for the
+KT2440 protein.
 
 ## Curation conclusions
 
 - Accept choline dehydrogenase activity, FAD binding, membrane association, and glycine-betaine biosynthesis.
-- Leave GO:0008802 on BetA UNDECIDED because the automated bifunctional assignment conflicts with the organism-specific two-enzyme pathway description.
+- Leave GO:0008802 on BetA UNDECIDED because the EC/HAMAP-derived IEA lacks a Q88CW6-specific biochemical assay.
 - Do not remove the second activity: absence of an accessible KT2440 assay is insufficient to disprove possible BetA bifunctionality.

@@ -23,19 +23,21 @@ The protein name is submission-derived and the GO rows are electronic; the recor
 
 ### KT2440 locus and paralog specificity
 
-Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230. Full text accessed through the publisher/web search.
+Source: Belda et al., 2016, PMID:26913973, DOI:10.1111/1462-2920.13230.
 
-- `"the genes encoding the choline transporter BetT1 and the betIBA operon are divergently transcribed in P. putida KT2440"`
-- The article states that three BBCT-family transporters are present and that `"BetT-I and BetT-III"` are associated with choline, while `"BetT-II"` is associated with glycine-betaine.
-
-For validator-addressable exact evidence, the normalized statement used in the YAML is:
-
-- `"BetT-I and BetT-III could transport choline, whereas BetT-II was assigned glycine-betaine"`
-
-The publication frames this specificity as comparative inference from Pseudomonas systems, not purified KT2440 transport kinetics.
+- The cached publication record is abstract-only and does not contain a
+  BetT-I-specific substrate statement.
+- Earlier working notes attributed choline transport to BetT-I and BetT-III
+  and glycine-betaine transport to BetT-II, but no directly checkable passage
+  or target-specific transport assay is currently available.
+- The adjacency and divergent orientation of betT-I relative to betIBA make
+  choline uptake a useful hypothesis, not sufficient evidence for a
+  choline-specific GO annotation.
 
 ## Curation conclusions
 
 - Accept plasma-membrane localization.
-- Modify generic transporter and transmembrane-transport terms to choline-specific GO:0015220 and GO:0015871.
-- Record a knowledge gap for direct discrimination among BetT-I, BetT-II, and BetT-III.
+- Accept generic transmembrane transporter activity and transmembrane transport.
+- Do not promote choline specificity into the reviewed annotations or core
+  function until a directly checkable source or substrate assay is available.
+- Keep choline uptake as the leading locus-based hypothesis.
