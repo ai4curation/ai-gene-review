@@ -1,0 +1,331 @@
+# ADISSP (Q9GZN8) — review notes
+
+Working journal for the PAINT + affinage review. Process history and negative results live here
+rather than in the review YAML.
+
+## 1. Identity: the gene was renamed, and the worklist contains a look-alike
+
+Resolved before anything else, because the assignment I was given described ADISSP as "formerly
+C5orf46/SSSP1". That is wrong, and the two genes both appear in the worklist:
+
+| | ADISSP | C5orf46 |
+|---|---|---|
+| HGNC | HGNC:15873 | HGNC:33768 |
+| previous symbol | **C20orf27** (changed 2022-12-12) | — |
+| aliases | FLJ20550 | MGC23985, **SSSP1**, AP-64 |
+| locus | 20p13 | 5q32 |
+| UniProt | Q9GZN8, 174 aa | Q6UWT4, 87 aa |
+| MANE | ENST00000379772.4 / NM_001258429.2 | ENST00000318315.5 / NM_206966.3 |
+
+`projects/paint/human-no-IBA-simple.csv` line 1540 is `human,Q9GZN8,ADISSP`; line 5884 is
+`human,Q6UWT4,C5orf46`. Different chromosomes, different proteins, and `SSSP1` (skin and saliva
+secreted protein 1) belongs to the second. The gene reviewed here is **Q9GZN8 / ADISSP /
+formerly C20orf27**. Both accessions were fetched with an assertion that `primaryAccession` equals
+the accession requested, so neither is a merged-accession artefact.
+
+Two ADISSP pseudogenes exist (ADISSPP1, HGNC:58498, 12q13.12; ADISSPP2, HGNC:58499, 16p11.2).
+Neither has a UniProtKB entry — a gene-name search returns zero results for each, while the same
+query returns three entries for ADISSP, so the route works and the zero is real. The
+"pseudogene carrying a molecular function" tell therefore cannot arise here.
+
+## 2. GOA row reconciliation
+
+```
+GOA TSV data rows                     13
+distinct annotations                  12
+seeded `- term:` entries in the stub  12
+```
+
+The gap is not a stub collapse of the kind seen on ADAMTSL5. Two rows are the same annotation:
+`GO:0005576 / ISS / GO_REF:0000024 / UniProtKB:Q9D1K7 / located_in / UniProt`, identical in every
+column except the date (2022-12-15 and 2025-10-27). One annotation, re-dated. The review has one
+entry for the pair and says so in its summary. Final count: 12 reviewed entries plus one `NEW`
+proposal = 13 entries.
+
+## 3. The worklist's "no-IBA" name is accurate here — checked, not assumed
+
+Seven genes this campaign were on `human-no-IBA-simple.csv` while carrying IBA rows, so this was
+queried rather than inferred from the filename. A fully paginated QuickGO query
+(`numberOfHits == len(results)` asserted) returns 13 annotations for Q9GZN8 with evidence
+`{IDA:1, IEA:4, IMP:2, ISS:5, ND:1}` and **zero IBA**. Positive control from the same endpoint in
+the same call pattern: ACTB (P60709) returns 286 annotations including 11 IBA. So the endpoint can
+see IBA rows and ADISSP genuinely has none. PAINT contributes nothing to this gene, and the whole
+propagation apparatus applies instead to Ensembl Compara and UniProt ISS.
+
+## 4. The three non-PAINT routes: all three are non-confirmations
+
+Each was tested with a control, because a rejected query and a genuine zero look identical.
+
+- **InterPro2GO.** ADISSP matches three signatures — `IPR026794` (ADISSP family), `PF15006`
+  (DUF4517) and `PTHR13287`. Grepping the current `interpro2go` file (30,127 lines) returns **zero**
+  mappings for all three. Control: `IPR001879`, the entry that supplied `GO:0004930` on ADGRA2,
+  returns 2. So the file and the grep work, and no GO term reaches this gene from a signature. The
+  family signature is named after the gene and the Pfam entry is a domain of unknown function, so
+  there is no fold-to-activity claim available to make.
+- **Bulk classification imports carrying TAS.** ADISSP has no TAS row at all. Nothing to test.
+- **ARBA.** No `GO_REF:0000117` row, and no `ARBA…` token in any WITH/FROM, so there is no rule to
+  fetch at `rest.uniprot.org/arba/<id>`.
+
+Worth recording the correction that came out of this: **`GO_REF:0000120` is not the ARBA
+reference.** Reading it from the GO reference metadata, it is *"Combined Automated Annotation using
+Multiple IEA Methods"*, which integrates identical annotations from UniRule, ARBA, InterPro2GO,
+TreeGrafter2GO, RHEA2GO, KeyWord2GO, SubCellular2GO, EC2GO and Ensembl Compara. ARBA on its own is
+`GO_REF:0000117`.
+
+## 5. Main finding: a combined-methods reference recording one source as three witnesses
+
+`GO:0005576 IEA GO_REF:0000120` carries three WITH/FROM tokens:
+
+```
+UniProtKB:Q9D1K7 | ensembl:ENSMUSP00000099477 | UniProtKB-SubCell:SL-0243
+```
+
+The whole purpose of GO_REF:0000120 is to record that several independent electronic pipelines
+produced the same annotation, so three tokens read as three witnesses. They are not independent:
+
+1. `UniProtKB:Q9D1K7` is mouse Adissp, which holds `GO:0005576` by IDA from PMID:36496438.
+2. `ensembl:ENSMUSP00000099477` is that same mouse protein in a second namespace.
+3. `UniProtKB-SubCell:SL-0243` is the UniProt vocabulary term "Secreted", which on the **human**
+   entry is asserted as `CC   -!- SUBCELLULAR LOCATION: Secreted {ECO:0000250|UniProtKB:Q9D1K7}` —
+   by similarity to the same mouse protein.
+
+So the SubCellular2GO arm re-reads the Compara arm's own conclusion. All three reduce to Q9D1K7.
+The annotation is correct; the *agreement* it advertises is one source counted three ways. Filed as
+a question to GOA/UniProt rather than as a GO action, since the term itself is right.
+
+## 6. The human/mouse exchange is reciprocal, not circular — a negative result
+
+Worth stating because it is the shape that usually turns out to be circular. Human ADISSP's eight
+IEA/ISS rows come from mouse Q9D1K7; mouse Q9D1K7's twelve annotations include three (`GO:0008157`,
+`GO:0030511`, `GO:1901224`) that arrive by ISO/IEA **from human Q9GZN8**. Two directions of
+transfer, but they carry *different* terms:
+
+- mouse → human: the four terms resting on mouse experiments in PMID:36496438
+  (`GO:0005576` IDA, `GO:0007189` IDA, `GO:0042593` IMP, `GO:1990845` IDA);
+- human → mouse: the three terms resting on the human experiments in PMID:32024300.
+
+No term is transferred back to its own origin. There is no circular chain, and every propagated
+term has genuine experimental evidence at its source. `SOURCE_WEAK_OR_INFERRED` would have been
+factually wrong on every row.
+
+The similarity judgement is also unusually safe: both proteins are exactly 174 residues and
+**90.2% identical (157/174) over an ungapped alignment with no indels**, far above the 40% peptide
+identity that GO_REF:0000107 requires.
+
+## 7. ADISSP is secreted, and it has no signal peptide — both are true
+
+The task brief warned that a signal peptide is not the same thing as a correct secretion
+annotation. Here the direction of that caution is inverted: there is *no* signal peptide and the
+protein *is* secreted, by a non-classical route, and this is measured rather than inferred.
+
+- No `FT SIGNAL` feature on either the human or the mouse entry. The human mature chain is
+  `FT   CHAIN           2..174` with `/note="N-acetylalanine"` at residue 2 from mass spectrometry
+  (`ECO:0007744|PubMed:22814378`), i.e. the initiator Met is removed and residue 2 becomes the
+  N-terminus — not the topology of a protein whose signal peptide has been cleaved.
+- Endogenous protein is in the medium: [PMID:36496438 "we were able to detect endogenous Adissp
+  present in conditioned medium of mouse brown adipocyte culture"], and a Flag knock-in at the
+  native locus puts the tag on the endogenous protein [PMID:36496438 "When probed with a Flag
+  antibody, Adissp-Flag was detected in conditioned medium of differentiated knock-in adipocytes"].
+- The route is non-classical, with an internal control: [PMID:36496438 "While adiponectin secretion
+  was inhibited by brefeldin A and monensin as expected, Adissp secretion was instead increased"],
+  the authors noting [PMID:36496438 "It has been reported that brefeldin A and monensin enhance the
+  secretion of non-classically secreted proteins IL-1β and migration inhibitory factor"].
+- Third, independent line: to purify secreted protein the authors had to add a signal peptide that
+  the protein does not have [PMID:36496438 "To increase the yield and facilitate the purification of
+  secreted Adissp, we added a signal peptide at the N-terminus of Adissp and a 6×His tag at its
+  C-terminus"].
+- The **human** protein specifically was shown to leave a cell [PMID:36496438 "this injection
+  resulted in acute expression of ADISSP in the liver and its secretion into circulation with a
+  concentration of about 0.45 μg/mL"], and the 2026 follow-up states [PMID:42030391 "Adissp is
+  efficiently secreted by both mouse and human adipocytes (24, 25) and is present in human
+  circulation (26, 27) (The human Protein Atlas)."].
+
+This matters twice over. It makes the `GO:0005576` rows well founded rather than
+prediction-derived, and it **defuses a topological argument I would otherwise have made** against
+`GO:0008157`: a secreted protein binding cytosolic PP1c looks impossible, and on a signal-peptide
+protein in a secretory lumen it would be (the ACRV1 pattern). A leaderless protein necessarily has
+a cytosolic pool, so the two annotations are compatible. The unconventional secretion route is what
+rescues the interaction, which is not obvious from either annotation alone.
+
+Note what is *not* claimed: ADISSP is the cargo, not the machinery, so no protein-secretion process
+term is proposed for it.
+
+## 8. Reading trap in PMID:36496438 — which panels used the human protein
+
+The paper infuses three adenoviruses: GFP, mouse Adissp, and human ADISSP. Only the
+circulating-protein detection is credited to the human construct ("As shown with human ADISSP
+adenovirus…", Fig. 4a). The browning and glucose-tolerance panels in the same figure are labelled
+`Adissp`, i.e. the mouse protein. So the human protein has been shown to be **secreted** and
+nothing more. It would be easy, and wrong, to read the paragraph as showing that human ADISSP
+produced the metabolic phenotype.
+
+## 9. `GO:0007189` is over-annotated on one clause, and no replacement term exists
+
+What PMID:36496438 measures, well: cAMP rises in transgenic inguinal WAT and falls in the
+adipose-specific knockout; PKA substrate and HSL phosphorylation move both ways; purified protein
+activates PKA dose- and time-dependently; labelled protein binds the adipocyte surface competably
+[PMID:36496438 "a specific binding of Adissp to adipose tissue sections was detected, which can be
+competed away by incubation with Adissp-containing conditioned medium"].
+
+What it does not measure: that the receptor is a G-protein-coupled receptor. The authors call it
+putative throughout [PMID:36496438 "Together, our data suggest that Adissp activates PKA signaling
+through binding to a putative receptor at adipocyte surface"], and the entire G-protein link is one
+experiment [PMID:36496438 "induction of Ucp1 expression by Adissp was reduced by a merely 2-h
+treatment with the PKA inhibitor H89 and was blocked by Melittin, an inhibitor for Gαs subunit of
+the heterotrimeric G protein"] — melittin, a membrane-active bee-venom peptide, at 1 µM for 24 h,
+n = 3.
+
+`GO:0007189`'s definition is a **G protein-coupled receptor** signalling pathway transmitting
+through adenylyl cyclase activation; its comment does permit annotating ligands, but only of a
+pathway known to be of that kind. Unmeasured rather than refuted, so
+`MARK_AS_OVER_ANNOTATED`, not `REMOVE`.
+
+No replacement is proposed, deliberately. Every ancestor of `GO:0007189` keeps the GPCR in its
+definition, so there is nothing to generalise to. `GO:0141156 cAMP/PKA signal transduction` is the
+obvious sideways candidate and is wrong for a different reason: it is defined as an *intracellular*
+signalling cassette, which an extracellular ligand is not part of. Ancestor closures of both were
+fetched and neither contains the other, so moving there would be a sideways move into a second
+wrong term. The missing receptor is recorded in `knowledge_gaps` instead.
+
+## 10. `GO:1901224` → `GO:0043123`: canonical, not non-canonical
+
+The cleanest defect on the gene, and it is decidable from the definitions plus the paper's figures.
+
+- `GO:0038061` **non-canonical** NF-κB signal transduction requires NIK-dependent processing: NIK →
+  IKKα → p100 phosphorylation → processing to p52.
+- `GO:0007249` **canonical** NF-κB signal transduction is IKK-complex-dependent activation through
+  IκB to the RelA-containing dimer.
+
+PMID:32024300 measures phospho-IKK, phospho-IκB and phospho-p65 (RelA), in both directions
+[PMID:32024300 "with C20orf27 overexpression in HCT15 and DLD-1 cells, the expression of p-TGFβR1,
+p-TAK1, p-IKK, p-IĸB, and p-p65 was increased"] and [PMID:32024300 "in HT29 and SW480 cells with
+C20orf27 silencing, p-TGFβR1, p-TAK1, p-IKK, p-IĸB, and p-p65 expressions were reduced"]. NIK,
+p100/p52 and RelB appear nowhere in the paper. Those are canonical markers exclusively.
+
+Sibling-versus-ancestor test run rather than assumed: the `is_a`/`part_of` ancestor closures of
+`GO:1901224` and `GO:0043123` were fetched and **neither contains the other**. So this is a wrong
+term, not an imprecise one, and the action is `MODIFY` rather than a granularity note. One
+gotcha for anyone re-running it: neither regulation term has its target cascade in its `is_a`
+closure either, because GO links them by `positively_regulates`, which does not subsume.
+
+## 11. `GO:0005575` ND: a 2012 placeholder that its own file now contradicts
+
+`GO:0005575`'s own comment says the term is recommended for gene products whose cellular component
+is unknown, and that using it indicates no information was available. BHF-UCL made this row on
+2012-07-16. The same GOA record now carries three `GO:0005576` extracellular region rows, one
+tracing to a mouse IDA. The assertion the ND row encodes is no longer true. `REMOVE`. Not a
+propagation failure of any kind — there is no WITH/FROM and no source to inspect.
+
+## 12. PP1 binding: independently replicated, but the count needs its null
+
+`GO:0008157` is the only molecular function ADISSP has, and the only one mouse Adissp has either
+(checked: QuickGO returns 1 MF annotation for Q9GZN8 and 2 for Q9D1K7, all `GO:0008157`).
+
+The cited evidence is a CoIP between two transfected tagged plasmids [PMID:32024300 "the C20orf27
+and PP1c plasmids with the marker were transfected into HCT15 and DLD-1 cells"], which is not a
+direct assay at native levels; for a physical interaction the code should be IPI with the partner
+in WITH/FROM, and this row's WITH/FROM is empty.
+
+IntAct corroborates it well beyond the cited paper. Twenty-seven records
+(`totalElements == len(content)` asserted), 16 distinct pairs, of which ADISSP appears with PPP1CA,
+PPP1CB, PPP1CC and the regulatory subunit PPP1R7 across **seven publications the annotation does
+not cite** — PMIDs 24366813, 27173435, 27880917, 28330616, 28514442, 33961781, 40205054 — by
+anti-tag co-IP, TAP and pull-down. (Three further records are `socioaffinity inference`, a
+computational method, and are excluded from that count.)
+
+**The null makes that less impressive than it first looks**, and it should be stated: PP1 catalytic
+subunits are among the most frequently recovered proteins in affinity proteomics.
+
+| protein | IntAct records |
+|---|---|
+| PPP1CA | 1012 |
+| PPP1CC | 927 |
+| PPP1CB | 571 |
+| PPP1R7 | 150 |
+| **ADISSP** | **27** |
+
+Recurring in tag pulldowns is therefore weak evidence on its own. The informative direction is the
+subject-centric one: **4 of ADISSP's 13 distinct IntAct partners are PP1-module components**, so
+the PP1 module dominates this small protein's own sparse interactome, rather than ADISSP being one
+more name on PP1's long list. The term is also correctly left isoform-agnostic, since the paper
+identified only "PP1c" by mass spectrometry and IntAct recovers all three catalytic subunits.
+
+## 13. A motif scan that was discarded because its own controls failed
+
+A first-pass scan for the canonical RVxF PP1-docking motif reported two candidate hits in ADISSP
+(`RSIRF` at 13, `KVGF` at 54, against a composition-derived null expectation of 0.22 per protein),
+both conserved in mouse. **No claim rests on this and none is made in the review**, because the
+scan's own positive controls failed: of five characterised PP1-interacting proteins, PPP1R2/I-2 and
+PPP1R13L scored zero RVxF hits. A scan whose known positives come back negative cannot certify its
+positives either, and building a properly validated motif model is a project of its own rather than
+a step in this review. Recorded here so the next reviewer knows the question was asked, what the
+provisional answer looked like, and why it was not used. Mapping the PP1-docking surface is filed
+under `suggested_experiments` instead.
+
+## 14. Checks that came back negative, reported as such
+
+- **Logical-opposite citation cross-product.** ADISSP has two `positive regulation of…` terms and no
+  `negative regulation of…` term, so no logically opposed pair exists and the check is not
+  applicable. The pair-finder was verified against a synthetic positive/negative pair to confirm it
+  fires.
+- **Reference-projection test.** `PMID:32024300` → 3 annotations over **1** entity;
+  `PMID:36496438` → 4 annotations over **1** entity. Both fully paginated. Neither is a bulk import
+  or a complex-to-subunit projection. `PMID:42030391` returns **0** annotations, which is a coverage
+  gap rather than a projection.
+- **Retraction / erratum / expression-of-concern.** All seven cited PMIDs clean by two independent
+  routes: the article's own `PublicationType` and `CommentsCorrections` fields, and Crossref
+  `relation`/`update-to`/`updated-by`. Positive control: PMID:32125225 fires on both
+  `ptype:Retracted Publication` and `cc:RetractionIn->PMID:35078223`, so the detector works.
+  This check found a bug in itself first: an unanchored `.//ArticleId` XPath was picking up DOIs
+  from each article's **reference list**, so a Cancers 2020 paper appeared to have a 2017 Signal
+  Transduction DOI. Anchoring to `PubmedData/ArticleIdList` fixed it, and the corrected DOIs were
+  cross-checked by confirming each Crossref title matches its PubMed title.
+- **Pseudogene molecular-function tell.** Not present; neither ADISSP pseudogene has a UniProtKB
+  entry (with a working-route control, see §1).
+
+## 15. affinage assessment
+
+`gates_passed: False` (its own head-to-head self-evaluation scored `pairwise = tie` rather than
+`win`). All five citations are real numeric PMIDs — no `PMID:bio_*` preprint identifiers — and all
+five resolve to the papers and journals claimed, so its *precision* is fine. Its **recall is the
+problem**, and the misses are exactly the facts the review turns on:
+
+- the non-classical secretion result, and the absence of a signal peptide;
+- the measurement of human ADISSP secretion into circulation;
+- the canonical-versus-non-canonical NF-κB mismatch;
+- the seven independent IntAct datasets behind the PP1 interaction;
+- the stale ND root annotation.
+
+One garbled claim: it renders PMID:40690096 as "acts upstream of NT5E as a downstream target",
+which is self-contradictory; the paper's title is "C20orf27 promotes hepatocellular carcinoma
+progression via NT5E." Its own GO grounding proposed `GO:0048018 receptor ligand activity`, which
+independently agrees with the `NEW` term reached here from the primary literature.
+
+**No affinage sentence is quoted anywhere in the review**, and its arithmetic was not carried over —
+every number in the review was re-derived from the primary source or computed here. The validation
+warning "No annotations reference available deep research files" is therefore left standing on
+purpose: satisfying it would mean citing the provider for mechanistic claims, which this campaign
+forbids.
+
+## 16. Verification performed
+
+- `checkquotes.py`: 81 quotes, 0 problems. Break-tested: a corrupted quote (cAMP → cGMP) is
+  rejected.
+- `just validate human ADISSP`: `✓ Valid`, one standing warning (see §15).
+- All 31 candidate quotes verified verbatim before use; every `file:` quote confirmed to lie on a
+  single physical line of `ADISSP-uniprot.txt`, since the repository's reference validator skips
+  `file:` quotes entirely.
+- `source_entities` built **from** the GOA WITH/FROM column with a drift assertion, not by hand.
+  Break-tested by deleting one entity GOA lists, after first asserting the mutation target was
+  present so the mutation could not be a silent no-op: the guard fires with the drift message and
+  exits non-zero.
+- Summary-opener-versus-action sweep over all 13 rows; `core_functions` ↔ ACCEPT/NEW checked in
+  **both** directions; hedge-versus-structured-field sweep; and a per-row check that every quote
+  names its subject. All four break-tested on a deliberately mutated copy, each firing with the
+  right message. The subject-naming sweep found a real defect on its first run — the melittin quote
+  was truncated so that it no longer named Adissp — which was fixed by quoting the full sentence.
+  Two exceptions are encoded deliberately rather than left to discredit the check: a `file:` quote
+  into the gene's own UniProt entry, and one quote that states a general premise about non-classical
+  secretion rather than an observation about ADISSP.
+- `cache/go/terms.csv`: one legitimate addition (`GO:0008157`), nothing lost, no new duplicates,
+  verified by **multiset** comparison rather than by reading the diff; `cache_lint` exits 0.
