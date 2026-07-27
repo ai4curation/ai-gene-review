@@ -63,6 +63,7 @@ MEMBERS: dict[str, str] = {
     "Q8NI60": "COQ8A_HUMAN",     # reference: structure + biochemistry (PMID:25498144/27499294)
     "Q96D53": "COQ8B_HUMAN",     # positive control: independently annotated UbiB
     "Q02981": "CQD1_YEAST",      # YPL109C/Cqd1: the ADCK2 orthologue (PMID:34362905)
+    "Q06567": "CQD2_YEAST",      # YLR253W/Mcp2/Cqd2: the ADCK1 orthologue (PMID:34362905)
     "Q86TW2": "ADCK1_HUMAN",     # paralogue, different PANTHER family
     "Q3MIX3": "ADCK5_HUMAN",     # paralogue
     "P0A6A0": "UBIB_ECOLI",      # bacterial archetype
@@ -236,6 +237,7 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
     """
     subj = "Q7Z695"
     cc = out["control_checks"]
+    pk_acc = cc["negative_control"]
     order = list(entries)
 
     def sym(a: str) -> str:
@@ -317,6 +319,25 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
         "motif is diagnostic for the UbiB family in this alignment and is not an artefact "
         "of aligning any protein kinase."
     )
+    # The two tests can disagree, and saying so is the point: a column where the control
+    # carries the right residue but has no feature annotation there is unconfirmable by
+    # the strict test yet is not evidence against the register.
+    unconfirmed_but_identical = [
+        r["site"] for r in rows
+        if not r["column_in_register_by_negative_control"]
+        and r["targets"][pk_acc]["identical"]
+    ]
+    if unconfirmed_but_identical:
+        L.append("")
+        L.append(
+            "Note where the two conditions come apart: "
+            + ", ".join(f"`{s}`" for s in unconfirmed_but_identical)
+            + " is not confirmed by the strict test, because the control's UniProt entry "
+            "annotates no feature at that position -- yet the control carries the *same* "
+            "residue as the reference there. Absence of an annotation in the control is "
+            "not evidence that the column is out of register, so this reads as "
+            "unconfirmable rather than wrong."
+        )
     L.append("")
     L.append("## Projected sites across the family")
     L.append("")
@@ -380,6 +401,44 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
         "dispensable for function in vivo, and it does not create in-trans peptide kinase "
         "activity while the KxGQ domain remains in place."
     )
+    L.append("")
+    # Reciprocal-orthologue test: is the A339-equivalent split branch-diagnostic?
+    a3 = next(r for r in rows if r["site"] == "Arich_A3")
+    ubib_only = [a for a in order if a != "P17612"]
+    gly = [sym(a) for a in ubib_only if a3["targets"][a]["aa"] == "G"]
+    ala = [sym(a) for a in ubib_only if a3["targets"][a]["aa"] == "A"]
+    other = [sym(a) for a in ubib_only if a3["targets"][a]["aa"] not in ("G", "A")]
+    L.append("## Reciprocal-orthologue test at the A339-equivalent position")
+    L.append("")
+    L.append(
+        "PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human "
+        "ADCK1/5, from genetics. The A339-equivalent column tests that pairing from "
+        "sequence alone, independently of PANTHER and of the paper."
+    )
+    L.append("")
+    L.append(f"- Gly (the de-repressing residue) in **{len(gly)}** of {len(ubib_only)} "
+             f"UbiB proteins: {', '.join(gly) if gly else 'none'}")
+    L.append(f"- Ala (the suppressor residue) in **{len(ala)}**: "
+             f"{', '.join(ala) if ala else 'none'}")
+    if other:
+        L.append(f"- other residue in {len(other)}: {', '.join(other)}")
+    L.append("")
+    expected_gly = {"ADCK2", "CQD1"}
+    if set(gly) == expected_gly:
+        L.append(
+            "The split is **exactly the ADCK2/Cqd1 orthologue pair against everything "
+            "else**, including Cqd2 and ADCK1, which carry the suppressor alanine. So a "
+            "single residue reproduces the published orthology assignment, and it does so "
+            "reciprocally: the two branches differ at precisely the position whose "
+            "substitution was shown to change COQ8A's behaviour. This corroborates the "
+            "pairing; it does not by itself show the two branches differ functionally."
+        )
+    else:
+        L.append(
+            f"The split is **not** the clean ADCK2/Cqd1-versus-rest pattern: Gly is carried "
+            f"by {sorted(gly)}, so this column does not track the published orthology "
+            f"pairing and must not be cited as corroborating it."
+        )
     L.append("")
     L.append("## Bottom line")
     L.append("")

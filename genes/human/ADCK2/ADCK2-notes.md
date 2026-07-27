@@ -85,17 +85,25 @@ Two guards against over-reading that negative:
 ## 3. Does ADCK2 keep the residues? (own analysis — `ADCK2-bioinformatics/`)
 
 `ubib_motif_analysis.py` builds a Clustal Omega MSA of ADCK2, COQ8A, COQ8B, Cqd1/YPL109C,
-ADCK1, ADCK5, *E. coli* UbiB and PKA (P17612, negative control), then projects COQ8A's own
-UniProt-annotated motif and ligand positions through the alignment. Residue identity and
-"lands on a site the target itself annotates" are kept as separate conditions, per the
-campaign rule that identity alone manufactures matches at low identity.
+Cqd2/YLR253W, ADCK1, ADCK5, *E. coli* UbiB and PKA (P17612, negative control), then projects
+COQ8A's own UniProt-annotated motif and ligand positions through the alignment. Residue
+identity and "lands on a site the target itself annotates" are kept as separate conditions,
+per the campaign rule that identity alone manufactures matches at low identity.
 
 Register is judged by the negative control: 6 of 9 columns place PKA inside one of PKA's
-own annotated sites; PKA reproduces 3/4 canonical catalytic residues and **0/2** KxGQ
+own annotated sites, and PKA reproduces **4/4** canonical catalytic residues and **0/2** KxGQ
 positions, so the KxGQ columns are UbiB-diagnostic and not an artefact of aligning any
-kinase. The one column the control fails is `DFG_D`; ADCK2's reading there (D493) is
-nevertheless corroborated independently by local context — COQ8A `all[D]FG`, ADCK2
-`vll[D]AG` — and by a motif scan of the raw sequence.
+kinase. The one column the strict test cannot confirm is `DFG_D` — but the two conditions
+come apart there for an uninteresting reason: PKA lands on **D185**, its own DFG aspartate,
+identical to COQ8A's D507, and P17612 simply carries no feature annotation at that position.
+Absence of an annotation in the control is not evidence the column is out of register.
+ADCK2's reading there (D493) is separately corroborated by local context — COQ8A `all[D]FG`
+versus ADCK2 `vll[D]AG` — and by a motif scan of the raw sequence.
+
+Worth recording as a methodological point: **adding Cqd2 to the alignment improved the
+register**, moving PKA's DFG column from a spurious Ser to its true D185 and taking the
+control from 3/4 to 4/4. A sparse alignment was mis-seating one column, and the fix came
+from more taxa rather than from more parameters.
 
 Results:
 
@@ -126,6 +134,14 @@ autophosphorylation, the naive reading is "ADCK2 is the branch that kept phospho
 I am not making that claim: the de-repressed activity is *cis* autophosphorylation, shown
 dispensable in vivo, and the KxGQ occlusion is untouched. Recorded as a hypothesis for
 `suggested_experiments`, not a finding.
+
+**The A339-equivalent column turns out to be branch-diagnostic**, which is a stronger result
+than the divergence alone. Across the 8 UbiB proteins in the alignment, Gly appears in
+exactly **2** — ADCK2 and Cqd1 — while all six others, *including Cqd2 and ADCK1*, carry the
+suppressor Ala. So a single residue reproduces the Cqd1↔ADCK2 / Cqd2↔ADCK1 pairing from
+sequence alone, independently of PANTHER and of PMID:34362905's genetics. This corroborates
+the orthology; it does not on its own show the two branches differ functionally, and it is
+not used here to assert anything about ADCK2's activity.
 
 ## 4. Orthology, and why the ADCK genes must not be pooled
 
@@ -299,3 +315,25 @@ also carries no MF annotation in GOA — so if the ADCK1 review reports a kinase
 propagation defect, that would be a disagreement worth resolving, because QuickGO returns
 only four BP rows for Q86TW2 (`GO:0007005` IBA, `GO:0055088` IBA, `GO:0010637` IMP,
 `GO:1903852` IMP) and no MF rows at all.
+
+**Compared against PR #2310 after the fact.** The two reviews were derived independently and
+agree on every cross-cutting point: the fold-propagation hypothesis is not confirmed in GOA
+but is present in UniProt's EC/keyword layer; `GO_REF:0000043` keyword annotations have been
+withdrawn; the catalytic residues are intact in both genes so neither is a pseudokinase; the
+Cqd1↔ADCK2 / Cqd2↔ADCK1 pairing holds; and `just validate` silently collapses main's two
+pre-existing duplicate curies in `cache/go/terms.csv` on every run.
+
+The one substantive difference is a genuine biological one, not a disagreement: at the
+A339-equivalent column, **ADCK1 carries A164 and ADCK2 carries G209** — both reviews report
+their own gene's residue correctly, and my alignment (which includes both proteins plus both
+yeast orthologues) shows the split is exactly ADCK2+Cqd1 versus everyone else. PR #2310 uses
+ADCK1's retained alanine to question ProRule's ATP-ligand assignment, on the grounds that
+COQ8A with Ala is ADP-selective. The reciprocal prediction for ADCK2 — Gly, hence plausibly
+more ATP-selective — follows from the same logic but is untested, so no nucleotide term is
+proposed here either. Both reviews withhold a nucleotide-binding term for the same reason:
+the site is untested, not refuted.
+
+Two claims in #2310 that I could not check from my own data and am deliberately not relaying
+as fact: that mouse ADCK1 was localised to the inner membrane in primary brain endothelial
+cells (PMID:40884816), and that the Yoon kinase-independence result is a gain-of-function
+readout. Both are ADCK1-specific and neither bears on ADCK2.

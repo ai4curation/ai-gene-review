@@ -196,18 +196,26 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
     un-normalised regex would miss any claim that happens to straddle a line break.
     """
     blob = re.sub(r"\s+", " ", raw_review + "\n" + notes)
-    # Each pattern must encode the AFFIRMATIVE form of the rejected claim. A bare keyword
-    # is not enough: the first version of this check flagged the word "pseudokinase" in
-    # "ADCK2 is not a pseudokinase", i.e. it fired on the correct statement. A guard that
-    # rejects the truth is worse than no guard.
+    # Each pattern encodes the AFFIRMATIVE form of a rejected claim, and every hit is then
+    # tested for a preceding negator. Two earlier versions of this check fired on correct
+    # statements -- first on the bare word "pseudokinase", then on "neither is a
+    # pseudokinase" after mere anchoring. A guard that rejects the truth is worse than no
+    # guard, so negation handling is explicit rather than encoded in ever-longer regexes.
+    negator = re.compile(
+        r"\b(?:not|never|neither|nor|no|cannot|rather than|instead of|without|"
+        r"is n't|isn't|dis(?:proved|proven)|refut\w*)\b[^.]{0,40}$",
+        re.I,
+    )
     for pattern, why in [
         (r"ADCK2 is a (?:protein )?serine/threonine kinase", "never demonstrated"),
         (r"ADCK2 (?:is|acts as) an ATPase", "never measured for ADCK2"),
         (r"\bis a pseudokinase\b", "refuted: all four catalytic positions are intact"),
         (r"ADCK2 .{0,40}\bcatalys(?:es|is|ing) a step", "refuted by the labelling experiment"),
     ]:
-        m = re.search(pattern, blob, re.I)
-        if m:
+        for m in re.finditer(pattern, blob, re.I):
+            preceding = blob[max(0, m.start() - 60): m.start()]
+            if negator.search(preceding):
+                continue  # a negated mention is the correct statement, not a retracted one
             problems.append(f"retracted phrasing present ({why}): {m.group(0)!r}")
 
 
@@ -282,6 +290,29 @@ def self_test() -> int:
          "gene_symbol: ADCK2\ndescription_note: ADCK2 catalyses a step of CoQ synthesis"),
     ]
     failures = 0
+
+    # False-positive tests: these mutations are CORRECT statements and must NOT be
+    # flagged. Two successive versions of the retracted-phrasing check failed exactly
+    # here, so the "guard must stay quiet" case is tested as deliberately as the
+    # "guard must fire" case.
+    must_not_fire = [
+        ("negated pseudokinase claim", "gene_symbol: ADCK2",
+         "gene_symbol: ADCK2\ndescription_note: neither gene is a pseudokinase"),
+        ("negated kinase claim", "gene_symbol: ADCK2",
+         "gene_symbol: ADCK2\ndescription_note: it is not the case that ADCK2 is a"
+         " serine/threonine kinase"),
+    ]
+    for name, target, replacement in must_not_fire:
+        if target not in base:
+            print(f"  BROKEN GUARD: false-positive target for {name!r} not present")
+            failures += 1
+            continue
+        if run(base.replace(target, replacement, 1)):
+            print(f"  FALSE POSITIVE: {name} was flagged but is a correct statement")
+            failures += 1
+        else:
+            print(f"  correctly ignored: {name}")
+
     for name, target, replacement in mutations:
         if target not in base:
             print(f"  BROKEN GUARD: mutation target for {name!r} not present in the file; "

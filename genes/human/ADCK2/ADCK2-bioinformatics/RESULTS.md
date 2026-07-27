@@ -19,14 +19,15 @@ Clustal Omega MSA (EBI REST) of the UbiB family plus a canonical protein kinase 
 
 | accession | entry | length | status | % id to COQ8A (global) | % id to COQ8A (PKL core) |
 |---|---|---|---|---|---|
-| Q7Z695 | ADCK2_HUMAN | 626 aa | Swiss-Prot | 14.4% | 15.4% |
+| Q7Z695 | ADCK2_HUMAN | 626 aa | Swiss-Prot | 14.9% | 14.2% |
 | Q8NI60 | COQ8A_HUMAN | 647 aa | Swiss-Prot | - | - |
 | Q96D53 | COQ8B_HUMAN | 544 aa | Swiss-Prot | 56.3% | 58.9% |
-| Q02981 | YP109_YEAST | 657 aa | Swiss-Prot | 16.8% | 19.0% |
-| Q86TW2 | ADCK1_HUMAN | 530 aa | Swiss-Prot | 21.7% | 23.0% |
-| Q3MIX3 | ADCK5_HUMAN | 580 aa | Swiss-Prot | 20.6% | 22.3% |
-| P0A6A0 | UBIB_ECOLI | 546 aa | Swiss-Prot | 19.8% | 21.0% |
-| P17612 | KAPCA_HUMAN | 351 aa | Swiss-Prot | 17.1% | 17.1% |
+| Q02981 | YP109_YEAST | 657 aa | Swiss-Prot | 15.3% | 16.3% |
+| Q06567 | MCP2_YEAST | 569 aa | Swiss-Prot | 18.9% | 21.8% |
+| Q86TW2 | ADCK1_HUMAN | 530 aa | Swiss-Prot | 24.2% | 24.6% |
+| Q3MIX3 | ADCK5_HUMAN | 580 aa | Swiss-Prot | 20.2% | 21.6% |
+| P0A6A0 | UBIB_ECOLI | 546 aa | Swiss-Prot | 20.7% | 21.9% |
+| P17612 | KAPCA_HUMAN | 351 aa | Swiss-Prot | 11.9% | 11.9% |
 
 `COQ8A_HUMAN` is the projection reference; `KAPCA_HUMAN` is the negative control (a canonical Ser/Thr protein kinase outside the UbiB family).
 
@@ -44,23 +45,25 @@ A column counts as in register only if the negative control's aligned position f
 | beta3_K | `revam[K]iqypg` | `isvav[K]vlhpg` | K73 | yes |
 | cat_D | `hfmqt[D]pnwsn` | `nfvha[D]lhpgn` | D167 | yes |
 | cat_N | `dpnws[N]ffydp` | `dlhpg[N]ilvqg` | N172 | yes |
-| DFG_D | `kvall[D]fgatr` | `rlvll[D]agiva` | S213 | **NOT CONFIRMED** |
+| DFG_D | `kvall[D]fgatr` | `rlvll[D]agiva` | D185 | **NOT CONFIRMED** |
 
-6 of 9 columns are confirmed in register. The control reproduces 3/4 canonical catalytic residues and 0/2 KxGQ positions, so the KxGQ motif is diagnostic for the UbiB family in this alignment and is not an artefact of aligning any protein kinase.
+6 of 9 columns are confirmed in register. The control reproduces 4/4 canonical catalytic residues and 0/2 KxGQ positions, so the KxGQ motif is diagnostic for the UbiB family in this alignment and is not an artefact of aligning any protein kinase.
+
+Note where the two conditions come apart: `DFG_D` is not confirmed by the strict test, because the control's UniProt entry annotates no feature at that position -- yet the control carries the *same* residue as the reference there. Absence of an annotation in the control is not evidence that the column is out of register, so this reads as unconfirmable rather than wrong.
 
 ## Projected sites across the family
 
-| site | what it is in COQ8A | ADCK2 | COQ8A | COQ8B | CQD1 | ADCK1 | ADCK5 | UBIB | KAPCA |
-|---|---|---|---|---|---|---|---|---|---|
-| KxGQ_K | KxGQ motif, invariant Lys; occludes peptide-substrate site | K147 | K276\* | K155\* | K178 | K102 | K147 | K70 | - |
-| KxGQ_Q | KxGQ motif Gln | Q150 | Q279\* | Q158\* | Q181 | Q105 | Q150 | Q73 | N3 |
-| Arich_A1 | A-rich loop A337 (Gly-rich-loop equivalent) | G207\* | A337\* | A216\* | G239 | G162\* | A207 | A131\* | G51\* |
-| Arich_A3 | A-rich loop A339; A339G de-represses autophosphorylation | G209\* | A339\* | A218\* | G241 | A164\* | A209 | A133\* | G53\* |
-| Arich_S | A-rich loop Ser; ATP-binding | C210\* | S340\* | S219\* | S242 | S165\* | S210 | S134\* | S54\* |
-| beta3_K | beta3 Lys (VAIK equivalent); ATP-binding | K311\* | K358\* | K237\* | K275 | K183\* | K228 | K153\* | K73\* |
-| cat_D | catalytic Asp, proton acceptor (HRD/HAD equivalent) | D445\* | D488\* | D367\* | D412 | D315\* | D360 | D288\* | D167\* |
-| cat_N | catalytic-loop Asn; Mg2+ / ATP-binding | N450 | N493\* | N372\* | N417 | N320 | N365 | N293 | N172\* |
-| DFG_D | DFG-equivalent Asp; Mg2+ / ATP-binding | D493 | D507\* | D386\* | D477 | D338 | D382 | D310 | S213 |
+| site | what it is in COQ8A | ADCK2 | COQ8A | COQ8B | CQD1 | CQD2 | ADCK1 | ADCK5 | UBIB | KAPCA |
+|---|---|---|---|---|---|---|---|---|---|---|
+| KxGQ_K | KxGQ motif, invariant Lys; occludes peptide-substrate site | K147 | K276\* | K155\* | K178 | K125 | K102 | K147 | K70 | - |
+| KxGQ_Q | KxGQ motif Gln | Q150 | Q279\* | Q158\* | Q181 | Q128 | Q105 | Q150 | Q73 | N3 |
+| Arich_A1 | A-rich loop A337 (Gly-rich-loop equivalent) | G207\* | A337\* | A216\* | G239 | G185 | G162\* | A207 | A131\* | G51\* |
+| Arich_A3 | A-rich loop A339; A339G de-represses autophosphorylation | G209\* | A339\* | A218\* | G241 | A187 | A164\* | A209 | A133\* | G53\* |
+| Arich_S | A-rich loop Ser; ATP-binding | C210\* | S340\* | S219\* | S242 | S188 | S165\* | S210 | S134\* | S54\* |
+| beta3_K | beta3 Lys (VAIK equivalent); ATP-binding | K311\* | K358\* | K237\* | K275 | K210 | K183\* | K228 | K153\* | K73\* |
+| cat_D | catalytic Asp, proton acceptor (HRD/HAD equivalent) | D445\* | D488\* | D367\* | D412 | D344 | D315\* | D360 | D288\* | D167\* |
+| cat_N | catalytic-loop Asn; Mg2+ / ATP-binding | N450 | N493\* | N372\* | N417 | N349 | N320 | N365 | N293 | N172\* |
+| DFG_D | DFG-equivalent Asp; Mg2+ / ATP-binding | D493 | D507\* | D386\* | D477 | D372 | D338 | D382 | D310 | D185 |
 
 `\*` = the position also carries a UniProt feature annotation in that entry.
 
@@ -71,6 +74,15 @@ A column counts as in register only if the negative control's aligned position f
 **2. The UbiB KxGQ motif is retained** (2/2 positions identical to COQ8A: KxGQ_K, KxGQ_Q). This is the feature shown to occlude the peptide-substrate site in COQ8A, and PMID:27499294 predicts unorthodox-PKL functionality throughout the family on exactly this basis. ADCK2 is a uPKL by that criterion, which argues against a canonical protein-serine/threonine-kinase annotation.
 
 **3. The A-rich loop is NOT alanine-rich in ADCK2.** Over the aligned span, COQ8A carries `AAAS` (337-340) and ADCK2 carries `GSGC` (207-210); all three projected positions fall inside ADCK2's own annotated ATP-binding site. Both COQ8A alanines project onto glycines in ADCK2. This is the one place where ADCK2 looks *more* like a conventional kinase than COQ8A does, and it must not be over-read: in COQ8A the A339G substitution de-represses **cis autophosphorylation**, which PMID:27499294 shows is dispensable for function in vivo, and it does not create in-trans peptide kinase activity while the KxGQ domain remains in place.
+
+## Reciprocal-orthologue test at the A339-equivalent position
+
+PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human ADCK1/5, from genetics. The A339-equivalent column tests that pairing from sequence alone, independently of PANTHER and of the paper.
+
+- Gly (the de-repressing residue) in **2** of 8 UbiB proteins: ADCK2, CQD1
+- Ala (the suppressor residue) in **6**: COQ8A, COQ8B, CQD2, ADCK1, ADCK5, UBIB
+
+The split is **exactly the ADCK2/Cqd1 orthologue pair against everything else**, including Cqd2 and ADCK1, which carry the suppressor alanine. So a single residue reproduces the published orthology assignment, and it does so reciprocally: the two branches differ at precisely the position whose substitution was shown to change COQ8A's behaviour. This corroborates the pairing; it does not by itself show the two branches differ functionally.
 
 ## Bottom line
 
