@@ -214,7 +214,7 @@ conclusion.
 
 ## Committed guard
 
-`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 15 break-tests plus 1 no-fire test.
+`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 17 break-tests plus 1 no-fire test.
 It gates the quotes (including the `file:` quotes that CI does not check), the GOA-row
 reconciliation in both directions, `source_entities` against the WITH/FROM field, a
 duplicate-key-rejecting YAML load with a raw-vs-parsed count, the residue claims against
@@ -347,6 +347,36 @@ which is the only reason the 45 is trustworthy.
    both gaps where it applied, not just the one flagged: the "what would settle it" sentences
    moved into `resolution`, and `significance` now says why the gap matters. Fixing only the
    flagged instance would have left the same inconsistency one entry away.
+
+## Review round 3 — approved again; the fix I made left the same gap one file away
+
+1. **I closed the coverage gap on the analysis report and left it open on the review
+   document.** Round 2 taught check I to parse the census table in `RESULTS.md`; the *same*
+   five numbers are stated in prose in `AGFG2-ai-review.yaml`, and none of them was bound.
+   So the copy a curator actually reads was the ungated one. This is the campaign's
+   "fixed in N places, landed in N−1" pattern in its most instructive form: the fix was
+   correct, thorough on the artifact I was looking at, and blind to the artifact next to it.
+   Check H now binds all five from `distribution.json`, with a break-test on one.
+
+2. **A coverage counter that a failure could satisfy.** `checked += 1` sat inside the
+   *failure* branch of the taxon-id test while `expected_cells` counted only value cells, so
+   taxon-id failures inflated the value-cell count. One deleted row (−2) plus two missing
+   taxon ids (+2) landed back at parity and **suppressed the "has lost coverage" message**.
+   A floor a failure can satisfy is not a floor. Value cells and taxon ids now have separate
+   counters, both counting *comparisons attempted* rather than failures found, and a
+   compound break-test reproduces the exact offset scenario: under the fix it reports
+   "only 8 of 10 census value cells were compared", which the old accounting hid.
+
+3. The first-token clade keying could in principle collide and silently shrink the floor.
+   Not reachable with the present five labels, but a silent shrink is precisely what the
+   counter exists to prevent, so it is now asserted rather than assumed.
+
+**Stopping criterion, stated explicitly.** Rounds 2 and 3 changed no GO term, no action, no
+evidence code, no quote and no reported number — every finding was about the guards, not
+about what the guards compute, and the two that *were* about what they compute (an unbound
+number, a foolable counter) are now fixed. I will still fix anything that could misstate a
+number or misfire on another machine. I am drawing the line at findings about the harness's
+own prose.
 
 ## Environment note
 

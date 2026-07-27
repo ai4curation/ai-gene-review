@@ -464,6 +464,23 @@ def check_h_numbers(text: str, problems: list[str]) -> None:
         (intact["n_human_partners_with_coip_or_pulldown"], " protein interaction partners",
          "IntAct human co-IP/pulldown partner count"),
     ]
+    # The clade-census numbers the *review document* states in prose. These are the ones a
+    # curator reads, and until now only the RESULTS.md copies were gated — the same class of
+    # coverage gap fixed on the other artifact, left standing one file away. `_states_number`
+    # requires a context suffix, which is what makes binding the single-digit 1 and 4 safe.
+    dist = json.loads((HERE / "distribution.json").read_text())["census"]
+    usage_bindings += [
+        (dist["Actinopterygii (bony fish)"]["AGFG2"]["total"], " ray-finned fish",
+         "agfg2 Actinopterygii census, as stated in the YAML"),
+        (dist["Sauropsida (reptiles+birds)"]["AGFG2"]["total"], " sauropsids",
+         "agfg2 Sauropsida census, as stated in the YAML"),
+        (dist["Amphibia"]["AGFG2"]["total"], " amphibians",
+         "agfg2 Amphibia census, as stated in the YAML"),
+        (dist["Aves"]["AGFG2"]["total"], " avian agfg2",
+         "agfg2 Aves census, as stated in the YAML"),
+        (dist["Aves"]["AGFG1_control"]["total"], " avian agfg1",
+         "agfg1 Aves control, as stated in the YAML"),
+    ]
     for value, suffix, what in usage_bindings:
         if not _states_number(body, value, suffix):
             problems.append(f"H: {what} {value}{suffix} not stated in the YAML")
@@ -536,6 +553,15 @@ def _check_census_table(raw: str, dist: dict, problems: list[str]) -> None:
     # A dropped row is the failure this exists to catch, so reconcile the sets of clades
     # rather than only the cells of the rows that happen to be present.
     json_keys = {k.split()[0].rstrip(","): k for k in census}
+    # Keying on the first whitespace token would silently COLLIDE if two clades shared it,
+    # shrinking expected_cells and weakening the coverage floor. Not reachable with the
+    # current five labels, but a silent shrink is exactly what this counter exists to
+    # prevent, so it is asserted rather than assumed.
+    if len(json_keys) != len(census):
+        problems.append(
+            f"I: two clade labels in distribution.json share a first token, so the "
+            f"census key set collapsed from {len(census)} to {len(json_keys)}"
+        )
     table_keys = {r["clade_cell"].split(",")[0].strip(): r for r in rows}
     missing = sorted(set(json_keys) - set(table_keys))
     extra = sorted(set(table_keys) - set(json_keys))
@@ -543,7 +569,13 @@ def _check_census_table(raw: str, dist: dict, problems: list[str]) -> None:
         problems.append(f"I: clade-census table is missing rows for {missing}")
     if extra:
         problems.append(f"I: clade-census table has rows not in distribution.json: {extra}")
+    # Two counters, and both count COMPARISONS ATTEMPTED, never failures found. An earlier
+    # version incremented `checked` inside the taxon-id failure branch, so taxon-id failures
+    # inflated the value-cell count and could offset a genuinely lost row (one deleted row
+    # -2, two missing taxon ids +2, back to parity). A coverage floor that a failure can
+    # satisfy is not a floor.
     checked = 0
+    taxon_checked = 0
     for short, key in json_keys.items():
         row = table_keys.get(short)
         if row is None:
@@ -558,15 +590,22 @@ def _check_census_table(raw: str, dist: dict, problems: list[str]) -> None:
                 )
             checked += 1
         tx = census[key].get("taxon_id")
-        if tx is not None and str(tx) not in row["clade_cell"]:
-            problems.append(
-                f"I: clade-census table row for {short} does not carry its taxon id {tx}"
-            )
-            checked += 1
+        if tx is not None:
+            taxon_checked += 1
+            if str(tx) not in row["clade_cell"]:
+                problems.append(
+                    f"I: clade-census table row for {short} does not carry its taxon id {tx}"
+                )
     expected_cells = 2 * len(json_keys)
     if checked < expected_cells:
         problems.append(
-            f"I: only {checked} of {expected_cells} census cells were compared — "
+            f"I: only {checked} of {expected_cells} census value cells were compared — "
+            f"the table check has lost coverage"
+        )
+    expected_taxa = sum(1 for k in json_keys if census[json_keys[k]].get("taxon_id"))
+    if taxon_checked < expected_taxa:
+        problems.append(
+            f"I: only {taxon_checked} of {expected_taxa} census taxon ids were compared — "
             f"the table check has lost coverage"
         )
 
@@ -750,6 +789,16 @@ def _mutate_exemption_stale(t: str) -> str:
     raise AssertionError("GO:0044794 row not found — fixture has drifted")
 
 
+def _mutate_yaml_census_number(t: str) -> str:
+    """Break one of the clade-census numbers stated in the REVIEW DOCUMENT, not in
+    RESULTS.md — the copy a curator actually reads."""
+    anchor = "72 ray-finned fish"
+    assert anchor in t, f"{anchor!r} absent from the YAML — fixture has drifted"
+    out = t.replace(anchor, "999 ray-finned fish")
+    assert out != t, "mutation changed nothing"
+    return out
+
+
 def _mutate_number(t: str) -> str:
     """Change every occurrence of a number H binds, choosing one that does not appear
     inside any `file:` quote, so the mutation exercises H rather than A."""
@@ -787,6 +836,8 @@ BREAK_TESTS = [
     ("G: hedged MF asserted in a structured slot", _mutate_add_cf_term, "G",
      "structured slot"),
     ("H: prose number contradicts the JSON", _mutate_number, "H", "not stated"),
+    ("H: a YAML census number contradicts distribution.json",
+     _mutate_yaml_census_number, "H", "ray-finned fish"),
 ]
 
 # The happy direction. A guard can be wrong about success as easily as about failure,
@@ -843,20 +894,32 @@ def self_test(text: str) -> int:
     # mutation than the distinction under test.
     md_break_tests = [
         ("I: a residue in RESULTS.md contradicts the JSON",
-         "R75 present", "R999 present", "R75 present"),
+         [("R75 present", "R999 present")], "R75 present"),
         ("I: a census table CELL contradicts the JSON",
-         "| **72** | 50 |", "| **72** | 51 |", "agfg1"),
+         [("| **72** | 50 |", "| **72** | 51 |")], "agfg1"),
         ("I: a census table ROW is deleted",
-         "| Amphibia, 8292 | **4** | 28 |\n", "", "missing rows"),
+         [("| Amphibia, 8292 | **4** | 28 |\n", "")], "missing rows"),
         ("I: a census table row loses its taxon id (label intact)",
-         "| Aves, 8782 (⊂ Sauropsida)", "| Aves, (⊂ Sauropsida)", "taxon id"),
+         [("| Aves, 8782 (⊂ Sauropsida)", "| Aves, (⊂ Sauropsida)")], "taxon id"),
+        # The exact scenario that defeated the old counter: one deleted row (-2 value
+        # cells) plus two rows missing their taxon ids (+2 under the old accounting) landed
+        # back at parity and suppressed the coverage message. With the counters separated,
+        # the value-cell floor must still report 8 of 10.
+        ("I: a deleted row is NOT offset by taxon-id failures (counter integrity)",
+         [("| Amphibia, 8292 | **4** | 28 |\n", ""),
+          ("| Aves, 8782 (⊂ Sauropsida)", "| Aves, (⊂ Sauropsida)"),
+          ("| Mammalia, 40674", "| Mammalia,")],
+         "8 of 10 census value cells"),
     ]
-    for label, old, new, expect in md_break_tests:
-        if old not in original:
-            print(f"  FAIL  {label}: anchor {old!r} has drifted out of RESULTS.md")
+    for label, pairs, expect in md_break_tests:
+        missing_anchor = [o for o, _ in pairs if o not in original]
+        if missing_anchor:
+            print(f"  FAIL  {label}: anchor(s) {missing_anchor!r} drifted out of RESULTS.md")
             failures += 1
             continue
-        mutated_md = original.replace(old, new)   # every occurrence, not just the first
+        mutated_md = original
+        for o, n in pairs:                        # every occurrence, not just the first
+            mutated_md = mutated_md.replace(o, n)
         if mutated_md == original:
             print(f"  FAIL  {label}: mutation was a no-op")
             failures += 1
