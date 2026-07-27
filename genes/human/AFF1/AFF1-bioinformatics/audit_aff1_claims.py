@@ -677,7 +677,14 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
                         f"{f.name}: states {m.group(1)} {action} but the document "
                         f"contains {count}: ...{ctx.strip()}...")
                 else:
-                    n_tally_claims_enforced += 1
+                    # A CORRECTLY-valued prose match inside the retraction sentence
+                    # must not count toward enforcement either. Otherwise the three
+                    # numbers there that happen to be right (ACCEPT, KEEP_AS_NON_CORE,
+                    # NEW) keep the vacuity guard quiet even if the tally table -- the
+                    # only surface that actually supplies coverage -- were deleted.
+                    ctx_ok = flat[max(0, m.start() - 160):m.end() + 30]
+                    if not RETRACTION_CONTEXT.search(ctx_ok):
+                        n_tally_claims_enforced += 1
         # And any stated total must equal the number of entries.
         total = sum(tally.values())
         for m in re.finditer(r"(\d+)\s+(?:annotation entries|existing_annotations)\b",
@@ -803,9 +810,35 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
                         "redundant-ancestor invariant could not fire")
     for h in sorted(set(hits)):
         problems.append(f"redundant ancestry inside one slot: {h}")
+    # DELIBERATELY NOT COMPARED: `in_complex` against `locations`.
+    #
+    # A widened loop would fire on core_functions[0], which asserts GO:0032783 in
+    # in_complex and GO:0005634 in locations -- and the fetched closure for
+    # GO:0032783 does contain GO:0005634, so the ancestry is real. It is not a
+    # curation error: "this protein is part of the super elongation complex" and
+    # "this protein is in the nucleus" are different KINDS of assertion, and a
+    # reader served only the complex would lose the compartment. The redundancy
+    # rule this check enforces is about a slot restating its own content at two
+    # granularities, which is not what that pair does. Recorded rather than
+    # silently omitted, with the evidence, so the omission is a judgement a
+    # reviewer can disagree with instead of a gap.
+    ic = (doc.get("core_functions") or [{}])[0].get("in_complex")
+    ic_id = ic.get("id") if isinstance(ic, dict) else None
+    not_compared = {
+        "slot_pair": ["in_complex", "locations"],
+        "reason": ("a complex and the compartment containing it are different kinds "
+                   "of assertion, so co-stating them is informative, not redundant"),
+        "live_instance": (
+            f"core_functions[0].in_complex={ic_id} whose closure contains "
+            f"GO:0005634, which core_functions[0].locations also asserts"
+            if ic_id and "GO:0005634" in (cl.get(ic_id) or []) else
+            "no live instance in the current document"),
+    }
     return {"pairs_checked": pairs_checked, "closures_available": len(cl),
             "slots_checked": list(MULTI),
+            "cross_slot_pairs_checked": list(MF_PAIR),
             "single_valued_slots_not_applicable": list(single_valued_skipped),
+            "deliberately_not_compared": not_compared,
             "hits": sorted(set(hits))}
 
 
@@ -1239,6 +1272,22 @@ def self_test() -> int:
         REVIEW.write_text(yaml.dump(d, sort_keys=False, allow_unicode=True))
     run_case("a term and its ancestor split across the two MF slots",
              mut_cross_slot_ancestor, "together with its own ancestor")
+
+    def mut_delete_tally_table() -> None:
+        # Removing the ONLY surface that supplies clause-4 coverage must trip the
+        # vacuity guard. Before the fix it did not, because three correct numbers
+        # inside the retraction sentence were counted as enforcement.
+        t2 = NOTES.read_text()
+        rows = [r for r in ("| `ACCEPT` | 11 |", "| `MODIFY` | 7 |",
+                            "| `KEEP_AS_NON_CORE` | 2 |", "| `NEW` | 1 |")
+                if r in t2]
+        if len(rows) < 4:
+            raise Problem(f"tally table rows missing; found only {rows}")
+        for r in rows:
+            t2 = t2.replace(r, "")
+        NOTES.write_text(t2)
+    run_case("the only enforcing tally surface is deleted", mut_delete_tally_table,
+             "matched no tally claim outside the retraction exemption")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making
