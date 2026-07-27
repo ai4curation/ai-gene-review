@@ -16,6 +16,12 @@ C. **Hedge sweep.** For every term this review *declines* in prose, no structure
 D. **Complex terms belong in `in_complex`, never in `locations`.**
 E. **No curation or project commentary in `description`.**
 F. **Every `NEW` row whose claim is isoform-specific carries an `isoform`.**
+J. **A DNA-binding suppression claim names its arm.** Five variants of one sentence shipped on
+   this gene saying the long isoform "suppresses PRC2 DNA binding" without saying which
+   measurement. The arms differ: below baseline for the methyltransferase and for chromatin
+   occupancy in cells, but merely *at* baseline on a naked-DNA probe. A literal phrase pin caught
+   four and missed the fifth, so this check anchors on the claim's **shape** - suppression verb +
+   DNA-binding marker + long-isoform subject, minus any arm qualifier - which survives rewording.
 G. **The notes' verdict table agrees with the YAML**, term by term, both directions:
    every term in the YAML has a notes row naming its action, and every term named in the
    notes table exists in the YAML. Writing only the first direction is how a stale notes
@@ -81,6 +87,22 @@ DECLINED_TERMS = {
                   "and its definition requires binding a DNA-binding transcription factor",
     "GO:0008047": "enzyme activator activity - the direction of AEBP2's effect is disputed",
 }
+
+# Check J. The structural trigger, replacing what a literal phrase pin could not close.
+# The recurring defect is a sentence that says the long isoform DECREASES something about DNA
+# binding without naming which arm - and the two arms differ: below baseline for the
+# methyltransferase and for chromatin occupancy in cells, but merely AT baseline on a naked-DNA
+# probe in vitro. So any sentence pairing a suppression verb with "DNA binding" must also carry
+# an arm qualifier. This fires on paraphrase because it matches the claim's shape, not its
+# wording. Five variants of this sentence shipped on this gene before it existed.
+SUPPRESSION_VERBS = ("suppress", "inhibit", "impair", "reduce", "lower", "decreas", "restrain")
+DNA_BINDING_MARKERS = ("dna binding", "dna-binding", "binding to dna", "affinity for dna",
+                       "bind the dna", "binds dna")
+ARM_QUALIFIERS = (
+    "in cells", "chromatin occupancy", "on chromatin", "at baseline", "naked", "in vitro probe",
+    "the short form confers", "the short isoform confers", "no better than",
+    "target genes in cells", "no-rescue",
+)
 
 STRUCTURED_TERM_SLOTS = {
     "molecular_function", "contributes_to_molecular_function", "directly_involved_in",
@@ -183,9 +205,9 @@ CANONICAL_ISOFORM_CLAUSE = (
     "3, and isoform 2 supports the activity but roughly twofold less well"
 )
 CANONICAL_CLAUSE_SURFACES = 2
-# Wordings retracted on this gene. A literal pin cannot catch a paraphrase, and this list
-# does not pretend to: it catches the exact sentences that were wrong, and the reason field
-# is the surface that needs human re-reading when a scope changes.
+# Wordings retracted on this gene. A literal pin CANNOT catch a paraphrase, and this list is
+# kept only for the exact sentences that were wrong. The reviewer found a fifth variant that
+# none of these match, which is why check J below anchors on the CLAIM'S SHAPE instead.
 RETRACTED_PHRASES = (
     "scoped to the isoforms that retain the full C-terminus",
     "the form assayed with the full C-terminus",
@@ -364,6 +386,62 @@ def audit(review_path: Path = REVIEW, notes_path: Path = NOTES) -> list[str]:
         if " ".join(phrase.split()) in normalised:
             problems.append(f"retracted wording has reappeared: {phrase!r}")
 
+    # --- J. a DNA-binding suppression claim must name its arm ------------------------
+    # Sentence-splitting the whole file produces chunks that span unrelated fields - the first
+    # version of this check fired on a run-together of a supporting_text quote and a term label.
+    # So it walks the PARSED document's prose fields and splits within each one. supporting_text
+    # is excluded on purpose: it is someone else's sentence, not a claim this review makes.
+    PROSE_FIELDS = ("description", "summary", "reason", "review_notes", "justification",
+                    "gap_statement", "boundary", "significance", "question", "comment",
+                    "proposed_definition", "hypothesis")
+    def prose_strings(node, out):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k in PROSE_FIELDS and isinstance(v, str):
+                    out.append(v)
+                else:
+                    prose_strings(v, out)
+        elif isinstance(node, list):
+            for v in node:
+                prose_strings(v, out)
+    blocks: list[str] = []
+    prose_strings(doc, blocks)
+    if not blocks:
+        problems.append("check J collected no prose fields - it would pass vacuously")
+    sentences = [s for block in blocks
+                 for s in re.split(r"(?<=[.;])\s+", " ".join(block.split()))]
+    flagged = 0
+    for sentence in sentences:
+        low = sentence.lower()
+        if not any(v in low for v in SUPPRESSION_VERBS):
+            continue
+        if not any(m in low for m in DNA_BINDING_MARKERS):
+            continue
+        # A sentence reporting what the SHORT form does is not the defect; the defect is an
+        # unqualified claim about the long form.
+        if not any(x in low for x in ("aebp2l", "long isoform", "long form", "long protein form",
+                                      "dominant isoform", "isoforms 1 and 2")):
+            continue
+        if not any(q in low for q in ARM_QUALIFIERS):
+            problems.append(
+                "check J: a DNA-binding suppression claim about the long isoform does not name "
+                "its arm (below baseline for HMTase and for chromatin occupancy in cells, but "
+                f"only AT baseline on the in vitro probe): {sentence[:170]!r}"
+            )
+        else:
+            flagged += 1
+    # Vacuity guard. The first version required at least one *qualified* suppression claim,
+    # which a correctly-written file need not contain at all - it failed on perfect agreement,
+    # the classic guard-defeat mode. The precondition that a correct file CAN satisfy is that
+    # the matcher reaches DNA-binding prose at all.
+    reachable = sum(1 for s in sentences
+                    if any(m in s.lower() for m in DNA_BINDING_MARKERS))
+    if reachable == 0:
+        problems.append(
+            "check J found no sentence mentioning DNA binding anywhere in the review's prose "
+            "fields - the matcher is not reaching the prose and a clean result is meaningless"
+        )
+
     print(f"audited {len(annotations)} annotation rows, "
           f"{len(doc.get('core_functions') or [])} core functions, "
           f"{len(by_term)} distinct existing terms; {len(problems)} problem(s)")
@@ -513,6 +591,35 @@ def self_test() -> int:
            raw.replace("in_complex:", "in_complex:  # scoped to the isoforms that retain the full C-terminus\n", 1),
            "retracted wording has reappeared")
 
+    # J: the paraphrase the literal pin could not catch must now fire. The mutation is exactly
+    # the distinction claimed - an arm qualifier removed - not a blanked surface.
+    # Run the check against the sentence that ACTUALLY SHIPPED and was flagged in review -
+    # a stronger claim than any mutation I would have invented. Reproduced verbatim from
+    # commit 80c1459c9, where it sat at AEBP2-ai-review.yaml:1056-1058.
+    shipped_defect = (
+        "N-terminal region present in isoforms 1 and 2 - the forms found in essentially all human\n"
+        "    tissues - suppresses the complex's DNA binding and takes its histone methyltransferase\n"
+        "    activity below the level of the core complex alone."
+    )
+    current = (
+        "N-terminal region present in isoforms 1 and 2 - the forms found in essentially all human\n"
+        "    tissues - takes the complex's histone methyltransferase activity below the level of the core\n"
+        "    complex alone,"
+    )
+    if current not in raw:
+        failures.append("check-J anchor absent; the corrected sentence has drifted")
+    else:
+        expect("J: the sentence that actually shipped and was flagged in review",
+               raw.replace(current, shipped_defect, 1),
+               "does not name its arm")
+    # J vacuity direction: a document whose prose never mentions DNA binding must FAIL, because
+    # a clean result from a matcher that reaches nothing is meaningless.
+    expect("J: vacuity when the matcher reaches no DNA-binding prose",
+           "id: Q6ZN18\ndescription: A nuclear protein.\nexisting_annotations:\n- term:\n    id: GO:1\n"
+           "    label: x\n  evidence_type: IDA\n  isoform: Q6ZN18-1\n  review:\n"
+           "    summary: Proposed x.\n    action: NEW\n",
+           "no sentence mentioning DNA binding")
+
     # vacuity: an empty annotation list must fail loudly.
     expect("vacuous review", "id: Q6ZN18\ndescription: x\n", "pass vacuously")
 
@@ -522,12 +629,103 @@ def self_test() -> int:
     return 1 if failures else 0
 
 
+def history() -> int:
+    """Run check J against every version of the review this branch has pushed.
+
+    A self-test proves the guards you thought of fire. Running the guard against the defects
+    that actually shipped is the stronger claim, and it demonstrates coverage of the *class*
+    rather than of one instance. Expected, and asserted: the count decreases monotonically to
+    zero, and the version the reviewer flagged shows exactly the one variant the earlier
+    literal-phrase pin could not match.
+    """
+    import subprocess
+
+    shas = ["a50319089", "c58380583", "80c1459c9"]
+    subjects = ("aebp2l", "long isoform", "long form", "long protein form",
+                "dominant isoform", "isoforms 1 and 2")
+
+    def flags(text: str) -> list[str]:
+        doc = yaml.safe_load(text)
+        blocks: list[str] = []
+        fields = ("description", "summary", "reason", "review_notes", "justification",
+                  "gap_statement", "boundary", "significance", "question", "comment",
+                  "proposed_definition", "hypothesis")
+
+        def walk(node):
+            if isinstance(node, dict):
+                for k, v in node.items():
+                    if k in fields and isinstance(v, str):
+                        blocks.append(v)
+                    else:
+                        walk(v)
+            elif isinstance(node, list):
+                for v in node:
+                    walk(v)
+
+        walk(doc)
+        sentences = [s for b in blocks
+                     for s in re.split(r"(?<=[.;])\s+", " ".join(b.split()))]
+        out = []
+        for s in sentences:
+            low = s.lower()
+            if (any(v in low for v in SUPPRESSION_VERBS)
+                    and any(m in low for m in DNA_BINDING_MARKERS)
+                    and any(x in low for x in subjects)
+                    and not any(q in low for q in ARM_QUALIFIERS)):
+                out.append(s)
+        return out
+
+    counts = []
+    for sha in shas:
+        proc = subprocess.run(
+            ["git", "show", f"{sha}:genes/human/AEBP2/AEBP2-ai-review.yaml"],
+            capture_output=True, text=True, cwd=REPO_ROOT if (REPO_ROOT := HERE.parents[3]) else None,
+        )
+        if proc.returncode != 0 or len(proc.stdout.splitlines()) < 500:
+            print(f"{sha}: could not extract a plausible review file "
+                  f"({len(proc.stdout.splitlines())} lines) - a zero here would be meaningless",
+                  file=sys.stderr)
+            return 1
+        hits = flags(proc.stdout)
+        counts.append(len(hits))
+        print(f"{sha}: check J flags {len(hits)}")
+        for h in hits:
+            print(f"    {h[:130]}")
+    current = len(flags(REVIEW.read_text()))
+    counts.append(current)
+    print(f"current: check J flags {current}")
+
+    problems = []
+    if counts != sorted(counts, reverse=True):
+        problems.append(f"counts are not monotonically decreasing: {counts}")
+    if current != 0:
+        problems.append(f"the current file still has {current} unqualified claim(s)")
+    if counts[0] < 2:
+        problems.append(
+            f"the first pushed version flags only {counts[0]}; the check is not demonstrating "
+            "coverage of the class"
+        )
+    if counts[-2] != 1:
+        problems.append(
+            f"the reviewer-flagged version flags {counts[-2]}, expected exactly 1 - the variant "
+            "the literal-phrase pin could not match"
+        )
+    for p_ in problems:
+        print("PROBLEM:", p_, file=sys.stderr)
+    print(f"history: {len(problems)} problem(s)")
+    return 1 if problems else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--history", action="store_true",
+                    help="run check J against every version this branch pushed")
     args = ap.parse_args()
     if args.self_test:
         return self_test()
+    if args.history:
+        return history()
     problems = audit()
     for p in problems:
         print("PROBLEM:", p)

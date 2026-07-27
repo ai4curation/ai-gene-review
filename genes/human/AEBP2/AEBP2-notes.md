@@ -536,6 +536,48 @@ molecular-function regulator route is what GO now provides, which is exactly whe
 puts the claim (`GO:0180000`, plus the proposed activator sibling). Recorded in the second
 `proposed_new_terms` justification.
 
+### Round 3: the literal pin missed a fifth variant, so the guard changed shape
+
+The reviewer's non-blocking follow-up found `core_functions[1]` still saying "suppresses the
+complex's DNA binding" without naming the arm — **a fifth variant of the same sentence, which
+the retracted-phrase pin did not match.** That is the documented limitation of a literal pin
+arriving in practice, so the response was to change the guard's shape rather than add a fifth
+literal.
+
+`audit_review_consistency.py` **check J** now anchors on the claim's *structure*: any sentence
+that pairs a suppression verb with a DNA-binding marker and a long-isoform subject must also
+carry an arm qualifier. It runs over the **parsed document's prose fields**, not the raw file —
+the first version sentence-split the whole YAML and fired on a run-together of a
+`supporting_text` quote and a term label, because the detector and the artifact disagreed on
+what a sentence is.
+
+Its vacuity guard also had to be rewritten. The first version required at least one *qualified*
+suppression claim, which a correctly-written file need not contain at all — it failed on perfect
+agreement, the classic guard-defeat mode. The precondition a correct file can satisfy is that
+the matcher reaches DNA-binding prose at all; 22 sentences do.
+
+**Coverage demonstrated against the defects that actually shipped**, not against an invented
+mutation. `--history` runs check J over every version this branch pushed:
+
+| version | check J flags |
+|---|---|
+| `a50319089` (first push) | **4** |
+| `c58380583` | **4** |
+| `80c1459c9` (the version the reviewer flagged) | **1** — exactly the variant the literal pin missed |
+| current | **0** |
+
+`--history` asserts that the sequence decreases monotonically, that the current count is zero,
+that the first version flags at least two (or the check is not demonstrating coverage of a
+class), and that the reviewer-flagged version flags exactly one. It refuses to report a zero
+from a git extract shorter than 500 lines, because a silent zero from a failed extract is
+indistinguishable from a clean result — which happened once while developing it.
+
+The other follow-up: the `GO:0180000` row justified its `isoform:` field from the DNA-binding
+arm when the term is about methyltransferase activity. Corrected, and the limitation stated
+rather than glossed: the HMTase result is reported for "PRC2-AEBP2L" without separating the two
+long isoforms, so `Q6ZN18-2`'s methyltransferase behaviour is **inferred, not measured** — the
+two were separately measured only in the DNA-binding arm.
+
 ### Five references added
 
 `PMID:20064375`, `PMID:20064376`, `PMID:31451685` (the three behind mouse Aebp2's `GO:0035098`
