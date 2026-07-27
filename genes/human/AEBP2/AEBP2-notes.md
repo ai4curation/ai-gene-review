@@ -97,14 +97,24 @@ This is what reframes the whole annotation set, and it is isoform-resolved.
 - `[PMID:41168462 "While core PRC2 alone and PRC2–AEBP2S exhibited comparable HMTase activities, PRC2–AEBP2L was almost completely inactive"]`
 - `[PMID:41168462 "In human cells, AEBP2S is expressed mainly in the testis and is otherwise expressed at very low levels"]`
 
-**Re-derive every comparison's two arms.** The affinage record's framing — "the short isoform
-promotes PRC2 activity" — invites the reading that AEBP2S *stimulates* methyltransferase
-activity. The measurement says otherwise: against core PRC2 alone, AEBP2S is
-**comparable** for HMTase and much better for **DNA binding** (Kd 45 nM vs > 4000 nM),
-while AEBP2L is **below** the core-alone baseline. So the sign of the effect is:
-AEBP2L inhibitory, AEBP2S neutral-to-enhancing depending on which activity you measure.
-That distinction is why I did **not** propose `GO:0008047 enzyme activator activity`,
-even though EED (IBA/IDA/IMP) and SUZ12 (IMP) already hold it.
+**Re-derive every comparison's two arms, per arm.** The affinage record's framing — "the short
+isoform promotes PRC2 activity" — invites the reading that AEBP2S *stimulates* methyltransferase
+activity. It does not, and the two isoforms differ per arm rather than uniformly. Against core
+PRC2 alone:
+
+| arm | + AEBP2L | + AEBP2S |
+|---|---|---|
+| HMTase, in vitro | **almost completely inactive** — below baseline | comparable to baseline |
+| DNA binding, in vitro probe | Kd > 4000 nM, i.e. **at** baseline | **45.5 nM**, ~90× better |
+| SUZ12 on chromatin, in cells | **below** the no-rescue control | above it |
+
+So the only arm where AEBP2L is unambiguously *below* baseline in vitro is the
+methyltransferase one — which is exactly the arm `GO:0180000` rests on — while in cells the
+chromatin-occupancy reduction is also below control. On the naked-DNA probe AEBP2L merely fails
+to confer what AEBP2S confers. Getting this per-arm rather than as one directional word is why
+I did **not** propose `GO:0008047 enzyme activator activity` for the short isoform, even though
+EED (IBA/IDA/IMP) and SUZ12 (IMP) already hold it; and an earlier draft of this file stated the
+"below baseline" claim unqualified, which §15 records.
 
 The direction is independently corroborated in vivo:
 
@@ -380,7 +390,9 @@ The isoform-2 overlap is computed, not eyeballed: the deletion `[504, 517]` agai
 region `[495, 517]` is **14 of 23 residues**, and the script fails if that overlap ever
 goes to zero. It matters because `PMID:29499137` measured that adding those 14 residues
 back doubles nucleosome binding — so the *reference transcript's* protein is the weaker
-binder, and every `contributes_to GO:0031491` claim is scoped to isoforms 1 and 3.
+binder. **The difference is quantitative, not qualitative**: isoform 2 supports the activity,
+roughly twofold less well. An earlier draft of this review turned that preference into an
+exclusion; see §15.
 
 Also worth recording: `PMID:29499137`'s crystal used
 `[PMID:29499137 "The Aebp2 fragment used in the crystal structure of S12R4J2A2 contains the last 97 residues of human Aebp2 isoform 2, including the C2B and H3K4D domains (Fig. 1A)."]`
@@ -446,3 +458,88 @@ and a batch of "text part not found" errors for quotes that are all present. Ver
 before acting rather than complying: the three target files exist, `just validate human
 AEBP2` inside the worktree returns `✓ Valid`, and `check_review_quotes.py` matches all 53
 quotes exactly. Complying would have meant deleting correct evidence.
+
+## 15. Round 2: the isoform scope was an exclusion where the data show a preference
+
+The reviewer's blocking point was correct, and verifying it against the cached full text is
+what settled it rather than deferring:
+
+- the wild-type reconstituted module in `PMID:29499137` is
+  `[PMID:29499137 "The Aebp2 fragment used in the crystal structure of S12R4J2A2 contains the last 97 residues of human Aebp2 isoform 2, including the C2B and H3K4D domains (Fig. 1A)."]`
+  — i.e. **isoform 2's** C-terminus;
+- and it worked:
+  `[PMID:29499137 "We found that S12R4 exhibited poor nucleosome binding by itself"]`
+  against
+  `[PMID:29499137 "In stark contrast, S12R4J2A2 displayed robust binding towards mononucleosomes, with a low micromolar binding affinity"]`.
+
+So the 14 extra residues of isoforms 1 and 3 give a **twofold enhancement** over an already
+robust baseline, and only the engineered five-residue deletion — not any natural isoform —
+abolishes binding. My `core_functions[0]` had converted that preference into an **exclusion**,
+writing the MANE-Select form out of the gene's only proposed `contributes_to` molecular
+function. The annotation row's own reason had it right ("expected to be weaker for
+`Q6ZN18-2`"), so the file contradicted itself with the correct reading in the row.
+
+Two consequences beyond the wording:
+
+- **The `isoform:` field on that row now reads `Q6ZN18-2`, not `Q6ZN18-1`.** Per CLAUDE.md the
+  field records *what was tested*, and what was tested was isoform 2's C-terminus. The activity
+  is not isoform-restricted at all — all three isoforms retain residues 407–503 — so recording
+  the tested form is both literally correct and less misleading than naming the strongest one.
+- **The scope is now single-sourced.** Two surfaces could express it, so correcting one left the
+  other; `audit_review_consistency.py` check I requires one canonical clause verbatim on both
+  surfaces and fires if either diverges. Its retracted-phrase list scans the review YAML only,
+  and deliberately not this notes file, because a notes file has to be able to *narrate* a
+  retraction — that limitation is stated rather than papered over.
+
+### The correction propagated to a surface nobody had flagged
+
+Adding check I's retracted-phrase list caught a **third** instance of a related imprecision:
+"suppresses PRC2 DNA binding and methyltransferase activity" appeared in the `GO:0000122` row's
+reason and in a `suggested_question` addressed to UniProt curators. Re-deriving the arms shows
+why it was wrong:
+
+| arm | core PRC2 alone | + AEBP2L | + AEBP2S |
+|---|---|---|---|
+| DNA binding, in vitro probe | Kd > 4000 nM | Kd > 4000 nM (**at baseline**) | **45.5 nM** |
+| HMTase, in vitro | baseline | **almost completely inactive** | comparable to baseline |
+| SUZ12 on chromatin, in cells | no-rescue control | **below the control** | above |
+
+`[PMID:41168462 "Conversely, core PRC2 alone, PRC2–AEBP2L(iso1) and PRC2–AEBP2L(iso2) complexes did not substantially bind the DNA probe, which indicates a much lower affinity"]`
+and
+`[PMID:41168462 "However, ectopically expressed AEBP2L reduced the amount of SUZ12 on chromatin compared to AEBP2S and even compared to the no-rescue control cells"]`.
+
+So "AEBP2L inhibits PRC2 DNA binding" — the paper's own abstract wording — is **true of chromatin
+occupancy in cells and not of the naked-DNA probe in vitro**, where AEBP2L merely fails to confer
+what AEBP2S confers. The below-baseline claim that `GO:0180000` rests on is the **methyltransferase**
+arm, which is untouched and is if anything cleaner for having been separated out. Same shape as
+the provider-arithmetic lesson: a directional word is meaningless until you know which two arms
+the comparison has.
+
+### Refuting the reviewer's BP-term suggestion, with evidence
+
+The review was asked why no biological-process term is proposed in the
+regulation-of-H3-K27-methylation branch for the headline finding. **Because GO has dismantled
+that branch.** Fetched from QuickGO:
+
+| term | status |
+|---|---|
+| `GO:0016571` histone methylation | **obsolete** |
+| `GO:0031056` regulation of histone modification | **obsolete** |
+| `GO:0031060` / `GO:0031061` / `GO:0031062` regulation of histone methylation | **obsolete** |
+| `GO:0061085` / `GO:0061086` / `GO:0061087` regulation of histone H3-K27 methylation | **obsolete** |
+
+None carries a `term_replaced_by`. A search of live `biological_process` terms returns **no**
+non-obsolete regulation-of-histone-methylation term, controlled against a search for
+"heterochromatin formation" that *does* return live terms — so the zero is a real zero and not a
+failed query. A process term cannot be requested in a branch GO deliberately removed, and the
+molecular-function regulator route is what GO now provides, which is exactly where this review
+puts the claim (`GO:0180000`, plus the proposed activator sibling). Recorded in the second
+`proposed_new_terms` justification.
+
+### Five references added
+
+`PMID:20064375`, `PMID:20064376`, `PMID:31451685` (the three behind mouse Aebp2's `GO:0035098`
+IDA rows, which is what makes that IBA well-founded), `PMID:21949878` (the neural-crest sentence
+in the description) and `PMID:31959557` (cited by UniProt's FUNCTION line and by the isoform
+question). All five were cited in prose while absent from `references:` — a gap the reviewer
+found and that no gate checks.

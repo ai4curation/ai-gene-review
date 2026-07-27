@@ -20,6 +20,12 @@ G. **The notes' verdict table agrees with the YAML**, term by term, both directi
    every term in the YAML has a notes row naming its action, and every term named in the
    notes table exists in the YAML. Writing only the first direction is how a stale notes
    row survives.
+I. **An isoform scope is single-sourced.** The blocking defect on this gene was a
+   `core_functions` description excluding isoform 2 from an activity the cited paper shows it
+   has, while the annotation row's own reason had it right. Two surfaces could express the
+   scope, so correcting one left the other. Rather than adding a third assertion, the scope is
+   now one canonical clause required verbatim in both surfaces, so editing one without the
+   other fires.
 H. **Prose numbers are tied to ``results.json``.** A hand-written count drifts the moment
    the underlying query changes, and it drifted here: the PRC2 census covers 12 proteins and
    two surfaces said "eleven". Each claim below names the JSON key it comes from, so a
@@ -167,6 +173,24 @@ NUMERIC_CLAIMS = [
         ("review",),
     ),
 ]
+
+# Check I. The isoform scope of GO:0031491 is expressible on two surfaces - the
+# core_functions description and the annotation row's reason - so it is single-sourced as one
+# canonical clause required verbatim on both. Selecting on the clause rather than on either
+# sentence means a reworded surface fires instead of silently diverging.
+CANONICAL_ISOFORM_CLAUSE = (
+    "it is strongest in the isoforms that retain the full C-terminus, isoforms 1 and "
+    "3, and isoform 2 supports the activity but roughly twofold less well"
+)
+CANONICAL_CLAUSE_SURFACES = 2
+# Wordings retracted on this gene. A literal pin cannot catch a paraphrase, and this list
+# does not pretend to: it catches the exact sentences that were wrong, and the reason field
+# is the surface that needs human re-reading when a scope changes.
+RETRACTED_PHRASES = (
+    "scoped to the isoforms that retain the full C-terminus",
+    "the form assayed with the full C-terminus",
+    "suppresses PRC2 DNA binding and methyltransferase",
+)
 
 FORBIDDEN_IN_DESCRIPTION = (
     "this review", "curation", "GOA", "should be annotated", "should not be annotated",
@@ -325,6 +349,21 @@ def audit(review_path: Path = REVIEW, notes_path: Path = NOTES) -> list[str]:
                         f"({value}); expected the phrase {phrase!r}"
                     )
 
+    # --- I. single-sourced isoform scope, and no retracted wording ------------------
+    normalised = " ".join(review_path.read_text().split())
+    canonical = " ".join(CANONICAL_ISOFORM_CLAUSE.split())
+    occurrences = normalised.count(canonical)
+    if occurrences != CANONICAL_CLAUSE_SURFACES:
+        problems.append(
+            f"the canonical isoform-scope clause appears {occurrences} time(s), expected "
+            f"{CANONICAL_CLAUSE_SURFACES} (core_functions description and the GO:0031491 row "
+            "reason). A scope stated on one surface and not the other is how the blocking "
+            "defect on this gene arose"
+        )
+    for phrase in RETRACTED_PHRASES:
+        if " ".join(phrase.split()) in normalised:
+            problems.append(f"retracted wording has reappeared: {phrase!r}")
+
     print(f"audited {len(annotations)} annotation rows, "
           f"{len(doc.get('core_functions') or [])} core functions, "
           f"{len(by_term)} distinct existing terms; {len(problems)} problem(s)")
@@ -408,7 +447,7 @@ def self_test() -> int:
            "curation/project commentary")
 
     # F: a NEW row with no isoform.
-    anchor_f = "  qualifier: contributes_to\n  isoform: Q6ZN18-1"
+    anchor_f = "  qualifier: contributes_to\n  isoform: Q6ZN18-2"
     if anchor_f not in raw:
         failures.append("check-F anchor absent")
     else:
@@ -454,6 +493,25 @@ def self_test() -> int:
         expect("H: number spelled as a word",
                raw.replace(anchor_h2, "from eight alternative condition sets", 1),
                "does not state the measured ARBA condition-set count")
+
+    # I forward: dropping the clause from ONE surface must fire. This is the exact defect
+    # that shipped, not a coarser mutation that a weaker implementation would also catch.
+    # The clause is line-wrapped differently on its two surfaces, so the mutation targets a
+    # short fragment that survives wrapping and appears exactly twice.
+    frag = "and isoform 2 supports the activity but"
+    if raw.count(frag) != 2:
+        failures.append(
+            f"check-I fragment appears {raw.count(frag)} times, expected 2; the break-test "
+            "cannot discriminate one surface from two"
+        )
+    else:
+        one_removed = raw.replace(frag, "and isoform 2 does not have the activity, since it", 1)
+        expect("I: scope dropped from one surface", one_removed,
+               "canonical isoform-scope clause appears 1 time(s)")
+    # I reverse: the retracted wording reappearing must fire, even alongside a correct clause.
+    expect("I: retracted wording reappears",
+           raw.replace("in_complex:", "in_complex:  # scoped to the isoforms that retain the full C-terminus\n", 1),
+           "retracted wording has reappeared")
 
     # vacuity: an empty annotation list must fail loudly.
     expect("vacuous review", "id: Q6ZN18\ndescription: x\n", "pass vacuously")
