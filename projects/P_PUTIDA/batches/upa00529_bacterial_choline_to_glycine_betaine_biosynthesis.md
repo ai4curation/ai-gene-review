@@ -45,6 +45,9 @@ autolink_gene_symbols: false
 timed out after 7200s without producing a report; the bounded batch did not
 start a third sequential gene request.
 
+2026-07-26: The generic module-level OpenScientist run also timed out after
+7200s without producing a report.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
