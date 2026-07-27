@@ -100,9 +100,51 @@ while the flat file still carries `KW G protein-coupled receptor;`, `KW Receptor
 SPKW retirement never touched**:
 
 1. **InterPro2GO** (`GO_REF:0000002`): `GO:0004930` from `IPR000832|IPR001879|IPR017983|IPR036445`
-   and `GO:0007186` from `IPR000832|IPR017983` — a fold-to-activity mapping.
+   and `GO:0007186` from `IPR000832|IPR017983`.
 2. **`TAS` assigned by GDB**, citing **PMID:15203201**, Bjarnadóttir et al., *"The human and mouse
    repertoire of the adhesion family of G-protein-coupled receptors"* (Genomics 2004).
+
+### Which signature licenses which term — InterPro2GO already draws the line
+
+`ADGRA2-bioinformatics/interpro_signatures.py` resolves every InterPro token in the GOA WITH/FROM
+and cross-checks it against the authoritative `interpro2go` mapping:
+
+| entry | InterPro name | type | interpro2go targets |
+|---|---|---|---|
+| `IPR017981` | GPCR, family 2-like, 7TM | domain | `GO:0004888`, `GO:0007166`, `GO:0016020` |
+| `IPR000832` | GPCR, family 2, secretin-like | family | `GO:0004930`, `GO:0007186`, `GO:0016020` |
+| `IPR017983` | GPCR, family 2, secretin-like, conserved site | conserved site | `GO:0004930`, `GO:0007186` |
+| `IPR001879` | GPCR, family 2, extracellular hormone receptor domain | domain | `GO:0004930`, `GO:0016020` |
+| `IPR036445` | GPCR family 2, extracellular hormone receptor domain superfamily | superfamily | `GO:0004930`, `GO:0016020` |
+
+Two things fall out.
+
+**InterPro curators already made the distinction this review argues for.** `IPR017981` is the entry
+covering ADGRA2's transmembrane bundle, and InterPro describes it as *"the transmembrane domain of
+family 2 GPCR receptor proteins and Frizzled proteins"* — Frizzleds being the textbook 7TM family
+whose principal signalling is not through heterotrimeric G proteins. Accordingly `interpro2go` maps
+it **only** to the generic `GO:0004888`/`GO:0007166`, never to `GO:0004930`/`GO:0007186`, and that is
+exactly the pair of terms ADGRA2 receives from it. The restraint is deliberate and it is a built-in
+negative control: when a signature's membership includes non-coupling 7TMs, the mapping is generic.
+
+**The over-reach comes from the hormone-receptor entries.** `IPR001879` and its superfamily
+`IPR036445` are *not* the GPS or GAIN entries — they are the family-2 **extracellular hormone
+receptor** domain, which InterPro calls *"the major ligand recognition domain"* and exemplifies with
+the calcitonin, corticotropin-releasing-factor 1, diuretic hormone, GLP-1 and parathyroid hormone
+receptors. ADGRA2 matches them on its GAIN/hormone-receptor module. So a **peptide-hormone
+ligand-recognition** signature is being converted into "activates a G protein" for a receptor that
+has no ligand at all. That is a sharper and more testable objection than a generic
+fold-became-an-activity complaint.
+
+> **My own error, recorded because it had already reached the prose.** I hand-wrote these five
+> labels and **three of five were wrong**, two substantively: I called `IPR001879` the "GPCR
+> proteolysis site (GPS) domain" and `IPR036445` the "GAIN domain superfamily". Both are the
+> hormone-receptor domain and its superfamily. This is the ACBD3 GOLD-versus-Q error exactly — a
+> domain misassignment propagating into an argument — and it was caught only by scripting the
+> comparison against InterPro instead of reading my own list back. The labels are now computed, the
+> comparison is a committed guard with a self-test, and the guard additionally asserts that every GO
+> term a row claims is one `interpro2go` actually licenses for that signature. Correcting it made
+> the argument stronger, not weaker.
 
 The TAS block is the interesting one and the projection test settles it. Querying QuickGO by
 *reference* rather than by gene (`?reference=PMID:15203201`, fully paginated, 78 = 78):
@@ -191,9 +233,18 @@ motif–domain activity. Every row is `MODIFY` → **`GO:0030165 PDZ domain bind
 informative where bare `protein binding` is not, and is honest about the promiscuity in a way that
 naming 19 individual partners as biological interactors would not be. **Not** core — see §6.
 
-Cross-paralog check: ADGRA1 (Q86SQ6) and ADGRA3 (Q8IWK6) carry the **same** PMID:36115835 PDZ panel
-(20 and 18 partners), so the whole ADGRA family was profiled together. Any future review of those
-genes should reach the same verdict on the same rows.
+Cross-paralog check: ADGRA1 (Q86SQ6) and ADGRA3 (Q8IWK6) carry the **same** PMID:36115835 PDZ panel,
+so the whole ADGRA family was profiled together. Counted from QuickGO rather than by eye, because
+a first hand count of the ADGRA1 panel came out one short:
+
+| gene | total `GO:0005515` | PMID:36115835 | PMID:24550280 | PMID:15021905 |
+|---|---|---|---|---|
+| ADGRA1 Q86SQ6 | 22 | 21 | 1 | – |
+| ADGRA2 Q96PE1 | 21 | 18 | 1 | 2 |
+| ADGRA3 Q8IWK6 | 19 | 18 | 1 | – |
+
+Any future review of ADGRA1 or ADGRA3 should reach the same `GO:0030165` verdict on the same rows;
+diverging silently from this one would repeat the AADACL2/3/4 failure.
 
 ## 5. PAINT node analysis — both directions of the node question
 
@@ -330,3 +381,6 @@ No hand-written WITH/FROM was introduced; the `NEW` ISS row for `GO:0010595` lis
   sweep, with `--self-test`.
 - `ADGRA2-bioinformatics/check_coverage.py` — asserts the review covers every GOA row exactly once,
   and rejects duplicate YAML keys on the raw text.
+- `ADGRA2-bioinformatics/interpro_signatures.py` → `interpro_signatures.json` — resolves every
+  InterPro token in the GOA WITH/FROM, audits the review's `source_label` values against InterPro's
+  own names, and asserts every claimed GO term is one `interpro2go` licenses for that signature.

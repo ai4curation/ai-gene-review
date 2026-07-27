@@ -14,10 +14,12 @@ JSON next to itself.
 | `resolve_partners.py` | Who are the `GO:0005515` partners, are they reviewed canonical entries, and do they carry PDZ domains? | `partners.json` | `python3 resolve_partners.py ../ADGRA2-goa.tsv` |
 | `check_corrections.py` | Does any cited PMID carry a retraction, erratum, expression of concern or Crossref correction? | `corrections.json` | `python3 check_corrections.py --json corrections.json <PMIDs>` |
 | `check_coverage.py` | Does the review cover every GOA row exactly once, with no duplicate YAML keys or aliases? | — (exit status) | `python3 check_coverage.py` |
+| `interpro_signatures.py` | Which InterPro signature licenses which GO term, and do the review's labels match InterPro? | `interpro_signatures.json` | `python3 interpro_signatures.py` |
 
 ## Guards, and how to break-test them
 
-`check_corrections.py --self-test` and `check_coverage.py --self-test` each exercise their guard
+`check_corrections.py --self-test`, `check_coverage.py --self-test` and
+`interpro_signatures.py --self-test` each exercise their guard
 in **both** directions — damage must be detected, and the clean file must pass. A self-test that
 only proves failure detection cannot tell you the happy path works, and an agreement check that
 fails on perfect agreement is a defect this campaign has actually seen.
