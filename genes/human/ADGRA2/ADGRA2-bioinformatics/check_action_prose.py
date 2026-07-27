@@ -35,7 +35,7 @@ REVIEW = HERE.parent / "ADGRA2-ai-review.yaml"
 
 # A phrase that names an action, and the action it implies. Matched case-insensitively
 # against summary + reason. Keep these keyed to how a *verdict* is announced, not to any
-# incidental mention of another row's action -- see ATTRIBUTED_PREFIXES below.
+# incidental mention of another row's action -- see ATTRIBUTION_SUBJECT below.
 ACTION_PHRASES: dict[str, str] = {
     "marked over-annotated rather than removed": "MARK_AS_OVER_ANNOTATED",
     "marked as over-annotated rather than removed": "MARK_AS_OVER_ANNOTATED",
@@ -45,15 +45,22 @@ ACTION_PHRASES: dict[str, str] = {
 }
 
 # A reason may legitimately discuss ANOTHER row's action, e.g. "The InterPro rows ... are
-# marked over-annotated". Such mentions are attributed and must not trip the guard, so the
-# bare verb is only checked when it is NOT preceded by an explicit attribution.
-ATTRIBUTED = re.compile(
-    r"(the interpro(2go)? rows?|the iea rows?|those rows?|the other rows?|the two removed rows?)"
-    r"[^.]{0,200}?", re.I
+# marked over-annotated". Such mentions are attributed and must not trip the guard.
+#
+# The exemption is scoped to the SENTENCE containing the phrase, via the sentences() helper
+# below. An earlier version used a regex ending in `[^.]{0,200}?` -- a lazy, zero-length-
+# matchable quantifier, so it succeeded on the bare subject anywhere in a 220-character
+# lookbehind window regardless of sentence boundaries, silently widening the exemption to
+# roughly "an attribution appeared somewhere nearby". Sentence scope is both narrower and
+# actually the thing meant.
+ATTRIBUTION_SUBJECT = re.compile(
+    r"\b(the\s+)?(interpro(2go)?\s+rows?|iea\s+rows?|those\s+rows?|other\s+rows?"
+    r"|two\s+removed\s+rows?|sibling\s+review|ADGRA[13]\b[^.]{0,40}review)", re.I
 )
 
-# Sentences that must appear at most once per reason. A superseding edit that forgets to
-# delete what it supersedes shows up here.
+# Snippets that must appear at most once per reason -- these are distinctive fragments, not
+# whole sentences, chosen so a reworded restatement still collides. A superseding edit that
+# forgets to delete what it supersedes shows up here.
 NO_DUPLICATE_SNIPPETS = [
     "a paper cannot make 25 gene-specific author statements",
     "abstract-only in the cache",
@@ -88,9 +95,11 @@ def check(review: Path = REVIEW, verbose: bool = True) -> list[str]:
             for m in re.finditer(re.escape(phrase), blob, re.I):
                 if implied == action:
                     continue
-                # Allow an explicitly attributed mention of another row's action.
-                window = blob[max(0, m.start() - 220):m.start()]
-                if ATTRIBUTED.search(window):
+                # Allow an explicitly attributed mention of another row's action, scoped to
+                # the sentence the phrase actually sits in -- not to a fixed-width window.
+                host = next((sent for sent in sentences(blob)
+                             if phrase.lower() in sent.lower()), "")
+                if ATTRIBUTION_SUBJECT.search(host):
                     continue
                 problems.append(
                     f"{label}: prose says {phrase!r}, which names {implied}, "

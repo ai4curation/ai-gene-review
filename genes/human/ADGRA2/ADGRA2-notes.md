@@ -59,14 +59,48 @@ an associated Gα, and nucleotide exchange. For ADGRA2:
   vascularization and establishment of the blood-brain barrier."]. IUPHAR/GtoPdb target 198 returns
   `{"GtoPdb Web Services":"No natural ligands found for target ID:198 "}` and an **empty**
   `/interactions` list — no agonist, no antagonist, no transducer record.
-- **No coupling measurement.** GtoPdb has no transduction comment for ADGRA2. A PubMed sweep of the
-  systematic adhesion-GPCR coupling literature (`("adhesion GPCR"[tiab] OR "adhesion G
-  protein-coupled receptor"[tiab]) AND ("G protein coupling"[tiab] OR "coupling profile"[tiab] OR
-  "constitutive activity"[tiab] OR "transducer"[tiab])`, 26 records) returns coupling studies for
-  ADGRL1, ADGRL2, ADGRL3, ADGRG1, ADGRG3/GPR97, ADGRE5/CD97, ADGRG4/GPR112 and CELSR1 — and **none
-  for ADGRA1/A2/A3**. `"GPR124 Stachel"` and `adhesion GPCR GPR124 tethered agonist` both return
-  **0** PubMed records. This is a measured corpus-level negative about the *literature*, not an
-  inference about the protein.
+- **No coupling measurement for ADGRA2 — and this is now a published statement, not a search
+  result.** GtoPdb has no transduction comment for ADGRA2, and the 2025 study that *did* measure
+  coupling in this clade says it outright: *"Whereas ADGRA2 has never been shown to couple to
+  heterotrimeric G proteins, it has been extensively studied for its role in the assembly of a
+  complex signalosome"* [PMID:40127866]. `"GPR124 Stachel"` and `adhesion GPCR GPR124 tethered
+  agonist` both return **0** PubMed records — an ADGRA2-specific negative that stands.
+
+> ### CORRECTION: my search returned nothing; that is not the same as nothing existing
+>
+> This review originally asserted, in the notes and at **four places** in the YAML, that *no*
+> G-protein coupling assay exists for ADGRA1, ADGRA2 **or** ADGRA3, and none for the ADGRA clade.
+> **That is false**, twice over:
+>
+> - **ADGRA3** — *"We found low-level activation of Gi and Gs by ADGRA3 and slightly more by its
+>   CTF."*, and removing the first three residues of the stachel tethered agonist gave
+>   *"abrogated G protein-mediated signaling"* [PMID:40127866].
+> - **ADGRA1** — *"ADGRA1 activates several G proteins, notably Gα13"*, on the full TRUPATH BRET2
+>   panel [PMID:41961591].
+>
+> **Why the sweep missed it, which is the reusable part.** The query recorded above requires
+> `"G protein coupling"` / `"coupling profile"` / `"constitutive activity"` / `"transducer"` in
+> `[tiab]`. The ADGRA3 abstract says *"G protein-mediated signaling"* and *"Gi and Gs"* and contains
+> **none of the four**. So the query was **too narrow, not the corpus stale** — re-running it any
+> number of times would never have surfaced the paper. A keyword conjunction over a field as
+> variable as an abstract is a filter whose false-negative rate is unknown to the person running it.
+>
+> **And the sharper distinction.** These notes phrased it defensibly — a *corpus-level negative
+> about the literature, not an inference about the protein*. The YAML did not: it promoted "my query
+> returned nothing" into "no such study exists". Those are different propositions and **only the
+> first was ever mine to assert.** The same failure mode as quoting an abstract-only paper about its
+> full text, in a new costume: an epistemic upgrade smuggled in while restating a true finding.
+>
+> **The correction runs in my favour, which is worth stating so it does not read as damage control.**
+> ADGRA2 itself still has no coupling assay, and now has a published statement saying so — stronger
+> evidence than an absence of hits. And a clade in which two of three paralogs demonstrably couple
+> makes `MARK_AS_OVER_ANNOTATED` **better** founded than `REMOVE` on the InterPro rows: a fold-based
+> inference of coupling is not absurd for an ADGRA protein, it is merely unverified for this one.
+> The two `REMOVE`s rest on the projection test and are untouched.
+>
+> **How it was found: not by me.** The paper reached this branch only because the sibling ADGRA3
+> review merged and brought its cached publication along. Reviewing paralogs in parallel is what
+> caught it — the same pairing the brief calls the campaign's richest source of findings.
 - **The one G-protein contact points the other way.** Gβγ binds the ADGRA2 C-tail rather than being
   released by it: *"In addition, Gβγ interacts with the C-terminal tail of GPR124 and promotes the
   formation of a GPR124-Elmo complex."* [PMID:28600358]. That is Gβγ acting on receptor-complex
@@ -98,6 +132,17 @@ inconsistent. Because the InterPro rows remain, removing the TAS rows does not e
 GOA; it removes two rows whose cited support is absent. This is complementary to, not a substitute
 for, the `suggested_questions` item asking GO whether the whole 78-annotation GDB block across 27
 entities should be retired: that is a consortium-level decision, this is the gene-level one.
+
+**Divergence from the merged ADGRA3 review, stated rather than left to be noticed.** ADGRA3 (#2315)
+`ACCEPT`s both `PMID:15203201` TAS rows — *"right conclusion, weak provenance - kept because the
+conclusion has since been earned"* — and recommends GOA re-evidence them against PMID:40127866.
+This review `REMOVE`s the identical pair. **Both follow one rule**: a defective TAS row is kept
+where the claim it makes is independently established *for that gene*, and removed where nothing
+else on the gene carries it. ADGRA3's claim was earned by a direct Gi/Gs measurement; ADGRA2's was
+not, and the same paper says so. The rule is visible inside this review too, which is the check that
+it is a rule and not a rationalisation: the `GO:0016020` TAS row from this very block is kept on
+exactly ADGRA3's logic. Flagged per the AADACL2/3/4 precedent, where three reviews gave one row
+three answers and nobody reconciled them until afterwards.
 
 **Stated within what the cache supports.** PMID:15203201 is `full_text_available: false`, so this
 review does *not* claim to know what its full text contains — that would be the same unsupported
