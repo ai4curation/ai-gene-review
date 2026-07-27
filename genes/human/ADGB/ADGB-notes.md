@@ -424,7 +424,30 @@ the annotation row already carried).
 I verified the reviewer's blocking point independently before conceding, and it is exactly
 scoped: `GO:0007283` was the **only** `ACCEPT` row whose term is absent from `core_functions`,
 and the converse check is also clean - no non-`ACCEPT` row holds a term that `core_functions`
-uses. That invariant is now enforced rather than checked by eye.
+uses.
+
+**That invariant is now genuinely enforced, and the first version of this sentence was false.**
+Round 3 of the PR review caught it: I had written "enforced rather than checked by eye" while
+the check itself lived only in a throwaway patch script under `/tmp`, which ran once and was
+never committed. `audit_adgb_review.py` had not been modified since the first commit and
+contained no occurrence of `core_functions` at all. The verification had genuinely happened -
+the scoping result I reported was correct - but **a verification you performed is not a
+verification that exists**, and a durable artifact was left claiming otherwise.
+
+It is now check F in `audit_adgb_review.py`, in both directions: every `ACCEPT` row's term must
+appear in `core_functions`, and every `core_functions` term must be backed by a row whose action
+is `ACCEPT` or `NEW`. The reverse direction is the one that would otherwise have gone unwritten,
+and unwritten is not the same as passing. Both are break-tested, plus a third mutation for a
+`core_functions` term with no annotation row at all.
+
+The decisive check is not the self-test but a regression test against history: running check F
+against the YAML at commit `6ff257b6f` - the version the reviewer blocked - fires on exactly
+`GO:0007283`, and against the current file it is clean. That is what makes the enforcement claim
+checkable rather than another assertion.
+
+**Rule, from three genes in one night: when you write that something is enforced, the same push
+must contain the enforcement, and you confirm it by grepping the script - not by remembering
+that you ran the check.**
 
 **Process lesson for the campaign brief.** My worktree's `HEAD` had silently advanced to the
 maintainer's commit. I discovered it only because a patch script **asserted its anchor was

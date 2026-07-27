@@ -108,8 +108,14 @@ def render(rows: list[list[str]]) -> str:
     return "\n".join(out)
 
 
-def assert_claims(data: dict) -> list[str]:
-    """The three review claims, asserted so a QuickGO change fails loudly."""
+def assert_claims(data: dict) -> tuple[list[str], dict]:
+    """The three review claims, asserted so a QuickGO change fails loudly.
+
+    Returns (problems, GO:0070026 holders keyed by symbol).  The annotation was
+    previously ``-> list[str]`` while the body returned a tuple; corrected here
+    rather than left as a comment, because a wrong signature is exactly what
+    makes a caller unpack the wrong thing later.
+    """
     problems = []
     # 1. NGB and CYGB hold GO:0019825 by IDA
     for acc in ("Q9NPG2", "Q8WWM9"):
@@ -137,6 +143,29 @@ def assert_claims(data: dict) -> list[str]:
     if "GUCY1B1" not in by:
         problems.append(f"CLAIM 3 BROKEN: GUCY1B1 absent from GO:0070026 holders "
                         f"({sorted(by)})")
+    else:
+        # Guard the DISTINCTION, not merely the presence.  The review originally
+        # wrote that THAP4 and CPX-2158 "also" hold the term by IDA next to a
+        # mention of GUCY1B1, which could be read as covering GUCY1B1 too - it is
+        # IEA.  A guard that only checks GUCY1B1 is *present* leaves precisely
+        # the corrected distinction unguarded, which is where the next
+        # regression would land.
+        if by["GUCY1B1"] != {"IEA"}:
+            problems.append(
+                f"CLAIM 3 EVIDENCE-CODE DRIFT: the review states GUCY1B1 holds "
+                f"GO:0070026 by IEA and that the experimental precedent comes from "
+                f"the other holders; QuickGO now reports {sorted(by['GUCY1B1'])}. "
+                f"Update the wording on all three surfaces before relying on it.")
+    # ... and the experimental precedent must actually be experimental.
+    for sym in ("CBS", "THAP4"):
+        if sym not in by:
+            problems.append(f"CLAIM 3 BROKEN: {sym} absent from GO:0070026 holders "
+                            f"({sorted(by)})")
+        elif not (by[sym] & EXPERIMENTAL):
+            problems.append(
+                f"CLAIM 3 BROKEN: {sym} no longer holds GO:0070026 experimentally "
+                f"(codes: {sorted(by[sym])}) - the review cites it as the "
+                f"experimental precedent")
     # ADGB would be the first single-chain globin with GO:0070026
     for acc, _ in GLOBINS:
         if data[acc]["GO:0070026"]:
@@ -174,6 +203,30 @@ def main() -> None:
         bad3["Q8WWM9"]["GO:0070026"] = ["IDA"]
         if not assert_claims(bad3)[0]:
             fails.append("[catch] a monomeric globin gaining GO:0070026 did not break claim 3")
+        # the GUCY1B1 evidence-code guard must fire on a code change, not just
+        # on absence - this is the distinction the review had to correct, so it
+        # is the one that most needs a break test.
+        import unittest.mock
+        real = globals()["query"]
+
+        def fake_query(**kw):
+            if kw.get("goId") == "GO:0070026" and kw.get("taxonId") == 9606:
+                return [{"symbol": "GUCY1B1", "goEvidence": "IDA", "goId": "GO:0070026"},
+                        {"symbol": "CBS", "goEvidence": "IDA", "goId": "GO:0070026"},
+                        {"symbol": "THAP4", "goEvidence": "IDA", "goId": "GO:0070026"}]
+            return real(**kw)
+
+        globals()["query"] = fake_query
+        try:
+            probs4 = assert_claims(copy.deepcopy(data))[0]
+        finally:
+            globals()["query"] = real
+        if not any("EVIDENCE-CODE DRIFT" in p for p in probs4):
+            fails.append("[catch] GUCY1B1 flipping IEA->IDA did not fire the "
+                         "evidence-code guard")
+        # ... and the happy direction of that same guard: real data must NOT fire it
+        if any("EVIDENCE-CODE DRIFT" in p for p in assert_claims(copy.deepcopy(data))[0]):
+            fails.append("[happy] evidence-code guard fires on the real data")
         # truncation guard must not be defeatable by a chosen page size
         try:
             query(goId="GO:0005515", taxonId=9606, limit=1)
@@ -185,8 +238,10 @@ def main() -> None:
             for f in fails:
                 print("  -", f)
             sys.exit(1)
-        print("SELF-TEST PASSED: happy direction holds; 3 doctored datasets rejected; "
-              "truncation guard fires.")
+        print("SELF-TEST PASSED: happy direction holds (twice - the claim set and "
+              "the GUCY1B1 evidence-code guard specifically); 4 doctored datasets "
+              "rejected, including GUCY1B1 flipping IEA->IDA, which is the exact "
+              "distinction the review had to correct; truncation guard fires.")
         return
 
     rows, data = build_table()
@@ -206,11 +261,30 @@ def main() -> None:
     print("\nAll three review claims verified against QuickGO.")
 
     if args.check_notes:
+        # Compare EVERY line, not just one row.  The first version checked only
+        # table.split("\n")[2] - the neuroglobin row - leaving three of four data
+        # rows unguarded, i.e. a check whose scope was narrower than the claim it
+        # was protecting.  A detector and the thing it guards must agree on scope
+        # or the verification is structurally blind.
         notes = (Path(__file__).resolve().parent.parent / "ADGB-notes.md").read_text()
-        if table.split("\n")[2] not in notes:
-            print("\nNOTES MISMATCH: the committed table does not match a fresh query.")
+        lines = table.split("\n")
+        missing = [ln for ln in lines if ln.strip() and ln not in notes]
+        if missing:
+            print(f"\nNOTES MISMATCH: {len(missing)} of {len(lines)} table lines are "
+                  f"not in ADGB-notes.md - regenerate the table there.")
+            for ln in missing:
+                print("  missing:", ln)
             sys.exit(1)
-        print("Committed table in ADGB-notes.md matches a fresh query.")
+        # ... and assert the check could actually have failed, so a table that
+        # silently emptied cannot pass by having nothing to compare.
+        data_rows = [ln for ln in lines if ln.startswith("| ") and "---" not in ln]
+        if len(data_rows) != len(GLOBINS) + 1:
+            print(f"\nFATAL: expected {len(GLOBINS) + 1} table lines (header + "
+                  f"{len(GLOBINS)} globins), built {len(data_rows)} - the "
+                  f"comparison would have been vacuous.")
+            sys.exit(1)
+        print(f"Committed table in ADGB-notes.md matches a fresh query "
+              f"({len(data_rows)} lines compared, all of them).")
 
 
 if __name__ == "__main__":

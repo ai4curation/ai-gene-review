@@ -208,6 +208,77 @@ def audit(review_path: Path = REVIEW, goa_path: Path = GOA) -> list[str]:
             problems.append(
                 f"[new] NEW annotation {a['term']['id']} cites a GO_REF; a "
                 f"proposed annotation needs a real evidence source")
+
+    # ---- F. ACCEPT <-> core_functions, BOTH directions --------------------
+    # ActionEnum defines ACCEPT as "retain as representing the core function of
+    # the gene", so an ACCEPT row whose term never reaches core_functions is a
+    # self-contradiction.  PR #2313 shipped exactly that on GO:0007283, where
+    # the row's own summary said "non-core" while its action said ACCEPT.
+    #
+    # This check exists because the first fix for that defect was performed in a
+    # throwaway patch script and then *described* in the notes as enforced. A
+    # verification you performed is not a verification that exists: the
+    # enforcement has to live in the committed artifact or it is not enforcement.
+    problems.extend(check_core_function_consistency(doc))
+    return problems
+
+
+def core_function_terms(doc: dict) -> set[str]:
+    """Every GO id reachable from core_functions, across all of its term slots."""
+    out: set[str] = set()
+    for cf in doc.get("core_functions") or []:
+        for slot in ("molecular_function", "contributes_to_molecular_function"):
+            if cf.get(slot):
+                out.add(cf[slot]["id"])
+        for slot in ("locations", "directly_involved_in", "in_complex"):
+            for term in (cf.get(slot) or []):
+                out.add(term["id"])
+    return out
+
+
+def check_core_function_consistency(doc: dict) -> list[str]:
+    """Both directions of the ACCEPT <-> core_functions invariant.
+
+    Forward : every ACCEPT row's term must appear in core_functions.
+    Reverse : every core_functions term must be backed by a row whose action is
+              ACCEPT or NEW -- a core function must not rest on a row that was
+              removed, downgraded to non-core, or flagged as over-annotated, and
+              must not be absent from the annotation set altogether.
+
+    The reverse direction is the one that would otherwise go unwritten, and it is
+    the direction that catches a core_functions entry quietly outliving the row
+    that justified it.
+    """
+    problems: list[str] = []
+    core = core_function_terms(doc)
+    anns = doc.get("existing_annotations") or []
+
+    by_term: dict[str, set[str]] = {}
+    for a in anns:
+        by_term.setdefault(a["term"]["id"], set()).add(
+            (a.get("review") or {}).get("action"))
+
+    for a in anns:
+        act = (a.get("review") or {}).get("action")
+        tid = a["term"]["id"]
+        if act == "ACCEPT" and tid not in core:
+            problems.append(
+                f"[core] {tid} ({a['term'].get('label')}) has action ACCEPT but does "
+                f"not appear in core_functions. ActionEnum defines ACCEPT as "
+                f"retaining the term as a core function; use KEEP_AS_NON_CORE if "
+                f"the term is correct but not core.")
+
+    for tid in sorted(core):
+        actions = by_term.get(tid)
+        if actions is None:
+            problems.append(
+                f"[core] core_functions uses {tid} but no existing_annotations "
+                f"entry carries that term")
+        elif not (actions & {"ACCEPT", "NEW"}):
+            problems.append(
+                f"[core] core_functions uses {tid} but its only annotation "
+                f"action(s) are {sorted(a for a in actions if a)} - a core "
+                f"function must rest on an ACCEPT or NEW row")
     return problems
 
 
@@ -305,13 +376,74 @@ def self_test() -> None:
     if n != 1:
         failures.append(f"[anchor] reference_id regex matched {n} times, expected 1")
 
+    # F. the ACCEPT <-> core_functions invariant, broken in BOTH directions.
+    #    Operates on the parsed document rather than on raw text, so it is
+    #    exercised independently of whether any anchor string has drifted.
+    doc = yaml.safe_load(base_raw)
+
+    #    F-happy: the real document must satisfy it.  A check can be wrong about
+    #    success as easily as about failure (ACTA1 defect #5: an agreement check
+    #    that failed on perfect agreement).
+    if check_core_function_consistency(doc):
+        failures.append(f"[happy/core] real document flagged: "
+                        f"{check_core_function_consistency(doc)}")
+
+    #    F-forward: an ACCEPT row whose term is not in core_functions.
+    import copy
+    fwd = copy.deepcopy(doc)
+    target = next((a for a in fwd["existing_annotations"]
+                   if (a.get("review") or {}).get("action") == "KEEP_AS_NON_CORE"
+                   and a["term"]["id"] not in core_function_terms(fwd)), None)
+    if target is None:
+        raise SystemExit("SELF-TEST BROKEN: no KEEP_AS_NON_CORE row outside "
+                         "core_functions to flip; the forward mutation is inert")
+    target["review"]["action"] = "ACCEPT"
+    fwd_problems = [p for p in check_core_function_consistency(fwd)
+                    if p.startswith("[core]") and "ACCEPT but does not appear" in p]
+    if not fwd_problems:
+        failures.append("[catch/core] an ACCEPT row absent from core_functions "
+                        "was not detected (forward direction)")
+
+    #    F-reverse: a core_functions term whose row is not ACCEPT/NEW.  Written
+    #    explicitly because this is the direction that would otherwise go
+    #    unwritten, and unwritten is not the same as passing.
+    rev = copy.deepcopy(doc)
+    core_ids = core_function_terms(rev)
+    victim = next((a for a in rev["existing_annotations"]
+                   if a["term"]["id"] in core_ids
+                   and (a.get("review") or {}).get("action") == "ACCEPT"), None)
+    if victim is None:
+        raise SystemExit("SELF-TEST BROKEN: no ACCEPT row backing a core_functions "
+                         "term to demote; the reverse mutation is inert")
+    demote_id = victim["term"]["id"]
+    for a in rev["existing_annotations"]:
+        if a["term"]["id"] == demote_id:
+            a["review"]["action"] = "MARK_AS_OVER_ANNOTATED"
+    rev_problems = [p for p in check_core_function_consistency(rev)
+                    if "must rest on an ACCEPT or NEW row" in p]
+    if not rev_problems:
+        failures.append("[catch/core] a core_functions term backed only by a "
+                        "non-ACCEPT row was not detected (reverse direction)")
+
+    #    F-reverse-2: a core_functions term with no annotation row at all.
+    orphan = copy.deepcopy(doc)
+    orphan["core_functions"].append(
+        {"description": "synthetic", "molecular_function":
+            {"id": "GO:0000000", "label": "synthetic term"}})
+    if not [p for p in check_core_function_consistency(orphan)
+            if "no existing_annotations entry carries that term" in p]:
+        failures.append("[catch/core] a core_functions term with no annotation "
+                        "row was not detected")
+
     if failures:
         print("SELF-TEST FAILED:")
         for f in failures:
             print("  -", f)
         sys.exit(1)
-    print("SELF-TEST PASSED: happy direction clean; 6 mutations each caught by "
-          "their intended guard; anchored substring verified.")
+    print("SELF-TEST PASSED: happy direction clean (twice - raw-text mutations and "
+          "the core-function invariant); 9 mutations each caught by their intended "
+          "guard, including BOTH directions of the ACCEPT<->core_functions check; "
+          "anchored substring verified.")
 
 
 def main() -> None:
