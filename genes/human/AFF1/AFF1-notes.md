@@ -17,6 +17,26 @@ genes/human/AFF1/AFF1-goa.tsv : 21 lines = 20 data rows, 20 distinct
 AFF1-ai-review.yaml stub      : 20 `- term:` entries, in TSV order
 ```
 
+### Verdict tally
+
+| action | rows |
+|---|---|
+| `ACCEPT` | 11 |
+| `MODIFY` | 7 |
+| `KEEP_AS_NON_CORE` | 2 |
+| `NEW` | 1 |
+| **total entries** | **21** (20 GOA rows + 1 `NEW`) |
+
+Recorded here deliberately. The tally was first written by hand into the PR body and
+a commit message as "11 ACCEPT · 6 MODIFY · 2 KEEP_AS_NON_CORE · 1 NEW", which sums
+to 20 rather than 21 and undercounts `MODIFY` by one — the third instance in this
+review of a count disagreeing with its own enumeration. Stating it in a file the
+audit can read makes it checkable: clause 4 of the counted-claims guard computes the
+tally from the document and compares it against any tally-shaped string here, so this
+table cannot drift from the YAML. The PR body and git commit messages are not
+lintable from inside the repository, which is why the numbers there should be copied
+from the guard's `COMPUTED_VERDICT_TALLY` output rather than counted by hand.
+
 This gene is a **negative result** for the known `fetch-gene` under-seeding defect
 (`GOAValidator.seed_missing_annotations` keys on term+evidence+reference+negated+qualifier and omits
 WITH/FROM). AFF1's three `GO:0005515` rows differ in *reference* as well as partner

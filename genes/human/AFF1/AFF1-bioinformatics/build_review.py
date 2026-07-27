@@ -1139,14 +1139,11 @@ def build() -> dict:
                 "level sets the outcome in both directions: depleting AFF1 raises "
                 "alkaline phosphatase, mineralisation and Runx2/SP7/BGLAP, while "
                 "raising AFF1 suppresses them and reduces ectopic bone formation in "
-                "vivo, and removing DKK1 abolishes the effect of excess AFF1. This is "
-                "a tissue-specific output of the same elongation activity rather than "
-                "a separate biochemistry, and it is one of the places where AFF1 and "
-                "its closest paralogue AFF4 act in opposite directions. The axis is "
-                "established in both directions in human cells: reducing AFF1 raises "
-                "the osteogenic markers and raising it lowers them, and removing DKK1 "
-                "abolishes the effect of excess AFF1, so DKK1 is the operative "
-                "intermediate rather than a correlate."),
+                "vivo, and removing DKK1 abolishes the effect of excess AFF1 - so "
+                "DKK1 is the operative intermediate rather than a correlate. This is a "
+                "tissue-specific output of the same elongation activity rather than a "
+                "separate biochemistry, and it is one of the places where AFF1 and its "
+                "closest paralogue AFF4 act in opposite directions."),
             "supported_by": sb(Q_KD_ALP, Q_OE_ALP, Q_CHIP_DKK1, Q_RESCUE, Q_INVIVO,
                                Q_OPPOSITE),
             "directly_involved_in": [

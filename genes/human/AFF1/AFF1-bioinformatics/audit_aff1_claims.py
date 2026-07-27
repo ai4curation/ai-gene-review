@@ -164,6 +164,11 @@ def walk_quotes(node: Any, ref: str | None = None, path: str = ""):
             yield from walk_quotes(e, ref, f"{path}[{i}]")
 
 
+# Documenting a retraction necessarily restates the retracted number. One shared
+# predicate so the three clauses cannot drift apart on what counts as a retraction.
+RETRACTION_CONTEXT = re.compile(
+    r"earlier draft|first draft|written by hand into the PR body", re.IGNORECASE)
+
 NOTE_CITATION = re.compile(r'\[((?:PMID|file):[^\s\]]+)\s+"([^"]+)"\]')
 
 
@@ -557,7 +562,7 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
             if m.group(1).lower() not in allowed:
                 ctx = flat[max(0, m.start() - 110):m.end() + 40]
                 # A documented retraction legitimately restates the wrong number.
-                if "earlier draft" in ctx.lower():
+                if RETRACTION_CONTEXT.search(ctx):
                     continue
                 findings.append(
                     f"{f.name}: states {m.group(1)!r} human {m.group(2)} but the "
@@ -604,7 +609,7 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
                     continue          # not the whole-protein claim
                 n_disorder_claims += 1
                 ctx = flat[max(0, m.start() - 110):m.end() + 40]
-                if "first draft" in ctx.lower() or "earlier draft" in ctx.lower():
+                if RETRACTION_CONTEXT.search(ctx):
                     continue
                 if a_ != n_dis:
                     findings.append(
@@ -614,6 +619,80 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
             problems.append("counted-claim check found no '<N> of 1210 residues' "
                             "claim, so its disorder clause could not fire")
 
+    # Clause 4: the verdict tally. Third instance of the count-vs-enumeration shape
+    # in this PR, and the reviewer's point was that clauses 1-3 were each scoped to
+    # the failure already known. So this one is generic: the tally is COMPUTED from
+    # the document, and any tally-shaped string is checked against it.
+    #
+    # Declared limitation, not silent: the PR body and the git commit messages are
+    # also surfaces that state this tally, and neither is lintable from inside the
+    # repository. The computed tally is printed on every run so that whatever is
+    # written there can be copied rather than counted by hand.
+    doc = yaml.load(REVIEW.read_text(), Loader=StrictLoader)
+    tally = Counter((a.get("review") or {}).get("action")
+                    for a in (doc.get("existing_annotations") or []))
+    if not tally:
+        problems.append("computed an empty action tally -- clause 4 is vacuous")
+    n_tally_claims = 0
+    n_tally_claims_enforced = 0   # not exempted by the retraction context
+    for f in surfaces:
+        if not f.exists():
+            continue
+        raw = f.read_text()
+        flat = re.sub(r"\s+", " ", raw)
+
+        # Markdown TABLE form, e.g. "| `MODIFY` | 7 |". This is how the notes state
+        # the authoritative tally, and the prose regex below cannot see it -- the
+        # number follows the action rather than preceding it. A break-test caught
+        # clause 4 matching only the exempted retraction sentence, i.e. reporting
+        # coverage it did not have.
+        for m in re.finditer(r"^\s*\|\s*`?([A-Z_]+)`?\s*\|\s*(\d+)\s*\|",
+                             raw, re.M):
+            action, stated = m.group(1), int(m.group(2))
+            if action not in tally:
+                continue
+            n_tally_claims += 1
+            n_tally_claims_enforced += 1
+            if stated != tally[action]:
+                findings.append(
+                    f"{f.name}: tally table states {stated} {action} but the "
+                    f"document contains {tally[action]}")
+
+        for action, count in tally.items():
+            if not action:
+                continue
+            for m in re.finditer(rf"(\d+)\s+{re.escape(action)}\b", flat):
+                n_tally_claims += 1
+                if int(m.group(1)) != count:
+                    ctx = flat[max(0, m.start() - 160):m.end() + 30]
+                    # Same exemption as clauses 1 and 3: documenting a retraction
+                    # necessarily restates the wrong number. Keyed on the retraction
+                    # context rather than on a literal phrase, and deliberately NOT
+                    # widened into a general "quotation" exemption, which is the
+                    # bypass anyone smuggling the claim back would use.
+                    if RETRACTION_CONTEXT.search(ctx):
+                        continue
+                    n_tally_claims_enforced += 1
+                    findings.append(
+                        f"{f.name}: states {m.group(1)} {action} but the document "
+                        f"contains {count}: ...{ctx.strip()}...")
+                else:
+                    n_tally_claims_enforced += 1
+        # And any stated total must equal the number of entries.
+        total = sum(tally.values())
+        for m in re.finditer(r"(\d+)\s+(?:annotation entries|existing_annotations)\b",
+                             flat):
+            n_tally_claims += 1
+            if int(m.group(1)) != total:
+                findings.append(
+                    f"{f.name}: states {m.group(1)} annotation entries but the "
+                    f"document contains {total}")
+
+    if n_tally_claims_enforced == 0:
+        problems.append(
+            "clause 4 matched no tally claim outside the retraction exemption, so it "
+            "reported coverage it does not have -- state the tally somewhere the "
+            "check can read it")
     if scanned == 0:
         problems.append("counted-claim check scanned zero files -- vacuous")
     if n_number_claims == 0:
@@ -629,6 +708,11 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
             "files_scanned": scanned,
             "number_claims_checked": n_number_claims,
             "enumerations_checked": n_enumerations,
+            "tally_claims_checked": n_tally_claims,
+            "tally_claims_enforced": n_tally_claims_enforced,
+            "COMPUTED_VERDICT_TALLY": dict(sorted(tally.items())),
+            "computed_total_entries": sum(tally.values()),
+            "unlintable_surfaces": ["the PR body", "git commit messages"],
             "findings": findings}
 
 
@@ -664,7 +748,32 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
                              "contributes_to_molecular_function", "in_complex")
     pairs_checked = 0
     hits = []
+    # The two molecular-function slots are single-valued individually but form a
+    # PAIR across slots, which the reviewer noted was structurally outside this
+    # check. Compare them too: asserting an activity and one of its own ancestors
+    # in the two MF slots of one core function would be the same redundancy.
+    MF_PAIR = ("molecular_function", "contributes_to_molecular_function")
     for i, cf in enumerate(doc.get("core_functions") or []):
+        mf_ids = []
+        for slot in MF_PAIR:
+            v = cf.get(slot)
+            if isinstance(v, dict) and isinstance(v.get("id"), str):
+                mf_ids.append((slot, v["id"]))
+        for (sa, a) in mf_ids:
+            for (sbs, b) in mf_ids:
+                if sa == sbs:
+                    continue
+                pairs_checked += 1
+                anc = cl.get(a)
+                if anc is None:
+                    problems.append(
+                        f"core_functions[{i}].{sa} asserts {a} but no closure was "
+                        f"fetched for it -- re-run the analysis script")
+                    continue
+                if b in anc:
+                    hits.append(
+                        f"core_functions[{i}] asserts {a} in {sa} together with its "
+                        f"own ancestor {b} in {sbs}")
         for slot in MULTI:
             v = cf.get(slot)
             if v is None:
@@ -1104,6 +1213,32 @@ def self_test() -> int:
         failures.append("the shared cache was modified by the self-test")
     else:
         print("  ok   the real cache/go/terms.csv is byte-identical afterwards")
+
+    def mut_wrong_tally() -> None:
+        t2 = NOTES.read_text()
+        needle = "| `MODIFY` | 7 |"
+        if needle not in t2:
+            raise Problem("anchor for the tally mutation is absent")
+        NOTES.write_text(t2.replace(needle, "| `MODIFY` | 6 |", 1))
+    run_case("verdict tally disagrees with the document", mut_wrong_tally,
+             "MODIFY but the document contains 7")
+
+    def mut_cross_slot_ancestor() -> None:
+        # molecular_function and contributes_to_molecular_function are each
+        # single-valued, so this pair exists only ACROSS slots -- the case the
+        # reviewer noted was structurally outside the check.
+        d = yaml.load(REVIEW.read_text(), Loader=StrictLoader)
+        cfs = d.get("core_functions") or []
+        if not cfs:
+            raise Problem("no core_functions to contaminate")
+        # GO:0060090 is the parent of GO:0030674, which core function 1 asserts.
+        cfs[0]["molecular_function"] = {
+            "id": "GO:0030674", "label": "protein-macromolecule adaptor activity"}
+        cfs[0]["contributes_to_molecular_function"] = {
+            "id": "GO:0060090", "label": "molecular adaptor activity"}
+        REVIEW.write_text(yaml.dump(d, sort_keys=False, allow_unicode=True))
+    run_case("a term and its ancestor split across the two MF slots",
+             mut_cross_slot_ancestor, "together with its own ancestor")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making
