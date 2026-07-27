@@ -111,6 +111,16 @@ Local alignment of human ADIRF against genuine orthologues (positive controls) a
 
 Identity is reported descriptively only. Orthologue identity range **43.4-100.0%**; oversized-member range **6.6-19.7%**; the ranges do not overlap (**True**), separated by 23.7 points. But identity is the weaker instrument: the largest gap anywhere in the pooled identity distribution is 35.5 points, between 50.0% and 85.5%, which falls **inside** the genuine orthologues (the bird/mammal split) rather than between orthologues and spurious matches. An identity cut placed at the largest observed gap would therefore have misclassified chicken and pigeon ADIRF. That is why no identity threshold is used or derived here.
 
+## D. HPA calls two main locations; GOA imported one
+
+HPA record for ADIRF (ENSG00000148671), IF reliability **Supported**, main subcellular locations **Nucleoplasm, Cytosol**.
+
+GOA rows attributed to the HPA immunofluorescence route (GO_REF:0000052): **GO:0005654**.
+
+Terms expected from HPA's main locations: GO:0005654, GO:0005829. Missing from ADIRF's GOA record entirely: **GO:0005829**.
+
+Positive control: GAPDH (P04406) is also called Plasma membrane, Cytosol by HPA and **does** carry GO:0005829 in GOA (term GO:0005829, resolved through the same mapping the subject uses: **True**) — so the missing ADIRF row is a real gap in the import, not a broken query or a wrong term id.
+
 ## E. Reach of PANTHER:PTN008674116, the node behind both IBA rows
 
 PANTHER:PTN008674116 carries **14** IBA annotations to **7** gene products: GO:0005634 (7 recipients), GO:0045600 (7 recipients).
@@ -143,15 +153,24 @@ So the organism has a real ADIRF gene, but UniProt's proteome for it contains no
 
 Muroid recipients: **none** — mouse and rat are absent from this node's reach because Muroidea have no ADIRF gene (section A), not because PAINT declined to annotate them.
 
-## D. HPA calls two main locations; GOA imported one
+## F. Teleost conservation, adjudicated by alignment rather than by symbol count
 
-HPA record for ADIRF (ENSG00000148671), IF reliability **Supported**, main subcellular locations **Nucleoplasm, Cytosol**.
+The 103 Actinopterygii figure in section A is an NCBI symbol/alias count -- orthology already asserted by an annotation pipeline -- so it cannot settle conservation, and the only teleost sequence section C aligns is a 938-aa UniProt family member that lands in the spurious bin. This section settles it on sequence.
 
-GOA rows attributed to the HPA immunofluorescence route (GO_REF:0000052): **GO:0005654**.
+UniProt's `IPR034450` family has **50** teleost members and **0** of them are ADIRF-sized. That is why no UniProt-based query could answer this: the family's teleost content is entirely oversized matches. The real teleost ADIRF proteins are annotated in RefSeq.
 
-Terms expected from HPA's main locations: GO:0005654, GO:0005829. Missing from ADIRF's GOA record entirely: **GO:0005829**.
+Aligned under the same criterion as sections C and E (at least 68 of the 76 query residues):
 
-Positive control: GAPDH (P04406) is also called Plasma membrane, Cytosol by HPA and **does** carry GO:0005829 in GOA (term GO:0005829, resolved through the same mapping the subject uses: **True**) — so the missing ADIRF row is a real gap in the import, not a broken query or a wrong term id.
+| entry | organism / role | length | aligned residues of 76 | % id | meets criterion |
+|---|---|---|---|---|---|
+| NP_001373520.1 | Danio rerio | 81 | 71 | 38.2 | **yes** |
+| XP_085644419.1 | Trachurus japonicus | 81 | 71 | 38.2 | **yes** |
+| A0A1D5PM71 | Gallus gallus ADIRF (positive control) | 76 | 76 | 50.0 | yes (expected yes) |
+| A0A8C1JCC4 | Cyprinus carpio, the only teleost the UniProt family offers (negative control) | 938 | 51 | 19.7 | no (expected no) |
+
+**Composition control.** 1 of 30 composition-matched shuffles of the *Danio* sequence (identical amino-acid content, order destroyed, deterministic seeds) pass the coverage criterion, and their identity range is 7.9-27.6% against the real proteins' 38.2%. So the criterion is not satisfied by amino-acid composition alone -- the obvious risk for an Ala/Gln-rich 76-aa protein -- though the non-zero shuffle pass rate is why the identity margin is reported alongside coverage rather than coverage being taken as sufficient on its own.
+
+**Result: teleost orthology supported by alignment = True.** Note that coverage and identity disagree in direction here: both fish proteins align over 71 of 76 residues, comfortably past the criterion, yet at 38.2% identity they sit *below* the orthologue identity floor established by the birds in section C (43.4%). Coverage is the criterion this analysis committed to before the fish were examined, and greater divergence is expected across a longer branch, but the disagreement is recorded rather than resolved by picking the instrument that gives the wanted answer.
 
 ## What these results do and do not support
 

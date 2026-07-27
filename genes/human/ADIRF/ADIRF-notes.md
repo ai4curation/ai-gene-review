@@ -79,12 +79,47 @@ The mechanism was published, and it converges on exactly the same clade:
   (and loss of ADIRF expression) occurred in the evolutionary predecessor to mouse, rat, and
   hamster."]
 
-**Where I disagree with that paper, and why I report only the part I measured.** It also
-states ADIRF "is absent in several other vertebrate species (rat, zebrafish, lamprey)".
-My own NCBI Gene census finds **103 ADIRF genes in Actinopterygii**, including
-`si:ch211-59p23.1` in *Danio rerio*, so the zebrafish half of that claim is contradicted by
-current annotation (the paper is 2020 and Ensembl-based). I therefore cite only the
-mouse/rat/hamster part, which my own measurement confirms, and record the disagreement here.
+**Where I disagree with that paper — and the first version of this argument was bad.** It
+also states ADIRF "is absent in several other vertebrate species (rat, zebrafish, lamprey)".
+I initially declined the zebrafish half on the strength of my NCBI Gene census (103
+Actinopterygii hits for `ADIRF[sym]`). **That was the wrong instrument**: a symbol/alias count
+is orthology already asserted by an annotation pipeline, not measured — precisely the
+name-based inference the rest of this analysis refuses — and the *only* teleost sequence the
+family gave me to align, carp `A0A8C1JCC4` (938 aa), lands in the spurious bin at 51/76 and
+19.7%. The reviewer caught this and was right.
+
+Settled properly, on sequence (section F of `RESULTS.md`):
+
+| entry | organism / role | length | aligned of 76 | % id | passes |
+|---|---|---|---|---|---|
+| NP_001373520.1 | *Danio rerio* | 81 | 71 | 38.2 | **yes** |
+| XP_085644419.1 | *Trachurus japonicus* | 81 | 71 | 38.2 | **yes** |
+| A0A1D5PM71 | *Gallus gallus* — positive control | 76 | 76 | 50.0 | yes (expected) |
+| A0A8C1JCC4 | carp, the only teleost UniProt's family offers — negative control | 938 | 51 | 19.7 | no (expected) |
+
+Plus a **composition control**: 1 of 30 composition-matched shuffles of the *Danio* sequence
+(identical residue content, order destroyed, deterministic seeds) passes the coverage
+criterion, and the shuffles reach only 7.9–27.6% identity against the real 38.2%. So the
+criterion is not satisfied by composition alone — the obvious risk for an Ala/Gln-rich 76-aa
+protein — though the non-zero shuffle rate is why the identity margin is reported alongside
+coverage rather than coverage being treated as sufficient by itself.
+
+**Coverage and identity disagree here, and I report that rather than choosing.** Both fish
+proteins clear the coverage criterion comfortably, yet their 38.2% identity sits *below* the
+43.4% orthologue floor the birds establish. Coverage is the criterion this analysis committed
+to before the fish were examined, and more divergence is expected over a longer branch.
+
+**Why no UniProt query could have answered this.** `IPR034450` has **50 teleost members and
+zero ADIRF-sized ones** — the family's entire fish content is oversized spurious matches,
+while the real teleost ADIRF proteins live in RefSeq and are absent from the family. So the
+signature is simultaneously over-inclusive of unrelated repeat proteins and under-inclusive of
+genuine orthologues; the second half is now in the InterPro question too.
+
+**What I still do not claim.** I examined sequence, not synteny. The paper's argument is a
+genomic deletion at the syntenic locus, and I have not tested that. So: an ADIRF-like protein
+*is* annotated in zebrafish and is inconsistent with a flat absence claim, but the
+deletion argument itself is not adjudicated here. Only the mouse/rat/hamster part is relied
+on, and that my own measurement independently confirms.
 
 ### What this does and does not do to the annotations
 
@@ -358,10 +393,15 @@ At 76 aa / 7855 Da, ADIRF is far below the nuclear-pore passive-diffusion limit,
 no annotated NLS. Nuclear *presence* is therefore the default expectation for this protein
 and carries little information. The primary paper says "localized primarily within the
 nucleus", which implies enrichment rather than mere presence — and enrichment of a freely
-diffusible protein requires a retention mechanism, which nobody has identified. I did not
-use this to argue against any row (the observation stands, and HPA's antibody has the mouse
-negative control above); it is filed as a knowledge gap, and it is the reason I flag PAN-GO's
-`is_active_in` as worth a second look in `suggested_questions`.
+diffusible protein requires a retention mechanism, which nobody has identified.
+
+**The argument is symmetric, so it is used on neither row.** Being below the diffusion limit
+predicts *both* compartments, so it discounts nuclear and cytosolic localisation equally and
+cannot be evidence for either. It therefore appears only in the knowledge gap asking whether
+nuclear enrichment is active, and in the question about PAN-GO's `is_active_in` qualifier.
+The `GO:0005829` proposal rests on the HPA immunofluorescence call alone, which is sufficient
+for it; the nuclear rows rest on their own IDA plus the HPA call with its mouse antibody
+control.
 
 ## What the affinage record gave, and what it missed
 

@@ -605,9 +605,12 @@ NEW_ROWS = [
                 "GOA, with the term id resolved through the same location-to-term mapping "
                 "used for ADIRF. GO:0005829 is not a descendant of GO:0005634, so this adds "
                 "genuinely new information rather than restating the nuclear rows. It is "
-                "also the expected distribution on physical grounds: at 7855 Da ADIRF is far "
-                "below the nuclear-pore passive-diffusion limit and has no annotated NLS, so "
-                "equilibration between nucleoplasm and cytosol is what one would predict. "
+                "This row rests on the HPA immunofluorescence call alone, which is sufficient "
+                "for it. It deliberately does NOT lean on the sub-diffusion-limit argument: at "
+                "7855 Da ADIRF is below the nuclear-pore passive-diffusion limit, but that "
+                "predicts BOTH compartments and so discounts both equally - it cannot be "
+                "evidence for one of them. That argument therefore appears only in the "
+                "knowledge gap asking whether nuclear enrichment is active. "
                 "Proposed as located_in only - no claim is made that any ADIRF function is "
                 "executed in the cytosol, and cytosol is deliberately absent from "
                 "core_functions locations for that reason."
@@ -839,11 +842,23 @@ REFERENCES = [
                  "Title verified; full text available and read. This is the single most "
                  "consequential reference for interpreting ADIRF's annotations and it is "
                  "absent from GOA, from UniProt's reference list and from the affinage "
-                 "record. One claim in it is NOT relied on: it also states ADIRF is absent "
-                 "from zebrafish and lamprey, whereas the ortholog census in this review's "
-                 "bioinformatics folder finds 103 ADIRF genes in Actinopterygii including "
-                 "si:ch211-59p23.1 in Danio rerio. Only the mouse/rat/hamster claim is used, "
-                 "and that is independently confirmed. No retraction or erratum."),
+                 "record. One claim in it is NOT relied on, and is adjudicated on sequence "
+                 "rather than on a symbol count: it also states ADIRF is absent from "
+                 "zebrafish and lamprey. An earlier version of this review declined that on "
+                 "the strength of an NCBI symbol/alias count, which is orthology asserted by "
+                 "an annotation pipeline rather than measured, and is exactly the name-based "
+                 "inference the rest of this analysis refuses. Aligning the actual RefSeq "
+                 "proteins instead: NP_001373520.1 (Danio rerio) and XP_085644419.1 "
+                 "(Trachurus japonicus) are both 81 aa and align over 71 of the 76 human "
+                 "residues at 38.2% identity, passing the same coverage criterion used "
+                 "throughout - with a chicken positive control, the 938-aa Cyprinus carpio "
+                 "family member as a negative control that fails as expected, and only 1 of "
+                 "30 composition-matched shuffles passing. So an ADIRF-like protein is "
+                 "annotated in zebrafish and the paper's zebrafish claim is inconsistent with "
+                 "current RefSeq annotation - though this review examined sequence, not "
+                 "synteny, so it does not adjudicate the genomic-deletion argument the paper "
+                 "actually makes. The mouse/rat/hamster claim, which is what this review does "
+                 "rely on, is independently confirmed. No retraction or erratum."),
          )),
     dict(id="PMID:33737617",
          title=("Adipose most abundant 2 protein is a predictive marker for cisplatin "
@@ -1051,6 +1066,11 @@ CORE_FUNCTIONS = [
             "can do rather than a demonstrated requirement."
         ),
         directly_involved_in=[T("GO:0045600", "positive regulation of fat cell differentiation")],
+        # Both nucleus and nucleoplasm are listed even though the second entails
+        # the first: three separate GOA rows assert the parent explicitly (IDA,
+        # IBA and IEA) while HPA's immunofluorescence supports the child, so each
+        # is independently attested. Cytosol is deliberately absent -- see the
+        # GO:0005829 row, which is proposed as located_in only.
         locations=[T("GO:0005634", "nucleus"), T("GO:0005654", "nucleoplasm")],
         supported_by=[
             ST("PMID:23239344",
@@ -1183,7 +1203,13 @@ QUESTIONS = [
         "and the oversized members are tandem-repeat proteins with 11/22/33-residue periods. "
         "Note this is a signature-specific problem, not a general indictment of InterPro2GO: "
         "the mapping consists of exactly two terms and both are correct for the gene the entry "
-        "was built from."),
+        "was built from. There is a reciprocal half worth fixing at the same time: the "
+        "family has 50 teleost members in UniProtKB and not one of them is ADIRF-sized, so its "
+        "entire fish content is oversized spurious matches, while the genuine teleost ADIRF "
+        "proteins - for example NP_001373520.1 in Danio rerio, 81 aa, aligning over 71 of the "
+        "76 human residues - are annotated in RefSeq and absent from the family. The signature "
+        "is thus simultaneously over-inclusive of unrelated repeat proteins and under-inclusive "
+        "of real orthologues."),
         experts=["InterPro curators", "GO Central"]),
     dict(question=(
         "Should UniProtKB:A0A5F8H3S4 be removed from PANTHER subfamily PTHR39227:SF1, and is "
@@ -1450,17 +1476,20 @@ def build() -> dict:
             "CEBPA during the early phase of differentiation and accelerates adipogenic "
             "conversion, placing it upstream of the core adipogenic transcriptional program, "
             "though the mechanism by which it does so - and whether it acts at transcription "
-            "directly - is unresolved. The protein is distributed between the nucleoplasm and "
-            "the cytosol, consistent with its being far smaller than the nuclear-pore "
-            "diffusion limit, and it is also recovered from extracellular fluids: it is "
+            "directly - is unresolved. Immunofluorescence places the protein in both the "
+            "nucleoplasm and the cytosol, a distribution consistent with its being far "
+            "smaller than the nuclear-pore diffusion limit, and it is also recovered from "
+            "extracellular fluids: it is "
             "present in human serum at microgram-per-millilitre concentrations and in "
             "urinary and prostatic exosome preparations, despite lacking any signal peptide "
             "or transmembrane segment. Expression is highest in arterial tissue and in "
             "adipose tissue, with additional expression in heart, cornea, liver, kidney and "
             "spleen, and the protein is detected in vascular and non-vascular smooth muscle. "
             "Elevated ADIRF is associated with obesity and, in tumour cells, with resistance "
-            "to cisplatin. The gene is present across vertebrates from fish and birds to "
-            "mammals but was lost in the ancestor of mice, rats and hamsters through a "
+            "to cisplatin. The gene is present across vertebrates: orthologues in teleost "
+            "fish, birds and mammals all align across essentially the whole 76-residue "
+            "protein. It was nonetheless lost in the ancestor of mice, rats and hamsters "
+            "through a "
             "43-kilobase deletion that removed its promoter and first exon, and it has no "
             "paralogue, so rodent models of the standard kind cannot report on its function."
         ),

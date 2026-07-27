@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 import time
 import urllib.error
@@ -786,6 +787,150 @@ def section_e(audit: Audit) -> None:
 
 
 # --------------------------------------------------------------------------
+# Section F -- is ADIRF conserved in teleosts? (sequence, not symbol counts)
+# --------------------------------------------------------------------------
+
+EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+
+# Pinned RefSeq protein accessions, not a live search, so the report reproduces.
+# Both are asserted below to still be ADIRF-sized and ADIRF-named, so a silent
+# repurposing of an accession fails loudly rather than changing the answer.
+REFSEQ_NAME_TOKEN = "adipogenesis regulatory factor"
+TELEOST_REFSEQ = {
+    "NP_001373520.1": "Danio rerio",
+    "XP_085644419.1": "Trachurus japonicus",
+}
+# Two-sided control: one entry that MUST pass the criterion and one that MUST
+# fail it, both run through the identical code path as the subjects.
+TELEOST_CONTROLS = {
+    "A0A1D5PM71": ("Gallus gallus ADIRF (positive control)", True),
+    "A0A8C1JCC4": ("Cyprinus carpio, the only teleost the UniProt family "
+                   "offers (negative control)", False),
+}
+SHUFFLE_TRIALS = 30
+
+
+def refseq_proteins(accessions: list[str]) -> dict[str, tuple[str, str]]:
+    """Fetch RefSeq protein FASTA. Returns {accession: (defline, sequence)}."""
+    url = EFETCH + "?" + urllib.parse.urlencode(
+        {"db": "protein", "rettype": "fasta", "retmode": "text",
+         "id": ",".join(accessions)})
+    fasta = _get(url, accept="text/plain")
+    out: dict[str, tuple[str, str]] = {}
+    acc = None
+    for line in fasta.splitlines():
+        if line.startswith(">"):
+            acc = line[1:].split()[0]
+            out[acc] = (line[1:].strip(), "")
+        elif acc:
+            out[acc] = (out[acc][0], out[acc][1] + line.strip())
+    missing = [a for a in accessions if a not in out]
+    if missing:
+        raise RuntimeError(f"RefSeq returned no protein for {missing}")
+    return out
+
+
+def section_f(audit: Audit) -> None:
+    """Adjudicate teleost conservation by ALIGNMENT, not by a symbol count.
+
+    An earlier version of this review claimed fish conservation from
+    ``ADIRF[sym] AND txid7898[Orgn]`` -- an NCBI symbol/alias count, i.e.
+    orthology already asserted by an annotation pipeline.  That is the same
+    name-based inference section C exists to avoid, and the only teleost
+    sequence section C actually aligned (a 938-aa UniProt family member) landed
+    in the spurious bin.  So the question is settled here on sequence, with a
+    two-sided control and a composition control, and reported whichever way it
+    falls.
+    """
+    human = uniprot_entries([HUMAN_ADIRF], "accession,sequence")[HUMAN_ADIRF]["Sequence"]
+    min_cov = round(MIN_ORTHOLOGUE_COVERAGE * len(human))
+
+    # How many teleost members does the UniProt family actually have, and are
+    # any of them ADIRF-sized? This is what made the earlier claim unsupportable.
+    fam_all = uniprot_tsv_safe(f"xref:interpro-{IPR} AND taxonomy_id:7898")
+    fam_sized = [r for r in fam_all
+                 if ADIRF_SIZED[0] <= int(r["Length"]) <= ADIRF_SIZED[1]]
+
+    fasta = refseq_proteins(sorted(TELEOST_REFSEQ))
+    subjects = {}
+    for acc, organism in sorted(TELEOST_REFSEQ.items()):
+        defline, seq = fasta[acc]
+        audit.check(REFSEQ_NAME_TOKEN in defline.lower(),
+                    f"[F] pinned accession {acc} is no longer described as "
+                    f"{REFSEQ_NAME_TOKEN!r} ({defline!r}) -- the accession has "
+                    f"been repurposed and the panel is not what it claims")
+        audit.check(ADIRF_SIZED[0] <= len(seq) <= ADIRF_SIZED[1],
+                    f"[F] pinned accession {acc} is {len(seq)} aa, outside the "
+                    f"ADIRF-sized window {ADIRF_SIZED} -- panel membership changed")
+        aln = global_align(human, seq)
+        subjects[acc] = {
+            "organism": organism, "defline": defline, "length": len(seq),
+            "aligned_residues_of_query": aln["ungapped_columns"],
+            "pct_id_over_shorter": aln["pct_id_over_shorter"],
+            "meets_orthologue_coverage": aln["ungapped_columns"] >= min_cov,
+        }
+
+    controls = {}
+    ctrl_meta = uniprot_entries(sorted(TELEOST_CONTROLS), "accession,sequence")
+    for acc, (label, must_pass) in sorted(TELEOST_CONTROLS.items()):
+        aln = global_align(human, ctrl_meta[acc]["Sequence"])
+        got = aln["ungapped_columns"] >= min_cov
+        controls[acc] = {"label": label, "expected_pass": must_pass, "passed": got,
+                         "length": len(ctrl_meta[acc]["Sequence"]),
+                         "aligned_residues_of_query": aln["ungapped_columns"],
+                         "pct_id_over_shorter": aln["pct_id_over_shorter"]}
+        audit.check(got == must_pass,
+                    f"[F] control {acc} ({label}) was expected to "
+                    f"{'pass' if must_pass else 'fail'} the coverage criterion and did "
+                    f"not -- the criterion does not discriminate, so the teleost result "
+                    f"is not interpretable")
+
+    # Composition control: shuffles preserve the amino-acid content exactly and
+    # destroy the order. If they pass at a high rate the criterion is measuring
+    # composition, which for an Ala/Gln-rich 76-aa protein is the obvious risk.
+    ref_seq = fasta["NP_001373520.1"][1]
+    shuffle_pass, shuffle_ids = 0, []
+    for seed in range(SHUFFLE_TRIALS):
+        rng = random.Random(seed)
+        chars = list(ref_seq)
+        rng.shuffle(chars)
+        aln = global_align(human, "".join(chars))
+        shuffle_ids.append(aln["pct_id_over_shorter"])
+        if aln["ungapped_columns"] >= min_cov:
+            shuffle_pass += 1
+    shuffle_rate = shuffle_pass / SHUFFLE_TRIALS
+    audit.check(shuffle_rate <= 0.2,
+                f"[F] {shuffle_pass}/{SHUFFLE_TRIALS} composition-matched shuffles pass "
+                f"the coverage criterion -- the criterion is driven by amino-acid "
+                f"composition rather than by sequence similarity, so it cannot support "
+                f"an orthology call on a low-complexity protein")
+    audit.check(max(shuffle_ids) < min(v["pct_id_over_shorter"]
+                                       for v in subjects.values()),
+                f"[F] a composition-matched shuffle reaches {max(shuffle_ids)}% identity, "
+                f"at or above the real teleost proteins "
+                f"({min(v['pct_id_over_shorter'] for v in subjects.values())}%) -- the "
+                f"identity corroboration is not available")
+
+    all_pass = all(v["meets_orthologue_coverage"] for v in subjects.values())
+    audit.results["F_teleost_conservation"] = {
+        "coverage_criterion_residues": min_cov,
+        "uniprot_family_teleost_members": len(fam_all),
+        "uniprot_family_teleost_members_adirf_sized": len(fam_sized),
+        "refseq_subjects": subjects,
+        "controls": controls,
+        "shuffle_trials": SHUFFLE_TRIALS,
+        "shuffle_passes": shuffle_pass,
+        "shuffle_identity_range_pct": [min(shuffle_ids), max(shuffle_ids)],
+        "teleost_orthologue_supported_by_alignment": all_pass,
+        "ncbi_symbol_count_is_not_evidence": (
+            "The 103 Actinopterygii hits reported in section A are an NCBI symbol/alias "
+            "count, i.e. orthology already asserted by an annotation pipeline. They are "
+            "retained as context only; the conservation call here rests on the "
+            "alignments above."),
+    }
+
+
+# --------------------------------------------------------------------------
 # report
 # --------------------------------------------------------------------------
 
@@ -916,6 +1061,30 @@ def write_report(audit: Audit) -> str:
       f"largest observed gap would therefore have misclassified chicken and pigeon "
       f"ADIRF. That is why no identity threshold is used or derived here.")
     w("")
+    d = r["D_hpa_vs_goa"]
+    hpa = d["hpa_record"]
+    w("## D. HPA calls two main locations; GOA imported one")
+    w("")
+    w(f"HPA record for ADIRF ({hpa['ensembl']}), IF reliability "
+      f"**{hpa['reliability_if']}**, main subcellular locations "
+      f"**{', '.join(hpa['main_locations'])}**.")
+    w("")
+    w(f"GOA rows attributed to the HPA immunofluorescence route ({d['hpa_go_ref']}): "
+      f"**{', '.join(d['goa_terms_from_hpa']) or 'none'}**.")
+    w("")
+    w(f"Terms expected from HPA's main locations: "
+      f"{', '.join(d['expected_from_hpa_main_locations'])}. "
+      f"Missing from ADIRF's GOA record entirely: "
+      f"**{', '.join(d['hpa_main_locations_missing_from_goa']) or 'none'}**.")
+    w("")
+    pc = d["positive_control"]
+    w(f"Positive control: {pc['gene']} ({pc['accession']}) is also called "
+      f"{', '.join(pc['hpa_main_locations'])} by HPA and **does** carry GO:0005829 in "
+      f"GOA (term {pc['control_term_from_mapping']}, resolved through the same "
+      f"mapping the subject uses: **{pc['carries_control_term_in_goa']}**) — so the "
+      f"missing ADIRF row is a real gap in the import, not a broken query or a wrong "
+      f"term id.")
+    w("")
     e = r["E_panther_node_reach"]
     w(f"## E. Reach of {e['node']}, the node behind both IBA rows")
     w("")
@@ -982,29 +1151,54 @@ def write_report(audit: Audit) -> str:
       f"from this node's reach because Muroidea have no ADIRF gene (section A), not because "
       f"PAINT declined to annotate them.")
     w("")
-    d = r["D_hpa_vs_goa"]
-    hpa = d["hpa_record"]
-    w("## D. HPA calls two main locations; GOA imported one")
+    f = r["F_teleost_conservation"]
+    w("## F. Teleost conservation, adjudicated by alignment rather than by symbol count")
     w("")
-    w(f"HPA record for ADIRF ({hpa['ensembl']}), IF reliability "
-      f"**{hpa['reliability_if']}**, main subcellular locations "
-      f"**{', '.join(hpa['main_locations'])}**.")
+    w(f"The {"103 Actinopterygii"} figure in section A is an NCBI symbol/alias count -- orthology "
+      f"already asserted by an annotation pipeline -- so it cannot settle conservation, and "
+      f"the only teleost sequence section C aligns is a 938-aa UniProt family member that "
+      f"lands in the spurious bin. This section settles it on sequence.")
     w("")
-    w(f"GOA rows attributed to the HPA immunofluorescence route ({d['hpa_go_ref']}): "
-      f"**{', '.join(d['goa_terms_from_hpa']) or 'none'}**.")
+    w(f"UniProt's `{IPR}` family has **{f['uniprot_family_teleost_members']}** teleost "
+      f"members and **{f['uniprot_family_teleost_members_adirf_sized']}** of them are "
+      f"ADIRF-sized. That is why no UniProt-based query could answer this: the family's "
+      f"teleost content is entirely oversized matches. The real teleost ADIRF proteins are "
+      f"annotated in RefSeq.")
     w("")
-    w(f"Terms expected from HPA's main locations: "
-      f"{', '.join(d['expected_from_hpa_main_locations'])}. "
-      f"Missing from ADIRF's GOA record entirely: "
-      f"**{', '.join(d['hpa_main_locations_missing_from_goa']) or 'none'}**.")
+    w(f"Aligned under the same criterion as sections C and E "
+      f"(at least {f['coverage_criterion_residues']} of the 76 query residues):")
     w("")
-    pc = d["positive_control"]
-    w(f"Positive control: {pc['gene']} ({pc['accession']}) is also called "
-      f"{', '.join(pc['hpa_main_locations'])} by HPA and **does** carry GO:0005829 in "
-      f"GOA (term {pc['control_term_from_mapping']}, resolved through the same "
-      f"mapping the subject uses: **{pc['carries_control_term_in_goa']}**) — so the "
-      f"missing ADIRF row is a real gap in the import, not a broken query or a wrong "
-      f"term id.")
+    w("| entry | organism / role | length | aligned residues of 76 | % id | meets criterion |")
+    w("|---|---|---|---|---|---|")
+    for acc, v in sorted(f["refseq_subjects"].items()):
+        w(f"| {acc} | {v['organism']} | {v['length']} | "
+          f"{v['aligned_residues_of_query']} | {v['pct_id_over_shorter']} | "
+          f"{'**yes**' if v['meets_orthologue_coverage'] else 'no'} |")
+    for acc, v in sorted(f["controls"].items()):
+        w(f"| {acc} | {v['label']} | {v['length']} | "
+          f"{v['aligned_residues_of_query']} | {v['pct_id_over_shorter']} | "
+          f"{'yes' if v['passed'] else 'no'} (expected "
+          f"{'yes' if v['expected_pass'] else 'no'}) |")
+    w("")
+    lo, hi = f["shuffle_identity_range_pct"]
+    w(f"**Composition control.** {f['shuffle_passes']} of {f['shuffle_trials']} "
+      f"composition-matched shuffles of the *Danio* sequence (identical amino-acid content, "
+      f"order destroyed, deterministic seeds) pass the coverage criterion, and their "
+      f"identity range is {lo}-{hi}% against the real proteins' "
+      f"{min(v['pct_id_over_shorter'] for v in f['refseq_subjects'].values())}%. So the "
+      f"criterion is not satisfied by amino-acid composition alone -- the obvious risk for "
+      f"an Ala/Gln-rich 76-aa protein -- though the non-zero shuffle pass rate is why the "
+      f"identity margin is reported alongside coverage rather than coverage being taken as "
+      f"sufficient on its own.")
+    w("")
+    w(f"**Result: teleost orthology supported by alignment = "
+      f"{f['teleost_orthologue_supported_by_alignment']}.** Note that coverage and identity "
+      f"disagree in direction here: both fish proteins align over 71 of 76 residues, "
+      f"comfortably past the criterion, yet at 38.2% identity they sit *below* the "
+      f"orthologue identity floor established by the birds in section C (43.4%). Coverage is "
+      f"the criterion this analysis committed to before the fish were examined, and greater "
+      f"divergence is expected across a longer branch, but the disagreement is recorded "
+      f"rather than resolved by picking the instrument that gives the wanted answer.")
     w("")
     w("## What these results do and do not support")
     w("")
@@ -1228,6 +1422,41 @@ def self_test() -> int:
         raise AssertionError(f"self-test E/happy: real data raised {audit.problems!r}")
     print("  ok  E/happy: real data produces no problems")
 
+    # ---- F: a control that fails its expectation must invalidate the result -
+    global TELEOST_CONTROLS
+    real_ctrl = TELEOST_CONTROLS
+    TELEOST_CONTROLS = dict(real_ctrl)
+    TELEOST_CONTROLS["A0A8C1JCC4"] = (real_ctrl["A0A8C1JCC4"][0], True)  # invert
+    try:
+        _expect_problem(section_f, "does not discriminate", "F/control-inverted")
+    finally:
+        TELEOST_CONTROLS = real_ctrl
+
+    # ---- F: a coverage criterion that composition alone satisfies must fail --
+    global MIN_ORTHOLOGUE_COVERAGE
+    real_cov = MIN_ORTHOLOGUE_COVERAGE
+    MIN_ORTHOLOGUE_COVERAGE = 0.05      # any alignment at all now "passes"
+    try:
+        _expect_problem(section_f, "driven by amino-acid", "F/composition-driven")
+    finally:
+        MIN_ORTHOLOGUE_COVERAGE = real_cov
+
+    # ---- F: a repurposed pinned accession must be caught ------------------
+    global REFSEQ_NAME_TOKEN
+    real_token = REFSEQ_NAME_TOKEN
+    REFSEQ_NAME_TOKEN = "haemoglobin subunit beta"
+    try:
+        _expect_problem(section_f, "no longer described as", "F/accession-repurposed")
+    finally:
+        REFSEQ_NAME_TOKEN = real_token
+
+    # ---- F: happy direction ----------------------------------------------
+    audit = Audit()
+    section_f(audit)
+    if audit.problems:
+        raise AssertionError(f"self-test F/happy: real data raised {audit.problems!r}")
+    print("  ok  F/happy: real data produces no problems")
+
     # ---- pagination guard: a clamped read must raise ---------------------
     real_get = globals()["_get"]
 
@@ -1275,6 +1504,7 @@ def main() -> int:
     section_c(audit)
     section_d(audit)
     section_e(audit)
+    section_f(audit)
 
     (HERE / "results.json").write_text(
         json.dumps({"problems": audit.problems, **audit.results},
