@@ -243,6 +243,50 @@ def go_names(go_ids: list[str]) -> dict[str, str]:
     return out
 
 
+# The HP1-interaction motif.  P-x-V-x-[LMIV]: three fixed positions and one
+# four-way position, so chance matches are NOT rare in a 1100-residue protein --
+# the expected count is computed below from the subject's own composition and
+# reported alongside the hits, because "exactly one match" reads as enrichment
+# evidence when it is roughly what chance predicts.
+PXVXL = re.compile(r"(?=(P.V.[LMIV]))")
+
+
+def pxvxl_scan(accession: str = "Q9H2P0", expected_length: int = 1102) -> dict:
+    payload = _get_json(
+        f"https://rest.uniprot.org/uniprotkb/{accession}.json?fields=sequence,id"
+    )
+    seq = payload["sequence"]["value"]
+    if len(seq) != expected_length:
+        raise RuntimeError(
+            f"{accession} is {len(seq)} aa, expected {expected_length} -- the reference "
+            "sequence has changed and every position in this analysis must be re-checked"
+        )
+    hits = [
+        {"start": m.start() + 1, "end": m.start() + 5, "match": m.group(1)}
+        for m in PXVXL.finditer(seq)
+    ]
+    n = len(seq)
+    freq = {aa: seq.count(aa) / n for aa in set(seq)}
+    p_last = sum(freq.get(aa, 0.0) for aa in "LMIV")
+    p_window = freq.get("P", 0.0) * freq.get("V", 0.0) * p_last
+    expected = (n - 4) * p_window
+    return {
+        "accession": accession,
+        "entry_name": payload["uniProtkbId"],
+        "length": n,
+        "pattern": "P.V.[LMIV]",
+        "hits": hits,
+        "expected_matches_under_composition_null": round(expected, 3),
+        "interpretation": (
+            "The observed count is not enrichment evidence: it is close to the "
+            "number chance predicts from the protein's own residue composition. "
+            "The support for this motif being the HP1 contact is its conservation "
+            "between ADNP and ADNP2 (PMID:38960717) plus binding to all three HP1 "
+            "paralogues, not its rarity. No point mutant has been tested."
+        ),
+    }
+
+
 def withfrom_ids(row: dict) -> list[str]:
     return [
         f"{x['db']}:{x['id']}"
@@ -398,6 +442,7 @@ def build() -> dict:
 
     return {
         "subject": HUMAN,
+        "pxvxl_scan": pxvxl_scan(),
         "human_annotation_rows": len(human),
         "compara_rows": len(compara),
         "donors": sorted({e["donor"] for e in entries}),
@@ -477,6 +522,24 @@ def render(data: dict) -> str:
         f"changed the marker set: {', '.join(rescoped) if rescoped else 'none'}. "
         "The scoping matters: on PMID:19047645 the unscoped match fired on an "
         "siRNA directed against *Fyn kinase*, not ADNP."
+    )
+    add("")
+    scan = data["pxvxl_scan"]
+    add("## HP1-interaction motif scan")
+    add("")
+    add(
+        f"`{scan['pattern']}` over {scan['entry_name']} ({scan['accession']}, "
+        f"{scan['length']} aa):"
+    )
+    add("")
+    add("| position | match |")
+    add("|---|---|")
+    for hit in scan["hits"]:
+        add(f"| {hit['start']}-{hit['end']} | `{hit['match']}` |")
+    add("")
+    add(
+        f"**Expected matches under a null from the protein's own residue composition: "
+        f"{scan['expected_matches_under_composition_null']}.** {scan['interpretation']}"
     )
     add("")
     add("## Reference-projection test")
@@ -632,10 +695,18 @@ def self_test() -> int:
     if classify(false_friend)["peptide_markers"]:
         failures.append("bare-NAP pattern fired on SNAP-25 (word-boundary bug)")
 
+    # The motif regex must be overlap-aware and must not match a 4-residue window.
+    if [m.group(1) for m in PXVXL.finditer("PGVLLPAVAV")] != ["PGVLL", "PAVAV"]:
+        failures.append("PXVXL regex missed an overlapping/second occurrence")
+    if [m.group(1) for m in PXVXL.finditer("PGVLA")]:
+        failures.append("PXVXL regex matched a window with a non-[LMIV] final residue")
+    if [m.group(1) for m in PXVXL.finditer("PVXL")]:
+        failures.append("PXVXL regex matched a 4-residue window")
+
     for failure in failures:
         print(f"SELF-TEST FAIL: {failure}", file=sys.stderr)
     if not failures:
-        print("self-test: 7/7 classifier directions OK")
+        print("self-test: 10/10 directions OK (7 classifier + 3 motif-regex)")
     return 1 if failures else 0
 
 

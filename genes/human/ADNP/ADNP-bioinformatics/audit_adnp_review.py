@@ -30,6 +30,13 @@ G. **The peptide claim matches the computed data.**  The set of GO ids this
    review treats as NAP-peptide-derived must equal
    ``results.json["nap_derived_go_ids"]``, which is computed from QuickGO and
    PubMed.  Selects on GO id, so rewording cannot drift it.
+I. **The verdict tally in ``ADNP-notes.md`` equals the computed one.**  Added
+   because the first PR body's hand-counted tally was wrong on three of six
+   actions.
+J. **A withdrawn cross-row claim stays withdrawn**, guarded on stable tokens
+   (a PMID, an RGD id, gene symbols) rather than on the conclusion's wording.
+   Cannot catch a paraphrase that avoids all of them -- prose still needs human
+   re-reading; this closes the cheap half.
 H. **core_functions terms are backed by a row.**  Reported in both directions,
    but only the forward direction fails: a core function must trace to an
    ACCEPT/NEW row or to a MODIFY row's replacement term.  The reverse direction
@@ -274,11 +281,63 @@ def audit(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> list[str]
             f"H: core_functions terms with no ACCEPT/NEW row and no MODIFY target: {sorted(unbacked)}"
         )
 
+    # ---- J: a withdrawn cross-row claim must not come back ----------------
+    # An earlier draft argued that GO:0042277 was "inverted" and that RGD's own
+    # records made the inversion explicit, citing Tubb3/Tubb4b rows carrying
+    # WITH/FROM RGD:71030.  Those rows come from PMID:16893427, the donor for
+    # GO:0048487 -- not for GO:0042277, whose only donor is PMID:14706557 and
+    # which annotates exactly one entity.  The REMOVE stands on entity identity
+    # alone; the tubulin cross-check belongs on the GO:0048487 row, where it is.
+    #
+    # The guard selects on STABLE tokens (a PMID, an RGD id, two gene symbols) --
+    # those survive rewording, unlike the conclusion's phrasing.  Stated
+    # limitation: it cannot catch a paraphrase that avoids all of them, e.g.
+    # "the companion affinity-chromatography study shows the reverse".  A prose
+    # surface still needs human re-reading when a claim is withdrawn; this
+    # closes the cheap half, not the whole hole.
+    problems.extend(check_withdrawn_cross_row_claim(annotations))
+
     # ---- I: the verdict tally in the notes must match the computed one -----
     # This exists because the hand-written tally in the first version of the PR
     # body was wrong on three of six actions.  A count stated in prose is a
     # hand-derived number; derive it instead.
     problems.extend(check_verdict_table(annotations))
+    return problems
+
+
+# (GO id of the row, tokens that must not appear in its prose or its quotes)
+WITHDRAWN_CROSS_ROW: dict[str, tuple[str, ...]] = {
+    "GO:0042277": ("16893427", "RGD:71030", "Tubb3", "Tubb4b", "invert"),
+}
+
+
+def check_withdrawn_cross_row_claim(annotations: list[dict]) -> list[str]:
+    problems: list[str] = []
+    for go_id, tokens in WITHDRAWN_CROSS_ROW.items():
+        rows = [a for a in annotations if a["term"]["id"] == go_id]
+        if not rows:
+            # Assert presence: a guard defeatable by deleting the thing it
+            # guards is worse than no guard.
+            problems.append(
+                f"J: no {go_id} row found -- the withdrawn-claim guard was not exercised"
+            )
+            continue
+        for row in rows:
+            review = row.get("review") or {}
+            blob = " ".join(
+                [review.get("summary") or "", review.get("reason") or ""]
+                + [
+                    (sb.get("reference_id") or "") + " " + (sb.get("supporting_text") or "")
+                    for sb in review.get("supported_by") or []
+                ]
+            ).lower()
+            hit = [t for t in tokens if t.lower() in blob]
+            if hit:
+                problems.append(
+                    f"J: withdrawn cross-row claim tokens back in the {go_id} row: {hit}. "
+                    f"{go_id}'s only donor is PMID:14706557; the tubulin evidence belongs "
+                    f"on GO:0048487."
+                )
     return problems
 
 
@@ -471,6 +530,27 @@ def self_test(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> int:
 
     expect("G-leak", misflag_protein_row, "G:")
 
+    def reintroduce_withdrawn(d, g, s):
+        for ann in d["existing_annotations"]:
+            if ann["term"]["id"] == "GO:0042277":
+                ann["review"]["reason"] += (
+                    " RGD's own annotations from the companion tubulin paper make the "
+                    "inversion explicit: PMID:16893427 gives peptide binding to Tubb3."
+                )
+                return True
+        return False
+
+    expect("J-withdrawn", reintroduce_withdrawn, "J:")
+
+    def delete_guarded_row(d, g, s):
+        before = len(d["existing_annotations"])
+        d["existing_annotations"] = [
+            a for a in d["existing_annotations"] if a["term"]["id"] != "GO:0042277"
+        ]
+        return len(d["existing_annotations"]) < before
+
+    expect("J-deleted-row", delete_guarded_row, "J:")
+
     def break_tally(d, g, s):
         # The defect that actually shipped: a hand-written tally disagreeing
         # with the file.  Simulate it by changing an action so the counts move.
@@ -501,7 +581,7 @@ def self_test(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> int:
     for failure in failures:
         print(f"SELF-TEST FAIL: {failure}", file=sys.stderr)
     if not failures:
-        print("self-test: 12/12 directions OK (baseline + 10 mutations + SafeLoader baseline)")
+        print("self-test: 14/14 directions OK (baseline + 12 mutations + SafeLoader baseline)")
     return 1 if failures else 0
 
 

@@ -62,7 +62,7 @@ The worst cases, in ascending order of how obviously wrong they are:
 
 | human GO row | rat donor reference | what was actually assayed |
 |---|---|---|
-| `GO:0005507` copper ion binding, `GO:0042277` peptide binding | PMID:14706557 | NAP peptide vs beta-amyloid aggregation |
+| `GO:0005507` copper ion binding, `GO:0042277` peptide binding | PMID:14706557 | NAP peptide vs beta-amyloid aggregation; the only binding reported is biotin-NAP binding Abeta |
 | `GO:0046068` cGMP metabolic, `GO:0080164` reg. NO metabolic | PMID:11438390 | VIP / SNV / NAP dosed onto cortical cultures |
 | `GO:0033484` intracellular NO homeostasis, `GO:0043524` neg. reg. neuron apoptosis | PMID:16938277 | i.p. ADNF-9 + NAP peptides in neonatal rats |
 | `GO:0007614` short-term memory | PMID:12212775 | inhaled NAP in normal rats, water maze |
@@ -88,14 +88,29 @@ nitric oxide (NO) by 60%."]. The authors themselves decouple the doses
 [PMID:11438390 "However, the concentrations of NAP, SNV and VIP affecting NO production did not
 match the neuro-protective doses."].
 
-**`GO:0042277` peptide binding is inverted, and RGD's own records prove it.** The binding
-measured is the peptide binding something else
-[PMID:14706557 "Further assays showed biotin-NAP binding to Abeta."]. And in the companion
-tubulin paper RGD annotated `GO:0042277` onto rat **Tubb3** (Q4QRB4) and **Tubb4b** (Q6P9T8)
-with `WITH/FROM RGD:71030`, which is *Adnp* — i.e. the same curation records the tubulins as
-the peptide-binders and Adnp as the source of the peptide, while Adnp separately carries
-`GO:0042277` itself. This is the "a PTM is not a binding activity" shape in a new guise: a
-*fragment* is being read as a binding activity.
+**`GO:0042277` peptide binding — the argument I first gave was wrong; the verdict is not.**
+The binding measured is [PMID:14706557 "Further assays showed biotin-NAP binding to Abeta."],
+so the entity that binds is the synthetic eight-residue NAP peptide. REMOVE rests on **entity
+identity alone**: no experiment shows that sequence is released from ADNP, so nothing measured
+here is a molecular function of the gene product. `PMID:14706557` annotates exactly one entity
+in all of GOA, so no cross-reference is involved.
+
+**Retracted from an earlier draft** (kept here because process history belongs in the notes,
+not in a row summary). I originally argued the annotation was *directionally inverted* and that
+RGD's own records made the inversion "explicit and checkable", citing the `GO:0042277` rows on
+rat Tubb3 (Q4QRB4) and Tubb4b (Q6P9T8) that carry `WITH/FROM RGD:71030`. Both halves were
+wrong. Abeta **is** a peptide, so for the fragment the direction is correct, not inverted. And
+those tubulin rows come from **PMID:16893427**, the donor for `GO:0048487` beta-tubulin
+binding, **not** for `GO:0042277` — `RESULTS.md` puts the two references on different rows.
+There is no internal contradiction in RGD's records of the kind I described, and the claim
+would have misled exactly the RGD/GO curators `suggested_questions[0]` is addressed to. The
+tubulin cross-check is real and is deployed where it belongs, on the `GO:0048487` row.
+**Generalisable lesson: check `original_reference_id` per row before reasoning across rows.**
+Guarded by `audit_adnp_review.py` check **J**, which selects on the stable tokens
+(`16893427`, `RGD:71030`, `Tubb3`, `Tubb4b`, `invert`) rather than on the conclusion's wording,
+fires on the exact version that shipped (`12f374d14`), and is clean on the current file. Its
+stated limitation: a paraphrase avoiding all five tokens would pass, so the prose still needs
+human re-reading.
 
 **Two of the peptides are not even ADNP fragments.** ADNF-9 is the active site of a different
 protein [PMID:15800376 "The active site for ADNF function is localized to a 9-amino-acid stretch
@@ -217,10 +232,15 @@ MODIFY targets:
   docking on the chromo shadow domain [PMID:20562864 "Proteins generally interact with HP1
   through a PxVxL (where x is any amino-acid residue) motif"], and ADNP's is conserved
   [PMID:38960717 "the C-terminal HP1 interaction motif (PxVxL) (Thiru et al. 2004; Mosch et al.
-  2011) is well conserved"]. A regex scan of Q9H2P0 finds **exactly one** `P.V.[LMIV]` match in
-  1102 residues — **PGVLL at 820–824**, immediately C-terminal to the homeobox. Caveat recorded
-  as a knowledge gap: no ADNP PxVxL point mutant has been shown to lose HP1 binding, so this is
-  motif + paralogue-wide binding, not a mapped surface.
+  2011) is well conserved"]. The scan is committed (`analyze_compara_donors.py`, `pxvxl_scan`,
+  which also asserts Q9H2P0 is still 1102 aa before trusting any position): the single
+  `P.V.[LMIV]` match is **PGVLL at 820–824**, immediately C-terminal to the homeobox — **but the
+  same function reports 0.76 matches expected by chance** under the protein's own residue
+  composition, so one match is what chance predicts and **its uniqueness is not evidence**. An
+  earlier draft leaned on "exactly one match in 1102 residues" as though it were enrichment; it
+  is not. The weight rests on the ADNP↔ADNP2 conservation and on all three HP1 paralogues
+  binding. Caveat recorded as a knowledge gap: no ADNP PxVxL point mutant has been shown to lose
+  HP1 binding, so this is motif + paralogue-wide binding, not a mapped surface.
 - CHD4 row → `GO:0140463 chromatin-protein adaptor activity`, whose definition ("brings together
   a protein and a region of the chromatin … to establish or maintain the chromatin localization
   of the protein, or the complex to which it belongs") is exactly what the experiments assign to
@@ -250,6 +270,13 @@ the benign shape, not the ACTR8 shape. ACCEPT.
 
 The papers it did surface that mattered: PMID:32533114 (Wnt), PMID:25178163 (EB1/EB3 SxIP),
 PMID:38479840 (SINE B2 / CTCF in blastocysts), PMID:41174994 (methyltransferase claim).
+
+**Where the affinage record is cited.** In `references` only, with a `reference_review` marking
+it `MISCITED` and recording both defects. It is deliberately **not** in any `supported_by`:
+`supported_by` should carry evidence *for* an annotation, and quoting a statement this review
+rejects would misuse the slot. The cost is that the repo's non-blocking
+"no annotations reference available deep research files" warning now stands — correctly, since
+no annotation here rests on the provider record.
 
 ## 10. Unresolved and recorded, not adjudicated
 
