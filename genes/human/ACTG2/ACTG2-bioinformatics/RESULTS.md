@@ -331,3 +331,57 @@ total is not a whole result, so incomplete enumerations are reported as unavaila
 | PMID:24743229 | 7 | 4 | GO:0005524: 3, GO:0016887: 4 |
 | PMID:38820162 | 0 | 0 | *unavailable* |
 
+## 6a. Is the chicken-ACTA2 ISS block also on human ACTA2?
+
+The donor of ACTG2's ISS block is **P08023** = ACTA_CHICK, gene **ACTA2**, Gallus gallus, 377 aa (Swiss-Prot) - "Actin, aortic smooth muscle".
+The chicken orthologue that was available and not used is **P63270** = ACTH_CHICK, gene **ACTG2**, 376 aa (Swiss-Prot).
+
+- ACTG2 ISS rows from that donor (**6**): GO:0005737, GO:0010628, GO:0030027, GO:0030175, GO:0044297, GO:0090131
+- human ACTA2 ISS rows from the same donor (**5**): GO:0010628, GO:0030027, GO:0030175, GO:0044297, GO:0090131
+- shared (**5**): GO:0010628, GO:0030027, GO:0030175, GO:0044297, GO:0090131
+- on ACTG2 only (**1**): GO:0005737
+
+So the transfers are not unique to ACTG2: the donor's true human orthologue already
+carries them, and the ACTG2 copies are the same inference aimed at the other smooth
+muscle actin.
+
+## 7. Canonical source labels for the review YAML
+
+`check_source_labels.py` asserts the review's `source_label` strings against these, so a
+retyped residue count cannot drift (six of them did on the first round of this review).
+
+| accession | canonical label |
+|---|---|
+| A0A1D8PFR4 | ACT1 (Candida albicans (strain SC5314 / ATCC MYA-2876), A0A1D8PFR4, TrEMBL (unreviewed), 376 aa) |
+| F1P476 | ACTA2 (Gallus gallus, F1P476, TrEMBL (unreviewed), 377 aa) |
+| O45815 | act-5 (Caenorhabditis elegans, O45815, TrEMBL (unreviewed), 375 aa) |
+| P07829 | act3 (Dictyostelium discoideum, P07829, Swiss-Prot, 376 aa) |
+| P07830 | act1 (Dictyostelium discoideum, P07830, Swiss-Prot, 376 aa) |
+| P08023 | ACTA2 (Gallus gallus, P08023, Swiss-Prot, 377 aa) |
+| P0DM42 | act-3 (Caenorhabditis elegans, P0DM42, Swiss-Prot, 376 aa) |
+| P10984 | act-2 (Caenorhabditis elegans, P10984, Swiss-Prot, 376 aa) |
+| P10986 | act-4 (Caenorhabditis elegans, P10986, Swiss-Prot, 376 aa) |
+| P10989 | act1 (Schizosaccharomyces pombe (strain 972 / ATCC 24843), P10989, Swiss-Prot, 375 aa) |
+| P38696 | ARP1 (Saccharomyces cerevisiae (strain ATCC 204508 / S288c), P38696, Swiss-Prot, 384 aa) |
+| P45891 | Arp53D (Drosophila melanogaster, P45891, Swiss-Prot, 376 aa) |
+| P60010 | ACT1 (Saccharomyces cerevisiae (strain ATCC 204508 / S288c), P60010, Swiss-Prot, 375 aa) |
+| P60709 | ACTB (Homo sapiens, P60709, Swiss-Prot, 375 aa) |
+| P60711 | Actb (Rattus norvegicus, P60711, Swiss-Prot, 375 aa) |
+| P61158 | ACTR3 (Homo sapiens, P61158, Swiss-Prot, 418 aa) |
+| P61160 | ACTR2 (Homo sapiens, P61160, Swiss-Prot, 394 aa) |
+| P62737 | Acta2 (Mus musculus, P62737, Swiss-Prot, 377 aa) |
+| P62738 | Acta2 (Rattus norvegicus, P62738, Swiss-Prot, 377 aa) |
+| P63259 | Actg1 (Rattus norvegicus, P63259, Swiss-Prot, 375 aa) |
+| P63260 | Actg1 (Mus musculus, P63260, Swiss-Prot, 375 aa) |
+| P63261 | ACTG1 (Homo sapiens, P63261, Swiss-Prot, 375 aa) |
+| P63269 | Actg2 (Rattus norvegicus, P63269, Swiss-Prot, 376 aa) |
+| P63270 | ACTG2 (Gallus gallus, P63270, Swiss-Prot, 376 aa) |
+| P68032 | ACTC1 (Homo sapiens, P68032, Swiss-Prot, 377 aa) |
+| P68133 | ACTA1 (Homo sapiens, P68133, Swiss-Prot, 377 aa) |
+| P68137 | ACTA1 (Sus scrofa, P68137, Swiss-Prot, 377 aa) |
+| Q04549 | ARP10 (Saccharomyces cerevisiae (strain ATCC 204508 / S288c), Q04549, Swiss-Prot, 284 aa) |
+| Q54GX7 | act10 (Dictyostelium discoideum, Q54GX7, Swiss-Prot, 376 aa) |
+| Q553U6 | act22 (Dictyostelium discoideum, Q553U6, Swiss-Prot, 376 aa) |
+| Q6QAQ1 | ACTB (Sus scrofa, Q6QAQ1, Swiss-Prot, 375 aa) |
+| Q8I4X0 | ACT1 (Plasmodium falciparum (isolate 3D7), Q8I4X0, Swiss-Prot, 376 aa) |
+

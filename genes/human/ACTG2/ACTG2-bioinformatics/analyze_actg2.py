@@ -48,6 +48,18 @@ Analysis 5 -- PAINT node audit inside PTHR11937.
   decides whether a term ACTG2 lacks is a curatorial judgement about ACTG2 or an accident of
   which node the term was attached to.
 
+Analysis 6a -- is the AgBase ISS block also on human ACTA2?
+  Six ACTG2 rows are transferred from a chicken entry that resolves to ACTA2. If the same
+  transfers already sit on human ACTA2 - the donor's true orthologue - then the ACTG2 copies
+  are duplicates aimed at the wrong paralog. That is a load-bearing claim in six annotation
+  reviews, so it is computed from QuickGO here rather than stated, and the chicken ACTG2
+  orthologue that was available and unused is resolved and printed alongside.
+
+Analysis 7 -- canonical source labels.
+  The review YAML names every WITH/FROM donor in prose. Hand-typed labels drift (six residue
+  counts did, on the first round of this review), so the canonical label string for each
+  accession is emitted here and checked against the YAML by check_source_labels.py.
+
 Analysis 6 -- reference-projection check.
   For every literature reference behind an ACTG2 row (directly or through a donor), QuickGO
   is queried by reference and the number of *distinct gene products* is counted, with all
@@ -738,6 +750,74 @@ def reference_projection(reference: str) -> dict:
     }
 
 
+# ------------------------------------- 6a. is the ISS block also on the true orthologue?
+
+ACTA2_HUMAN = "P62736"
+CHICK_ACTA2 = "P08023"
+CHICK_ACTG2 = "P63270"
+
+
+def iss_block_on_paralog(goa: list[dict]) -> dict:
+    """Which of ACTG2's P08023-derived rows does human ACTA2 also carry from P08023?"""
+    actg2_rows = {
+        r["term"]: r
+        for r in goa
+        if f"UniProtKB:{CHICK_ACTA2}" in r["withfrom_tokens"] and r["evidence"] == "ISS"
+    }
+    d = get_json(
+        "https://www.ebi.ac.uk/QuickGO/services/annotation/search",
+        {"geneProductId": f"UniProtKB:{ACTA2_HUMAN}", "limit": 200},
+    )
+    if d["pageInfo"]["total"] > 1:
+        raise RuntimeError("human ACTA2 annotation set is paginated; widen the query")
+    acta2 = {}
+    for r in d["results"]:
+        tokens = [
+            f"{c['db']}:{c['id']}"
+            for w in (r.get("withFrom") or [])
+            for c in w.get("connectedXrefs", [])
+        ]
+        if f"UniProtKB:{CHICK_ACTA2}" in tokens and r["goEvidence"] == "ISS":
+            acta2[r["goId"]] = r["goEvidence"]
+    shared = sorted(set(actg2_rows) & set(acta2))
+    return {
+        "chicken_donor": entry_summary(uniprot_entry(CHICK_ACTA2)),
+        "chicken_actg2_orthologue_unused": entry_summary(uniprot_entry(CHICK_ACTG2)),
+        "actg2_iss_rows_from_donor": sorted(actg2_rows),
+        "acta2_iss_rows_from_donor": sorted(acta2),
+        "shared_rows": shared,
+        "n_actg2": len(actg2_rows),
+        "n_acta2": len(acta2),
+        "n_shared": len(shared),
+        "actg2_only": sorted(set(actg2_rows) - set(acta2)),
+    }
+
+
+# --------------------------------------------------- 7. canonical source labels
+
+
+def canonical_labels(wf: dict) -> dict:
+    """One canonical label string per resolved donor accession, for the review YAML.
+
+    The review's source_label strings are prose and were previously retyped, which let six
+    residue counts drift away from the values this script computes. Emitting the canonical
+    string here makes the YAML checkable by check_source_labels.py.
+    """
+    out: dict[str, str] = {}
+    for row in wf["rows"]:
+        for s in row["sources"]:
+            chosen = s.get("chosen") or (s["candidates"][0] if s["candidates"] else None)
+            if chosen is None:
+                continue
+            reviewed = "Swiss-Prot" if chosen["reviewed"] == "Swiss-Prot" else "TrEMBL (unreviewed)"
+            organism = chosen["organism"]
+            out[chosen["accession"]] = (
+                f"{chosen['gene']} ({organism}, {chosen['accession']}, {reviewed}, "
+                f"{chosen['length']} aa)"
+            )
+    return out
+
+
 # ------------------------------------------------------------------------ main
 
 
@@ -801,6 +881,21 @@ def main() -> None:
     ]
     projections = {r: reference_projection(r) for r in refs}
 
+    print("6a. is the chicken-ACTA2 ISS block also on human ACTA2? ...")
+    paralog_block = iss_block_on_paralog(goa)
+
+    print("7. canonical source labels ...")
+    labels_out = canonical_labels(wf)
+    # The chicken ACTG2 orthologue is named in the review although it is not a WITH/FROM
+    # donor - it is the entry that was available and not used - so it must be checkable too.
+    for entry in (paralog_block["chicken_donor"], paralog_block["chicken_actg2_orthologue_unused"]):
+        reviewed = "Swiss-Prot" if entry["reviewed"] == "Swiss-Prot" else "TrEMBL (unreviewed)"
+        labels_out.setdefault(
+            entry["accession"],
+            f"{entry['gene']} ({entry['organism']}, {entry['accession']}, {reviewed}, "
+            f"{entry['length']} aa)",
+        )
+
     results = {
         "gene": {"symbol": "ACTG2", "accession": ACTG2},
         "length_audit": audit,
@@ -813,6 +908,8 @@ def main() -> None:
         "paint_node_audit": paint,
         "actg2_holds_terms": holds,
         "reference_projection": projections,
+        "iss_block_on_paralog": paralog_block,
+        "canonical_source_labels": labels_out,
     }
     (HERE / "results.json").write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
     (HERE / "RESULTS.md").write_text(render(results))
@@ -1028,6 +1125,41 @@ def render(r: dict) -> str:
         spread = v["entities_per_term"]
         spread_s = ", ".join(f"{k}: {n}" for k, n in sorted((spread or {}).items())) if spread else "*unavailable*"
         a(f"| {ref} | {v['annotations_total']} | {ents if ents is not None else '*unavailable (paginated)*'} | {spread_s} |")
+    a("")
+
+    # 6a
+    pb = r["iss_block_on_paralog"]
+    a("## 6a. Is the chicken-ACTA2 ISS block also on human ACTA2?")
+    a("")
+    d0, d1 = pb["chicken_donor"], pb["chicken_actg2_orthologue_unused"]
+    a(f"The donor of ACTG2's ISS block is **{d0['accession']}** = {d0['entry_name']}, "
+      f"gene **{d0['gene']}**, {d0['organism']}, {d0['length']} aa ({d0['reviewed']}) - "
+      f"\"{d0['protein_name']}\".")
+    a(f"The chicken orthologue that was available and not used is **{d1['accession']}** = "
+      f"{d1['entry_name']}, gene **{d1['gene']}**, {d1['length']} aa ({d1['reviewed']}).")
+    a("")
+    a(f"- ACTG2 ISS rows from that donor (**{pb['n_actg2']}**): "
+      + ", ".join(pb["actg2_iss_rows_from_donor"]))
+    a(f"- human ACTA2 ISS rows from the same donor (**{pb['n_acta2']}**): "
+      + ", ".join(pb["acta2_iss_rows_from_donor"]))
+    a(f"- shared (**{pb['n_shared']}**): " + ", ".join(pb["shared_rows"]))
+    a(f"- on ACTG2 only (**{len(pb['actg2_only'])}**): " + (", ".join(pb["actg2_only"]) or "none"))
+    a("")
+    a("So the transfers are not unique to ACTG2: the donor's true human orthologue already")
+    a("carries them, and the ACTG2 copies are the same inference aimed at the other smooth")
+    a("muscle actin.")
+    a("")
+
+    # 7
+    a("## 7. Canonical source labels for the review YAML")
+    a("")
+    a("`check_source_labels.py` asserts the review's `source_label` strings against these, so a")
+    a("retyped residue count cannot drift (six of them did on the first round of this review).")
+    a("")
+    a("| accession | canonical label |")
+    a("|---|---|")
+    for acc, lab in sorted(r["canonical_source_labels"].items()):
+        a(f"| {acc} | {lab} |")
     a("")
     return "\n".join(L) + "\n"
 

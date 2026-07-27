@@ -325,7 +325,63 @@ analogy with `GO:0030486`, and the exact axiomatisation is left to GO editors.
 | 10 | MODIFY (to `GO:0030485`) | 1 |
 | 6, 7, 8, 17, 18, 19 | MARK_AS_OVER_ANNOTATED | 6 |
 | 1, 12, 13, 14, 15, 16 | REMOVE | 6 |
-| — | NEW | 4 |
+| — | NEW | 5 |
 
-27 existing rows = 27 GOA lines (`wc -l` on the TSV is 28 including the header), plus 4 rows
-authored here with `action: NEW`, giving 31 entries in `existing_annotations`.
+27 existing rows = 27 GOA lines (`wc -l` on the TSV is 28 including the header), plus 5 rows
+authored here with `action: NEW`, giving 32 entries in `existing_annotations`.
+
+The five NEW rows are `GO:0005884` actin filament (IDA), `GO:0043531` ADP binding (IDA),
+`GO:0005524` ATP binding (ISS), `GO:0017022` myosin binding (IDA) and `GO:0006939` smooth
+muscle contraction (IMP). Four of the five come from `PMID:38820162`; `GO:0006939` rests on the
+human genetic series plus the two knock-in mouse lines.
+
+`core_functions` carries three entries — `GO:0005200` (structural constituent of cytoskeleton),
+`GO:0016887` (ATP hydrolysis) and `GO:0017022` (myosin binding) — each with
+`directly_involved_in: GO:0006939`, so the machine-readable block states the gene's defining
+process and not only its structural role.
+
+## 14. Round-2 corrections (PR review)
+
+Four things changed after review, three of them because a number disagreed with another number.
+
+1. **Six residue counts in `source_label` strings were wrong** — Candida ACT1, *C. elegans*
+   act-5 and all four *Dictyostelium* actins. The script asserts that WITH/FROM *tokens* cannot
+   drift from GOA; it said nothing about the prose labels wrapped round them, which were typed.
+   Fixed programmatically from `results.json`, and closed permanently with
+   `ACTG2-bioinformatics/check_source_labels.py`, which checks every `(accession, N aa)` and
+   `(accession, Swiss-Prot|TrEMBL)` pair anywhere in the review against the computed record,
+   rejects invented `source_id`s, and asserts **presence** so it cannot be defeated by deleting
+   the thing it guards. Four self-tests.
+   - Writing that guard immediately exposed a bug in the guard: its first regex excluded `)`
+     from the window between accession and residue count, so labels of the form
+     `A0A1D8PFR4, TrEMBL (unreviewed), 376 aa` were invisible and **two of the six drifted
+     lengths went unreported**. That is the same detector-versus-mutator scope mismatch the
+     guard exists to catch, found by running it rather than by reading it.
+   - The first self-test also asserted the wrong expectation: relabelling one `source_id` does
+     not exercise the presence check, because the accession survives elsewhere in the row's
+     prose. The guard was behaving correctly and the test was wrong. Split into two mutations.
+2. **"human ACTA2 already carries five of the same rows" was the one load-bearing number not
+   re-derivable from the committed artefacts.** Now computed in `RESULTS.md` §6a and cited on
+   all six affected rows: ACTG2 has 6 ISS rows from `P08023`, human ACTA2 has 5 from the same
+   donor, all 5 shared, `GO:0005737` on ACTG2 only. The unused chicken orthologue `P63270` is
+   resolved in the same section.
+3. **`core_functions` omitted the review's own headline biology.** `GO:0006939` and
+   `GO:0017022` were proposed as NEW but appeared nowhere in the structured block, so a
+   consumer reading only `core_functions` would have learned that ACTG2 is a structural
+   cytoskeletal ATPase and not that it is the thin filament of visceral smooth muscle
+   contraction. Added `directly_involved_in` to all three core functions and a third core
+   function for the myosin track.
+4. **`GO:0005524` ATP binding added as a fifth NEW row.** The record asserted ATP *hydrolysis*
+   with no ATP *binding*, which cannot be right. Entered as ISS rather than IDA, one code
+   weaker than the ADP row, because no structure resolves ATP-bound ACTG2 — the distinction
+   between the observed and the inferred ligand is kept visible.
+
+**One reviewer suggestion was checked and declined.** The suggestion was IPI rather than IDA for
+`GO:0017022`, "given the named SMM-S1/MYL6 partner". The paper does not name the partner. Its
+methods say the construct came from a baculovirus "provided by L. Sweeney", coexpressed in Sf9
+cells with the essential light chain MYL6; no heavy-chain gene or species is given, and MYH11
+occurs in the paper exactly twice, both in the introduction, as a visceral-myopathy disease gene
+rather than as the identity of this construct. MYL6 is named but is a light chain, not the
+actin-binding moiety, so citing it as the interactor would misdescribe the assay. IDA is kept,
+with the reasoning written into the row and a note that a curator who can establish the heavy
+chain from the cited methods reference should convert it to IPI.
