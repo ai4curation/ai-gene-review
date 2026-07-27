@@ -15,3 +15,16 @@
   would be preferable.
 - Upstream preQ0 production is outside scope; Tgt receives preQ1 from QueF and
   supplies preQ1-tRNA to QueA.
+
+## OpenScientist reconciliation
+
+Source: `file:PSEPK/tgt/tgt-deep-research-openscientist.md`.
+
+- The report independently identifies Q88PL7 as bacterial Tgt and supports
+  preQ1 insertion at guanine 34 rather than the eukaryotic free-queuine
+  reaction.
+- Its sequence, AlphaFold, operon, and pathway-completeness analyses are
+  computational corroboration, not organism-specific experimental evidence.
+- The report explicitly found no biochemical, structural, kinetic, or genetic
+  study of Q88PL7 itself. The curated review therefore retains the existing
+  orthology-based confidence level and records this as a knowledge gap.

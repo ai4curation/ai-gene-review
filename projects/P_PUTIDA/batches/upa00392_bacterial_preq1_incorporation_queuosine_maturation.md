@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 4
 - Selected module genes: 4
 - Selected gene reviews curated: 4
-- Selected OpenScientist reports: in progress
+- Selected OpenScientist reports: 1 of 4 complete
 
 ## Curated Boundary
 
@@ -45,12 +45,15 @@ autolink_gene_symbols: false
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
 
+2026-07-26: Gene-level OpenScientist completed for `tgt`; the earlier `queF`
+run timed out after 7200s without producing a report.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
 | [x] | `queA` | PP_0832 | Q88PL8 | unipathway:UPA00392 | PRESENT | CURATED | MISSING | S-adenosylmethionine:tRNA ribosyltransferase-isomerase (EC 2.4.99.17) (Queuosine biosynthesis protein QueA) |
-| [x] | `tgt` | PP_0833 | Q88PL7 | unipathway:UPA00392 | PRESENT | CURATED | MISSING | Queuine tRNA-ribosyltransferase (EC 2.4.2.29) (Guanine insertion enzyme) (tRNA-guanine transglycosylase) |
+| [x] | `tgt` | PP_0833 | Q88PL7 | unipathway:UPA00392 | PRESENT | CURATED | PRESENT | Queuine tRNA-ribosyltransferase (EC 2.4.2.29) (Guanine insertion enzyme) (tRNA-guanine transglycosylase) |
 | [x] | `queF` | PP_2160 | Q88KX9 | kegg:ppu00790 | PRESENT | CURATED | MISSING | NADPH-dependent 7-cyano-7-deazaguanine reductase (EC 1.7.1.13) (7-cyano-7-carbaguanine reductase) (NADPH-dependent nitri |
 | [x] | `queG` | PP_4900 | Q88DC7 | unipathway:UPA00392 | PRESENT | CURATED | MISSING | Epoxyqueuosine reductase (EC 1.17.99.6) (Queuosine biosynthesis protein QueG) |
 
