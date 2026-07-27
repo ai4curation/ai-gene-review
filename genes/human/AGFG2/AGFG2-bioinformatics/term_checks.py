@@ -96,15 +96,26 @@ def main() -> None:
     # Children of GO:0044794, to check whether a more specific host/viral term exists.
     out["extra"]["GO_0044794_children"] = out["terms"]["GO:0044794"]["children"]
 
-    # How many human gene products carry GO:0046784, and by what evidence?
-    rows = quickgo_annotations(goId="GO:0046784", goUsage="descendants",
-                              goUsageRelationships="is_a,part_of",
-                              taxonId="9606", limit=100)
-    out["extra"]["GO_0046784_human"] = {
-        "n_annotations": len(rows),
-        "n_entities": len({r["geneProductId"] for r in rows}),
-        "evidence": sorted({r["goEvidence"] for r in rows}),
-    }
+    # Human usage of every candidate term the review either chose or declined, so the
+    # "actively used" / "zero annotations" claims are evidence in the repository rather
+    # than assertions made in a conversation.  GO:0045055 is the non-zero control that
+    # makes the GO:0046784 zero interpretable.
+    for go in ("GO:0046784", "GO:0044794", "GO:1903077", "GO:0045055", "GO:0031623"):
+        rows = quickgo_annotations(goId=go, goUsage="descendants",
+                                   goUsageRelationships="is_a,part_of",
+                                   taxonId="9606", limit=100)
+        out["extra"][f"human_usage_{go.replace(':', '_')}"] = {
+            "goId": go,
+            "n_annotations": len(rows),
+            "n_entities": len({r["geneProductId"] for r in rows}),
+            "evidence": sorted({r["goEvidence"] for r in rows}),
+        }
+    ctrl = out["extra"]["human_usage_GO_0045055"]["n_annotations"]
+    if ctrl == 0:
+        raise AssertionError(
+            "positive control GO:0045055 returned 0 human annotations — the query "
+            "pattern is broken, so the GO:0046784 zero is uninterpretable"
+        )
 
     (HERE / "term_checks.json").write_text(json.dumps(out, indent=2, sort_keys=True))
 
@@ -123,7 +134,11 @@ def main() -> None:
     print(f"\nchildren of GO:0044794:")
     for c in out["extra"]["GO_0044794_children"] or []:
         print(f"   {c}")
-    print(f"\nGO:0046784 in human: {out['extra']['GO_0046784_human']}")
+    print("\nhuman usage of the candidate terms:")
+    for k, v in out["extra"].items():
+        if k.startswith("human_usage_"):
+            print(f"  {v['goId']}: {v['n_annotations']} annotations over "
+                  f"{v['n_entities']} entities; evidence={v['evidence']}")
     print("\ndefinitions of the terms the argument turns on:")
     for i in ("GO:0005096", "GO:0016020", "GO:0045055", "GO:0044794", "GO:0031410",
               "GO:0045109", "GO:0046784"):

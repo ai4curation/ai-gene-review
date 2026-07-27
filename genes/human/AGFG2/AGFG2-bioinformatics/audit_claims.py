@@ -423,6 +423,35 @@ def check_h_numbers(text: str, problems: list[str]) -> None:
         if f"{v}%" not in body:
             problems.append(f"H: computed identity {v}% for {acc} not stated in the YAML")
 
+    # Term-usage counts and the IntAct partner count: both are claims the review makes in
+    # prose that used to rest only on an ad-hoc query. Bound to committed JSON here so
+    # they are evidence in the repository rather than in a transcript.
+    terms = json.loads((HERE / "term_checks.json").read_text())["extra"]
+    intact = json.loads((HERE / "intact.json").read_text())
+    usage_bindings = [
+        (terms["human_usage_GO_0044794"]["n_annotations"], " human annotations",
+         "GO:0044794 human annotation count"),
+        (terms["human_usage_GO_0044794"]["n_entities"], " entities",
+         "GO:0044794 human entity count"),
+        (intact["n_human_partners_with_coip_or_pulldown"], " protein interaction partners",
+         "IntAct human co-IP/pulldown partner count"),
+    ]
+    for value, suffix, what in usage_bindings:
+        if not _states_number(body, value, suffix):
+            problems.append(f"H: {what} {value}{suffix} not stated in the YAML")
+    # The GO:0046784 zero is only readable against a non-zero control from the same call
+    # pattern; assert the control rather than trusting it.
+    if terms["human_usage_GO_0046784"]["n_annotations"] != 0:
+        problems.append(
+            "H: the YAML says GO:0046784 carries zero human annotations, but "
+            f"term_checks.json records {terms['human_usage_GO_0046784']['n_annotations']}"
+        )
+    if terms["human_usage_GO_0045055"]["n_annotations"] == 0:
+        problems.append(
+            "H: the GO:0046784 zero has no non-zero control — GO:0045055 also returned 0, "
+            "so the query pattern cannot be trusted"
+        )
+
 
 #: Set by the self-test to feed check I a mutated report. Check I reads RESULTS.md
 #: through this indirection so the break-test can operate on the same representation
@@ -469,7 +498,21 @@ def check_i_results_md(text: str, problems: list[str]) -> None:
          "ArfGAP-activity positive-control count (table cell)"),
         (dist["census"]["Actinopterygii (bony fish)"]["AGFG2"]["total"], " ray-finned fish",
          "agfg2 bony-fish symbol census"),
+        (dist["census"]["Sauropsida (reptiles+birds)"]["AGFG2"]["total"],
+         " reptiles and birds", "agfg2 sauropsid symbol census"),
+        (dist["census"]["Actinopterygii (bony fish)"]["AGFG1_control"]["total"], ", 473",
+         "agfg1 control counts, in order"),
     ]
+    intact = json.loads((HERE / "intact.json").read_text())
+    md_intact = [
+        (intact["total_records"], " records", "IntAct total record count"),
+        (intact["n_protein_protein_records"], " are protein–protein",
+         "IntAct protein-protein record count"),
+        (intact["n_distinct_partners"], " distinct partners", "IntAct distinct partner count"),
+        (intact["n_human_partners_with_coip_or_pulldown"], " human partners",
+         "IntAct human co-IP/pulldown partner count"),
+    ]
+    bindings += md_intact
     for value, suffix, what in bindings:
         if not _states_number(body, value, suffix):
             problems.append(f"I: RESULTS.md does not state {what} as {value}{suffix}")

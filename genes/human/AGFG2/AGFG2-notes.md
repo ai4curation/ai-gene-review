@@ -245,6 +245,24 @@ The break-test for the number check also had to be retargeted: mutating
 exercises the check it is meant to exercise. Red is not the same as red for the right
 reason.
 
+## Two claims that were verified only in a transcript, and are now in the repository
+
+Caught on a self-review pass before the first review landed. Two numbers in the YAML —
+`GO:0044794`'s human usage (58 annotations over 53 entities, the reason it was chosen over
+`GO:0046784`) and the IntAct partner count — came from ad-hoc queries whose output existed
+only in the working session. A verification a reader of the tree cannot re-run is not a
+verification.
+
+Both are now committed: the term-usage counts in `term_checks.json` (with `GO:0045055` at
+369/201 as the non-zero control that makes the `GO:0046784` zero readable), and the
+interaction records in `intact.py` / `intact.json`. Check H binds all three to the JSON,
+and check I binds the IntAct figures in `RESULTS.md` as well.
+
+Writing the IntAct script also corrected an over-claim: I had described the bacterial
+partner lcrS as excluded from the co-IP set by a species filter. It is excluded by
+**method** — two-hybrid pooling — so the by-name filter is a no-op. It is kept, and
+reported as a no-op, rather than credited with work it does not do.
+
 ## Environment note
 
 The pre-write hook resolves `file:` paths and the `publications/` cache against

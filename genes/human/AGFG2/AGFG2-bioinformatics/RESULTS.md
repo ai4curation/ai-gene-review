@@ -11,6 +11,7 @@ python provenance_checks.py    # provenance.json    — reference projection, In
 python term_checks.py          # term_checks.json   — every term-level fact the review leans on
 python distribution.py         # distribution.json  — clade distribution + node taxon breadth
 python litsearch.py            # litsearch.json     — recorded PubMed queries + retraction checks
+python intact.py               # intact.json        — interaction records, partners, methods
 python audit_claims.py         # gates every claim in this file against the review YAML
 ```
 
@@ -213,7 +214,9 @@ statement about the family.
   annotations, so using it here would make AGFG2 its sole human holder.
 - `GO:0044794 host-mediated activation of viral process` carries **58** human annotations
   over 53 entities including IMP, so it is an actively used host-factor term rather than an
-  unused corner of the ontology.
+  unused corner of the ontology. The declined alternative `GO:1903077` carries 37 over 31.
+  All of these counts, including the `GO:0046784` zero, are recorded in `term_checks.json`
+  with `GO:0045055` (369 over 201) as the non-zero control that makes the zero readable.
 - `GO:0045109`'s definition is "*Control of the spatial distribution of intermediate
   filaments…*", i.e. a genuine cytoskeletal-organisation claim, not a by-product term.
 
@@ -244,13 +247,17 @@ count as `n_cited_checked: 12` so the number here cannot drift from the sweep.
 - **Logical-opposite citation cross-product.** No pair of AGFG2's 7 terms is a
   positive/negative regulation pair or otherwise logically opposed, so the cross-product
   test has nothing to intersect. Run, empty.
-- **IntAct.** 10 records, 8 of them protein–protein: AGFG1, TRIM68 and STARD7 by
+- **IntAct** (`intact.py` / `intact.json`). 10 records, of which 2 are miRNA–mRNA CLASH
+  and **8 are protein–protein over 5 distinct partners**: AGFG1, TRIM68 and STARD7 by
   `anti tag coip` in **both** BioPlex releases (`PMID:28514442`, `PMID:33961781` — one
   platform, not two independent methods), XPO1 by pull-down (`PMID:26673895`), and
   *Yersinia* lcrS by `two hybrid pooling` (`PMID:20711500`, MI-score 0.37, a host–pathogen
-  screen). Two further records are miRNA–mRNA CLASH, not protein interactions. **None of
-  these appears in GOA: AGFG2 has zero `GO:0005515` rows**, so no per-partner verdicts were
-  needed — but the absence is itself an under-curation datum.
+  screen). That leaves **4 human partners with co-IP or pull-down support**, which is the
+  figure the review quotes. lcrS drops out on *method*, not on species — the by-name
+  non-human filter in the script is a no-op here and is reported as one rather than
+  credited with the exclusion. **None of the five appears in GOA: AGFG2 has zero
+  `GO:0005515` rows**, so no per-partner verdicts were needed — but the absence is itself
+  an under-curation datum.
 - **Self-referential IBA.** No WITH/FROM token on any row is AGFG2's own accession, so no
   row records a PAINT curator judging the function core to this gene.
 
