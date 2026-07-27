@@ -29,6 +29,9 @@ low identity:
      Sources with no annotated sites of their own are reported separately and are
      NOT silently promoted to "match".
 
+The two conditions are scored PER POSITION, so `n_identical_and_on_own_site` is a count
+out of five rather than a pass/fail for the whole set.
+
 Run:  uv run python catalytic_residue_census.py
       uv run python catalytic_residue_census.py --self-test
 """
@@ -64,11 +67,27 @@ QUICKGO = "https://www.ebi.ac.uk/QuickGO/services"
 INTERPRO = "https://www.ebi.ac.uk/interpro/api"
 RCSB = "https://data.rcsb.org/rest/v1/core/entry"
 
-# Every PDB entry of human ADPRH listed in its UniProt cross-references.  Which metals
-# each one actually contains is the evidence behind the GO:0000287 and GO:0030955 rows,
-# and PMID:19407395's cached record is abstract-only and never mentions magnesium - so
-# without this the magnesium claim has no checkable source inside the repository.
-PDB_ENTRIES = ["3HFW", "6G28", "6G2A", "6IUX"]
+# The PDB set is DERIVED from the subject's UniProt cross-references rather than written
+# out here, so a new deposition is picked up instead of silently omitted.  Which metals
+# each structure contains is the evidence behind the GO:0000287 and GO:0030955 rows, and
+# PMID:19407395's cached record is abstract-only and never mentions magnesium - so without
+# this the magnesium claim has no checkable source inside the repository.
+def pdb_ids_of(accession: str) -> list[str]:
+    d = _get_json(
+        f"{UNIPROT}/search?"
+        + urllib.parse.urlencode(
+            {"query": f"accession:{accession}", "fields": "xref_pdb", "format": "json", "size": 2}
+        )
+    )
+    results = d.get("results", [])
+    if len(results) != 1:
+        raise AnalysisError(f"{accession}: expected 1 entry, got {len(results)}")
+    ids = sorted(
+        x["id"] for x in results[0].get("uniProtKBCrossReferences", []) if x["database"] == "PDB"
+    )
+    if not ids:
+        raise AnalysisError(f"{accession}: no PDB cross-references - the metals table would be empty")
+    return ids
 
 
 class AnalysisError(RuntimeError):
@@ -379,7 +398,9 @@ def run() -> dict:
         a: sorted(interpro_entries(a)) for a in ["P54922", "Q8NDY3", "Q9NX46"]
     }
 
-    pdb = [fetch_pdb(x) for x in PDB_ENTRIES]
+    pdb_ids = pdb_ids_of(SUBJECT)
+    print(f"  PDB cross-references of {SUBJECT}: {', '.join(pdb_ids)}")
+    pdb = [fetch_pdb(x) for x in pdb_ids]
     if not any(e["has_MG"] for e in pdb):
         raise AnalysisError("no ADPRH structure contains MG - the magnesium claim would be unsupported")
 
@@ -686,14 +707,29 @@ def report(res: dict) -> str:
             f"{e['pubmed'] or '-'} |"
         )
     A("")
-    n_mg = sum(1 for e in res["pdb_entries"] if e["has_MG"])
-    k_entries = [e["pdb_id"] for e in res["pdb_entries"] if e["has_K"]]
+    # Everything in this paragraph is computed from the table above.  The stoichiometry
+    # ("two Mg2+ per subunit") is a UniProt COFACTOR statement, NOT something
+    # nonpolymer_bound_components can support, so it is deliberately not asserted here.
+    entries = res["pdb_entries"]
+    mg = [e["pdb_id"] for e in entries if e["has_MG"]]
+    k = [e["pdb_id"] for e in entries if e["has_K"]]
+    worst = max(entries, key=lambda e: e["resolution_A"] if e["resolution_A"] is not None else -1)
+    k_res = [e["resolution_A"] for e in entries if e["has_K"]]
     A(
-        f"Two magnesium ions per subunit are coordinated by the catalytic residues, and magnesium "
-        f"is present in **{n_mg} of {len(res['pdb_entries'])}** of these structures. Potassium is "
-        f"present in **{len(k_entries)}** ({', '.join(k_entries) if k_entries else 'none'}), the "
-        "lowest-resolution of the set, and does not recur in the two structures solved at 1.2 A."
+        f"Magnesium is present in **{len(mg)} of {len(entries)}** structures "
+        f"({', '.join(mg) if mg else 'none'}). Potassium is present in "
+        f"**{len(k)} of {len(entries)}** ({', '.join(k) if k else 'none'})."
     )
+    A("")
+    if k and all(r is not None and r >= worst["resolution_A"] for r in k_res):
+        better = sorted(
+            e["pdb_id"] for e in entries if e["resolution_A"] is not None and not e["has_K"]
+        )
+        A(
+            f"Every structure containing potassium is at the worst resolution in the set "
+            f"({worst['resolution_A']} A); the {len(better)} better-resolved structures "
+            f"({', '.join(better)}) contain none."
+        )
     A("")
     A("## InterPro signature membership (the annotation route)")
     A("")
@@ -781,6 +817,22 @@ def self_test() -> int:
         problems.append("subject-sequence precondition did not fire on a wrong residue")
     finally:
         CATALYTIC_SITES = saved_sites
+
+    # 8b. the PDB set must be derived, and must fail loudly on an accession with none
+    ids = pdb_ids_of(SUBJECT)
+    if not {"3HFW", "6G28"} <= set(ids):
+        problems.append(f"derived PDB set for {SUBJECT} is missing known entries: {ids}")
+    # An accession that cannot resolve must RAISE.  The first version of this test had no
+    # `else` branch, so an accession that happened to resolve would have passed it silently -
+    # a vacuous test, the most common way a guard reports coverage it does not have.
+    try:
+        pdb_ids_of("Q0Q0Q0")
+    except AnalysisError:
+        pass
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"pdb_ids_of raised the wrong error type: {exc!r}")
+    else:
+        problems.append("pdb_ids_of did not raise on an unresolvable accession")
 
     # 8. the PDB fetcher must return the metals, and must fail loudly on a bad id
     e = fetch_pdb("3HFW")

@@ -25,8 +25,11 @@ Checks
        G2 every term marked ACCEPT on a molecular_function row appears in core_functions,
           unless it is listed in ACCEPT_MF_NOT_CORE with a reason.  Unwritten is not the
           same as passing.
-  I  every supporting_text must contain a surface form of its OWN row's term.  A quote can
-     be verbatim, correctly attributed and about a different row; every other gate passes it.
+  I  AT LEAST ONE supporting_text on a row must contain a surface form of that row's OWN
+     term (the predicate is `any`, not `every` -- a row may legitimately carry a
+     corroborating quote about something else alongside the on-point one).  A quote can be
+     verbatim, correctly attributed and about a different row; every other gate passes it.
+     The declared forms must be pairwise disjoint, which is itself asserted.
   H  a review with status COMPLETE must contain no PENDING actions, no TODO summaries
      and no TODO description.  Found by running this audit against the fetch-gene stub,
      where every check but G passed on 15 entirely unreviewed rows.
@@ -69,13 +72,18 @@ OPPOSITE_PAIRS: list[tuple[str, str]] = []
 # is added, and conversely a quote that merely contains the word is not thereby shown to
 # support the claim.  It catches the cross-row citation slip - a potassium quote under a
 # magnesium row - and nothing subtler.
+# The form sets must be PAIRWISE DISJOINT, asserted below.  An earlier version listed
+# table-cell fragments ("| k, mg |", ", mg |") that the SAME RESULTS.md row satisfied for
+# both the magnesium and the potassium term, so the check could not have discriminated the
+# two on that row - which is the one discrimination it exists to make.
 TERM_SURFACE_FORMS: dict[str, tuple[str, ...]] = {
-    "GO:0000287": ("magnesium", "mg2+", "mg(2+)", "| mg |", ", mg |"),
-    "GO:0030955": ("potassium", "k+", "k(+)", "| k, mg |"),
+    "GO:0000287": ("magnesium", "mg2+", "mg(2+)"),
+    "GO:0030955": ("potassium", "k+", "k(+)"),
+    # "hydrolase" belongs to the activity term only, and the bare word "modification" was
+    # removed from GO:0036211 - both were flagged by the disjointness assertion below.
     "GO:0003875": ("arginine", "adp-ribosylarginine", "hydrolase"),
-    "GO:0051725": ("de-adp-ribosyl", "de-modification", "removing one or more adp-ribose",
-                   "reversible modification", "hydrolase"),
-    "GO:0036211": ("reversible modification", "modification"),
+    "GO:0051725": ("de-adp-ribosyl", "de-modification", "removing one or more adp-ribose"),
+    "GO:0036211": ("reversible modification",),
     "GO:0005576": ("extracellular", "cerebrospinal", "csf"),
     "GO:0005515": ("interact", "two-hybrid", "two hybrid", "binary", "protein-protein"),
 }
@@ -313,7 +321,21 @@ def audit(raw: str, data: dict) -> list[str]:
                 "molecular-function row - the exemption is unreachable"
             )
 
-    # ---- I: every supporting_text must be about its own row's term --------------
+    # ---- I: each supporting_text set must be about its own row's term ------------
+    # Two terms sharing a surface form would make the check unable to tell them apart on a
+    # quote containing that form.  Enforce disjointness rather than trusting the table.
+    for a_id, a_forms in TERM_SURFACE_FORMS.items():
+        for b_id, b_forms in TERM_SURFACE_FORMS.items():
+            if a_id >= b_id:
+                continue
+            for fa in a_forms:
+                for fb in b_forms:
+                    if fa in fb or fb in fa:
+                        problems.append(
+                            f"I: TERM_SURFACE_FORMS[{a_id}] and [{b_id}] share the overlapping "
+                            f"forms {fa!r}/{fb!r}; the check cannot discriminate the two terms"
+                        )
+
     # The cross-row citation slip: a quote that is verbatim, correctly attributed, and
     # about a DIFFERENT row.  Every mechanical gate in this repo passes it, because each
     # validates a quote against its source and none against the claim it is attached to.
@@ -528,6 +550,15 @@ def self_test() -> int:
     dI2 = yaml.load(raw, Loader=StrictLoader)
     dI2["existing_annotations"][0]["term"]["id"] = "GO:9999998"
     expect("I", raw, dI2)
+
+    # I: overlapping surface forms must be rejected, not silently tolerated
+    global TERM_SURFACE_FORMS
+    saved_forms = dict(TERM_SURFACE_FORMS)
+    TERM_SURFACE_FORMS = dict(TERM_SURFACE_FORMS, **{"GO:0030955": ("potassium", "magnesium")})
+    try:
+        expect("I", raw, yaml.load(raw, Loader=StrictLoader))
+    finally:
+        TERM_SURFACE_FORMS = saved_forms
 
     # H must NOT fire while the review is still in progress (the happy direction)
     d10 = yaml.load(raw, Loader=StrictLoader)

@@ -106,7 +106,9 @@ counts are NOT promoted to matches.
 | 6G2A | 1.8 | A3R, MG | yes | no | 30472116 |
 | 6IUX | 1.195 | AR6, MG | yes | no | - |
 
-Two magnesium ions per subunit are coordinated by the catalytic residues, and magnesium is present in **4 of 4** of these structures. Potassium is present in **1** (3HFW), the lowest-resolution of the set, and does not recur in the two structures solved at 1.2 A.
+Magnesium is present in **4 of 4** structures (3HFW, 6G28, 6G2A, 6IUX). Potassium is present in **1 of 4** (3HFW).
+
+Every structure containing potassium is at the worst resolution in the set (1.92 A); the 3 better-resolved structures (6G28, 6G2A, 6IUX) contain none.
 
 ## InterPro signature membership (the annotation route)
 

@@ -377,6 +377,48 @@ five residues whose substitution abolishes activity, so the ion is part of the c
 machine rather than an accessory to it. Keeping it visible as a core function and saying why
 is better than hiding it behind an exemption.
 
+## Round 3: the reviewer's script-hygiene items, and what enforcing one of them found
+
+Four 🔵 items, all labelled "changing no annotation". Two of them did change what a *cited*
+artifact asserts, so all four were fixed rather than deferred.
+
+1. **A generated report asserted something it had not computed.** The metals paragraph opened
+   *"Two magnesium ions per subunit are coordinated by the catalytic residues…"* — a UniProt
+   `COFACTOR` statement that RCSB's `nonpolymer_bound_components` cannot support — **and that
+   sentence was quoted as `supporting_text` on `core_functions[1]`.** The generator now emits
+   only what it computes, and the stoichiometry lives in the row's `reason`, where it is
+   attributed to UniProt.
+2. **Two surface-form sets both matched the same table row.** `GO:0000287` listed `", mg |"`
+   and `GO:0030955` listed `"| k, mg |"`, so the `| 3HFW | 1.92 | K, MG | … |` row satisfied
+   *both* — the check could not have discriminated the two terms on the one row where it
+   mattered. Table-cell fragments were dropped in favour of word forms, and **disjointness is
+   now asserted rather than assumed**.
+
+   Enforcing it immediately found **four more overlaps I had introduced myself**: `hydrolase`
+   in both `GO:0003875` and `GO:0051725`, and `modification` / `reversible modification` /
+   `de-modification` colliding across `GO:0036211` and `GO:0051725`. The reviewer spotted one
+   instance; the assertion found the class. Check `I` still fires on exactly the three sites
+   of `d86ff17d6` afterwards, so tightening the forms did not cost it its sensitivity.
+3. **The docstring said "every" where the predicate is "any".** A row may legitimately carry a
+   corroborating quote alongside the on-point one; the predicate was always `any`. Corrected,
+   since a guard misdescribed in its own docstring is how the ADCK5 lint got past its author.
+4. **`PDB_ENTRIES` was a literal.** Now derived from UniProt's `xref_pdb` cross-references, so
+   a new deposition is picked up instead of silently omitted. The derived set reproduced the
+   hardcoded one exactly — `3HFW, 6G28, 6G2A, 6IUX` — which is the confirmation worth having.
+
+And one defect of my own, found while writing #4: the new `pdb_ids_of` self-test had a `try`
+with no `else`, so an accession that happened to resolve would have passed it **silently**.
+That is the fifth vacuous-pass instance this gene has produced, and the only reason it was
+caught is that the campaign brief names the pattern explicitly.
+
+### Stopping criterion
+
+Rounds 2 and 3 changed one action (`GO:0030955`), four quotes, one reference `correctness`,
+one `is_invalid`, and the surface-form table. Everything remaining that I can see is prose
+about the harness rather than about what the harness computes. **If a further round produces
+only items of that kind, I will fix anything that could misfire on another machine or misstate
+a number, and decline changes that only reword an explanation** — the ADCK2 line.
+
 ## Committed guards
 
 `ADPRH-bioinformatics/audit_adprh_review.py` holds eight invariant checks (A–H) over the
