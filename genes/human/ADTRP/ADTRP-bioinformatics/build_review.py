@@ -843,7 +843,7 @@ def build_annotations() -> list[dict]:
             "this reference is abstract-only and the abstract does not use the phrase 'cell "
             "surface'; the study does measure cell-associated TFPI activity and FXa inhibition "
             "at the endothelial surface, and the UniProt curator worked from the full text. "
-            "Accepted with that limitation stated rather than marked undecided, because the "
+            "Retained with that limitation stated rather than marked undecided, because the "
             "topology makes an externally exposed surface pool unproblematic.",
             supported_by=[
                 q(
