@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 18
 - Selected module genes: 5
 - Selected gene reviews curated: 5
-- Selected OpenScientist reports: in progress
+- Selected OpenScientist reports: 1 of 5 (`hutU`)
 
 ## Curated Boundary
 
@@ -45,6 +45,12 @@ PSEPK report; no report file was produced.
 2026-07-26: The generic module-level OpenScientist run also timed out after
 7200s without producing a report.
 
+2026-07-26: The `hutH` gene-level run timed out after 7200s with no report.
+The `hutU` run persisted a complete report and artifacts; its direct
+same-species urocanase evidence was reconciled into the review. The remaining
+three selected genes retain their UniProt and family-level evidence in this
+bounded first pass.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
@@ -66,7 +72,7 @@ PSEPK report; no report file was produced.
 | [x] | `hutG` | PP_5029 | Q88D00 | kegg:ppu00340 | PRESENT | CURATED | MISSING | N-formylglutamate deformylase (EC 3.5.1.68) |
 | [x] | `hutI` | PP_5030 | Q88CZ9 | kegg:ppu00340 | PRESENT | CURATED | MISSING | Imidazolonepropionase (EC 3.5.2.7) (Imidazolone-5-propionate hydrolase) |
 | [x] | `hutH` | PP_5032 | Q88CZ7 | kegg:ppu00340 | PRESENT | CURATED | MISSING | Histidine ammonia-lyase (Histidase) (EC 4.3.1.3) |
-| [x] | `hutU` | PP_5033 | Q88CZ6 | kegg:ppu00340 | PRESENT | CURATED | MISSING | Urocanate hydratase (Urocanase) (EC 4.2.1.49) (Imidazolonepropionate hydrolase) |
+| [x] | `hutU` | PP_5033 | Q88CZ6 | kegg:ppu00340 | PRESENT | CURATED | PRESENT (OpenScientist) | Urocanate hydratase (Urocanase) (EC 4.2.1.49) (Imidazolonepropionate hydrolase) |
 | [x] | `hutF` | PP_5036 | Q88CZ3 | kegg:ppu00340 | PRESENT | CURATED | MISSING | Formimidoylglutamate deiminase (EC 3.5.3.13) |
 | [ ] | `PP_5147` | PP_5147 | Q88CN3 | kegg:ppu00340 | PRESENT | CURATED | PRESENT | Histidinol-phosphatase (EC 3.1.3.15) (Histidinol-phosphate phosphatase) |
 
