@@ -626,6 +626,27 @@ Two separate checks, because they catch different things.
   restructure that followed removed the drift it was policing, so it was deleted rather than
   repaired. What survives from it is one set comparison, that no `_selftest_*` helper exists
   outside the registry.
+- **Two errors can cancel and read as a correct number.** The report claimed the count of
+  truncation-marked rows was "derived from the rows". It was derived from two mistakes that
+  happened to sum correctly. There were *two* markers, not the one the constant's comment
+  claimed — the wide tables use the long form, and the per-position table hand-wrote a short
+  `[TRUNC]` because its cells are one character wide — so the count missed that row; and at the
+  same time it counted the §1 prose sentence, which interpolates the long marker and is already in
+  the output buffer when the count runs. Five marked rows + one prose line = 6; true marked rows
+  5 + 1 = 6. **Correct only because there was exactly one flagged member**; with two, truth is 12
+  and the computed value 11.
+  Two consequences worth separating. The arithmetic was fragile, but two *statements in the
+  deliverable* were outright false: the report said flagged rows carry the long marker "wherever a
+  tally of theirs is printed" when the named-site row carries the short one — and that is the row
+  where the truncation is most visible, six gap calls at exactly the N-terminal positions 245 aa
+  cannot reach — and the code comment said "one literal" while the second was hand-maintained at
+  the call site, which is precisely what the constant existed to prevent.
+  The fix is structural rather than a corrected rule: both forms are constants, both are counted,
+  and the count looks only at lines that are table rows, so prose is excluded **by construction**.
+  Verified by forcing a second flagged member (raising the cutoff so ACTL8 at 366 aa also flags):
+  computed 12, independent grep 12, where the old code would have said 11. Doing the break test in
+  the direction that could expose the bug — rather than the direction already known to work — is
+  the only reason the cancellation was visible at all.
 - **A guard per instance is the wrong shape; remove the possibility of drift instead.** Four
   consecutive review rounds found a hand-maintained enumeration listing N−1 of N checks, each time
   omitting the one added most recently — because there were *three* such lists (module docstring,
