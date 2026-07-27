@@ -43,11 +43,15 @@ a dark gene.
 The context is a lineage-wide loss. The same group had already shown fertilin alpha and
 tMDC I to be non-functional in humans
 [PMID:10417343 "Of these, two (fertilin alpha and tMDC I) have recently been shown to be non-functional in the human."],
-and an HGNC census of the 8p11–8p23 reproductive ADAM cluster confirms it is unusually
-pseudogene-rich: **ADAM1A, ADAM1B, ADAM3A, ADAM3B, ADAM5 and ADAM6 are all HGNC-typed
-pseudogenes**, while ADAM2, ADAM7, ADAM18, ADAM20, ADAM21, ADAM29 and ADAM30 remain
-protein-coding. ADAM5 is the **only pseudogene of the six with a UniProt accession at all**,
-which is precisely why it turns up on a protein-keyed worklist while its equally
+and an HGNC census of the testis/epididymis-expressed ADAMs confirms the group is
+unusually pseudogene-rich: **ADAM1A, ADAM1B, ADAM3A, ADAM3B, ADAM5 and ADAM6 are all
+HGNC-typed pseudogenes**, while ADAM2, ADAM7, ADAM18, ADAM20, ADAM21, ADAM29 and ADAM30
+remain protein-coding. Note the pseudogenes are *not* one contiguous cluster - I wrote that
+first and the query refuted it. Only ADAM3A and ADAM5 share 8p11.22 (with the coding ADAM2,
+ADAM9 and ADAM18); ADAM1A and ADAM1B are at 12q24, ADAM3B at 16q12.1 and ADAM6 at 14q32.33.
+The losses are dispersed across four chromosomes, which makes them independent events rather
+than one deletion. ADAM5 is the **only pseudogene of the six with a UniProt accession at
+all**, which is precisely why it turns up on a protein-keyed worklist while its equally
 pseudogenised neighbours do not.
 
 ## 3. What the orthologue does — and why that is not this gene's function
