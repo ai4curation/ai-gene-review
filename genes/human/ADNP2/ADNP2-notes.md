@@ -225,6 +225,15 @@ verified each checkable premise before acting; all four held.
   already durable and in-repo here and in the guard's own code comment; opening an issue from a gene PR
   fires the mention workflow, which competes with the review jobs this campaign is bottlenecked on.
 
+**And a third, worse than the other two.** After changing `GO:0006357` to `MODIFY`, its summary still
+opened *"Kept, but not as a core function"* — the exact ADGB "check the first word of every summary
+against its action" defect. My opener sweep passed anyway, because when it flagged the mismatch I
+**added the offending phrase to the MODIFY allow-list** instead of fixing the prose. That is the guard
+inversion in its purest form: I widened the guard's vocabulary to admit the very thing it exists to
+catch, and it then reported coverage it did not have. Fixed the prose ("Directionally
+under-specified…"), restored the allow-list, and added a cross-check that a MODIFY summary may not open
+with a KEEP verb and vice versa — an assertion that could not have been silenced by widening.
+
 **Two of my own verification probes were wrong in the same sitting, both the same way**: an unanchored
 substring (`contributes_to_molecular_function`, which also appears in the comment explaining the change)
 and an under-scoped regex (`^- description: >-$`, which also matches `suggested_experiments` entries).
