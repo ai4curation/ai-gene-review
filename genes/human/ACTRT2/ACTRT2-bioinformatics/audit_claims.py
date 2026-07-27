@@ -265,6 +265,10 @@ def _selftest_every_helper_is_registered() -> int:
     fixed. The registry removed what they policed, and an audit harness that needs its own audit
     harness is past the point of proportion on a gene whose curation settled several rounds ago.
     """
+    # Residual gap, stated rather than closed: this check is itself a registry entry, so it protects
+    # every other check but not its own removal. Deleting its tuple removes the only thing that would
+    # have noticed. That is not worth a further guard - a guard guarding the guard is where this file
+    # would stop being proportionate to a settled curation - so it is recorded here instead.
     defined = {
         name for name, obj in globals().items()
         if name.startswith("_selftest_") and callable(obj)

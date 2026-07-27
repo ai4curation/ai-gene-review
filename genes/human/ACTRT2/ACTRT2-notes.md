@@ -619,9 +619,13 @@ Two separate checks, because they catch different things.
   **The lesson is narrower and harder than "verify your fixes": a verification you performed is not
   a verification that exists.** An ad-hoc command proves the state at one instant; only a committed
   check proves it going forward, and describing the former as the latter is a false claim about the
-  tree. `_selftest_docstrings_match_code()` now exists, was confirmed to **fail** against the wrong
-  docstring before the docstring was touched, and is break-tested by deleting a helper from the
-  enumeration.
+  tree. `_selftest_docstrings_match_code()` was then written, and confirmed to **fail** against the
+  wrong docstring before the docstring was touched. It no longer exists: a later round found that
+  it resolved calls by substring-searching `inspect.getsource(selftest)`, which includes the
+  docstring, so a check that was merely *documented* counted as *called* — and the registry
+  restructure that followed removed the drift it was policing, so it was deleted rather than
+  repaired. What survives from it is one set comparison, that no `_selftest_*` helper exists
+  outside the registry.
 - **A guard per instance is the wrong shape; remove the possibility of drift instead.** Four
   consecutive review rounds found a hand-maintained enumeration listing N−1 of N checks, each time
   omitting the one added most recently — because there were *three* such lists (module docstring,

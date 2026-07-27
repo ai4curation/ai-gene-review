@@ -105,9 +105,23 @@ PAINT_TSV = REPO_ROOT / "interpro" / "panther" / "PTHR11937" / "PTHR11937-paint.
 
 CONTACT_CUTOFF = 4.0  # Angstrom, heavy atom to heavy atom
 
-# One literal, used both to mark a row and to count the marks, so the report's claim about how many
-# rows are marked is derived from the rows rather than maintained alongside them.
+# TWO markers, because the named-site table is one narrow cell per position and cannot carry the
+# long form. Both are constants and both are counted: an earlier version declared "one literal"
+# while hand-writing the short form at the call site, so the count missed that row - and
+# simultaneously counted the prose sentence, which interpolates the long marker and was already in
+# the output buffer. The two errors cancelled at one flagged member and would have diverged at two.
+# The count is therefore restricted to table rows by construction (see `count_marked_rows`).
 MARK_TRUNCATED = " **[TRUNCATED - not comparable]**"
+MARK_TRUNCATED_SHORT = " [TRUNC]"
+ALL_TRUNCATION_MARKERS = (MARK_TRUNCATED.strip(), MARK_TRUNCATED_SHORT.strip())
+
+
+def count_marked_rows(lines: list[str]) -> int:
+    """Marked TABLE ROWS only. Prose that mentions a marker is excluded structurally, not by luck."""
+    return sum(
+        1 for line in lines
+        if line.lstrip().startswith("|") and any(m in line for m in ALL_TRUNCATION_MARKERS)
+    )
 
 ACTRT2 = "Q8TDY3"
 
@@ -1543,10 +1557,11 @@ def render(r: dict) -> str:
       f"asserted rather than claimed: `panel_length_audit` raises if a flagged accession appears in "
       f"any of the argument-carrying reference sets ({', '.join(la['argument_carrying_sets_checked'])}"
       f"), and it currently finds "
-      f"{len(la['flagged_members_in_argument_carrying_sets'])} such overlaps. Flagged rows carry "
-      f"{MARK_TRUNCATED.strip()} wherever a tally of theirs is printed, and the number of marked "
-      f"rows is counted from the rendered document at the end of this section rather than stated "
-      f"by hand.")
+      f"{len(la['flagged_members_in_argument_carrying_sets'])} such overlaps. Every table row "
+      f"carrying a flagged member's tally is marked - `{MARK_TRUNCATED.strip()}` in the wide "
+      f"tables, `{MARK_TRUNCATED_SHORT.strip()}` in the per-position table, whose cells are too "
+      f"narrow for the long form - and the number of marked rows is counted from the rendered "
+      f"tables at the end of this section rather than stated by hand.")
     a("")
     a("Aligned residue at each named actin position:")
     a("")
@@ -1560,7 +1575,7 @@ def render(r: dict) -> str:
             v = rec["sites"][s]
             mark = {"identical": "", "conservative": "*", "non-conservative": "**", "gap": "!"}[v["call"]]
             cells.append(f"{v['aligned_residue']}{mark}")
-        trunc = " [TRUNC]" if acc in FLAGGED else ""
+        trunc = MARK_TRUNCATED_SHORT if acc in FLAGGED else ""
         a(f"| {rec['label'].split(' (')[0]}{trunc} | " + " | ".join(cells) + " |")
     a("")
     a("(`*` conservative, `**` non-conservative, `!` gap; roles: "
@@ -1628,11 +1643,13 @@ def render(r: dict) -> str:
 
     # Count the marks from the rendered document itself, so the claim above cannot drift from the
     # tables below it. `L` at this point contains every residue-comparison table.
-    n_marked = sum(1 for line in L if MARK_TRUNCATED.strip() in line)
+    n_marked = count_marked_rows(L)
     n_flagged = len(FLAGGED)
-    a(f"Marked rows counted from the rendered tables above: **{n_marked}** across "
-      f"{n_flagged} flagged member(s). Rows carrying only annotation counts rather than sequence "
-      f"comparisons are deliberately unmarked, since a length flag cannot affect them.")
+    a(f"Marked table rows counted from the rendered tables above: **{n_marked}** across "
+      f"{n_flagged} flagged member(s), i.e. {n_marked // n_flagged if n_flagged else 0} rows each. "
+      f"Both marker forms are counted and prose mentioning a marker is excluded, since the count "
+      f"looks only at lines that are table rows. Rows carrying annotation counts rather than "
+      f"sequence comparisons are deliberately unmarked, since a length flag cannot affect them.")
     a("")
 
     # 3 IBA sources
