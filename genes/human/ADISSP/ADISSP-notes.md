@@ -329,3 +329,20 @@ forbids.
   secretion rather than an observation about ADISSP.
 - `cache/go/terms.csv`: one legitimate addition (`GO:0008157`), nothing lost, no new duplicates,
   verified by **multiset** comparison rather than by reading the diff; `cache_lint` exits 0.
+
+## 17. Sibling cross-check against the merged ADIPOQ review — non-confirmation
+
+The campaign brief records that ADIPOQ "shipped a false ancestry claim" about `GO:0048018`, which is
+the term proposed here, so the merged review on `main` was checked for a surviving instance. It
+asserts that `GO:0005179 hormone activity` sits "under GO:0048018 receptor ligand activity ->
+GO:0140677 -> GO:0098772". **That claim is true**, verified against QuickGO: `GO:0005179`'s
+`is_a`/`part_of` ancestor closure contains `GO:0048018`, `GO:0030545`, `GO:0140677` and `GO:0098772`,
+and contains neither `GO:0005102` nor `GO:0005488`. I suspected a defect, tested it, and there is
+none — the brief's note refers to a claim that was corrected before merge, not one still standing.
+
+The check paid for itself anyway, because the ancestry it establishes bears directly on this gene.
+`GO:0005179`, which ADIPOQ and LEP both carry, is a **descendant** of the `GO:0048018` proposed here.
+So the two are not competing choices: the parent was chosen because the endocrine claim inside
+hormone activity is established for the mouse protein and untested for the human one, and refining
+to `GO:0005179` later would retract nothing. The `suggested_questions` entry now states this
+relationship rather than merely contrasting the terms.
