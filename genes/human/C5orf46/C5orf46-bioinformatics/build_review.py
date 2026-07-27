@@ -53,6 +53,7 @@ FILE_REF_TARGETS = {
 P_AP64 = "PMID:33804835"
 P_PLASMA = "PMID:31308252"
 P_RCC = "PMID:35504177"
+P_AP57 = "PMID:25585381"   # the same group's earlier AMP, curated in GO where AP-64 is not
 P_EXOSOME = "PMID:19199708"
 P_BIOPLEX2 = "PMID:28514442"
 P_HURI = "PMID:32296183"
@@ -74,6 +75,7 @@ TITLES = {
     P_PLASMA: ("Small-protein Enrichment Assay Enables the Rapid, Unbiased Analysis of Over 100 Low "
                "Abundance Factors from Human Plasma."),
     P_RCC: "Preliminary study on the role of the C5orf46 gene in renal cancer.",
+    P_AP57: "AP-57/C10orf99 is a new type of multifunctional antimicrobial peptide.",
     AFFINAGE_FILE_REF: "Affinage mechanistic annotation for C5orf46 (human)",
     UNIPROT_FILE_REF: "UniProtKB entry Q6UWT4 (CE046_HUMAN), cached in the gene folder",
     RESULTS_FILE_REF: ("C5orf46 bioinformatics results (mature-peptide identity; partner-set "
@@ -142,6 +144,22 @@ TOPOLOGY_CAVEAT = (
     "here and not the main argument. What does apply to all thirteen is that every interaction "
     "was scored either in the Saccharomyces cerevisiae nucleus or in a HEK293T lysate, so no "
     "partner was tested in its native topology."
+)
+
+AP57_PRECEDENT = (
+    "There is an exact curatorial precedent, and it is what turns this from a request into a "
+    "consistency argument. The same group had previously characterised C10orf99 as a human "
+    "antimicrobial peptide under the same naming convention, AP-57, and the AP-64 paper cites "
+    "that work as its own predecessor. C10orf99 (UniProtKB:Q6UWK7, GPR15LG) was curated: "
+    "UniProt gave it the alternative name 'Antimicrobial peptide with 57 amino acid residues', "
+    "and GOA carries four IDA annotations from the AP-57 paper, among them GO:0050830 defense "
+    "response to Gram-positive bacterium and GO:0050832 defense response to fungus. The two "
+    "peptides are near-mirror images: AP-57 is basic with four cysteines and kills "
+    "Gram-positives and a fungus, while AP-64 is anionic with none and kills Gram-negatives "
+    "but neither Gram-positives nor yeast. So GO:0050829 for this gene is the exact "
+    "counterpart of the GO:0050830 that the sibling already holds, from an equivalent "
+    "experiment in an equivalent paper by the same laboratory. The class is demonstrably "
+    "curatable and has been curated; this gene was simply missed."
 )
 
 AP64_IDENTITY = (
@@ -669,6 +687,47 @@ def build_references() -> list[dict]:
             },
         },
         {
+            "id": P_AP57,
+            "title": TITLES[P_AP57],
+            "findings": [
+                {
+                    "statement": ("The same laboratory's earlier antimicrobial peptide, cited by the "
+                                  "AP-64 paper as its own predecessor and curated in GO where AP-64 "
+                                  "is not. Its stated properties are the near-mirror of AP-64's - "
+                                  "basic rather than anionic, four cysteines rather than none - "
+                                  "which is why its curated GO:0050830 and the GO:0050829 proposed "
+                                  "here are counterpart terms rather than the same claim."),
+                    "supporting_text": ("AP-57 is a short basic amphiphilic peptide with four cysteines and a net "
+                                        "charge +14 (MW = 6.52, PI = 11.28)"),
+                    "full_text_unavailable": True,
+                },
+                {
+                    "statement": ("The activity spectrum is complementary to AP-64's: AP-57 kills "
+                                  "Gram-positive bacteria and a fungus, the two categories AP-64 "
+                                  "was measured not to affect."),
+                    "supporting_text": ("AP-57 exhibited broad-spectrum antimicrobial activities against "
+                                        "Gram-positive Staphylococcus aureus, Actinomyce, and Fungi Aspergillus niger"),
+                    "full_text_unavailable": True,
+                },
+            ],
+            "reference_review": {
+                "relevance": "MEDIUM",
+                "correctness": "VERIFIED",
+                "review_notes": (
+                    "Abstract-only in the cache, so nothing beyond the abstract is asserted about "
+                    "it. Cited here for one purpose: it is the curatorial precedent that makes the "
+                    "coverage gap on C5orf46 a consistency defect rather than a wish. GOA carries "
+                    "four IDA rows from this paper on C10orf99/GPR15LG (Q6UWK7), including "
+                    "GO:0050830 and GO:0050832, all assigned by UniProt, and UniProt took the "
+                    "AP-57 name into that entry. Note a correction to my own working assumption, "
+                    "recorded because it nearly propagated: I first looked C10orf99 up as Q6UWT2, "
+                    "which is adropin (ENHO) and an entirely different protein. The right accession "
+                    "is Q6UWK7, confirmed by primaryAccession and by its gene synonyms including "
+                    "C10orf99."
+                ),
+            },
+        },
+        {
             "id": AFFINAGE_FILE_REF,
             "title": TITLES[AFFINAGE_FILE_REF],
             "findings": [
@@ -970,7 +1029,7 @@ def new_term_rows() -> list[dict]:
                     "yeast. Ancestry was fetched rather than inferred from the labels - "
                     "GO:0042742 is in GO:0050829's is_a/part_of closure - so the specific term "
                     "entails the general one and nothing is given up by using it. "
-                    + common
+                    + AP57_PRECEDENT + " " + common
                 ),
                 "supported_by": NEW_ROW_SUPPORT + [
                     q(P_AP64, ("we also observed that the yeast cells were unsusceptible to the "
@@ -1290,6 +1349,15 @@ def build_questions() -> list[dict]:
                 "in vivo. Curating the mouse rows would additionally open an ISO/ISS route to the "
                 "human gene which cannot exist today, because transfer needs a source annotation "
                 "and there is none anywhere in the family."
+                "and there is none anywhere in the family. What makes this a consistency question "
+                "rather than a wish is that the same laboratory's previous paper on the same kind "
+                "of molecule WAS curated: C10orf99, which they named AP-57 and which the AP-64 "
+                "paper cites as its own predecessor, carries GO:0050830 and GO:0050832 by IDA from "
+                "that paper (PMID:25585381), and UniProt even took 'Antimicrobial peptide with 57 "
+                "amino acid residues' into the entry as an alternative name. AP-64 is the anionic, "
+                "Gram-negative-killing counterpart of that basic, Gram-positive-killing peptide, so "
+                "GO:0050829 is the mirror of a term the sibling already holds. The class is "
+                "curatable, has been curated, and this gene was missed."
             ),
             "experts": ["GO Central curators", "MGI curators", "UniProt curators"],
         },
@@ -1303,7 +1371,11 @@ def build_questions() -> list[dict]:
                 "mature-chain properties the paper states are exactly those of the entry's "
                 "annotated CHAIN 24..87 (64 residues, 7.22 kDa, pI 4.54, no cysteines), so the "
                 "identification is not in doubt. A FUNCTION comment, an Antimicrobial or "
-                "Antibiotic keyword, and the missing reference would all be supportable. Raised "
+                "Antibiotic keyword, and the missing reference would all be supportable. The same "
+                "group's earlier peptide is the precedent here too: UniProt took 'Antimicrobial "
+                "peptide with 57 amino acid residues' into Q6UWK7 as an alternative name on the "
+                "strength of an equivalent paper, so the treatment requested is one this database "
+                "has already applied to the sibling molecule. Raised "
                 "as a UniProt correction rather than as a GO action, since there is no GO row to "
                 "act on."
             ),

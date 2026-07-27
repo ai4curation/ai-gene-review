@@ -62,6 +62,57 @@ Gm94 (mouse C5orf46) also exhibits the similar antibacterial ability"]. Bovine `
 one IEA localisation row. So across the whole reviewed family there is not one functional
 annotation.
 
+## The sibling molecule WAS curated — which is the strongest form of the request
+
+The coverage gap looked at first like GO simply not covering this class. It is not that, and
+finding out inverted the framing.
+
+The same laboratory had previously characterised **C10orf99 as AP-57**, "Antimicrobial Peptide
+with 57 amino acid residues", and the AP-64 paper cites that work as its own predecessor
+[PMID:33804835 "Previously, we identified an uncharacterized peptide, chromosome 10 open reading
+frame 99 (C10orf99), as a type of human AMP, which was termed AP-57 [11]."]. **That gene was
+curated.** `Q6UWK7` (GPR15LG) carries four IDA rows from `PMID:25585381`, including
+`GO:0050830` defense response to Gram-positive bacterium and `GO:0050832` defense response to
+fungus, all assigned by UniProt — and UniProt took *"Antimicrobial peptide with 57 amino acid
+residues"* into the entry as an alternative name.
+
+And the two peptides are near-mirror images, so the comparison is sharp rather than loose:
+AP-57 is basic (net +14, pI 11.28) with four cysteines and kills Gram-positives and a fungus
+[PMID:25585381 "AP-57 is a short basic amphiphilic peptide with four cysteines and a net charge
++14 (MW = 6.52, PI = 11.28)"]; AP-64 is anionic (pI 4.54) with no cysteines and kills
+Gram-negatives while leaving Gram-positives and yeast alone. `GO:0050829` is therefore the
+exact counterpart of the `GO:0050830` the sibling already holds. That converts "please curate
+this" into "you applied this treatment to the sibling from an equivalent paper and missed this
+one", which is a much better-founded request.
+
+**An accession error of mine that nearly inverted the conclusion.** I first looked C10orf99 up
+as `Q6UWT2` — reasoning from accession proximity to `Q6UWT4`, which is not reasoning at all.
+`Q6UWT2` is **adropin (ENHO)**, 76 aa, an entirely different protein, and its record (7
+annotations, none antibacterial) would have supported precisely the wrong conclusion: that GO
+does not curate this class. The correct accession is `Q6UWK7`, confirmed by `primaryAccession`
+and by the entry's gene synonyms including `C10orf99`. Same failure shape as the merged-accession
+trap the analysis script guards against, arrived at from a different direction — a plausible
+accession that resolves to a real, reviewed, wrong protein.
+
+## Cross-review consistency of the 14 protein-binding verdicts
+
+Checked rather than assumed, because "three independent reviews gave one identical row three
+different answers" is a known campaign defect. Across the 1,769 merged human reviews on `main`,
+excluding this one, **803** `GO:0005515` rows cite HuRI (`PMID:32296183`):
+
+| action | rows | share | genes |
+|---|---|---|---|
+| `MARK_AS_OVER_ANNOTATED` | 554 | 69% | 465 |
+| `KEEP_AS_NON_CORE` | 142 | 18% | 142 |
+| `REMOVE` | 87 | 11% | 85 |
+| `MODIFY` | 12 | 1% | 9 |
+| `ACCEPT` | 6 | 1% | 6 |
+| `UNDECIDED` / `PENDING` | 1 / 1 | — | 2 |
+
+The 14 `MARK_AS_OVER_ANNOTATED` verdicts here follow the dominant convention. Note this is a
+convention check, not an argument: it would not justify the verdict on its own, and it is
+recorded separately from the evidence for exactly that reason.
+
 ## Two brief hypotheses tested, both non-confirmations
 
 Recorded so the next reviewer knows the checks were run rather than skipped.
@@ -324,6 +375,13 @@ Declined, each for a stated reason:
   is weaker and still sufficient: the argument now rests on SGTA specifically, with SGTB as
   family-and-architecture corroboration (55.6% identity, same TPR array) rather than as a
   second curated instance.
+- **The stale-phrase sweep needed context reading, exactly as predicted.** Its final run
+  reported four hits: `Q6UWT2` in `RESULTS.md` and in the builder, and "That role is curated
+  for SGTA only" and "bait in 29 of" in this file. All four are **the retractions narrating
+  themselves** — the accession-caution paragraph and the two process-findings bullets above.
+  Each was confirmed in context rather than counted, and one of them (`Q6UWT2`) only matched
+  after whitespace normalisation because the sentence wraps. A phrase count is not a defect;
+  the check has to end in reading.
 - **Two overlapping string edits produced a dangling antecedent.** Correcting the above, I
   applied two replacements whose anchors overlapped inside one prose constant. Both landed, and
   the result read *"the small glutamine-rich TPR co-chaperones of the SGT family. That role is

@@ -229,6 +229,43 @@ protects mice in vivo. That is the coverage gap stated as sharply as it can be: 
 ontology's explicit "nothing is known" placeholder sits on a gene with a published
 purified-protein activity.
 
+**The class IS curatable, and has been curated — for the sibling molecule.** The same
+laboratory previously characterised C10orf99 as a human antimicrobial peptide under the same
+naming convention, AP-57, and the AP-64 paper cites that work as its own predecessor. That
+gene *was* curated: `Q6UWK7` (GPR15LG) carries **four IDA rows from `PMID:25585381`**, among
+them `GO:0050830` defense response to Gram-positive bacterium and `GO:0050832` defense
+response to fungus, all assigned by UniProt — which also took *"Antimicrobial peptide with 57
+amino acid residues"* into the entry as an alternative name.
+
+The two peptides are near-mirror images, which is what makes the comparison sharp rather than
+loose:
+
+| | AP-57 / C10orf99 (`Q6UWK7`) | AP-64 / C5orf46 (`Q6UWT4`) |
+|---|---|---|
+| charge | basic, net +14, pI 11.28 | **anionic**, pI 4.54 |
+| cysteines | 4 | **0** |
+| kills | Gram-positive bacteria, a fungus | **Gram-negative bacteria** |
+| does not kill | (not the reported focus) | Gram-positives, yeast |
+| GO term from its paper | **`GO:0050830`, curated** | `GO:0050829`, **absent** |
+
+So `GO:0050829` proposed here is the exact counterpart of a term the sibling already holds,
+from an equivalent experiment in an equivalent paper by the same group. The gap is a
+consistency defect, not a request for a novel kind of annotation.
+
+*Accession caution, recorded because it nearly propagated:* C10orf99 is **`Q6UWK7`**. An
+earlier pass in this analysis looked it up as `Q6UWT2`, which is **adropin (ENHO)** — a
+different protein whose record would have supported the opposite conclusion, that the class is
+uncurated. The right accession was confirmed by `primaryAccession` and by the entry's gene
+synonyms including `C10orf99`.
+
+**Cross-review consistency of the protein-binding verdicts.** Across the 1,769 merged human
+reviews on `main`, excluding this one, there are **803** `GO:0005515` rows whose reference is
+HuRI (`PMID:32296183`). They are resolved as: `MARK_AS_OVER_ANNOTATED` **554 (69%)** over 465
+genes, `KEEP_AS_NON_CORE` 142, `REMOVE` 87, `MODIFY` 12, `ACCEPT` 6, one `UNDECIDED`, one
+`PENDING`. The 14 `MARK_AS_OVER_ANNOTATED` verdicts here therefore follow the corpus's
+dominant convention rather than diverging from it — checked deliberately, because independently
+reviewed genes giving one identical row three different answers is a known campaign defect.
+
 Two hypotheses from the campaign brief were tested here and **did not confirm**, which is
 worth recording so the next reviewer knows the checks were run:
 
