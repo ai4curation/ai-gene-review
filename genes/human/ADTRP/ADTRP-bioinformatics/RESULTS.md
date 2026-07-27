@@ -48,6 +48,15 @@ So the **catalytic dyad is broadly conserved**: 73 of 85 recipients retain it, i
 
 **Reciprocal question, benign answer.** `PTN002591065` — the node whose reach is almost exactly this gene's orthologue set — covers 25 gene products, **all Vertebrata**, scoped taxon:117571 Euteleostomi, and gives them `GO:0005901 caveola`. Caveolae are a vertebrate structure, so the scope and the term agree. The paralog AIG1 is correctly **not** among the recipients.
 
+### PTHR12242 vs PTHR10989 — distinct families, not a renumbering
+
+PMID:27018888 names PANTHER family `PTHR12242` for the non-mammalian AIG1/ADTRP-like proteins, whereas this analysis works from `PTHR10989`. Both are live and distinct, so the paper describes a sister set in another family rather than the recipients of the node reviewed here:
+
+| family | name | proteins | InterPro |
+|---|---|---|---|
+| `PTHR10989` | ANDROGEN-INDUCED PROTEIN 1-RELATED | 5163 | IPR006838 |
+| `PTHR12242` | OS02G0130600 PROTEIN-RELATED | 6117 | none |
+
 ## 3. The three non-PAINT routes
 
 **InterPro2GO — non-confirmation.** `IPR006838` (ADTRP/AIG1, family) is a *family-specific* signature, not a bare fold. interpro2go maps it to GO:0016020 — a cellular component only, **no molecular function**. Of its 5788 proteins, 8 are reviewed (Swiss-Prot) (0.138% of the family), and 2 of those are uncharacterised UPF0641 proteins. The predicted fold-to-activity error is **absent**: this entry shows restraint.

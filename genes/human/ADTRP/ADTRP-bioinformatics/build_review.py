@@ -330,7 +330,7 @@ def build_annotations() -> list[dict]:
                     {
                         "source_id": "PANTHER:PTN001659973",
                         "source_label": "PANTHER IBD node, taxon:2759 Eukaryota, 86 recipients",
-                        "source_status": "SUPPORTS_SOURCE_BUT_NOT_TARGET",
+                        "source_status": "SUPPORTS_TRANSFER",
                         "comment": "Supports the transfer to ADTRP, which has its own IMP, but "
                         "the node's taxon scope carries a substrate-level claim to 46 "
                         "non-vertebrate recipients whose substrate has never been determined; "
@@ -571,9 +571,11 @@ def build_annotations() -> list[dict]:
             sup = [q(P_TFPI, "We confirm ADTRP expression and colocalization with TFPI and caveolin-1 in ECs.")]
         else:
             summ = (
-                "Term is correct for ADTRP, but this particular reference does not establish "
-                "the plasma membrane specifically - it supports GO:0016020 membrane, which the "
-                "same paper is separately and correctly cited for."
+                "Plasma-membrane localisation is correct for ADTRP and stands on PMID:21868574 "
+                "and the SL-0039 mapping, so the term is accepted. Recorded caveat: this "
+                "particular reference contains no localisation experiment and supports only "
+                "GO:0016020 membrane, for which the same paper is separately cited - a UniProt "
+                "evidence-attribution question, not a GO error."
             )
             reason = (
                 "Accepted on the term, with a reference-attribution caveat rather than a GO "
@@ -829,9 +831,12 @@ def build_annotations() -> list[dict]:
 
     A.append(
         annotation(
-            "GO:0009986", "cell surface", "IDA", P_TFPI, "located_in", "ACCEPT",
+            "GO:0009986", "cell surface", "IDA", P_TFPI, "located_in", "KEEP_AS_NON_CORE",
             "Retained on curator authority. Plausible for a polytopic plasma-membrane protein "
-            "with three extracellular loops, though the cached abstract does not state it.",
+            "with three extracellular loops, though the cached abstract does not state it. "
+            "Non-core: unlike GO:0016020, cell surface is not an ancestor of plasma membrane but "
+            "an independent claim, and the catalytic residues sit inside the bilayer rather than "
+            "on the external face.",
             "GO:0009986 sits in its own branch: closures were fetched and it is not a descendant "
             "of GO:0005886 plasma membrane or of GO:0016020 membrane, so it is a distinct claim "
             "rather than a coarser version of the other location rows. The cached record for "
@@ -936,6 +941,19 @@ def reconcile(annotations: list[dict]) -> None:
     assert all(a["review"]["action"] != "PENDING" for a in annotations), "PENDING left in review"
 
 
+def _finalise_references(by_id: dict) -> list[dict]:
+    """Emit the references list and assert its ids are unique.
+
+    Kept as a separate function so the post-condition has a seam that can be exercised: a
+    regression that rebuilds this list by appending (the original bug shape) is caught here.
+    """
+    refs = sorted(by_id.values(), key=lambda r: r["id"])
+    ids = [r["id"] for r in refs]
+    dupes = sorted({i for i in ids if ids.count(i) > 1})
+    assert not dupes, f"duplicate reference ids in output: {dupes}"
+    return refs
+
+
 class NoAliasDumper(yaml.SafeDumper):
     def ignore_aliases(self, data):  # noqa: D102
         return True
@@ -982,10 +1000,7 @@ def main() -> int:
             "directly_involved_in": [
                 {"id": "GO:0042758", "label": "long-chain fatty acid catabolic process"}
             ],
-            "locations": [
-                {"id": "GO:0005886", "label": "plasma membrane"},
-                {"id": "GO:0016020", "label": "membrane"},
-            ],
+            "locations": [{"id": "GO:0005886", "label": "plasma membrane"}],
             "substrates": [
                 {"id": "CHEBI:83670", "label": "9-PAHSA(1-)"},
                 {"id": "CHEBI:83677", "label": "12-PAHSA(1-)"},
@@ -1212,7 +1227,10 @@ def main() -> int:
                 q(
                     P_HYD,
                     "The HHpred search results, however, uncovered a distinct set of "
-                    "uncharacterized AIG1/ADTRP-like protei",
+                    "uncharacterized AIG1/ADTRP-like proteins that possess the conserved Thr and "
+                    "His residues and are found in non-mammalian eukaryotic organisms (Panther "
+                    "family PTHR12242; members in insects, plants, protozoa, and other "
+                    "non-vertebrates)",
                 )
             ],
         },
@@ -1261,66 +1279,47 @@ def main() -> int:
             "review. Mouse data, so it is not used to assert a human-specific claim.",
         ),
     }
-    for ref in doc["references"]:
-        if ref["id"] in reviews:
-            rel, corr, notes = reviews[ref["id"]]
-            ref["reference_review"] = {
-                "relevance": rel,
-                "correctness": corr,
-                "review_notes": notes,
-            }
-    doc["references"].append(
+    # This builder loads its own previous output as the starting document, so appending
+    # references unconditionally re-appends them on every re-run -- which is exactly how
+    # PMID:32152231 reached four byte-identical entries. Merge by id instead of appending, so
+    # the step is idempotent, then assert uniqueness. (`reference_id` citation counts cannot
+    # catch this: they count citations, not uniqueness of the references list itself.)
+    extra_refs = [
         {
             "id": P_POU,
             "title": "ADTRP regulates TFPI expression via transcription factor POU1F1 involved "
             "in coronary artery disease.",
             "findings": [],
-            "reference_review": {
-                "relevance": "MEDIUM",
-                "correctness": "VERIFIED",
-                "review_notes": "PubMed-verified; cached abstract-only. Resolves the mechanism "
-                "behind the GO:0010628 rows: POU1F1, not ADTRP, is the DNA-binding protein. "
-                "Cited to keep the review from implying any transcriptional molecular function "
-                "for ADTRP. Not present in GOA for this gene; surfaced by the affinage record and "
-                "then read directly.",
-            },
-        }
-    )
-    doc["references"].append(
-        {
-            "id": AFFINAGE,
-            "title": "Affinage mechanistic annotation for ADTRP (human)",
-            "findings": [],
-            "reference_review": {
-                "relevance": "MEDIUM",
-                "correctness": "VERIFIED",
-                "review_notes": "Machine-generated deep-research record, gates_passed: True, 12 "
-                "citations. Recall was checked rather than assumed and it performed well on this "
-                "gene: all 12 PMIDs are numeric (no bioRxiv ids in a PMID-shaped field), all 12 "
-                "resolve to papers genuinely about ADTRP - there is no gene-symbol collision "
-                "here - and none carries a retraction, erratum or expression of concern on its "
-                "PubMed record. It also surfaced two papers absent from GOA that this review "
-                "uses, PMID:32152231 (in vivo FAHFA control) and PMID:32445923 (POU1F1). Cited "
-                "only as a lead and for claims independently anchored to a primary PMID; its own "
-                "GO grounding block is wrong (it lists GO:0140098 catalytic activity, acting on "
-                "RNA for a lipid hydrolase) and was not used.",
-            },
-        }
-    )
-    doc["references"].append(
+        },
+        {"id": AFFINAGE, "title": "Affinage mechanistic annotation for ADTRP (human)", "findings": []},
         {
             "id": P_MOUSE,
             "title": "AIG1 and ADTRP are endogenous hydrolases of fatty acid esters of hydroxy "
             "fatty acids (FAHFAs) in mice.",
             "findings": [],
-            "reference_review": {
-                "relevance": reviews[P_MOUSE][0],
-                "correctness": reviews[P_MOUSE][1],
-                "review_notes": reviews[P_MOUSE][2],
-            },
+        },
+    ]
+    # Detector: report duplicates present in the INPUT document. This is the check that would
+    # have caught the shipped defect (four PMID:32152231 entries). It has to look at the loaded
+    # list, because the merge below repairs them -- an assertion placed only after the merge is
+    # vacuous, since dict values are unique by construction.
+    loaded_ids = [r["id"] for r in doc["references"]]
+    input_dupes = sorted({i for i in loaded_ids if loaded_ids.count(i) > 1})
+    if input_dupes:
+        print(f"  repaired duplicate reference ids present in input: {input_dupes}")
+
+    by_id = {r["id"]: r for r in doc["references"]}
+    for r in extra_refs:
+        by_id.setdefault(r["id"], r)
+    for ref_id, (rel, corr, notes) in reviews.items():
+        assert ref_id in by_id, f"reference {ref_id} not present to review"
+        by_id[ref_id]["reference_review"] = {
+            "relevance": rel,
+            "correctness": corr,
+            "review_notes": notes,
         }
-    )
-    doc["references"].sort(key=lambda r: r["id"])
+    doc["references"] = _finalise_references(by_id)
+
 
     text = yaml.dump(doc, Dumper=NoAliasDumper, sort_keys=False, allow_unicode=True, width=100)
     assert "&id" not in text and "*id" not in text, "YAML anchors emitted; rows are sharing objects"

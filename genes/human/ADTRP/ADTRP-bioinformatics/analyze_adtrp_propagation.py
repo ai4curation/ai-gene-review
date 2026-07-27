@@ -391,6 +391,30 @@ def check_term_relations(res: dict) -> None:
     res["term_relations"] = {"ancestry": out, "terms": terms}
 
 
+def check_panther_family_identity(res: dict) -> None:
+    """PMID:27018888 names PANTHER family PTHR12242 for the non-mammalian AIG1/ADTRP-like
+    proteins, while this analysis works from PTHR10989.
+
+    Recorded because it looks like a discrepancy and is not: both families are live and distinct.
+    A reviewer suggested noting that "PANTHER renumbered"; that is not what happened, so the
+    claim is measured rather than repeated.
+    """
+    out = {}
+    for fam in ("PTHR10989", "PTHR12242"):
+        m = fetch(f"https://www.ebi.ac.uk/interpro/api/entry/panther/{fam}/")["metadata"]
+        out[fam] = {
+            "name": m["name"]["name"],
+            "proteins": m["counters"]["proteins"],
+            "integrated": m.get("integrated"),
+        }
+    assert out["PTHR10989"]["name"] != out["PTHR12242"]["name"], "families are not distinct"
+    assert out["PTHR10989"]["integrated"] == "IPR006838"
+    res["panther_family_identity"] = {
+        "families": out,
+        "conclusion": "distinct, both live; not a renumbering",
+    }
+
+
 def check_catalytic_dyad_conservation(res: dict) -> None:
     """Is the Thr47/His131 catalytic dyad conserved across the 86 recipients of PTN001659973?
 
@@ -795,6 +819,21 @@ def render(res: dict) -> str:
         f"the recipients."
     )
     a("")
+    fi = res["panther_family_identity"]["families"]
+    a("### PTHR12242 vs PTHR10989 — distinct families, not a renumbering")
+    a("")
+    a(
+        "PMID:27018888 names PANTHER family `PTHR12242` for the non-mammalian AIG1/ADTRP-like "
+        "proteins, whereas this analysis works from `PTHR10989`. Both are live and distinct, so "
+        "the paper describes a sister set in another family rather than the recipients of the "
+        "node reviewed here:"
+    )
+    a("")
+    a("| family | name | proteins | InterPro |")
+    a("|---|---|---|---|")
+    for fam, v in fi.items():
+        a(f"| `{fam}` | {v['name']} | {v['proteins']} | {v['integrated'] or 'none'} |")
+    a("")
     a("## 3. The three non-PAINT routes")
     a("")
     a(
@@ -980,6 +1019,7 @@ def main() -> int:
     check_reference_projection(res)
     check_opposite_cross_product(res)
     check_term_relations(res)
+    check_panther_family_identity(res)
     check_catalytic_dyad_conservation(res)
     check_intact_interactions(res)
     check_celltype_branch_disjointness(res)

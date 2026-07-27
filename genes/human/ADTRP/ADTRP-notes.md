@@ -108,10 +108,9 @@ specific BP unwarranted. That reasoning does not survive measurement.
 
 Prompted by a sentence in the very paper I was citing — [PMID:27018888 "The HHpred search results,
 however, uncovered a distinct set of uncharacterized AIG1/ADTRP-like proteins that possess the
-conserved Thr and His residues and are found in non-mammalian eukaryotic organisms"] (note: that
-sentence is about PANTHER family **PTHR12242**, a *different* family from the PTHR10989 node here,
-so it is a lead rather than an answer) — I aligned all 85 other recipients to ADTRP, requiring the
-aligned column to land on ADTRP's own annotated SITE positions:
+conserved Thr and His residues and are found in non-mammalian eukaryotic organisms"] — I aligned
+all 85 other recipients to ADTRP, requiring the aligned column to land on ADTRP's own annotated
+SITE positions:
 
 | clade | dyad Thr/His intact | of which ≥25% identity |
 |---|---|---|
@@ -123,6 +122,24 @@ aligned column to land on ADTRP's own annotated SITE positions:
 
 Positive control: AIG1, whose catalytic residues are independently annotated as Thr43/His134,
 scores dyad-intact at 36.5% identity, so the aligner recovers a known case.
+
+### PTHR12242 vs PTHR10989 — the paper points at a *different* family, and it still exists
+
+The sentence above continues "…(Panther family **PTHR12242**; members in insects, plants, protozoa,
+and other non-vertebrates)", whereas this whole analysis works from **PTHR10989**. That is not a
+discrepancy to explain away and **it is not a PANTHER renumbering** — I checked both, and both are
+live and distinct:
+
+| family | name | proteins | InterPro integration |
+|---|---|---|---|
+| `PTHR10989` | ANDROGEN-INDUCED PROTEIN 1-RELATED | 5163 | `IPR006838` |
+| `PTHR12242` | OS02G0130600 PROTEIN-RELATED | 6117 | none |
+
+ADTRP is in `PTHR10989`, subfamily `PTHR10989:SF17` (`ADTRP-uniprot.txt` `DR PANTHER` lines), and
+`PTN001659973` is a node of that family. So the paper's remark describes a **sister set of
+AIG1/ADTRP-like proteins in a separate family**, not the recipients of the node under review —
+which is exactly why it was treated as a *lead* to go and measure rather than as an answer. Anyone
+comparing the 2016 paper against `RESULTS.md` should not expect the two family ids to match.
 
 **The dyad is broadly conserved — 73/85.** So heterogeneity is the wrong basis for the objection.
 Note also that **all 14 fungal members fall below 25% identity**, where pairwise alignment
@@ -326,3 +343,59 @@ whitespace-normalised substring of its cited source, asserts one entry per disti
 asserts each row's quotes actually mention the row's subject, and dumps with aliases disabled so
 no two rows can share a quote object. All five of its guards were break-tested; the mutation for
 each was asserted non-no-op first.
+
+## Review round 1 (PR #2338) — what changed
+
+Two blocking items, both real and both mechanical; no verdict changed.
+
+1. **`PMID:32152231` appeared four times in `references:`.** Root cause found and fixed at the
+   generator, not the output: `build_review.py` loads **its own previous output** as the starting
+   document and then appended the extra references, so every re-run appended again — I had run it
+   four times. Replaced the appends with a **merge keyed on reference id**, which makes the step
+   idempotent (three consecutive runs are now byte-identical; they were not before). References
+   went 14 → **11**, matching the reviewer's count.
+
+   Note the guard I wrote first was **vacuous**: I asserted uniqueness *after* building the list
+   from a dict, where duplicates are impossible by construction, so the assertion could never
+   fire. A break-test caught that — the mutation that re-introduced the bug shape passed cleanly.
+   Restructured into two checks that can actually fail: a **detector on the loaded input** (run it
+   against the pushed commit and it reports exactly `['PMID:32152231']`) and a **post-condition in
+   its own function** so an append-shaped regression is caught (break-tested: fires, rc=1).
+   This is the "unreachable check that reads as coverage" mode — worse than no check.
+
+2. **`source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET` on the `GO:0042758` IBA row** contradicted its
+   own `action: ACCEPT`, `root_cause: NO_FAILURE_CORE` and comment. The schema reads that value as
+   "propagation to the target is unsafe", but the target here is human ADTRP, which has its own
+   IMP. Changed to `SUPPORTS_TRANSFER`; the over-reach-to-other-recipients concern stays in the
+   `comment` and in `suggested_questions`, which is where a nuance belongs when the enum has no
+   value for it.
+
+Non-blocking suggestions, all adopted except two:
+
+- **Truncated quote** in `knowledge_gaps` provenance (ended mid-word at "…protei") replaced with the
+  full sentence, which is also more probative for the gap.
+- **`PTHR12242`** written up above — but *not* as "PANTHER renumbered", which I checked and it did
+  not: both families are live and distinct with different names and protein counts.
+- **`GO:0016020` dropped from `core_functions.locations`** as a verified ancestor of `GO:0005886`
+  that adds nothing there. Its `existing_annotations` rows keep the claim.
+- **Declined `MODIFY` on `GO:0005886` EXP / `PMID:27018888`**, for a mechanical reason as well as a
+  judgement one: the repo validator requires all rows on one term to share an action, and the other
+  two `GO:0005886` rows are correctly `ACCEPT`, so a lone `MODIFY` would trip
+  same-term-same-action while asserting the gene is not at the plasma membrane. Instead the
+  **summary was reworded to lead with the acceptance** and carry the attribution caveat second, so
+  the row no longer reads like a `MODIFY`. The concern stays where it is actionable: a UniProt
+  correction request.
+- **Declined adding `GO:0071676` as a second `proposed_replacement_terms` entry** on `GO:2000402`.
+  The abstract directly supports the monocyte reading, and two replacement terms would make the
+  machine-readable intent ambiguous rather than conservative. The fallback stays in the `reason`
+  and in the `suggested_question` addressed to BHF-UCL, which is who would apply it.
+
+**One further item I found by running the standing "does a structured field state what the prose
+refuses" check across the whole file:** `GO:0009986 cell surface` was `ACCEPT`, and `ACCEPT` is
+defined in the schema as retaining the annotation *as representing the core function* — while its
+reason hedges ("retained on curator authority… the cached abstract does not state it") and the term
+is deliberately absent from `core_functions.locations`. Changed to `KEEP_AS_NON_CORE`. Unlike
+`GO:0016020`, cell surface is **not** an ancestor of plasma membrane (verified, separate branch), so
+it is an independent claim, and the catalytic residues sit inside the bilayer rather than on the
+external face. After the change the only `ACCEPT` term absent from `core_functions` is `GO:0016020`,
+which is a verified ancestor of a core location — coherent by construction.
