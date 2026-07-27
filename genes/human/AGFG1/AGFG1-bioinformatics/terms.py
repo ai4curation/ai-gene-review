@@ -54,6 +54,11 @@ TERMS = [
     "GO:0035615",  # clathrin adaptor activity?
     "GO:0019080",  # viral gene expression
     "GO:0016032",  # viral process
+    # Raised by the round-1 reviewer: is there an acrosome-associated CC or a more
+    # specific BP for what the mouse null actually blocks?
+    "GO:0001669",  # acrosomal vesicle
+    "GO:0120211",  # proacrosomal vesicle fusion
+    "GO:0140042",  # lipid droplet formation (control: unrelated)
 ]
 
 # (child, ancestor) pairs the review's prose depends on. Checked by asking
@@ -65,6 +70,7 @@ ANCESTRY_CLAIMS = [
     ("GO:0072583", "GO:0016192"),  # clathrin-dependent endocytosis under vesicle transport
     ("GO:0035615", "GO:0140312"),  # clathrin-cargo adaptor under cargo adaptor activity
     ("GO:0035615", "GO:0060090"),  # ... and therefore under molecular adaptor activity
+    ("GO:0120211", "GO:0001675"),  # proacrosomal vesicle fusion under acrosome assembly
     # Negative controls: these must come back False, or the checker is vacuous.
     ("GO:0075733", "GO:0006406"),  # viral transport is NOT under mRNA export
     ("GO:0003723", "GO:0005515"),  # RNA binding is NOT under protein binding
@@ -110,15 +116,16 @@ def main() -> None:
     assert checks["GO:0003723 under GO:0005515"] is False, (
         "negative control failed: the descendant query is not discriminating"
     )
-    for positive in (
-        "GO:0140312 under GO:0060090",
-        "GO:0005643 under GO:0005635",
-        "GO:0072583 under GO:0016192",
-        "GO:0035615 under GO:0140312",
-        "GO:0035615 under GO:0060090",
-    ):
+    negatives = {"GO:0075733 under GO:0006406", "GO:0003723 under GO:0005515"}
+    positives = set(checks) - negatives
+    for positive in sorted(positives):
         assert checks[positive] is True, f"expected ancestry claim failed: {positive}"
-    print("\nancestry checks OK (5 positive, 2 negative controls)")
+    # Counts derived, not hardcoded: a literal here goes stale the moment a claim
+    # is added, and then reports coverage it does not have.
+    print(
+        f"\nancestry checks OK ({len(positives)} positive, {len(negatives)} negative "
+        "controls)"
+    )
 
     OUT.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
     print(f"\nwrote {OUT}", file=sys.stderr)

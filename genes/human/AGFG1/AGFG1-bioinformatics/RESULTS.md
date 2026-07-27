@@ -69,6 +69,19 @@ Two independent structures agree, and both agree with the motif scan of section 
 is direct experimental evidence that human AGFG1 binds zinc — a term GOA does **not**
 carry (see section 8).
 
+**The table above is now machine-checked against `zinc_site.json`.** The first committed
+version of `zinc_site.py` wrote that artifact as `{}` — the loop computed each result,
+printed it, asserted it, and never stored it — so this table had no persisted output
+behind it while still validating as a byte-exact quote. `audit_review.py` check J parses
+the rendered table back out and asserts the PDB id, offset and coordinating cysteines
+agree with the JSON; check I fails on any empty artifact in this directory. Both are
+break-tested against the exact content that shipped.
+
+Neither structure has a primary publication: PDBe reports 2OLM as *"ArfGap domain of
+HIV-1 Rev binding protein"* and 2D9L as *"Solution structure of the ArfGap domain of
+human RIP"*, both **"To be published"** with a null PubMed id and a null DOI. That is why
+the `GO:0008270` row's `original_reference_id` is this computation rather than a PMID.
+
 ## 3. AGFG1 and AGFG2 are paralogues — verified, not assumed
 
 `paralogy.py`, three independent lines with a scale:
@@ -259,6 +272,23 @@ CATH/Gene3D–UniProt correction rather than a GO action.
 **0/20 carry a retraction, erratum or expression-of-concern flag.** A correction can
 carry a null PubMed id and be visible only through Crossref, so this is "none found by
 these two routes", not "none exists".
+
+## 12b. Searching for an acrosome compartment found a better process term instead
+
+Asked in review whether an acrosome-associated cellular component should be proposed.
+`GO:0001669 acrosomal vesicle` is **declined** on its own definition — *"A structure in
+the head of a spermatozoon that contains acid hydrolases ... derived from the lysosome"* —
+which denotes the **mature** organelle, whereas AGFG1 sits on the cytosolic surface of the
+**precursor** vesicles and in the null the mature acrosome never forms. The human evidence
+is orthology-only, so a human CC row would rest on similarity for a compartment nobody has
+imaged in human spermatids.
+
+The search for that CC surfaced **`GO:0120211 proacrosomal vesicle fusion`**, whose
+definition is the mouse phenotype verbatim: *"Fusion of the membrane of proacrosomal
+vesicle with the membrane of another proacrosomal vesicle to form the acrosome."* It is a
+verified descendant of the accepted `GO:0001675` over `is_a`/`part_of`, so proposing it is
+additive rather than a sideways move. That is a better answer to the question than the
+component would have been.
 
 ## 13. Checks that came back negative, recorded so they are known to have been run
 

@@ -144,6 +144,7 @@ def main() -> None:
     results = {}
     for pdb in ("2olm", "2d9l"):
         r = analyse(pdb)
+        results[pdb] = r
         chains = {s["chain"] for s in r["coordination_shell"]}
         assert len(chains) == 1, f"{pdb}: shell spans chains {chains}"
         off = sifts_offset(pdb, chains.pop(), SUBJECT)
@@ -172,8 +173,21 @@ def main() -> None:
             f"predicted Cys{PREDICTED_CYS} - one of the two is wrong"
         )
         print(f"   matches the motif prediction Cys{PREDICTED_CYS}: True")
+
+    # The first committed version of this script wrote `{}` because the loop never
+    # assigned `results[pdb]`, while every real number went only to stdout - a
+    # silent degradation that no gate could see, since the RESULTS.md table it
+    # feeds still validated as a byte-exact quote. Assert the payload before AND
+    # after writing.
+    assert set(results) == {"2olm", "2d9l"}, f"results has keys {sorted(results)}"
+    for pdb, r in results.items():
+        assert r["coordination_shell"], f"{pdb}: empty coordination shell"
+        assert r["coordinating_cysteines_uniprot"] == PREDICTED_CYS, pdb
     OUT.write_text(json.dumps(results, indent=2, sort_keys=True) + "\n")
-    print(f"\nwrote {OUT}")
+    reread = json.loads(OUT.read_text())
+    assert reread == results, "what was written back does not match what was computed"
+    assert reread, "wrote an empty artifact"
+    print(f"\nwrote {OUT} ({len(reread)} entries)")
 
 
 if __name__ == "__main__":

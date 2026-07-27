@@ -20,6 +20,14 @@ F. summary/action agreement in BOTH directions: no summary's opening clause may
 G. core_functions terms must be backed by an ACCEPT or NEW row, and every ACCEPT
    row's term must appear somewhere in core_functions - the direction that
    otherwise goes unwritten.
+I. no committed JSON artifact in this directory may be empty. The round-1 reviewer
+   found `zinc_site.json` written as `{}` because its producing loop never stored
+   its results, while every real number went only to stdout - a silent degradation
+   invisible to every gate, because the RESULTS.md table it feeds still validated
+   as a byte-exact quote.
+J. the RESULTS.md zinc-coordination table must agree with zinc_site.json. A prose
+   table derived from a script is a two-way dependency; without this the table can
+   drift from the artifact in either direction.
 
 Usage:
     uv run python audit_review.py
@@ -29,8 +37,11 @@ Usage:
 from __future__ import annotations
 
 import csv
+import json
 import re
+import shutil
 import sys
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -235,6 +246,61 @@ def audit(text: str) -> list[str]:
         if term != "GO:0005515" and len(actions) > 1:
             problems.append(f"H: {term} has divergent actions {dict(actions)}")
 
+    problems.extend(audit_artifacts())
+    return problems
+
+
+def audit_artifacts() -> list[str]:
+    """Checks I and J: artifact non-emptiness, and RESULTS.md/zinc_site.json
+    agreement. Separated so the review-YAML checks and the artifact checks can be
+    exercised independently."""
+    problems: list[str] = []
+
+    # I. no empty JSON artifact
+    jsons = sorted(HERE.glob("*.json"))
+    if not jsons:
+        problems.append("I: no JSON artifacts found - vacuous check")
+    for p in jsons:
+        try:
+            payload = json.loads(p.read_text())
+        except json.JSONDecodeError as exc:
+            problems.append(f"I: {p.name} is not valid JSON: {exc}")
+            continue
+        if not payload:
+            problems.append(f"I: {p.name} is empty ({payload!r})")
+
+    # J. RESULTS.md zinc table vs zinc_site.json
+    zj = HERE / "zinc_site.json"
+    rm = HERE / "RESULTS.md"
+    if not zj.exists() or not rm.exists():
+        problems.append("J: zinc_site.json or RESULTS.md missing - vacuous check")
+        return problems
+    zinc = json.loads(zj.read_text())
+    text = rm.read_text()
+    if not zinc:
+        problems.append("J: zinc_site.json is empty, so the table cannot be checked")
+        return problems
+    rows = 0
+    for pdb, rec in zinc.items():
+        cys = rec["coordinating_cysteines_uniprot"]
+        expect_cys = ", ".join(f"Cys{c}" for c in cys)
+        off = rec["auth_to_uniprot_offset"]
+        expect_off = f"+{off}" if off >= 0 else str(off)
+        # The table row must carry this PDB id, its offset and its cysteines.
+        pattern = re.compile(
+            rf"^\|\s*{pdb.upper()}\s*\|[^|]*\|[^|]*\|\s*{re.escape(expect_off)}\s*\|"
+            rf"\s*{re.escape(expect_cys)}\s*\|",
+            re.MULTILINE,
+        )
+        if not pattern.search(text):
+            problems.append(
+                f"J: RESULTS.md has no zinc table row for {pdb.upper()} with offset "
+                f"{expect_off} and {expect_cys}"
+            )
+        else:
+            rows += 1
+    if rows == 0:
+        problems.append("J: matched zero zinc table rows - vacuous check")
     return problems
 
 
@@ -298,7 +364,46 @@ def self_test() -> None:
         "H",
         "same-term-same-action",
     )
-    print("self-test OK (7 break-tests, each asserting mutation + firing)")
+    # I and J act on files rather than on `text`, so they are break-tested by
+    # mutating the artifact and restoring it, asserting the restore succeeded.
+    zj = HERE / "zinc_site.json"
+    original = zj.read_text()
+    assert json.loads(original), "baseline zinc_site.json is empty - fix before testing"
+    with tempfile.TemporaryDirectory() as td:
+        backup = Path(td) / "zinc_site.json"
+        shutil.copy2(zj, backup)
+
+        # I, run against THE DEFECT THAT ACTUALLY SHIPPED: commit e6ac0a131 wrote
+        # this file as literally `{}`. Reproducing that exact content is a stronger
+        # claim than any mutation I would have invented.
+        zj.write_text("{}\n")
+        assert zj.read_text() != original, "mutation did not change the artifact"
+        probs = audit_artifacts()
+        assert any(p.startswith("I:") and "zinc_site.json is empty" in p for p in probs), (
+            f"check I did not fire on the shipped defect; got {probs}"
+        )
+        assert any(p.startswith("J:") for p in probs), (
+            f"check J should also fire on an empty artifact; got {probs}"
+        )
+
+        # J on its own: a populated artifact whose offset disagrees with the table.
+        broken = json.loads(original)
+        broken["2olm"]["auth_to_uniprot_offset"] = 99
+        zj.write_text(json.dumps(broken, indent=2, sort_keys=True) + "\n")
+        assert zj.read_text() != original
+        probs = audit_artifacts()
+        assert any(p.startswith("J:") and "2OLM" in p for p in probs), (
+            f"check J did not fire on a drifted offset; got {probs}"
+        )
+        assert not any(p.startswith("I:") for p in probs), (
+            "check I should be silent on a populated artifact"
+        )
+
+        shutil.copy2(backup, zj)
+    assert zj.read_text() == original, "failed to restore zinc_site.json"
+    assert audit_artifacts() == [], f"artifact checks not clean after restore: {audit_artifacts()}"
+
+    print("self-test OK (10 break-tests, each asserting mutation + firing)")
 
 
 def main() -> int:

@@ -274,6 +274,29 @@ CATH/Gene3D–UniProt correction request rather than acted on in GO.
 * The recipient composition of `PTN002919572` (21/12/3) was originally counted by eye;
   it is now computed with an assertion that the classes sum to the total, because the
   prose claimed it was computed.
+* **Round 1 review found a real bug I had shipped:** `zinc_site.json` was written as `{}`
+  because `main()` computed `r` for each PDB, printed it, asserted it, and never stored it
+  in `results`. Every number reached stdout and none reached the artifact — and no gate
+  could see it, because the `RESULTS.md` table it feeds still validated as a byte-exact
+  quote. Fixed, and closed off as a class rather than an instance: `zinc_site.py` now
+  asserts the payload before *and* after writing and re-reads what it wrote,
+  `audit_review.py` check I fails on any empty JSON in the directory, and check J parses
+  the rendered `RESULTS.md` table back out and asserts it agrees with the JSON. Both new
+  checks are break-tested against the exact `{}` content that shipped in `e6ac0a131`.
+* **The round-1 response turned a suggestion into a finding.** Asked whether an
+  acrosome-associated CC should be proposed, I checked `GO:0001669`'s definition, found it
+  denotes the *mature* organelle (which never forms in the null) and declined it — and the
+  search surfaced `GO:0120211 proacrosomal vesicle fusion`, whose definition is the mouse
+  phenotype verbatim and which is a verified descendant of the accepted `GO:0001675`. Added
+  as a NEW ISS row with the mouse orthologue in `supporting_entities`.
+* **One reviewer premise needed correcting rather than conceding.** The suggestion that
+  `GO:0140312 cargo adaptor activity` "does not commit to clathrin" is not right: its
+  definition reads *"Binding directly to the structural scaffolding elements of a vesicle
+  coat (such as clathrin or COPII), and bridging the membrane, cargo receptor, and membrane
+  deformation machinery"*, so retreating from `GO:0035615` to its parent would not avoid the
+  coat commitment and would add a cargo-receptor clause that is wrong here (VAMP7 is the
+  cargo). The substance of the point stands and is now acknowledged in the row; the proposed
+  remedy would not have worked.
 * `publications/PMID_18819912.md` carries `full_text_extraction_method: pdf_partial` and
   a `## Full Text` section containing only page boilerplate
   ("Preparing to download … HHS Vulnerability Disclosure"). The `full_text_available:
