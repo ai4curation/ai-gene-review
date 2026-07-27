@@ -218,6 +218,78 @@ propagate — G-protein coupling and a PV-interneuron-specific conditional-knock
 mouse *Adgra1*, the very gene behind `MGI:MGI:1277167`. Recommending it to PAINT is the single
 highest-value action available on this gene, and it is filed in `suggested_questions`.
 
+## Cross-review check against the concurrent ADGRA2 and ADGRA3 reviews
+
+Run per the AADACL2/3/4 lesson: when three paralogs are reviewed independently, compare the
+rows they share rather than diverging silently. Sibling PRs #2314 (ADGRA2) and #2315 (ADGRA3).
+
+Eleven rows are shared by all three genes (identical term + evidence code + reference; the two
+IBA rows also have byte-identical WITH/FROM). **Eight of the eleven are resolved differently.**
+
+| shared row | ADGRA1 | ADGRA2 | ADGRA3 |
+|---|---|---|---|
+| `GO:0005515` IPI (both refs) | MODIFY→`GO:0030165` | MODIFY→`GO:0030165` | MODIFY→`GO:0030165` |
+| `GO:0005886` IBA | ACCEPT | ACCEPT | ACCEPT |
+| `GO:0004930` IEA | ACCEPT | MARK_AS_OVER_ANNOTATED | ACCEPT |
+| `GO:0004930` TAS | ACCEPT | **REMOVE** | ACCEPT |
+| `GO:0007186` IEA | ACCEPT | MARK_AS_OVER_ANNOTATED | ACCEPT |
+| `GO:0007186` TAS | ACCEPT | **REMOVE** | ACCEPT |
+| `GO:0007166` IBA / IEA | ACCEPT | KEEP_AS_NON_CORE | ACCEPT |
+| `GO:0016020` TAS | MODIFY→`GO:0005886` | KEEP_AS_NON_CORE | MODIFY→`GO:0005886` |
+| `GO:0004888` IEA | MODIFY→`GO:0004930` | KEEP_AS_NON_CORE | ACCEPT |
+
+**All three independently reached MODIFY → `GO:0030165` on the PDZ rows.** Three separate
+reviews converging on the same replacement for the same 21-partner holdup dataset is the
+strongest single result in this comparison.
+
+**All three independently found the `PMID:15203201` GDB block.** ADGRA2's review derived the
+same 78-annotations/27-entities/25-with-`GO:0004930` figures I did, and went one step further:
+it checked *by name* which two entities miss `GO:0004930`, so that the pseudogene recipients
+are confirmed rather than inferred from the count. I reproduced that claim from QuickGO and it
+is **correct** — the two are `ADGRG3` and `ADGRV1`, and the pseudogenes `ADGRE4P` and
+`ADGRF2P` do receive the molecular function. Two reviews deriving the same block independently
+is much stronger than either alone; cited in agreement.
+
+### Where I disagree, and why it is mostly not a disagreement
+
+The `GO:0004930`/`GO:0007186` split (ADGRA1 ACCEPT, ADGRA3 ACCEPT, ADGRA2 REMOVE) is
+**evidence-driven, not method-driven**, and by the ACTR1A/ACTR10 rule that needs no
+reconciliation: all three reviews apply the same standard — annotate what has been measured on
+*this* gene — and the measurements differ.
+
+- ADGRA1: `PMID:41961591` (Cell Rep, Apr 2026), TRUPATH 14-sensor panel, Gα13/Gα11/Gα15, dose-response.
+- ADGRA3: `PMID:40127866` (J Biol Chem, May 2025), "Complex G-protein signaling of the adhesion
+  GPCR, ADGRA3" — Gi and Gs, stachel-dependent, DVL-independent. Verified at PubMed; the paper
+  is real and is what the sibling says it is.
+- ADGRA2: no coupling assay, and gene-specific evidence pointing away from one (IUPHAR lists no
+  transducer; UniProt states the characterised tethering activity does not rely on its GPCR
+  structure; the one reported heterotrimeric contact runs the other way, Gβγ binding the C-tail).
+
+So three different verdicts on one row can all be right here, unlike the AADACL case where one
+row on one node had to have one answer.
+
+### One correction I owe the ADGRA2 review
+
+Its REMOVE reason states: *"No G-protein coupling assay for ADGRA1, ADGRA2 or ADGRA3 exists in
+the systematic adhesion-GPCR coupling literature ... and none for the ADGRA clade."*
+
+**That clade-wide negative is false**, and it is refuted twice over by work the two sibling
+reviews found independently: `PMID:41961591` assays ADGRA1 and `PMID:40127866` assays ADGRA3.
+Neither is cited in the ADGRA2 review. The miss is instructive rather than careless for the
+first — a hippocampal-circuits paper will not surface in a pharmacology-literature sweep — but
+`PMID:40127866` is squarely inside the literature that was swept, so the sweep was incomplete.
+
+This does **not** flip ADGRA2's verdict. Its gene-specific arguments are untouched by either
+paper, and coupling in ADGRA1 and ADGRA3 says nothing about ADGRA2. What it removes is a
+*strengthener*: the row cannot be argued down on the grounds that the clade as a whole is
+uncoupled, only on ADGRA2's own evidence. An absence asserted at clade level, when two of three
+members have since been assayed, is exactly the "an absence is not a finding" failure this
+campaign has recorded before.
+
+Its other cross-gene premise — *"across all three human ADGRA paralogs there is no
+molecular-function IBA at all"* — I checked independently and it is **correct** (see the
+node-reach table in `RESULTS.md`: no node in this family carries an MF term).
+
 ## Checks run that came back negative (recorded so the next reviewer knows)
 
 - **Retraction / erratum / expression-of-concern sweep** over all 15 cited PMIDs, reading
