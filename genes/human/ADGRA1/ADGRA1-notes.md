@@ -253,14 +253,18 @@ verdict because they run against the obvious reading. vGAT is a presynaptic mark
 rescue works when the receptor is restored in the presynaptic PV cell
 [PMID:41961591 "supporting a role for ADGRA1 in presynaptic PV+ cells that target DG GCs"] — but
 that is a statement about *which cell*, not about which side of the synapse the protein sits on.
-Against it: the localisation sentence is hedged ("suggesting subcellular localization"), it rests
-entirely on overexpressed tagged protein
-[PMID:41961591 "Given the absence of reliable antibodies for ADGRA1, we expressed HA-tagged ADGRA1 in primary hippocampal cultures"],
-and the paper's own controls show the presynaptic release apparatus is intact —
+Against it, and keeping the two kinds of argument apart — a distinction the reviewer was right to
+press: the **localisation** case is weak on its own terms, because the sentence is hedged
+("*suggesting* subcellular localization") and rests entirely on overexpressed tagged protein
+[PMID:41961591 "Given the absence of reliable antibodies for ADGRA1, we expressed HA-tagged ADGRA1 in primary hippocampal cultures"].
+Those are the grounds for declining `GO:0098793`. Separately, on **function**, the paper's own
+controls show the presynaptic release apparatus is intact —
 [PMID:41961591 "PV-cKO GCs displayed no changes in the PPR or coefficient of variation in eIPSCs, supporting that presynaptic release probability is preserved"]
 and [PMID:41961591 "the overall density of PV terminals labeled with synaptotagmin-2 (Syt2) was unaltered throughout the hippocampus"].
-Filed as a knowledge gap rather than a term. Restraint argued per term from the measured
-numbers, not applied uniformly: `GO:0098982` in, `GO:0098793` out.
+That is a mechanistic gap in its own right and says nothing about where the protein is; the first
+round of this review recruited it as if it did. Both filed as a knowledge gap rather than a term.
+Restraint argued per term from the measured numbers, not applied uniformly: `GO:0098982` in,
+`GO:0098793` out.
 
 ## Cross-review check against the concurrent ADGRA2 and ADGRA3 reviews
 

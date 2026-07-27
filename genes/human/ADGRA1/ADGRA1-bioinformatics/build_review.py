@@ -580,7 +580,7 @@ NEW_ROWS = [
                 },
                 {
                     "reference_id": "PMID:41961591",
-                    "supporting_text": "ADGRA1 deletion in PV interneurons impairs intrinsic excitability and reduces inhibitory synaptic strength onto dentate gyrus granule cells.",
+                    "supporting_text": "Surface ADGRA1 formed puncta that partially co-localized with both pre- and postsynaptic markers",
                 },
             ],
         },
@@ -1069,14 +1069,20 @@ KNOWLEDGE_GAPS = [
     {
         "gap_statement": (
             "Whether ADGRA1 sits on the presynaptic or the postsynaptic side of the "
-            "inhibitory synapse is unresolved, and the available evidence pulls both "
-            "ways. Tagged receptor appears on dendrites and on axon initial segments "
-            "and co-localises with the presynaptic vesicular GABA transporter vGAT, "
-            "and the rescue experiment works when the receptor is restored in the "
-            "presynaptic PV interneuron - but the same study finds paired-pulse ratio, "
-            "coefficient of variation and Syt2-labelled terminal density all "
-            "unaltered, so the presynaptic release apparatus is intact. GO:0098793 "
-            "presynapse was therefore considered and not proposed."
+            "inhibitory synapse is unresolved. Two distinct questions are involved and "
+            "the evidence bears on them unequally. On LOCALISATION, the only positive "
+            "statements are that tagged receptor appears on dendrites and on axon "
+            "initial segments and co-localises with vGAT - and that sentence is hedged "
+            "('suggesting subcellular localization'), rests entirely on overexpressed "
+            "HA-tagged protein because no reliable antibody exists, and the rescue "
+            "result establishes which CELL the receptor is needed in rather than which "
+            "side of the synapse it occupies. Those are the grounds on which GO:0098793 "
+            "presynapse was considered and not proposed. Separately, on FUNCTION, "
+            "paired-pulse ratio, coefficient of variation and Syt2-labelled terminal "
+            "density are all unaltered, so whatever the receptor does, it is not acting "
+            "through presynaptic release probability or terminal number. That is a "
+            "mechanistic gap in its own right and is not evidence about where the "
+            "protein is."
         ),
         "boundary": (
             "Known: the receptor is at inhibitory synapses (vGAT co-localisation) and "
