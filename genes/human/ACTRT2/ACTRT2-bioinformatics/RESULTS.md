@@ -14,7 +14,7 @@ Contacts computed from **PDB 2BTF** chain A (ligands ATP, SR), 374 observed resi
 
 Literature-named actin residues inside the computed contact set: D157, E214, G15, G156, K18, K336, Q137, S14, V159, Y306. Outside it (probed by alignment anyway): A108, D11, D154, H161, P109, R183.
 
-**Sequence-length audit first, because a truncated reference manufactures fake substitutions.** The structure's observed chain is 374 residues; a panel member shorter than 280.5 residues (0.75 x the structure's observed chain length; the shortest unflagged panel member is 366 aa and the longest flagged is 245 aa, so the cut lies in an observed gap) is flagged as too short to contain the fold: **ACTL10 (human actin-like 10)** at 245 aa. Tallies for a flagged member are NOT comparable: gaps and apparent substitutions may reflect absent residues rather than divergence.
+**Sequence-length audit first, because a truncated reference manufactures fake substitutions.** The structure's observed chain is 374 residues; a panel member shorter than 280.5 residues (0.75 x the structure's observed chain length; the shortest unflagged panel member is 366 aa and the longest flagged is 245 aa, so the cut lies in an observed gap) is flagged as too short to contain the fold: **ACTL10 (human actin-like 10)** at 245 aa. Tallies for a flagged member are NOT comparable: gaps and apparent substitutions may reflect absent residues rather than divergence. No conclusion in this analysis rests on a flagged member, and that is asserted rather than claimed: `panel_length_audit` raises if a flagged accession appears in any of the argument-carrying reference sets (filament_builders, nucleators_not_polymerisers, pt_complex_arps), and it currently finds 0 such overlaps. A flagged member's rows are marked in every table below where its numbers are read.
 
 Aligned residue at each named actin position:
 
@@ -35,7 +35,7 @@ Aligned residue at each named actin position:
 | ACTL7A | D | T* | G | K | P** | P | Q | E* | G | H** | V | Y** | S** | K** | L** | D** |
 | ACTL7B | D | S | Q** | K | P** | P | Q | E* | G | H** | V | H | G** | K** | L** | K |
 | ACTL9 | D | T* | G | K | P** | P | Q | D | G | H** | V | Y** | N** | H** | F* | N** |
-| ACTL10 | -! | -! | -! | -! | -! | -! | T** | E* | G | A** | V | H | S** | K** | F* | G** |
+| ACTL10 [TRUNC] | -! | -! | -! | -! | -! | -! | T** | E* | G | A** | V | H | S** | K** | F* | G** |
 | ACTL8 | D | S | G | K | T** | P | Q | D | G | Y** | L* | R* | Q** | M** | Y | N** |
 
 (`*` conservative, `**` non-conservative, `!` gap; roles: D11 = phosphate-binding loop 1; S14 = phosphate-binding loop 1, beta-phosphate contact; G15 = phosphate-binding loop 1; K18 = phosphate-binding loop 1; A108 = Pro-rich loop; governs His161 flipping; P109 = Pro-rich loop; governs His161 flipping; Q137 = hydrogen-bonded to the attacking water W1; D154 = divalent cation coordination; G156 = phosphate-binding loop 2; D157 = phosphate-binding loop 2; V159 = phosphate-binding loop 2; H161 = ATP hydrolysis trigger; R183 = sensor loop / nucleotide state; E214 = adenosine region; Y306 = adenine pocket; K336 = adenine/ribose region.)
@@ -159,7 +159,7 @@ Actin positions 38, 39, 40, 41, 42, 43, 44, 45, 47, 49 = `PRHQGVMVMQ`
 | ACTR10 (human Arp11; dynactin pointed-end cap) (Q9NZ32) | `----------` | 0/10 |
 | ACTL7B (human actin-like 7B; GO:0005200 negated by PAINT) (Q9Y614) | `RCPEAADADR` | 0/10 |
 | ACTL9 (human actin-like 9; PT complex) (Q8TC94) | `QPKKPATSQG` | 0/10 |
-| ACTL10 (human actin-like 10) (Q5JWF8) | `----------` | 0/10 |
+| ACTL10 (human actin-like 10) (Q5JWF8) **[TRUNCATED - not comparable]** | `----------` | 0/10 |
 
 ## 3. IBA source audit
 

@@ -226,29 +226,40 @@ def _probe_for(pattern: str) -> str:
 
 
 def selftest() -> int:
-    """Inject each retracted phrasing into a synthetic surface and require `audit()` to report it.
+    """Prove this lint actually fires: probe construction, injection, scan COVERAGE, sabotage, prose.
 
-    The first version of this function did NOT do that. It compared `re.search(pattern, probe)` -
-    the regex against a string built from that same regex - so it tested `_probe_for` and never
-    called `audit()` at all. `audit()`'s `extra` parameter, which exists precisely for this
-    injection, was dead; and `failures` could never be non-zero because its only increment sat after
-    a `raise`. The success line therefore printed "every retracted phrasing is caught" without having
-    tested anything, and breaking the lint - `surfaces()` returning `[]`, or inverting the
-    `if rx.search` - still passed.
+    Injection alone is not enough and that is the central point. `audit(extra=...)` appends to
+    `surfaces()`, so an injected surface is scanned however badly the real-file scan is broken - of
+    three deliberate sabotages (`surfaces()` returning `[]`, `review_strings()` losing its list
+    recursion, inverting the `if rx.search`), injection caught only the third. The coverage assertion
+    is what catches the other two, so any description of this mode as injection alone is wrong.
 
-    That is the "reports zero on a broken input" state this mode was added to prevent, committed
-    inside the file added to prevent it. It is fixed by calling the thing under test, and the checks
-    are now separately named so neither can be mistaken for the other:
+    The five checks, each summed into the return value:
 
-      * `_selftest_probe_builder()`        - can a literal be built that the pattern matches?
-      * `_selftest_lint_fires()`           - injected as a surface, does `audit()` report it?
+      * `_selftest_probe_builder()`         - can a literal be built that the pattern matches?
+      * `_selftest_lint_fires()`            - injected as a surface, does `audit()` report it?
+      * `_selftest_scan_coverage()`         - does the walk actually reach `review.description`, a
+                                              list-nested review path, `notes` and `RESULTS.md`?
       * `_selftest_detects_a_broken_lint()` - if the scan is sabotaged, does `audit()` stop passing?
+      * `_selftest_docstrings_match_code()` - does this file's prose match this file's behaviour,
+                                              including this enumeration?
+
+    History, because it is the reason for the last two. The first version of this function did none
+    of the above: it compared `re.search(pattern, probe)` - the regex against a string built from
+    that same regex - so it tested `_probe_for` and never called `audit()` at all. `audit()`'s
+    `extra` parameter was dead, and `failures` could never be non-zero because its only increment sat
+    after a `raise`. It printed "every retracted phrasing is caught" without having tested anything:
+    the "reports zero on a broken input" state this mode exists to prevent, committed inside the file
+    added to prevent it. Then this docstring itself drifted - listing three helpers while the code
+    summed four, and omitting precisely the coverage check that had just been added - which is why
+    the enumeration is now machine-checked rather than maintained by hand.
     """
     total = (
         _selftest_probe_builder()
         + _selftest_lint_fires()
         + _selftest_scan_coverage()
         + _selftest_detects_a_broken_lint()
+        + _selftest_docstrings_match_code()
     )
     if total:
         print(f"selftest FAILED: {total} problem(s)")
@@ -263,6 +274,60 @@ def selftest() -> int:
     print("  returning [], review_strings() losing list recursion, and inverting the search):")
     print("  all three are caught - the first two only by the coverage assertion.")
     return 0
+
+
+def _selftest_docstrings_match_code() -> int:
+    """Assert this file's prose describes this file's behaviour. Written after claiming it existed.
+
+    This check was DESCRIBED in a PR comment as already present before it had been written - the
+    exact "fixed in N places, landed in N-1" failure the rest of this file exists to prevent, and
+    the reviewer found it by grepping the folder for `__doc__` and finding nothing. So it now exists,
+    and its third clause is the one that would have caught the defect it was invented to explain: the
+    enumeration in `selftest`'s own docstring had drifted from the helpers `selftest` actually sums.
+
+    Deliberately mechanical rather than stylistic. It checks only claims that can be falsified from
+    the module's own source and docstrings.
+    """
+    import inspect
+
+    failures = 0
+    module_doc = " ".join((__doc__ or "").split())
+    selftest_doc = " ".join((selftest.__doc__ or "").split())
+    selftest_src = inspect.getsource(selftest)
+
+    if "occurrence count" in module_doc:
+        print("  DOC FAIL: module docstring calls required_min_surfaces an 'occurrence count'; it "
+              "counts surfaces")
+        failures += 1
+    for label, doc in (("module", module_doc), ("selftest()", selftest_doc)):
+        if "coverage" not in doc.lower():
+            print(f"  DOC FAIL: {label} docstring does not mention the coverage assertion, which is "
+                  "the check that catches a sabotaged scan; describing this mode as injection alone "
+                  "is the framing that was already corrected once")
+            failures += 1
+
+    # Every _selftest_* helper defined in this module must be summed by selftest(), and every helper
+    # summed by selftest() must be named in its docstring. Both directions, because either gap hides
+    # a check that is not run or a check nobody knows is run.
+    helpers = {
+        name for name, obj in globals().items()
+        if name.startswith("_selftest_") and callable(obj)
+    }
+    called = {n for n in helpers if f"{n}()" in selftest_src}
+    for missing in sorted(helpers - called):
+        print(f"  DOC FAIL: {missing}() is defined but never called from selftest(); a check that "
+              "is not run is documentation")
+        failures += 1
+    for undocumented in sorted(called - {h for h in helpers if h in selftest_doc}):
+        print(f"  DOC FAIL: selftest() calls {undocumented}() but its docstring does not name it; "
+              "the enumeration has drifted from the code")
+        failures += 1
+
+    n = len(called)
+    if n != 2 and "neither can be mistaken for the other" in selftest_doc:
+        print(f"  DOC FAIL: selftest() docstring uses two-way language for {n} checks")
+        failures += 1
+    return failures
 
 
 def _selftest_probe_builder() -> int:

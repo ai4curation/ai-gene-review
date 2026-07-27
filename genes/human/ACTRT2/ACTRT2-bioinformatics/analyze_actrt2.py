@@ -1535,7 +1535,12 @@ def render(r: dict) -> str:
       f"({la['cutoff_rationale']}) is flagged as too short to contain the fold: "
       + (", ".join(f"**{k}** at {v} aa" for k, v in la["flagged_too_short_for_the_fold"].items())
          or "none")
-      + f". {la['note']}")
+      + f". {la['note']} No conclusion in this analysis rests on a flagged member, and that is "
+      f"asserted rather than claimed: `panel_length_audit` raises if a flagged accession appears in "
+      f"any of the argument-carrying reference sets ({', '.join(la['argument_carrying_sets_checked'])}"
+      f"), and it currently finds "
+      f"{len(la['flagged_members_in_argument_carrying_sets'])} such overlaps. A flagged member's "
+      f"rows are marked in every table below where its numbers are read.")
     a("")
     a("Aligned residue at each named actin position:")
     a("")
@@ -1549,7 +1554,8 @@ def render(r: dict) -> str:
             v = rec["sites"][s]
             mark = {"identical": "", "conservative": "*", "non-conservative": "**", "gap": "!"}[v["call"]]
             cells.append(f"{v['aligned_residue']}{mark}")
-        a(f"| {rec['label'].split(' (')[0]} | " + " | ".join(cells) + " |")
+        trunc = " [TRUNC]" if acc in FLAGGED else ""
+        a(f"| {rec['label'].split(' (')[0]}{trunc} | " + " | ".join(cells) + " |")
     a("")
     a("(`*` conservative, `**` non-conservative, `!` gap; roles: "
       + "; ".join(f"{s} = {next(iter(ns['named_site_probe'].values()))['sites'][s]['role']}" for s in sites)
@@ -1609,7 +1615,9 @@ def render(r: dict) -> str:
 
     for acc, rec in sorted(rowsrc.items(), key=lambda kv: -kv[1]["subset"]["identical"]):
         motif = "".join(call_at(rec["calls"], p)["aligned_residue"] for p in dl)
-        a(f"| {rec['label']} ({acc}) | `{motif}` | {rec['subset']['identical']}/{rec['subset']['n_positions']} |")
+        mark = " **[TRUNCATED - not comparable]**" if acc in FLAGGED else ""
+        a(f"| {rec['label']} ({acc}){mark} | `{motif}` | "
+          f"{rec['subset']['identical']}/{rec['subset']['n_positions']} |")
     a("")
 
     # 3 IBA sources

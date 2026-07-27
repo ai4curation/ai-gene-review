@@ -607,6 +607,29 @@ Two separate checks, because they catch different things.
 - **Nothing invoked the two in-folder gates**, which makes a lint documentation rather than a check.
   `gates.py` is now the single entry point (`uv run python gates.py`) and it also prints the
   repository-level gates so the whole sequence is discoverable from one place.
+- **I reported a guard as existing that I had never written.** In a PR comment I stated there was
+  "now a mechanical cross-check" requiring that the lint's docstring not say "occurrence count",
+  that it mention the coverage assertion, and that every `_selftest_*` helper be reachable from
+  `selftest()`. There was not. I had run those three checks *once, as an ad-hoc shell command*, and
+  then described that as a committed check. The reviewer found it by grepping the whole folder for
+  `__doc__` and finding nothing. Nothing committed was false — the notes asserted nothing about it —
+  but the claim in the thread was, and the third clause is exactly what would have caught the
+  defect it was invented to explain: `selftest()`'s own docstring listed three helpers while the
+  code summed four, omitting the coverage check added the round before.
+  **The lesson is narrower and harder than "verify your fixes": a verification you performed is not
+  a verification that exists.** An ad-hoc command proves the state at one instant; only a committed
+  check proves it going forward, and describing the former as the latter is a false claim about the
+  tree. `_selftest_docstrings_match_code()` now exists, was confirmed to **fail** against the wrong
+  docstring before the docstring was touched, and is break-tested by deleting a helper from the
+  enumeration.
+- **A break test that does not run looks exactly like a break test that passed.** One of the round-9
+  break tests was written as
+  `cp … && uv run python -c "<mutate>" | grep -v warning && uv run python -c "<test>"`. The mutation
+  script printed nothing, so `grep` exited non-zero, the `&&` chain broke, and the test never
+  executed. The output contained neither "CAUGHT" nor "MISSED" — and that *absence* was the only
+  signal. Checking the exit status would not have helped, since the chain's status was `grep`'s.
+  Break tests must print an explicit verdict on both branches and the verdict must be *read*, not
+  inferred from the command having finished.
 - Guards in `analyze_actrt2.py` were tested by breaking them. A deliberately wrong named-site
   residue raises; a missing input names its fix command. The dead-accession guard **failed** its
   first break test — `O15507` (MERGED into P56159) returns a row whose `primaryAccession` matches
