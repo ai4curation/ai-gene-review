@@ -39,6 +39,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -632,6 +633,149 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# H. no slot may list both a term and its own ancestor
+# ---------------------------------------------------------------------------
+
+def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
+    """A class-level invariant, not an instance fix.
+
+    The PR reviewer spotted `core_functions[0].directly_involved_in` carrying both
+    GO:0032968 and its ancestor GO:0006355. Rather than delete that one pair, this
+    asserts the general property over EVERY multivalued term slot of every core
+    function, using closures fetched by the analysis script -- so the next such pair
+    cannot be introduced silently.
+    """
+    if not RESULTS_JSON.exists():
+        raise Problem(f"missing {RESULTS_JSON}; run analyze_aff1_annotations.py")
+    data = json.loads(RESULTS_JSON.read_text())
+    cl = (data.get("core_function_closures") or {}).get("closures")
+    if not cl:
+        raise Problem("results.json has no core_function_closures; this check "
+                      "would pass vacuously")
+    doc = yaml.load(REVIEW.read_text(), Loader=StrictLoader)
+
+    MULTI = ("directly_involved_in", "locations", "anatomical_locations",
+             "substrates", "contributes_to_molecular_function")
+    pairs_checked = 0
+    hits = []
+    for i, cf in enumerate(doc.get("core_functions") or []):
+        for slot in MULTI:
+            v = cf.get(slot)
+            if v is None:
+                continue
+            items = v if isinstance(v, list) else [v]
+            ids = [it.get("id") if isinstance(it, dict) else it for it in items]
+            ids = [x for x in ids if isinstance(x, str) and x.startswith("GO:")]
+            for a in ids:
+                for b in ids:
+                    if a == b:
+                        continue
+                    pairs_checked += 1
+                    anc = cl.get(a)
+                    if anc is None:
+                        problems.append(
+                            f"core_functions[{i}].{slot} asserts {a} but no closure "
+                            f"was fetched for it -- re-run the analysis script")
+                        continue
+                    if b in anc:
+                        hits.append(
+                            f"core_functions[{i}].{slot} lists {a} together with "
+                            f"its own ancestor {b}")
+    # A single-element slot yields no pairs, so a document that happened to have
+    # only singletons would pass vacuously. Say so rather than reporting coverage.
+    if pairs_checked == 0:
+        problems.append("no slot contained two or more terms, so the "
+                        "redundant-ancestor invariant could not fire")
+    for h in sorted(set(hits)):
+        problems.append(f"redundant ancestry inside one slot: {h}")
+    return {"pairs_checked": pairs_checked, "closures_available": len(cl),
+            "hits": sorted(set(hits))}
+
+
+# ---------------------------------------------------------------------------
+# I. shared append-only cache: ask the two questions separately
+# ---------------------------------------------------------------------------
+
+def check_shared_cache(problems: list[str]) -> dict[str, Any]:
+    """`cache/go/terms.csv` is shared, append-only state, and the naive check gives
+    FALSE POSITIVES.
+
+    Two different questions, needing two different comparisons:
+
+    1. *Did this branch delete anything?* -> diff against the **merge base**. A
+       two-dot diff against the moving tip reports a sibling branch's ADDITION as
+       this branch's DELETION, and the reflexive remedy
+       (`git checkout origin/main -- cache/go/terms.csv`) then silently pulls the
+       sibling's row into this PR.
+    2. *Will merging duplicate a curie?* -> compare against main's current file, and
+       treat curies that main has but the merge base does not as expected
+       (main moved), not as loss.
+
+    Written as a committed check rather than a shell heredoc because a verification
+    that lives somewhere disposable gets described as permanent by the same commit
+    that throws it away -- and because this exact assertion, run the naive way, had
+    already fired a false positive on this branch.
+    """
+    def sh(*args: str) -> str:
+        r = subprocess.run(args, capture_output=True, text=True, cwd=REPO)
+        if r.returncode != 0:
+            raise Problem(f"git failed: {' '.join(args)}: {r.stderr.strip()}")
+        return r.stdout
+
+    rel = "cache/go/terms.csv"
+    path = REPO / rel
+    if not path.exists():
+        raise Problem(f"missing {rel}")
+
+    def curies(text: str) -> Counter:
+        return Counter(l.split(",")[0] for l in text.splitlines()
+                       if l.startswith("GO:"))
+
+    base_sha = sh("git", "merge-base", "origin/main", "HEAD").strip()
+    if not base_sha:
+        raise Problem("could not determine the merge base against origin/main")
+    base = curies(sh("git", "show", f"{base_sha}:{rel}"))
+    main = curies(sh("git", "show", f"origin/main:{rel}"))
+    mine = curies(path.read_text())
+    if not base or not main or not mine:
+        raise Problem("one of the three terms.csv snapshots parsed to zero curies, "
+                      "so this check would pass vacuously")
+
+    # Q1: deletions, against the MERGE BASE.
+    deleted = sorted(set(base) - set(mine))
+    if deleted:
+        problems.append(
+            f"{rel}: this branch DELETED curies present at the merge base "
+            f"{base_sha[:9]}: {deleted} -- that is a clobber of shared state")
+
+    # Q2: duplicates that this branch would introduce.
+    new_dups = {k: v for k, v in mine.items()
+                if v > 1 and main.get(k, 0) < v}
+    if new_dups:
+        problems.append(f"{rel}: this branch introduces duplicate curies: {new_dups}")
+
+    # Informational, and explicitly NOT a failure: curies main gained after the
+    # branch point. Reporting them as loss is the known false positive.
+    main_only = sorted(set(main) - set(mine))
+    moved = [c for c in main_only if c not in base]
+    genuinely_lost = [c for c in main_only if c in base]
+    if genuinely_lost:
+        problems.append(
+            f"{rel}: curies present in BOTH the merge base and origin/main are "
+            f"missing here: {genuinely_lost} -- this one is real loss, not the "
+            f"moving-tip artefact")
+    return {
+        "merge_base": base_sha[:9],
+        "rows_base": sum(base.values()), "rows_main": sum(main.values()),
+        "rows_branch": sum(mine.values()),
+        "deleted_vs_merge_base": deleted,
+        "added_by_this_branch": sorted(set(mine) - set(main)),
+        "main_gained_after_branch_point": moved,
+        "new_duplicates": new_dups,
+    }
+
+
+# ---------------------------------------------------------------------------
 # driver
 # ---------------------------------------------------------------------------
 
@@ -648,6 +792,8 @@ def audit() -> tuple[list[str], dict[str, Any]]:
     report["source_entities"] = check_source_entities(problems)
     report["emitted_text_lint"] = check_emitted_text(problems)
     report["counted_claims"] = check_counted_claims(problems)
+    report["no_redundant_ancestor"] = check_no_redundant_ancestor(problems)
+    report["shared_cache"] = check_shared_cache(problems)
     return problems, report
 
 
@@ -888,6 +1034,58 @@ def self_test() -> int:
         REVIEW.write_text(t2.replace(needle, "1000 of its 1210 residues", 1))
     run_case("disorder figure disagrees with the feature table",
              mut_wrong_disorder, "residues but the feature table gives")
+
+    def mut_redundant_ancestor() -> None:
+        # Re-introduce exactly the pair the reviewer found, rather than a synthetic
+        # one: the mutation must be as fine as the claim.
+        d = yaml.load(REVIEW.read_text(), Loader=StrictLoader)
+        cfs = d.get("core_functions") or []
+        target = None
+        for cf in cfs:
+            di = cf.get("directly_involved_in") or []
+            if any((x.get("id") if isinstance(x, dict) else x) == "GO:0032968"
+                   for x in di):
+                target = di
+                break
+        if target is None:
+            raise Problem("no core function lists GO:0032968, so the reviewer's "
+                          "pair cannot be reconstructed")
+        target.append({"id": "GO:0006355",
+                       "label": "regulation of DNA-templated transcription"})
+        REVIEW.write_text(yaml.dump(d, sort_keys=False, allow_unicode=True))
+    run_case("a slot lists a term together with its own ancestor",
+             mut_redundant_ancestor, "redundant ancestry inside one slot")
+
+    def mut_delete_cache_row() -> None:
+        # Delete a row that exists at the MERGE BASE, which is a real clobber, and
+        # assert the check distinguishes it from the moving-tip artefact.
+        cache = REPO / "cache/go/terms.csv"
+        lines = cache.read_text().splitlines(keepends=True)
+        victim = next((i for i, l in enumerate(lines)
+                       if l.startswith("GO:0005634,")), None)
+        if victim is None:
+            raise Problem("no GO:0005634 row to delete; fixture drifted")
+        cache_backup.append(cache.read_text())
+        cache.write_text("".join(lines[:victim] + lines[victim + 1:]))
+    # This mutation touches a file outside REVIEW/NOTES, so run_case's restore does
+    # not cover it -- restore explicitly.
+    cache_backup: list[str] = []
+    try:
+        before_problems, _ = audit()
+        mut_delete_cache_row()
+        if not cache_backup:
+            failures.append("cache-deletion mutation was a no-op")
+        else:
+            problems, _ = audit()
+            hit = [x for x in problems if "DELETED curies present at the merge base" in x]
+            if hit:
+                print(f"  ok   deleted a shared-cache row: {hit[0][:100]}")
+            else:
+                failures.append("shared-cache deletion guard did not fire; got "
+                                f"{[x[:60] for x in problems][:3]}")
+    finally:
+        if cache_backup:
+            (REPO / "cache/go/terms.csv").write_text(cache_backup[0])
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making

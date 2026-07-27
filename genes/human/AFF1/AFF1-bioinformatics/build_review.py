@@ -399,9 +399,19 @@ verdict(("GO:0050877", "IBA", "GO_REF:0000033"),
         "hypothesised rather than demonstrated. That evidence is real but it is (i) "
         "mouse, (ii) a dominant missense allele in which Af4 accumulates, so a "
         "gain-of-function rather than a loss of function, and (iii) downstream of the "
-        "same transcription-elongation activity captured by the core rows - a "
-        "tissue-specific consequence, not a separate function. Note for upstream "
-        "curation: mouse Aff1 is NOT among this row's donors and MGI has annotated no "
+        "same transcription-elongation activity captured by the core rows. The "
+        "discriminator against core function 3, which uses similar "
+        "tissue-specific-output language and is nevertheless kept as core, is the "
+        "evidence and not the tissue-specificity: the DKK1 axis rests on direct human "
+        "loss- AND gain-of-function in the relevant cell type with a mapped "
+        "intermediate whose removal abolishes the effect, whereas this row has no "
+        "human data at all and its mouse support is a dominant gain-of-function allele "
+        "with no identified mechanism. MARK_AS_OVER_ANNOTATED is a defensible reading "
+        "on the same facts and a curator may prefer it; KEEP_AS_NON_CORE is chosen "
+        "because the term is not wrong - PAINT deliberately generalised from two "
+        "independent learning-or-memory IMPs rather than transferring them, which is "
+        "sound practice - and over-annotated would mis-describe a correct conservative "
+        "call as an over-reach. Note for upstream curation: mouse Aff1 is NOT among this row's donors and MGI has annotated no "
         "nervous-system term to it, so the claim reaches human AFF1 through its "
         "paralogues while the ortholog's own relevant phenotype is uncaptured."),
     supported_by=sb(Q_ROBOTIC, Q_ROBOTIC_HEDGE, Q_IGF1),
@@ -463,14 +473,19 @@ verdict(("GO:0010468", "IEA", "GO_REF:0000002"),
         "strictly redundant on this gene."),
     action="MODIFY",
     reason=(
-        "Every characterised member of the AF4/FMR2 family regulates transcription "
+        "The argument is upstream, about the mapping, not about this gene. Every "
+        "characterised member of the AF4/FMR2 family regulates transcription "
         "specifically, not gene expression at some unspecified step - none has a "
         "reported role in translation, RNA stability or any other post-transcriptional "
         "layer, and the family's defining biochemistry is occupancy of a "
-        "transcription-elongation complex. Refining the InterPro2GO mapping one step "
-        "to GO:0006355 asserts nothing this gene does not already hold by IBA, and it "
-        "would remove a redundancy across every IPR007797 protein rather than only "
-        "here."),
+        "transcription-elongation complex. So IPR007797 supports the more precise term "
+        "for every protein it matches, and the mapping is what should move. Noted "
+        "rather than claimed as a benefit, because the PR reviewer was right to press "
+        "on it: on THIS gene the row is redundant either way - today it is an ancestor "
+        "of the GO:0006355 the gene already holds by IBA, and after the refinement it "
+        "would duplicate that row exactly. Removing a redundancy is therefore doing no "
+        "work here, and the reason it is still worth filing is the family-wide "
+        "precision gain."),
     proposed_replacement_terms=[dict(GO0006355)],
     supported_by=sb(Q_SEC_PURIFIED),
     propagation_review=prop("NO_FAILURE_CORE", ["GRANULARITY_MISMATCH"],
@@ -591,7 +606,14 @@ verdict(("GO:0003711", "IMP", "PMID:41062835"),
         "alone controls whether the elongation activity is delivered. Verified rather "
         "than assumed: GO:0003712 is NOT an ancestor of GO:0003711, so this row and "
         "the coregulator row are different claims rather than a general/specific pair, "
-        "and both stand."),
+        "and both stand. The divergence between the row's GOA qualifier (enables) and "
+        "where core_functions puts the term (contributes_to_molecular_function) is "
+        "deliberate, not an inconsistency: strictly, contributes_to is the correct GOA "
+        "qualifier for an activity delivered by an assembled complex, but ActionEnum "
+        "offers no qualifier-change action, and MODIFY would wrongly imply the TERM is "
+        "wrong when only the qualifier is imprecise. So the row is ACCEPTed as-is and "
+        "the nuance is carried by the core_functions slot; a qualifier correction is "
+        "raised with UniProt in suggested_questions instead."),
     supported_by=sb(Q_DEPLETION, Q_REEXPRESS, Q_CTD_KINASE))
 
 # --- row 13 ----------------------------------------------------------------
@@ -1082,7 +1104,6 @@ def build() -> dict:
             "directly_involved_in": [
                 dict(GO0006368),
                 dict(GO0032968),
-                dict(GO0006355),
             ],
             "locations": [
                 term("GO:0005634", "nucleus"),
@@ -1123,7 +1144,13 @@ def build() -> dict:
                 "vivo, and removing DKK1 abolishes the effect of excess AFF1. This is "
                 "a tissue-specific output of the same elongation activity rather than "
                 "a separate biochemistry, and it is one of the places where AFF1 and "
-                "its closest paralogue AFF4 act in opposite directions."),
+                "its closest paralogue AFF4 act in opposite directions. It is kept as "
+                "a core function, unlike the nervous-system row which uses similar "
+                "language and is not, because of the evidence rather than the "
+                "tissue-specificity: this rests on human loss- and gain-of-function in "
+                "the cell type concerned plus an intermediate whose removal abolishes "
+                "the effect, where the nervous-system claim has no human data and no "
+                "identified mechanism."),
             "supported_by": sb(Q_KD_ALP, Q_OE_ALP, Q_CHIP_DKK1, Q_RESCUE, Q_INVIVO,
                                Q_OPPOSITE),
             "directly_involved_in": [
@@ -1148,7 +1175,7 @@ def build() -> dict:
         "description": (
             "AFF1 (also called AF4, and the founding member of the AF4/FMR2 family) is "
             "a large, largely intrinsically disordered nuclear protein - about "
-            "three-quarters of its 1210 residues carry a disorder annotation - that "
+            "three-quarters of its 1210 residues are intrinsically disordered - that "
             "works as a scaffold rather than as an enzyme or a sequence-specific "
             "DNA-binding factor. It is the subunit that holds together one branch of "
             "the super elongation complex: it is constitutively bound to the "
@@ -1256,7 +1283,13 @@ def build() -> dict:
             "dissociation constant, a curated SUBUNIT line and a 2026 primary paper on "
             "its role in transcriptional recovery. The SUBCELLULAR LOCATION line is "
             "also still ECO:0000305 curator inference although an experimental IDA now "
-            "exists (PMID:41062835)."),
+            "exists (PMID:41062835). Third item, raised here because ActionEnum has no "
+            "qualifier-change action so it cannot be expressed on the row itself: "
+            "GO:0003711 transcription elongation factor activity is annotated with the "
+            "enables qualifier, but the activity is delivered by the assembled SEC and "
+            "the evidence is an AFF1 knockdown, so contributes_to would be the "
+            "strictly correct qualifier. The term is right; only the qualifier "
+            "overstates AFF1's independence."),
          "experts": ["UniProt curators"]},
         {"question": (
             "Is AFF1's molecular adaptor role better modelled on AFF1, on AF9, or on "

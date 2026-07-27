@@ -109,6 +109,8 @@ How many *distinct gene products* does each cited reference annotate, and does t
 | is `GO:0003712` an ancestor of `GO:0003711`? | False | False | yes | transcription elongation factor activity is NOT under transcription coregulator activity -- the two MF rows are different claims, not a general/specific pair |
 | is `GO:0005634` an ancestor of `GO:0000785`? | False | False | yes | chromatin is not part_of nucleus in GO's is_a/part_of closure, so the chromatin and nucleus rows are separate location claims |
 | is `GO:0000785` an ancestor of `GO:0090734`? | False | False | yes | site of DNA damage is not under chromatin, so the two damage-associated location rows are not a general/specific pair |
+| is `GO:0006355` an ancestor of `GO:0032968`? | True | True | yes | raised by the PR reviewer: GO:0006355 is an ancestor of GO:0032968, so listing both in one core_function's directly_involved_in is redundant by the same logic used to collapse GO:0032786 onto GO:0032968 in the rows |
+| is `GO:0006355` an ancestor of `GO:0045668`? | False | False | yes | the osteoblast-differentiation term is NOT under regulation of DNA-templated transcription, so core function 3 may legitimately carry both |
 
 ## E. PANTHER node reach
 

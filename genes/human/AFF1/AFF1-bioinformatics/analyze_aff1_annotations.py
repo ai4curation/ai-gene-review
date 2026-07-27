@@ -429,6 +429,13 @@ RELATION_CLAIMS: list[tuple[str, str, bool, str]] = [
     ("GO:0090734", "GO:0000785", False,
      "site of DNA damage is not under chromatin, so the two damage-associated "
      "location rows are not a general/specific pair"),
+    ("GO:0032968", "GO:0006355", True,
+     "raised by the PR reviewer: GO:0006355 is an ancestor of GO:0032968, so "
+     "listing both in one core_function's directly_involved_in is redundant by the "
+     "same logic used to collapse GO:0032786 onto GO:0032968 in the rows"),
+    ("GO:0045668", "GO:0006355", False,
+     "the osteoblast-differentiation term is NOT under regulation of "
+     "DNA-templated transcription, so core function 3 may legitimately carry both"),
 ]
 
 
@@ -787,6 +794,40 @@ def analyse_reference_species_split(proj: dict, pmid: str,
         "parent_only_organisms": sorted({par[k].split(" / ")[0] for k in par_only}),
         "child_organisms": sorted({v2.split(" / ")[0] for v2 in chi.values()}),
     }
+
+
+# ---------------------------------------------------------------------------
+# K. ancestor closures of every term the review asserts
+# ---------------------------------------------------------------------------
+
+def analyse_core_function_closures() -> dict:
+    """Fetch the is_a/part_of ancestor closure of every GO term the review's
+    ``core_functions`` asserts, so the audit can enforce a CLASS-level invariant --
+    no single slot may list both a term and one of its own ancestors -- rather than
+    fixing each instance as it is spotted.
+    """
+    import re as _re
+    review = GENE_DIR / "AFF1-ai-review.yaml"
+    if not review.exists():
+        raise Fail(f"missing {review}; run build_review.py first")
+    text = review.read_text()
+    start = text.find("\ncore_functions:")
+    if start < 0:
+        raise Fail("the review has no core_functions section")
+    end = text.find("\nreferences:", start)
+    block = text[start:end if end > 0 else len(text)]
+    terms = sorted(set(_re.findall(r"GO:\d{7}", block)))
+    if not terms:
+        raise Fail("found zero GO terms in core_functions; the closure check "
+                   "would be vacuous")
+    out = {}
+    for tid in terms:
+        anc = ancestors(tid)
+        if tid not in anc:
+            raise Fail(f"{tid} is absent from its own closure -- the ancestor "
+                       f"endpoint is not behaving as assumed")
+        out[tid] = sorted(anc)
+    return {"n_terms": len(out), "closures": out}
 
 
 # ---------------------------------------------------------------------------
@@ -1251,6 +1292,8 @@ def main(argv: list[str]) -> int:
     res["affinage_recall"] = analyse_affinage_recall(rows)
     print("H. missing-ortholog donor question ...")
     res["ortholog_donor"] = analyse_missing_ortholog_donor(rows, res["withfrom"])
+    print("K. core-function term closures ...")
+    res["core_function_closures"] = analyse_core_function_closures()
     print("J. disorder coverage ...")
     res["disorder"] = analyse_disorder()
     print("I. within-reference species asymmetry ...")
