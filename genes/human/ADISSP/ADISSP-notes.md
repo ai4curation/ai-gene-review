@@ -184,7 +184,7 @@ treatment with the PKA inhibitor H89 and was blocked by Melittin, an inhibitor f
 the heterotrimeric G protein"] — melittin, a membrane-active bee-venom peptide, at 1 µM for 24 h,
 n = 3.
 
-Three candidate homes were then evaluated, and the resolution is `MODIFY` to
+Four candidate homes were then evaluated and three rejected; the resolution is `MODIFY` to
 **`GO:0141163 positive regulation of cAMP/PKA signal transduction`**:
 
 | candidate | verdict |
@@ -428,3 +428,74 @@ scopes, and conflating them is what caused it:
 
 Both directions were then break-tested independently, plus the happy path that had been falsely
 firing, so neither direction is vacuous and the exception is not a blanket widening.
+
+## 19. Round 3: the review found a wrong set hiding behind a right number
+
+Approved again, with two 🔵 notes. Both were real; the first is the most instructive defect in this
+review, and **the reviewer's diagnosis of it was itself wrong in two checkable ways** — which is worth
+recording, because conceding a wrong diagnosis would have put a false statement in the review.
+
+### What the reviewer flagged
+
+That `distinct_partners = 13` was not 13 protein partners: the set contained `ADISSP` itself and
+`mrna_adissp`, so the "4 of 13" fraction was diluted. They attributed it to
+`partner = b if id_a.endswith(SUBJECT) else a` mis-resolving when `idA` is an isoform form, and
+concluded that "no real partner can be lost this way" and that the error "runs in the conservative
+direction (4 of 11 protein partners would be a *stronger* claim than 4 of 13)".
+
+### What was actually wrong
+
+The mechanism is worse. IntAct returns ids **with a trailing database tag** — `"Q9GZN8 (uniprotkb)"` —
+so `endswith("Q9GZN8")` was **never true for any record**, not merely for isoform forms. The resolver
+therefore took `partner = moleculeA` in all 27 records. Consequences:
+
+- every partner that appears **only** as `moleculeB` was **dropped** — `RALYL` (Q86SE5) and a PRO
+  chain of P0C6X7. So real partners *were* lost, and the first premise is false.
+- `ADISSP` entered its own partner set, and `mrna_adissp` entered from a CLASH record in which
+  **neither** side is ADISSP (it pairs the ADISSP mRNA with a miRNA).
+- the correct count of distinct **protein** partners is **13**, not 11 — so the fraction is unchanged
+  at 4 of 13 and the error was not conservative. It was a *different wrong set that produced the same
+  number*.
+
+That last point is the finding. Two spurious entries and two dropped ones cancelled exactly, so the
+count survived a hand check, a review, and a table. **A right-looking number is not evidence of a
+right set**, and this is the sharpest instance of it I have seen: no arithmetic discrepancy existed to
+notice, because there was none.
+
+### The fix, and its guard
+
+`base_accession()` now strips the database tag and the isoform/PRO suffix for subject matching while
+retaining the full name for partners (a PRO chain is a distinct participant). `resolve_partners()`
+determines the partner as the non-subject side, **raises** if both sides resolve to the subject, and
+excludes — while counting and reporting — records in which neither side is the protein. `RESULTS.md`
+now states all three numbers separately: 27 total records, 26 involving the ADISSP protein, 1 involving
+the locus but not the protein.
+
+A committed `--self-test` covers six directions, and it was validated the two ways that matter:
+
+- **Run against the defect that actually shipped.** Taking the resolver logic verbatim from
+  `git show HEAD:...` and applying it to the live IntAct response reproduces the wrong set —
+  13 partners including `ADISSP` and `mrna_adissp`, missing `RALYL` and the PRO chain — against the
+  fixed resolver's 13 with those two recovered. Same count, different set, demonstrated rather than
+  asserted.
+- **Prove the test can fail.** Reinstating the shipped defect inside `resolve_partners` makes
+  direction 1 fail with exactly its own diagnosis ("a partner appearing only as moleculeB was
+  dropped"), plus directions 4 and 6; disabling the self-interaction guard makes direction 3 fail with
+  its own message. Both mutations were applied only after asserting the target string was present, so
+  neither could be a silent no-op, and both exit non-zero.
+
+The self-test also **declares one thing it cannot do** (direction 1b): the "subject appears in its own
+partner set" invariant keys on accessions, so a partner named by gene *symbol* — which is exactly how
+the spurious `ADISSP` entry appeared — cannot be matched against the subject accession. That invariant
+would not have caught the shipped bug. What catches it is direction 1's set-equality assertion on a
+fixture. Saying so is better than letting the invariant read as coverage it does not have.
+
+### The other note, and a two-way dependency earned its keep
+
+The reviewer also spotted that both `reason` strings said "Three candidate homes were checked" against
+a four-row table — three rejected plus one chosen. Corrected in the YAML and in §9.
+
+Regenerating `RESULTS.md` broke a `file:` quote that cited the changed "PP1-module partners" line, in
+**two** places, and `checkquotes.py` caught both. This is the two-way dependency a quote into a
+generated artifact creates: the prose you will edit is coupled to citations you will forget. It only
+worked because the quote check was re-run *after* regeneration.

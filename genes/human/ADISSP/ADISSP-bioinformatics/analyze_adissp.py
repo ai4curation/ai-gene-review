@@ -120,6 +120,63 @@ def intact_record_count(acc: str) -> int:
     return d["totalElements"]
 
 
+def base_accession(raw: str | None) -> str:
+    """Reduce an IntAct participant id to a bare UniProt accession.
+
+    IntAct ids arrive decorated in two ways that both defeat a naive match, and getting this
+    wrong is not a dilution but a *substitution* of one partner set for another:
+
+    * a trailing database tag - ``"Q9GZN8 (uniprotkb)"`` - so ``endswith("Q9GZN8")`` is never
+      true. An earlier version of this script used exactly that test; because it never fired,
+      the partner was silently taken to be ``moleculeA`` in every record. That dropped every
+      partner which only ever appears as ``moleculeB`` (RALYL and a PRO chain of P0C6X7 here)
+      and added the subject itself plus an mRNA participant. The resulting *count* was
+      coincidentally unchanged at 13, which is precisely why it survived review: a wrong set
+      can produce a right-looking number.
+    * an isoform or PRO-chain suffix - ``"Q9GZN8-2"``, ``"P0C6X7-PRO_0000037312"`` - which must
+      be stripped for the SUBJECT comparison but retained when naming a partner, since a PRO
+      chain is a distinct participant.
+    """
+    if not raw:
+        return ""
+    ident = raw.split(" (")[0].strip()
+    return ident.split("-")[0]
+
+
+def resolve_partners(records: list[dict], subject_acc: str) -> tuple[dict[str, set[str]], list[dict], int]:
+    """Split records into those involving the subject protein and those that do not.
+
+    Returns (partner -> methods, subject_records, n_excluded). Asserts that exactly one side of
+    every retained record is the subject, which is the invariant the earlier bug violated
+    silently.
+    """
+    partners: dict[str, set[str]] = {}
+    kept, excluded = [], 0
+    for rec in records:
+        a_is_subject = base_accession(rec.get("idA")) == subject_acc
+        b_is_subject = base_accession(rec.get("idB")) == subject_acc
+        if not (a_is_subject or b_is_subject):
+            # e.g. a CLASH record pairing the subject's mRNA with a miRNA: a real IntAct record
+            # about the locus, but not an interaction of the protein. Counted, not hidden.
+            excluded += 1
+            continue
+        if a_is_subject and b_is_subject:
+            raise RuntimeError(
+                f"both sides of a record resolve to {subject_acc}; a self-interaction needs an "
+                "explicit decision rather than an arbitrary pick"
+            )
+        partner = rec.get("moleculeB") if a_is_subject else rec.get("moleculeA")
+        if not partner:
+            raise RuntimeError(f"record involving {subject_acc} has no named partner: {rec!r}")
+        partners.setdefault(partner, set()).add(rec.get("detectionMethod"))
+        kept.append(rec)
+    if subject_acc in {base_accession(p) for p in partners}:
+        raise RuntimeError(
+            "the subject appears in its own partner set, which means partner resolution failed"
+        )
+    return partners, kept, excluded
+
+
 def main() -> None:
     results: dict = {}
 
@@ -170,14 +227,12 @@ def main() -> None:
 
     # ---------------------------------------------------------------- 2. IntAct
     records = fetch_intact(SUBJECT)
-    partners: dict[str, set[str]] = {}
+    partners, subject_records, non_protein_records = resolve_partners(records, SUBJECT)
+
     pp1_rows = []
     excluded = 0
-    for rec in records:
+    for rec in subject_records:
         a, b = rec.get("moleculeA"), rec.get("moleculeB")
-        id_a = rec.get("idA") or ""
-        partner = b if id_a.endswith(SUBJECT) else a
-        partners.setdefault(partner, set()).add(rec.get("detectionMethod"))
         if any("PPP1" in (n or "").upper() for n in (a, b)):
             method_name = rec.get("detectionMethod")
             pubs = [p for p in (rec.get("publicationIdentifiers") or []) if "(pubmed)" in p]
@@ -192,11 +247,12 @@ def main() -> None:
     pp1_partners = sorted(p for p in partners if "PPP1" in (p or "").upper())
 
     hub_null = {sym: intact_record_count(acc) for acc, sym in PP1_MODULE.items()}
-    subject_records = len(records)
 
     results["intact"] = {
-        "subject_records": subject_records,
-        "distinct_partners": len(partners),
+        "total_records": len(records),
+        "subject_protein_records": len(subject_records),
+        "records_not_involving_the_protein": non_protein_records,
+        "distinct_protein_partners": len(partners),
         "partners": sorted(partners),
         "pp1_module_partners": pp1_partners,
         "pp1_experimental_publications": exp_pmids,
@@ -245,10 +301,17 @@ def render(r: dict) -> str:
         "",
         "## 2. The ADISSP-PP1 interaction in IntAct, with its null",
         "",
-        f"ADISSP has **{t['subject_records']} IntAct records** over "
-        f"**{t['distinct_partners']} distinct partners**.",
+        f"ADISSP has **{t['total_records']} IntAct records**. "
+        f"{t['subject_protein_records']} of them are interactions of the ADISSP protein; "
+        f"{t['records_not_involving_the_protein']} involve the locus but not the protein (a CLASH "
+        "record pairing the ADISSP mRNA with a miRNA) and are excluded from the partner set rather "
+        "than counted as partners.",
         "",
-        f"PP1-module partners: **{len(t['pp1_module_partners'])} of {t['distinct_partners']}** - "
+        f"Distinct **protein** partners of ADISSP: **{t['distinct_protein_partners']}** - "
+        f"{', '.join(t['partners'])}.",
+        "",
+        f"PP1-module partners: **{len(t['pp1_module_partners'])} of "
+        f"{t['distinct_protein_partners']} protein partners** - "
         f"{', '.join(t['pp1_module_partners'])}.",
         "",
         f"Independent experimental publications recovering ADISSP with a PP1-module protein: "
@@ -272,12 +335,13 @@ def render(r: dict) -> str:
     for sym, n in sorted(t["hub_null_records"].items(), key=lambda kv: -kv[1]):
         lines.append(f"| {sym} | {n} |")
     lines += [
-        f"| **ADISSP** | **{t['subject_records']}** |",
+        f"| **ADISSP** | **{t['total_records']}** |",
         "",
         "This is why the publication count above must not be read as strong replication on its own:",
         "a protein recovered in a thousand IntAct records will reappear in many tag pulldowns. The",
         "informative comparison is the subject-centric one - that PP1-module proteins are",
-        f"{len(t['pp1_module_partners'])} of ADISSP's {t['distinct_partners']} distinct partners, so the",
+        f"{len(t['pp1_module_partners'])} of ADISSP's {t['distinct_protein_partners']} distinct protein",
+        "partners, so the",
         "PP1 module dominates this small protein's own sparse interactome rather than ADISSP being one",
         "more name on PP1's long list.",
         "",
@@ -297,5 +361,115 @@ def render(r: dict) -> str:
     return "\n".join(lines)
 
 
+def self_test() -> None:
+    """Break-tests for the partner resolver, run with ``--self-test``. No network.
+
+    This exists because the resolver shipped once with a bug that produced a *right-looking
+    number from a wrong set*, and nothing caught it. Each direction below is run against a
+    fixture that reproduces one specific failure, and each must raise - a direction that cannot
+    fail is not a test.
+    """
+    S = "Q9GZN8"
+    failures = []
+
+    def expect_raise(label: str, fn, must_contain: str) -> None:
+        """Assert the call fails AND that it fails for the stated reason, not incidentally."""
+        try:
+            fn()
+        except RuntimeError as exc:
+            if must_contain not in str(exc):
+                failures.append(
+                    f"{label}: raised, but for the wrong reason - expected {must_contain!r}, got {exc!r}"
+                )
+            else:
+                print(f"  OK   {label}: raised with the expected message")
+            return
+        failures.append(f"{label}: did NOT raise - the guard is absent or unreachable")
+
+    # --- direction 1: id decoration must not defeat the subject match -------------------
+    # This is the shipped bug. The naive test `idA.endswith("Q9GZN8")` is false for
+    # "Q9GZN8 (uniprotkb)", so the partner was always moleculeA. Here the subject is
+    # moleculeA, so a broken resolver records the subject as its own partner.
+    decorated = [{"idA": f"{S} (uniprotkb)", "idB": "Q86SE5 (uniprotkb)",
+                  "moleculeA": "ADISSP", "moleculeB": "RALYL", "detectionMethod": "two hybrid pooling"}]
+    partners, kept, excluded = resolve_partners(decorated, S)
+    if sorted(partners) != ["RALYL"]:
+        failures.append(f"direction 1: expected ['RALYL'], got {sorted(partners)} - "
+                        "a partner appearing only as moleculeB was dropped")
+    else:
+        print("  OK   direction 1: decorated ids resolve, moleculeB-only partner retained")
+
+    # The same fixture must be caught by the invariant if the resolver regresses. Simulate the
+    # regression directly rather than trusting that the correct path implies the guard works.
+    def regressed():
+        bad = {p: {"m"} for p in ["ADISSP"]}
+        if S in {base_accession(p) for p in bad}:
+            raise RuntimeError(
+                "the subject appears in its own partner set, which means partner resolution failed"
+            )
+    # base_accession("ADISSP") is "ADISSP", not the accession, so the invariant as written keys
+    # on accessions and would NOT catch a gene-symbol self-entry. Assert that limitation openly
+    # rather than claiming coverage it lacks:
+    assert base_accession("ADISSP") != S, (
+        "if this ever becomes equal, the self-entry invariant starts firing on symbols too"
+    )
+    print("  NOTE direction 1b: the self-entry invariant keys on accessions; a partner named by "
+          "gene SYMBOL cannot be matched against the subject accession, so direction 1 (set "
+          "equality on a fixture) is what actually guards the shipped bug, not the invariant.")
+
+    # --- direction 2: a record naming neither side as the subject is excluded, not counted ---
+    clash = [{"idA": "ENST00000217195 (ensembl)", "idB": "URS00003CF1AD_9606 (rnacentral)",
+              "moleculeA": "mrna_adissp", "moleculeB": "hsamir320a3p", "detectionMethod": "clash"}]
+    partners, kept, excluded = resolve_partners(clash, S)
+    if partners or kept or excluded != 1:
+        failures.append(f"direction 2: expected 0 partners / 0 kept / 1 excluded, got "
+                        f"{len(partners)}/{len(kept)}/{excluded}")
+    else:
+        print("  OK   direction 2: a record not involving the protein is excluded and counted")
+
+    # --- direction 3: both sides the subject must raise rather than pick arbitrarily -------
+    both = [{"idA": f"{S} (uniprotkb)", "idB": f"{S}-2 (uniprotkb)",
+             "moleculeA": "ADISSP", "moleculeB": "ADISSP", "detectionMethod": "anti tag coip"}]
+    expect_raise("direction 3", lambda: resolve_partners(both, S), "both sides of a record resolve")
+
+    # --- direction 4: a record involving the subject with no named partner must raise -------
+    nameless = [{"idA": f"{S} (uniprotkb)", "idB": "Q86SE5 (uniprotkb)",
+                 "moleculeA": "ADISSP", "moleculeB": None, "detectionMethod": "x"}]
+    expect_raise("direction 4", lambda: resolve_partners(nameless, S), "has no named partner")
+
+    # --- direction 5: isoform / PRO suffixes ------------------------------------------------
+    cases = {
+        f"{S} (uniprotkb)": S,
+        f"{S}-2 (uniprotkb)": S,
+        "P0C6X7-PRO_0000037312 (uniprotkb)": "P0C6X7",
+        "ENST00000217195 (ensembl)": "ENST00000217195",
+        None: "",
+    }
+    for raw, want in cases.items():
+        got = base_accession(raw)
+        if got != want:
+            failures.append(f"direction 5: base_accession({raw!r}) == {got!r}, expected {want!r}")
+    if not any(f.startswith("direction 5") for f in failures):
+        print("  OK   direction 5: db tags, isoform and PRO suffixes all normalise correctly")
+
+    # A PRO chain must survive as a PARTNER name even though it normalises for subject matching.
+    pro = [{"idA": f"{S} (uniprotkb)", "idB": "P0C6X7-PRO_0000037312 (uniprotkb)",
+            "moleculeA": "ADISSP", "moleculeB": "P0C6X7-PRO_0000037312", "detectionMethod": "two hybrid pooling"}]
+    partners, _, _ = resolve_partners(pro, S)
+    if sorted(partners) != ["P0C6X7-PRO_0000037312"]:
+        failures.append(f"direction 6: PRO-chain partner name was altered: {sorted(partners)}")
+    else:
+        print("  OK   direction 6: a PRO-chain partner keeps its full name")
+
+    if failures:
+        raise SystemExit("SELF-TEST FAILED:\n  " + "\n  ".join(failures))
+    print("self-test: all directions passed")
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if "--self-test" in sys.argv:
+        self_test()
+    else:
+        main()
