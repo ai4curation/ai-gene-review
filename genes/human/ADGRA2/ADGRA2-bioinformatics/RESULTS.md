@@ -15,11 +15,12 @@ JSON next to itself.
 | `check_corrections.py` | Does any cited PMID carry a retraction, erratum, expression of concern or Crossref correction? | `corrections.json` | `python3 check_corrections.py --json corrections.json <PMIDs>` |
 | `check_coverage.py` | Does the review cover every GOA row exactly once, with no duplicate YAML keys or aliases? | — (exit status) | `python3 check_coverage.py` |
 | `interpro_signatures.py` | Which InterPro signature licenses which GO term, and do the review's labels match InterPro? | `interpro_signatures.json` | `python3 interpro_signatures.py` |
+| `projection_test.py` | Is the GDB `TAS` block a projection, and do the pseudogenes really receive the molecular function? | `projection_test.json` | `python3 projection_test.py` |
 
 ## Guards, and how to break-test them
 
-`check_corrections.py --self-test`, `check_coverage.py --self-test` and
-`interpro_signatures.py --self-test` each exercise their guard
+`check_corrections.py --self-test`, `check_coverage.py --self-test`,
+`interpro_signatures.py --self-test` and `projection_test.py --self-test` each exercise their guard
 in **both** directions — damage must be detected, and the clean file must pass. A self-test that
 only proves failure detection cannot tell you the happy path works, and an agreement check that
 fails on perfect agreement is a defect this campaign has actually seen.

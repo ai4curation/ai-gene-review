@@ -90,7 +90,7 @@ demonstration of absence.
 | route | rows | action | why |
 |---|---|---|---|
 | InterPro2GO | `GO:0004930` IEA, `GO:0007186` IEA | `MARK_AS_OVER_ANNOTATED` | The signature genuinely matches ADGRA2. The inference has a real, if over-extended, basis. |
-| GDB `TAS` | `GO:0004930` TAS, `GO:0007186` TAS | **`REMOVE`** | `TAS` asserts a *traceable author statement*, and the cited paper contains no such statement about ADGRA2 or any other receptor. **The stated evidence does not exist.** |
+| GDB `TAS` | `GO:0004930` TAS, `GO:0007186` TAS | **`REMOVE`** | `TAS` asserts a *traceable author statement* about this gene, and the reference cannot supply one. **The stated evidence does not exist** — argued from the annotation distribution, not from the full text (see below). |
 
 The `REMOVE` is on **evidentiary** grounds, not on the grounds that ADGRA2 provably lacks GPCR
 activity — the two are different claims and conflating them is what makes the calibration look
@@ -210,7 +210,14 @@ The TAS block is the interesting one and the projection test settles it. Queryin
 | terms | `GO:0016020` (27 entities), `GO:0007186` (26), `GO:0004930` (25) |
 
 Twenty-seven entities receiving one identical generic triple from one reference is the shape of a
-**bulk classification import**, not 27 traceable author statements. The paper itself performs no
+**bulk classification import**, not 27 traceable author statements.
+
+**The pseudogene sub-claim, checked rather than inferred.** "Two of the recipients are pseudogenes"
+does not follow from the 25-of-27 distribution — that figure is equally consistent with ADGRE4P and
+ADGRF2P being the two that *missed* the molecular function. The per-entity matrix settles it: the two
+entities that do not receive `GO:0004930` are **ADGRG3** and **ADGRV1**, both protein-coding, so both
+pseudogenes are confirmed among the 25 that do. `projection_test.py` checks them by name and fails
+loudly if either drops out, so the claim cannot silently rot. The paper itself performs no
 functional assay on any of them — it is genome mining plus phylogenetics plus expression:
 *"Here, 2 new human adhesion-GPCRs, termed GPR133 and GPR144, have been found by searches done in
 the human genome databases."* and *"EST expression charts for the entire repertoire of
@@ -436,3 +443,7 @@ No hand-written WITH/FROM was introduced; the `NEW` ISS row for `GO:0010595` lis
 - `ADGRA2-bioinformatics/interpro_signatures.py` → `interpro_signatures.json` — resolves every
   InterPro token in the GOA WITH/FROM, audits the review's `source_label` values against InterPro's
   own names, and asserts every claimed GO term is one `interpro2go` licenses for that signature.
+- `ADGRA2-bioinformatics/projection_test.py` → `projection_test.json` — the GDB `TAS` projection
+  test. This is the load-bearing evidence for the two `REMOVE` verdicts and was the last analysis
+  here still being run ad hoc; it is now reproducible, emits the per-entity term matrix, and checks
+  the pseudogene sub-claim by name.
