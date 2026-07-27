@@ -256,6 +256,199 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
     return [b for b in re.split(r"\n\s*\n", text)]
 
 
+# ---------------------------------------------------------------------------------------
+# THE CLASS-CLOSING INVARIANT.
+#
+# Four separate blocking items in this PR were the same thing: a claim about a *paralog's*
+# database record, asserted in prose as established background, with nothing in the repo a
+# reader could check it against. The parity framing, ADCK2's SubCell provenance, the
+# supplied-vs-corroborated split, and the MitoCoP row - the last being literally the other
+# half of the sentence whose first half was fixed the round before. Fixing them one at a time
+# was losing to the rate of discovery.
+#
+# So: every cross-gene claim about a database record must be COVERED - the fact must live in
+# family_census.json and be re-asserted here against the committed JSON. A prose unit that
+# names a paralog together with a record token whose dimension is not in COVERAGE fails,
+# which is what makes this close the class rather than patch the instance. Literature claims
+# about paralogs (what COQ8A was shown to do) are out of scope: those are anchored by
+# supporting_text and already checked verbatim against the cached publications.
+# ---------------------------------------------------------------------------------------
+PARALOGS = ("ADCK1", "ADCK2", "COQ8A", "COQ8B")
+PARALOG_RE = re.compile(r"\b(ADCK1|ADCK2|COQ8A|COQ8B)\b")
+
+# record-token -> dimension name. A token in a paralog-mentioning unit demands that dimension.
+RECORD_TOKENS = {
+    r"\bIBA\b": "iba",
+    r"PMID:34800366|MitoCoP": "mitocop_row",
+    r"EC[= ]?2\.7|2\.7\.-\.-|2\.7\.11\.-": "ec",
+    r"Ser/Thr-kinase keyword|Serine/threonine-protein kinase keyword|keyword": "keyword",
+    r"SL-0173|SL-0162|SUBCELLULAR LOCATION|subcellular location": "subcellular",
+    r"NOT\|": "negated",
+    r"ECO:0000269\|PubMed:33988507|PubMed:33988507|PMID:33988507": "screen_provenance",
+    r"ECO:0000269\|PubMed:(11888884|24270420|25498144)": "tag_sets",
+}
+
+
+def _coverage(census_doc: dict) -> dict[str, callable]:
+    """dimension -> assertion re-derived from the COMMITTED census JSON."""
+    c = census_doc["census"]
+    prov = census_doc["mitochondrial_localisation_provenance"]
+
+    def iba():
+        bad = [g for g in PARALOGS if c[g]["n_iba"] == 0]
+        return (
+            f"prose says every paralog has an IBA row; {bad} do not" if bad else None
+        )
+
+    def mitocop():
+        missing = [
+            g
+            for g in ("ADCK5", "ADCK1", "ADCK2")
+            if not any(
+                r["reference"] == "PMID:34800366" and r["evidence"] == "HTP"
+                for r in c[g]["mitochondrion_go_rows"]
+            )
+        ]
+        return (
+            f"prose says ADCK5, ADCK1 and ADCK2 share the MitoCoP GO:0005739 HTP row; "
+            f"{missing} do not carry it"
+            if missing
+            else None
+        )
+
+    def ec():
+        exp = {"COQ8A": ["2.7.-.-"], "COQ8B": ["2.7.-.-"], "ADCK1": ["2.7.-.-"],
+               "ADCK2": ["2.7.11.-"], "ADCK5": ["2.7.11.-"]}
+        bad = {g: c[g]["ec_numbers"] for g in exp if c[g]["ec_numbers"] != exp[g]}
+        return f"EC numbers changed: {bad}" if bad else None
+
+    def keyword():
+        exp = {"ADCK5": True, "ADCK1": True, "ADCK2": True, "COQ8A": False, "COQ8B": False}
+        bad = {g: c[g]["has_ser_thr_kinase_keyword"] for g in exp
+               if c[g]["has_ser_thr_kinase_keyword"] != exp[g]}
+        return f"Ser/Thr-kinase keyword changed: {bad}" if bad else None
+
+    def subcellular():
+        if any(str(l["location"]).startswith("Mitochondrion")
+               for l in c["ADCK5"]["subcellular_locations"]):
+            return "ADCK5 now has a Mitochondrion SUBCELLULAR LOCATION; the request is stale"
+        for g in ("ADCK1", "ADCK2"):
+            if not any(str(l["location"]).startswith("Mitochondrion")
+                       and any(e.startswith("ECO:0000269") for e in l["evidence"])
+                       for l in c[g]["subcellular_locations"]):
+                return f"{g} lost its experimental Mitochondrion SUBCELLULAR LOCATION"
+        return None
+
+    def negated():
+        bad = [g for g in ("COQ8A", "COQ8B") if len(c[g]["negated_annotations"]) != 2]
+        return f"prose says COQ8A and COQ8B each carry 2 NOT| rows; {bad} do not" if bad else None
+
+    def screen():
+        if prov["sole"] != ["ADCK1", "ADCK2"] or prov["absent"] != ["ADCK5"] \
+                or prov["corroborating"] != ["COQ8A", "COQ8B"]:
+            return f"screen provenance partition changed: {prov}"
+        return None
+
+    def tag_sets():
+        # RESULTS.md pins the exact ECO:0000269 tag set per gene in a table. Bucket
+        # membership alone would let a fourth COQ8A tag appear with the table left stale.
+        expected = {
+            "ADCK1": ["ECO:0000269|PubMed:33988507"],
+            "ADCK2": ["ECO:0000269|PubMed:33988507"],
+            "COQ8A": [
+                "ECO:0000269|PubMed:11888884",
+                "ECO:0000269|PubMed:25498144",
+                "ECO:0000269|PubMed:33988507",
+            ],
+            "COQ8B": [
+                "ECO:0000269|PubMed:24270420",
+                "ECO:0000269|PubMed:33988507",
+            ],
+        }
+        bad = {}
+        for g, exp in expected.items():
+            got = sorted(
+                {
+                    e
+                    for l in c[g]["subcellular_locations"]
+                    if str(l["location"]).startswith("Mitochondrion")
+                    for e in l["evidence"]
+                }
+            )
+            if got != exp:
+                bad[g] = {"expected": exp, "got": got}
+        return (
+            f"the per-gene tag table in RESULTS.md is stale: {bad}" if bad else None
+        )
+
+    return {
+        "iba": iba, "mitocop_row": mitocop, "ec": ec, "keyword": keyword,
+        "subcellular": subcellular, "negated": negated, "screen_provenance": screen,
+        "tag_sets": tag_sets,
+    }
+
+
+def check_cross_gene_claims(census_doc: dict, texts: dict[str, str]) -> list[str]:
+    problems: list[str] = []
+    coverage = _coverage(census_doc)
+
+    # 1. Every covered dimension must still hold against the committed JSON.
+    for dim, fn in coverage.items():
+        msg = fn()
+        if msg:
+            problems.append(f"cross-gene claim [{dim}]: {msg}")
+
+    # 2. No prose unit may make a record claim in a dimension nothing covers.
+    seen_dims = set()
+    for name, text in texts.items():
+        for unit in _paragraphs(text, name):
+            if not PARALOG_RE.search(unit):
+                continue
+            for pattern, dim in RECORD_TOKENS.items():
+                if re.search(pattern, unit, re.I):
+                    seen_dims.add(dim)
+                    if dim not in coverage:
+                        problems.append(
+                            f"{name}: makes a cross-gene claim in dimension {dim!r}, which "
+                            f"nothing in family_census.json asserts. Compute it, scope it "
+                            f"down, or delete it."
+                        )
+    if not seen_dims:
+        problems.append(
+            "cross-gene guard is vacuous: no prose unit paired a paralog with a record token, "
+            "so the invariant proved nothing. Check PARALOG_RE / RECORD_TOKENS."
+        )
+    return problems
+
+
+COARSE_UNIT_CHARS = 1500
+
+
+def check_unit_granularity(texts: dict[str, str]) -> list[str]:
+    """Markdown surfaces must stay finely split, or both hedge guards degrade silently.
+
+    Runs on EVERY invocation, not only under --self-test: its YAML counterpart (a surface
+    that yields <2 units) is reported by check_compartment_hedge on every run, and the
+    surfaces that actually regressed were the markdown ones. A guard that only fires in the
+    self-test cannot catch a regression introduced by someone editing the prose.
+    """
+    problems: list[str] = []
+    for surface in ("ADCK5-notes.md", "ADCK5-bioinformatics/RESULTS.md"):
+        if surface not in texts:
+            problems.append(f"granularity guard: {surface} absent from the scanned surfaces")
+            continue
+        oversized = [
+            u for u in _paragraphs(texts[surface], surface) if len(u) > COARSE_UNIT_CHARS
+        ]
+        if oversized:
+            problems.append(
+                f"{surface} has {len(oversized)} unit(s) over {COARSE_UNIT_CHARS} chars; the "
+                f"hedge guards run per unit, so a coarse unit lets an unhedged claim ride "
+                f"along with an unrelated hedge. First: {oversized[0].strip()[:70]!r}"
+            )
+    return problems
+
+
 def check_compartment_hedge(texts: dict[str, str]) -> list[str]:
     """Structural guard: discussing the compartment argument obliges you to hedge it NEARBY.
 
@@ -613,6 +806,8 @@ def run_checks(texts: dict[str, str], motif: dict, census: dict, partner: dict) 
     problems += check_withdrawn(texts)
     problems += check_compartment_hedge(all_surfaces(texts))
     problems += check_parity_hedge(all_surfaces(texts))
+    problems += check_cross_gene_claims(census, all_surfaces(texts))
+    problems += check_unit_granularity(all_surfaces(texts))
     problems += check_required_claims(texts)
     return problems
 
@@ -884,23 +1079,50 @@ def self_test() -> int:
     else:
         print("  PASS: splitter keeps a block scalar whole across prose colons")
 
-    # A prose surface whose units are too coarse defeats both hedge guards silently - the
-    # ADCK5-notes.md Localisation section had no blank lines and ran as one list-level unit.
-    # This is the coarse-unit shape again, so it gets an invariant rather than a fix-and-hope.
-    COARSE = 1500
-    for surface in ("ADCK5-notes.md", "ADCK5-bioinformatics/RESULTS.md"):
-        oversized = [
-            u for u in _paragraphs(all_surfaces(good)[surface], surface) if len(u) > COARSE
-        ]
-        if oversized:
-            failures.append(
-                f"{surface} has {len(oversized)} unit(s) over {COARSE} chars; the hedge guards "
-                f"run per unit, so a coarse unit lets an unhedged claim ride along with an "
-                f"unrelated hedge. First: {oversized[0].strip()[:70]!r}"
-            )
-            print(f"  FAIL: {surface} has over-coarse units")
-        else:
-            print(f"  PASS: {surface} units are fine-grained enough for the hedge guards")
+    # --- the class-closing cross-gene invariant, one break-test per dimension ---
+    import copy as _copy
+    dim_muts = [
+        ("ADCK1 loses its IBA row", lambda d: d["census"]["ADCK1"].__setitem__("n_iba", 0), "[iba]"),
+        ("ADCK2 loses the MitoCoP row",
+         lambda d: d["census"]["ADCK2"].__setitem__("mitochondrion_go_rows", []), "[mitocop_row]"),
+        ("COQ8A's EC reverts to 2.7.11.-",
+         lambda d: d["census"]["COQ8A"].__setitem__("ec_numbers", ["2.7.11.-"]), "[ec]"),
+        ("COQ8A regains the Ser/Thr keyword",
+         lambda d: d["census"]["COQ8A"].__setitem__("has_ser_thr_kinase_keyword", True), "[keyword]"),
+        ("ADCK5 gains a mitochondrial SUBCELLULAR LOCATION",
+         lambda d: d["census"]["ADCK5"]["subcellular_locations"].append(
+             {"location": "Mitochondrion", "evidence": ["ECO:0000269|PubMed:1"]}), "[subcellular]"),
+        ("COQ8B loses its NOT| rows",
+         lambda d: d["census"]["COQ8B"].__setitem__("negated_annotations", []), "[negated]"),
+        ("the screen-provenance partition shifts",
+         lambda d: d["mitochondrial_localisation_provenance"].__setitem__("corroborating", ["COQ8A"]),
+         "[screen_provenance]"),
+        ("COQ8A gains a fourth localisation tag (RESULTS.md table would go stale)",
+         lambda d: d["census"]["COQ8A"]["subcellular_locations"][0]["evidence"].append(
+             "ECO:0000269|PubMed:99999999"), "[tag_sets]"),
+    ]
+    for desc, mut, marker in dim_muts:
+        bad = _copy.deepcopy(census)
+        mut(bad)
+        expect_flag(f"cross-gene: {desc}", good, census=bad, match=marker)
+
+    # The class-closer itself: a NEW cross-gene dimension that nothing asserts must fail.
+    RECORD_TOKENS[r"ZZ_UNCOVERED_TOKEN_ZZ"] = "an_uncovered_dimension"
+    try:
+        expect_flag(
+            "a cross-gene claim in a dimension nothing in the census asserts",
+            {**good, "ADCK5-notes.md": good["ADCK5-notes.md"] + "\n\nCOQ8A ZZ_UNCOVERED_TOKEN_ZZ.\n"},
+            match="an_uncovered_dimension",
+        )
+    finally:
+        RECORD_TOKENS.pop(r"ZZ_UNCOVERED_TOKEN_ZZ", None)
+
+    # Granularity now runs on every invocation, so break-test it there too.
+    expect_flag(
+        "a markdown surface coarsened into one giant unit",
+        {**good, "ADCK5-notes.md": good["ADCK5-notes.md"].replace("\n\n", "\n")},
+        match="over 1500 chars",
+    )
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them

@@ -150,10 +150,26 @@ def main() -> int:
             }
         )
 
+        # Every GO:0005739 row with its evidence code and reference. Recorded because this
+        # review asserts on three surfaces that ADCK1 and ADCK2 carry the same MitoCoP HTP
+        # row as ADCK5 - a cross-gene claim about another entry's evidence, which is the
+        # shape this PR has already had to retract twice. It must be checkable from the
+        # repository rather than from a live query someone once ran.
+        mito_rows = sorted(
+            {
+                (r["goEvidence"], r["reference"])
+                for r in rows
+                if r["goId"] == "GO:0005739"
+            }
+        )
+
         census[sym] = {
             "accession": acc,
             "entry_name": entry_name,
             "subcellular_locations": subcellular_evidence(ent),
+            "mitochondrion_go_rows": [
+                {"evidence": e, "reference": ref} for e, ref in mito_rows
+            ],
             "reviewed": ent["entryType"].startswith("UniProtKB reviewed"),
             "ec_numbers": ecs,
             "has_ser_thr_kinase_keyword": "Serine/threonine-protein kinase" in kws,
@@ -248,6 +264,23 @@ def main() -> int:
             "term; the UniProt correction request in suggested_questions has been actioned "
             "upstream and must be revised"
         )
+    # The MitoCoP claim, asserted rather than described.
+    MITOCOP = "PMID:34800366"
+    carries_mitocop = sorted(
+        sym
+        for sym in GENES
+        if any(
+            r["reference"] == MITOCOP and r["evidence"] == "HTP"
+            for r in census[sym]["mitochondrion_go_rows"]
+        )
+    )
+    for sym in ("ADCK5", "ADCK1", "ADCK2"):
+        if sym not in carries_mitocop:
+            problems.append(
+                f"MitoCoP claim: {sym} no longer carries a GO:0005739 HTP row from {MITOCOP}. "
+                f"The review states on three surfaces that ADCK5, ADCK1 and ADCK2 share it."
+            )
+
     if provenance["sole"] != ["ADCK1", "ADCK2"] or provenance["absent"] != ["ADCK5"]:
         problems.append(
             f"localisation provenance changed: screen-as-sole-evidence={provenance['sole']}, "
@@ -287,6 +320,8 @@ def main() -> int:
         f"one tag among several (corroborating) for {provenance['corroborating']}, "
         f"and absent for {provenance['absent']}."
     )
+    print()
+    print(f"GO:0005739 HTP row from {MITOCOP} carried by: {carries_mitocop}")
     print()
     print("UniProt SUBCELLULAR LOCATION and the evidence behind it:")
     for sym in GENES:

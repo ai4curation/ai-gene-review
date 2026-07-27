@@ -89,9 +89,28 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-31 self-tests, each exercised in the direction it exists to catch and in the happy
-direction, plus invariants about the harness itself. Two of them replay **real** defects
-from this PR's own history, frozen as fixtures: the unhedged compartment paragraph and the
+### The class that kept recurring, and the invariant that closes it
+
+Four blocking items in this PR were one thing: **a claim about a paralog's database record,
+asserted in prose with nothing in the repo to check it against.** The parity framing, ADCK2's
+SubCell provenance, the supplied-vs-corroborated split, and the MitoCoP row — the last being
+the other half of the very sentence whose first half was fixed the round before. (For the
+record, since this paragraph names the same paralogs: their SL-0173 rests on
+`PubMed:33988507`, an assay ADCK5 was never in.) Fixing these one at a time was losing to the
+rate of discovery.
+
+So `check_cross_gene_claims` closes the class. Every cross-gene *record* claim must be
+**covered**: the fact lives in `family_census.json` and is re-asserted against the committed
+JSON — eight dimensions (IBA rows, the MitoCoP `GO:0005739` HTP row, EC numbers, the Ser/Thr
+keyword, `SUBCELLULAR LOCATION`, `NOT|` rows, the screen-provenance partition, and the exact
+per-gene tag sets the table above pins). And a prose unit naming a paralog alongside a record
+token in a dimension **nothing covers** fails — which is what makes this close the class
+rather than patch an instance. Literature claims about paralogs stay out of scope: those are
+anchored by `supporting_text` and already checked verbatim against the cached publications.
+
+39 self-tests, each exercised in the direction it exists to catch and in the happy
+direction, plus invariants about the harness itself. Two replay **real** defects from this
+PR's own history, frozen as fixtures: the unhedged compartment paragraph and the
 pre-retraction parity units.
 
 ## Question
