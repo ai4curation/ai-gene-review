@@ -297,3 +297,28 @@ PMID:38479840 (SINE B2 / CTCF in blastocysts), PMID:41174994 (methyltransferase 
 - Both committed scripts break-test their own guards: `analyze_compara_donors.py --self-test`
   (7 classifier directions, including the false-friend and other-gene-perturbation cases) and
   `audit_adnp_review.py --self-test` (baseline + 9 mutations + the SafeLoader dedup baseline).
+
+## 12. Verdict tally
+
+Generated from the review file, not hand-counted. `audit_adnp_review.py` check **I** asserts
+this table equals the computed counts and fails if they drift.
+
+<!-- verdict-counts:begin -->
+
+| action | rows |
+|---|---|
+| ACCEPT | 14 |
+| KEEP_AS_NON_CORE | 9 |
+| MARK_AS_OVER_ANNOTATED | 8 |
+| MODIFY | 15 |
+| NEW | 2 |
+| REMOVE | 7 |
+| **total** | **55** |
+
+<!-- verdict-counts:end -->
+
+The first version of this PR's body stated a hand-counted tally that was **wrong on three of
+six actions** (MODIFY, KEEP_AS_NON_CORE and ACCEPT). REMOVE and MARK_AS_OVER_ANNOTATED, the two
+that carry the argument, happened to be right — which is exactly why the error survived a
+read-through. Check I exists because of it: anything countable should be counted, and then
+compared against what was written.

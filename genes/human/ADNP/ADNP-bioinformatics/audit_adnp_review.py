@@ -273,7 +273,49 @@ def audit(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> list[str]
         problems.append(
             f"H: core_functions terms with no ACCEPT/NEW row and no MODIFY target: {sorted(unbacked)}"
         )
+
+    # ---- I: the verdict tally in the notes must match the computed one -----
+    # This exists because the hand-written tally in the first version of the PR
+    # body was wrong on three of six actions.  A count stated in prose is a
+    # hand-derived number; derive it instead.
+    problems.extend(check_verdict_table(annotations))
     return problems
+
+
+VERDICT_BLOCK = re.compile(
+    r"<!-- verdict-counts:begin -->(.*?)<!-- verdict-counts:end -->", re.S
+)
+
+
+def computed_verdicts(annotations: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for ann in annotations:
+        action = (ann.get("review") or {}).get("action")
+        if action:
+            counts[action] = counts.get(action, 0) + 1
+    return counts
+
+
+def check_verdict_table(annotations: list[dict], notes: Path | None = None) -> list[str]:
+    notes = notes or (GENE_DIR / "ADNP-notes.md")
+    if not notes.exists():
+        return ["I: ADNP-notes.md is missing -- refusing to pass vacuously"]
+    match = VERDICT_BLOCK.search(notes.read_text())
+    if not match:
+        return [
+            "I: no <!-- verdict-counts:begin/end --> block in ADNP-notes.md; the tally "
+            "must be present so it can be checked against the computed one"
+        ]
+    stated = {
+        m.group(1): int(m.group(2))
+        for m in re.finditer(r"^\|\s*`?([A-Z_]+)`?\s*\|\s*(\d+)\s*\|", match.group(1), re.M)
+    }
+    if not stated:
+        return ["I: verdict-counts block parsed to zero rows -- refusing to pass vacuously"]
+    computed = computed_verdicts(annotations)
+    if stated != computed:
+        return [f"I: notes tally {stated} != computed {computed}"]
+    return []
 
 
 def report_only(doc: dict) -> list[str]:
@@ -429,6 +471,17 @@ def self_test(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> int:
 
     expect("G-leak", misflag_protein_row, "G:")
 
+    def break_tally(d, g, s):
+        # The defect that actually shipped: a hand-written tally disagreeing
+        # with the file.  Simulate it by changing an action so the counts move.
+        for ann in d["existing_annotations"]:
+            if (ann.get("review") or {}).get("action") == "MODIFY":
+                ann["review"]["action"] = "ACCEPT"
+                return True
+        return False
+
+    expect("I-tally", break_tally, "I:")
+
     def orphan_core_function(d, g, s):
         if not d.get("core_functions"):
             return False
@@ -448,7 +501,7 @@ def self_test(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> int:
     for failure in failures:
         print(f"SELF-TEST FAIL: {failure}", file=sys.stderr)
     if not failures:
-        print("self-test: 11/11 directions OK (baseline + 9 mutations + SafeLoader baseline)")
+        print("self-test: 12/12 directions OK (baseline + 10 mutations + SafeLoader baseline)")
     return 1 if failures else 0
 
 
