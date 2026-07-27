@@ -14,6 +14,8 @@ Contacts computed from **PDB 2BTF** chain A (ligands ATP, SR), 374 observed resi
 
 Literature-named actin residues inside the computed contact set: D157, E214, G15, G156, K18, K336, Q137, S14, V159, Y306. Outside it (probed by alignment anyway): A108, D11, D154, H161, P109, R183.
 
+**Sequence-length audit first, because a truncated reference manufactures fake substitutions.** The structure's observed chain is 374 residues; a panel member shorter than 280.5 residues (0.75 x the structure's observed chain length; the shortest unflagged panel member is 366 aa and the longest flagged is 245 aa, so the cut lies in an observed gap) is flagged as too short to contain the fold: **ACTL10 (human actin-like 10)** at 245 aa. Tallies for a flagged member are NOT comparable: gaps and apparent substitutions may reflect absent residues rather than divergence. No conclusion in this analysis rests on a flagged member - the filament-builder, nucleator and PT-complex reference sets are listed explicitly in `synthesis` and contain none of them.
+
 Aligned residue at each named actin position:
 
 | protein | D11 | S14 | G15 | K18 | A108 | P109 | Q137 | D154 | G156 | D157 | V159 | H161 | R183 | E214 | Y306 | K336 |

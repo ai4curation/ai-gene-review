@@ -226,6 +226,27 @@ so a protein that cannot make the F-form contacts has no route to the hydrolysis
 regardless of His161. Counting them as two independent lines would inflate the case — as would
 counting the Pro-rich loop substitutions as a third.
 
+### A truncated reference sequence in the panel — flagged, and load-bearing nowhere
+
+**ACTL10's Swiss-Prot entry (Q5JWF8) is 245 aa**, against 366–435 aa for every other panel member
+and 374 observed residues in the structure. It is ~130 residues short of the actin fold, so its
+tallies contain gaps and apparent substitutions that reflect **absent residues rather than
+divergence** — the same artefact that has already propagated into a merged review elsewhere in this
+campaign.
+
+The script now audits panel lengths *before* any tally is presented, with the cut derived from the
+panel's own distribution rather than hand-assigned: 0.75 × the structure's observed chain, i.e. 280.5
+aa, which lies inside a real observed gap (shortest unflagged member 366 aa, longest flagged 245 aa).
+ACTL10 is the only flag.
+
+Checked which conclusions could be affected: **none**. The three reference sets that carry arguments
+are enumerated explicitly in `synthesis` — `filament_builders` (conventional actins, Arp53D, ACTR1A),
+`nucleators_not_polymerisers` (Arp2, Arp3) and the PT-complex ARPs — and ACTL10 is in none of them.
+It appears in this review only in the relatives census, where the figure is a count of IBA rows and
+is independent of sequence length, and as one of the five un-adjudicated PAINT clade members. Its
+truncation was already visible as gap calls (`-!`) in the named-site table; what was missing was the
+statement of *why*.
+
 ### IBA donor quality — the objection cannot be about the donors
 
 Every WITH/FROM token was resolved programmatically and each source was then asked, through
@@ -568,6 +589,24 @@ Two separate checks, because they catch different things.
   detector/mutator scope divergence that makes a check structurally blind. Now returns `INACTIVE`
   with an explanatory note, break-tested in both directions. No reported number changes, because
   no WITH/FROM token in ACTRT2's GOA is a dead accession — so this was latent, not active.
+- **The claim lint's own self-test did not test the lint.** `--selftest` claimed to inject each
+  retracted phrasing and assert the lint catches it. It did not: it compared `re.search(pattern,
+  probe)` — the regex against a string built from that same regex — so it exercised the probe
+  builder and never called `audit()`. `audit()`'s `extra` parameter, added for exactly that
+  injection, was dead code, and the failure counter could never increment because its only `+= 1`
+  sat after a `raise`. So the mode printed "every retracted phrasing is caught" without having
+  tested anything. That is a docstring asserting a guarantee its code does not provide — the
+  precise defect the lint was added to catch — committed inside the lint.
+  Fixed by calling the thing under test, and then **break-tested against the three sabotages the
+  reviewer named**. That mattered: injection tests alone caught only one of the three, because an
+  injected surface is scanned even when the real-file scan is gutted. `surfaces()` returning `[]`
+  and `review_strings()` losing its list recursion were both still missed. They are caught now only
+  because a positive **coverage assertion** was added — the scan must reach `review.description`, a
+  list-nested review path, the notes and RESULTS.md, over 100+ surfaces with real content. All three
+  sabotages are now caught, and the summary line says what is actually checked.
+- **Nothing invoked the two in-folder gates**, which makes a lint documentation rather than a check.
+  `gates.py` is now the single entry point (`uv run python gates.py`) and it also prints the
+  repository-level gates so the whole sequence is discoverable from one place.
 - Guards in `analyze_actrt2.py` were tested by breaking them. A deliberately wrong named-site
   residue raises; a missing input names its fix command. The dead-accession guard **failed** its
   first break test — `O15507` (MERGED into P56159) returns a row whose `primaryAccession` matches

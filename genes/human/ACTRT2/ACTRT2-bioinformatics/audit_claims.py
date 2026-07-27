@@ -47,7 +47,9 @@ NOTES = GENE_DIR / "ACTRT2-notes.md"
 RESULTS = HERE / "RESULTS.md"
 
 # Each rule: what was retracted, what must be present instead, and where it must be present.
-# `required_min` is 0 where the counter-claim is optional (e.g. a field may simply not discuss it).
+# `required_min_surfaces` counts distinct TEXT SURFACES (one review field, the notes file, RESULTS.md)
+# that must contain the counter-claim - NOT occurrences, which is what the earlier name implied.
+# 0 means the counter-claim is optional.
 RULES = [
     {
         "name": "pocket-not-fully-retained",
@@ -65,7 +67,7 @@ RULES = [
         ],
         "required": r"(?:largely\s+but\s+not\s+wholly|adenine/ribose\s+region|"
         r"phosphate-loop|phosphate-binding-loop|phosphate\s+loops)",
-        "required_min": 1,
+        "required_min_surfaces": 1,
     },
     {
         "name": "his161-carries-the-argument-alone",
@@ -80,7 +82,7 @@ RULES = [
         ],
         "required": r"(?:His161\s+carries\s+the\s+argument|context\s+rather\s+than\s+evidence|"
         r"governs\s+(?:its\s+rotamer|the\s+His161\s+rotamer)|ATP-hydrolysis\s+trigger)",
-        "required_min": 1,
+        "required_min_surfaces": 1,
     },
     {
         "name": "go5200-not-accepted",
@@ -92,7 +94,7 @@ RULES = [
             r"core\s+molecular\s+function,\s+but\s+the\s+route\s+by\s+which",
         ],
         "required": r"(?:no\s+ortholog-strength\s+donor|ACTR10\s+precedent\s+does\s+not\s+transfer)",
-        "required_min": 1,
+        "required_min_surfaces": 1,
     },
     {
         "name": "partner-arithmetic",
@@ -105,7 +107,7 @@ RULES = [
             r"spoke-expanded\s+at\s+MI-score\s+0\.35\s+with\s+the\s+PDCL3\s+pair",
         ],
         "required": r"eight\s+(?:partners\s+)?besides\s+PDCL3",
-        "required_min": 1,
+        "required_min_surfaces": 1,
     },
     {
         "name": "annotation-count-is-not-an-entity-count",
@@ -118,7 +120,7 @@ RULES = [
         ],
         "required": r"(?:not\s+counted|annotation\s+count\s+is\s+not\s+an\s+entity\s+count|"
         r"GOA\s+\*\*annotations\*\*)",
-        "required_min": 1,
+        "required_min_surfaces": 1,
     },
 ]
 
@@ -143,10 +145,21 @@ def review_strings() -> list[tuple[str, str]]:
 
 
 def surfaces() -> list[tuple[str, str]]:
+    """The text a curator or reader actually sees. This file is deliberately NOT among them.
+
+    `RULES` necessarily contains every retracted phrasing as a regex literal, so scanning this file
+    would make the lint report itself. The exclusion is therefore load-bearing rather than
+    incidental, and is asserted below so that adding this file to the scan fails loudly instead of
+    producing a confusing self-report.
+    """
     surf = review_strings()
     surf.append(("notes", NOTES.read_text()))
     if RESULTS.exists():
         surf.append(("RESULTS.md", RESULTS.read_text()))
+    assert not any(name == "audit_claims.py" for name, _ in surf), (
+        "this lint's own source contains every retracted phrasing as a regex literal and must not "
+        "be scanned; exclude it or the report becomes self-referential"
+    )
     return surf
 
 
@@ -163,13 +176,13 @@ def audit(extra: list[tuple[str, str]] | None = None) -> list[str]:
                     problems.append(
                         f"[{rule['name']}] RETRACTED CLAIM present at {where}: /{pattern}/"
                     )
-        if rule["required_min"]:
+        if rule["required_min_surfaces"]:
             rx = re.compile(rule["required"], re.I | re.S)
             hits = sum(1 for _, text in surf if rx.search(" ".join(text.split())))
-            if hits < rule["required_min"]:
+            if hits < rule["required_min_surfaces"]:
                 problems.append(
                     f"[{rule['name']}] REPLACEMENT CLAIM missing: /{rule['required']}/ "
-                    f"found in {hits} surfaces, need {rule['required_min']}"
+                    f"found in {hits} surfaces, need {rule['required_min_surfaces']}"
                 )
     return problems
 
@@ -203,24 +216,131 @@ def _probe_for(pattern: str) -> str:
 
 
 def selftest() -> int:
-    """Reinstate each retracted phrasing in a synthetic surface and require the lint to catch it."""
+    """Inject each retracted phrasing into a synthetic surface and require `audit()` to report it.
+
+    The first version of this function did NOT do that. It compared `re.search(pattern, probe)` -
+    the regex against a string built from that same regex - so it tested `_probe_for` and never
+    called `audit()` at all. `audit()`'s `extra` parameter, which exists precisely for this
+    injection, was dead; and `failures` could never be non-zero because its only increment sat after
+    a `raise`. The success line therefore printed "every retracted phrasing is caught" without having
+    tested anything, and breaking the lint - `surfaces()` returning `[]`, or inverting the
+    `if rx.search` - still passed.
+
+    That is the "reports zero on a broken input" state this mode was added to prevent, committed
+    inside the file added to prevent it. It is fixed by calling the thing under test, and the checks
+    are now separately named so neither can be mistaken for the other:
+
+      * `_selftest_probe_builder()`        - can a literal be built that the pattern matches?
+      * `_selftest_lint_fires()`           - injected as a surface, does `audit()` report it?
+      * `_selftest_detects_a_broken_lint()` - if the scan is sabotaged, does `audit()` stop passing?
+    """
+    total = (
+        _selftest_probe_builder()
+        + _selftest_lint_fires()
+        + _selftest_scan_coverage()
+        + _selftest_detects_a_broken_lint()
+    )
+    if total:
+        print(f"selftest FAILED: {total} problem(s)")
+        return 1
+    n_patterns = sum(len(r["retracted"]) for r in RULES)
+    surf = surfaces()
+    print(f"selftest passed: {n_patterns} retracted phrasings over {len(RULES)} rules, each")
+    print("  (a) constructible as a probe and (b) reported by audit() when injected as a surface;")
+    print(f"  scan coverage asserted over {len(surf)} surfaces including review.description, a")
+    print("  list-nested review path, notes and RESULTS.md; and audit() confirmed to stop passing")
+    print("  when its scan is sabotaged. Verified by breaking the lint three ways (surfaces()")
+    print("  returning [], review_strings() losing list recursion, and inverting the search):")
+    print("  all three are caught - the first two only by the coverage assertion.")
+    return 0
+
+
+def _selftest_probe_builder() -> int:
+    """Can a literal be built that each pattern matches? A test of `_probe_for`, nothing more."""
     failures = 0
     for rule in RULES:
         for pattern in rule["retracted"]:
-            # Build a literal that the pattern matches, by stripping regex syntax conservatively.
             probe = _probe_for(pattern)
             if not re.search(pattern, probe, re.I | re.S):
-                raise AssertionError(
-                    f"could not build a probe matching /{pattern}/ (got {probe!r}); the rule would "
-                    "go untested, which is exactly the failure this lint exists to prevent"
-                )
-                print(f"  SELFTEST FAIL: lint did not catch /{pattern}/")
+                print(f"  PROBE FAIL: cannot build a probe matching /{pattern}/ (got {probe!r}); "
+                      "the rule would go untested")
                 failures += 1
-    if failures:
-        print(f"selftest: {failures} rule(s) do not fire when the claim is reinstated")
-        return 1
-    print("selftest: every retracted phrasing is caught when reinstated")
-    return 0
+    return failures
+
+
+def _selftest_lint_fires() -> int:
+    """Inject each probe as a surface and require audit() to report that rule's pattern."""
+    failures = 0
+    for rule in RULES:
+        for pattern in rule["retracted"]:
+            probe = _probe_for(pattern)
+            reported = audit(extra=[("SELFTEST-SURFACE", probe)])
+            expected = f"[{rule['name']}] RETRACTED CLAIM present at SELFTEST-SURFACE: /{pattern}/"
+            if expected not in reported:
+                print(f"  LINT FAIL: audit() did not report /{pattern}/ for rule "
+                      f"{rule['name']} when injected as a surface")
+                failures += 1
+    return failures
+
+
+def _selftest_scan_coverage() -> int:
+    """Assert the scan actually reaches the places a claim has hidden. This is the check that
+    catches a sabotaged `surfaces()`.
+
+    Added after break-testing the three sabotages the reviewer named. Injection tests
+    (`_selftest_lint_fires`) pass even when the real-file scan is gutted, because the injected
+    surface is scanned regardless - so `surfaces()` returning `[]` and `review_strings()` losing its
+    list recursion were BOTH missed. Only a positive coverage assertion catches them, and each item
+    below corresponds to a place a retracted claim has actually been found in this review:
+
+      * `review.description`      - where the last instance hid, and not reachable without dict walk
+      * a list-nested review path - where every annotation `reason` lives, and not reachable without
+                                    list recursion
+      * `notes`                   - where the lint found three instances manual sweeps had missed
+      * `RESULTS.md`              - where the §8 rewrite stranded two quotes
+    """
+    failures = 0
+    surf = surfaces()
+    names = [name for name, _ in surf]
+    for required in ("review.description", "notes", "RESULTS.md"):
+        if required not in names:
+            print(f"  COVERAGE FAIL: {required!r} is not among the scanned surfaces; a claim there "
+                  "would be invisible")
+            failures += 1
+    if not any("[" in name for name in names):
+        print("  COVERAGE FAIL: no list-nested field is scanned, so every annotation reason, "
+              "knowledge_gap and reference finding is invisible")
+        failures += 1
+    if len(surf) < 100:
+        print(f"  COVERAGE FAIL: only {len(surf)} surfaces scanned; this review has hundreds of "
+              "text fields, so the walk is not reaching them")
+        failures += 1
+    if not any(len(text) > 500 for _, text in surf):
+        print("  COVERAGE FAIL: no substantial text scanned; surfaces are present but empty")
+        failures += 1
+    return failures
+
+
+def _selftest_detects_a_broken_lint() -> int:
+    """Sabotage the scan and require audit() to stop passing.
+
+    `_selftest_lint_fires` only proves the INJECTED surface is scanned. A `surfaces()` that returned
+    nothing would still pass it, so the real-file scan is checked separately here: with `surfaces()`
+    emptied, `audit()` must report the missing counter-claims rather than reporting clean.
+    """
+    global surfaces
+    original = surfaces
+    failures = 0
+    try:
+        surfaces = lambda: []  # noqa: E731 - deliberate sabotage
+        empty = audit()
+        if not any("REPLACEMENT CLAIM missing" in p for p in empty):
+            print("  META FAIL: audit() reports clean with nothing to scan, so a broken "
+                  "surfaces() would pass unnoticed")
+            failures += 1
+    finally:
+        surfaces = original
+    return failures
 
 
 def main() -> int:

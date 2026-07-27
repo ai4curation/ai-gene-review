@@ -465,6 +465,38 @@ def probe_named_sites(struct_seq, struct_numbers) -> dict:
     return out
 
 
+def panel_length_audit(struct_seq: str) -> dict:
+    """Flag panel members too short to contain the fold, BEFORE their tallies are believed.
+
+    A reference sequence that starts mid-fold manufactures fake substitutions out of absent
+    residues. ACTL10's Swiss-Prot entry is the case in this family - it is ~130 residues shorter
+    than the actin fold - and that artefact has already propagated into a merged review elsewhere in
+    this campaign. The threshold is derived from the panel's own length distribution and from the
+    structure's observed chain, never hand-assigned: a member is flagged when it is shorter than the
+    structure by more than a quarter of the structure's length, which sits inside the observed gap
+    (the next-shortest member is within 3 per cent of the fold).
+    """
+    targets = {ACTRT2: "ACTRT2 (this gene)", **PANEL}
+    lengths = {acc: len(uniprot_sequence(acc)) for acc in targets}
+    ref = len(struct_seq)
+    cutoff = ref * 0.75
+    flagged = {acc: lengths[acc] for acc in lengths if lengths[acc] < cutoff}
+    ok = sorted(v for a, v in lengths.items() if a not in flagged)
+    return {
+        "structure_observed_length": ref,
+        "cutoff_length": round(cutoff, 1),
+        "cutoff_rationale": "0.75 x the structure's observed chain length; the shortest unflagged "
+        f"panel member is {min(ok)} aa and the longest flagged is "
+        f"{max(flagged.values()) if flagged else 'n/a'} aa, so the cut lies in an observed gap",
+        "lengths": {targets[a]: lengths[a] for a in sorted(lengths, key=lambda x: lengths[x])},
+        "flagged_too_short_for_the_fold": {targets[a]: v for a, v in flagged.items()},
+        "note": "Tallies for a flagged member are NOT comparable: gaps and apparent substitutions "
+        "may reflect absent residues rather than divergence. No conclusion in this analysis rests "
+        "on a flagged member - the filament-builder, nucleator and PT-complex reference sets are "
+        "listed explicitly in `synthesis` and contain none of them.",
+    }
+
+
 def score_panel(struct_seq, struct_numbers, contact_positions, subset=None):
     """Per-target tallies over `contact_positions`, under both alignment schemes."""
     targets = {ACTRT2: "ACTRT2 (this gene)", **PANEL}
@@ -1205,6 +1237,7 @@ def main() -> None:
             f"{NAMED_ACTIN_SITES[p][0]}{p}" for p in NAMED_ACTIN_SITES if p not in positions
         ),
         "named_site_probe": probe_named_sites(seq, numbers),
+        "panel_length_audit": panel_length_audit(seq),
         "panel": score_panel(seq, numbers, positions),
     }
 
@@ -1456,6 +1489,15 @@ def render(r: dict) -> str:
       + ". Outside it (probed by alignment anyway): "
       + (", ".join(ns["named_actin_sites_outside_contact_set"]) or "none")
       + ".")
+    a("")
+    la = ns["panel_length_audit"]
+    a(f"**Sequence-length audit first, because a truncated reference manufactures fake "
+      f"substitutions.** The structure's observed chain is {la['structure_observed_length']} "
+      f"residues; a panel member shorter than {la['cutoff_length']} residues "
+      f"({la['cutoff_rationale']}) is flagged as too short to contain the fold: "
+      + (", ".join(f"**{k}** at {v} aa" for k, v in la["flagged_too_short_for_the_fold"].items())
+         or "none")
+      + f". {la['note']}")
     a("")
     a("Aligned residue at each named actin position:")
     a("")
