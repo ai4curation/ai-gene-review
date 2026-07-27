@@ -51,7 +51,13 @@ def require(path: Path, fix: str) -> Path:
 
 
 def norm(text: str) -> str:
-    return re.sub(r"\s+", " ", text)
+    """Collapse whitespace AND strip markdown emphasis.
+
+    Whitespace collapsing alone let a retracted phrasing survive: the notes wrote it as
+    `**IPI twice**`, and the asterisks defeated a plain substring test on "IPI twice". A
+    retraction guard that any emphasis can bypass is not a guard.
+    """
+    return re.sub(r"\s+", " ", text.replace("**", "").replace("*", "").replace("`", ""))
 
 
 def compat(tally: dict) -> int:
@@ -222,9 +228,9 @@ def main() -> int:
          r"whose (\d+) protein donors are (\d+) conventional actins", (donors(1), donors(1) - 1),
          review, 1),
         ("donors, 'N/N carry their own' (notes)",
-         r"\*\*(\d+)/(\d+) carry their own", (donors(1), donors(1)), notes, 1),
+         r"(\d+)/(\d+) carry their own", (donors(1), donors(1)), notes, 1),
         ("donors, 'Row 1 carries **N** tokens (M protein donors + one PANTHER node)'",
-         r"Row 1 carries \*\*(\d+)\*\* tokens \((\d+) protein donors",
+         r"Row 1 carries (\d+) tokens \((\d+) protein donors",
          (donors(1) + 1, donors(1)), notes, 1),
         ("donors, 'same N WITH/FROM tokens'",
          r"same (\d+) WITH/FROM tokens", (donors(1) + 1,), review, 1),
@@ -233,6 +239,128 @@ def main() -> int:
         ("donors, 'All N carry their own experimental evidence' for row 2",
          r"all (\d+) donors carry their own experimental evidence", (donors(2),), review, 1),
     ]
+
+    # --- reference-scope figures, from reference_scope.json rather than typed.
+    #     Looked up through a helper that names the missing key, because indexing the dict by a
+    #     hardcoded PMID raised a bare KeyError when the file was regenerated with a different
+    #     citation set - an unhelpful failure for a script whose job is clear failure.
+    scope_path = HERE / "reference_scope.json"
+    problems_early: list[str] = []
+    if not scope_path.exists():
+        problems_early.append(
+            f"missing {scope_path}; regenerate with: uv run python reference_scope.py")
+    else:
+        sc = json.loads(scope_path.read_text())
+
+        def ref(pmid: str) -> dict:
+            if pmid not in sc:
+                raise RuntimeError(
+                    f"reference_scope.json has no block for PMID:{pmid}; it holds "
+                    f"{sorted(sc)}. Either the review stopped citing it or the audit needs "
+                    "updating - re-run reference_scope.py and re-read the affected prose."
+                )
+            return sc[pmid]
+
+        bioplex, theca, prof = ref("33961781"), ref("35793634"), ref("18692047")
+
+        def entity_count(block: dict, go_id: str, why: str) -> int | None:
+            """Distinct-entity count, or None with a recorded problem.
+
+            Records rather than raises: this script's contract is that one run prints every
+            failure, and raising here aborted the remaining patterns so a second, unrelated
+            drift would stay hidden until the first was fixed.
+            """
+            if not block.get("entities_per_term_available"):
+                problems_early.append(
+                    f"PMID:{block['pmid']} no longer yields a distinct-entity count per term "
+                    f"(rows_complete is false, i.e. the row list is a sample), so {why} is "
+                    "unsupported: an annotation count is not an entity count. Re-run "
+                    "reference_scope.py and re-read the affected prose rather than substituting "
+                    "the annotation count."
+                )
+                return None
+            if go_id not in block["entities_per_term"]:
+                problems_early.append(
+                    f"PMID:{block['pmid']} no longer annotates {go_id}; {why} must be re-read. "
+                    f"Terms present: {sorted(block['entities_per_term'])}"
+                )
+                return None
+            return block["entities_per_term"][go_id]
+
+        theca_pt = entity_count(theca, "GO:0033011",
+                                "the prose's '12 mouse perinuclear-theca proteins'")
+        theca_pheno = entity_count(theca, "GO:0007286", "the projection argument")
+        prof_pb = entity_count(prof, "GO:0005515", "the annotations-versus-entities sentence")
+        # Entity-count patterns are added only where the count is available; the absence is already
+        # recorded above, so skipping here loses nothing and keeps the remaining checks running.
+        if theca_pt is not None:
+            P.extend([
+                ("scope, theca proteins carrying GO:0033011 IDA",
+                 r"carries GO:0033011 by IDA for (\d+) mouse perinuclear-theca proteins",
+                 (theca_pt,), review, 1),
+                ("scope, theca proteins named in the notes table",
+                 r"by IDA for (\w+) mouse theca proteins", (word(theca_pt),), notes, 1),
+            ])
+        if prof_pb is not None:
+            P.append(
+                ("scope, profilin GO:0005515 annotations vs entities (the double-logging itself)",
+                 r"(\d+) protein-binding annotations spread over only (\d+) entities",
+                 (prof["true_annotations_per_term"].get("GO:0005515", "MISSING"), prof_pb),
+                 review, 1))
+        # rows_complete is the property entity counting actually needs; term-list closure is
+        # weaker and was the wrong gate. Both are asserted so a regression in either is visible.
+        def flag(block: dict, field: str, want, why: str) -> None:
+            """Assert a JSON field without direct indexing, so a renamed or dropped field is
+            reported by name rather than raising KeyError -- the same reason entity_count()
+            uses .get()."""
+            if field not in block:
+                problems_early.append(
+                    f"PMID:{block.get('pmid', '?')} has no '{field}' field; reference_scope.py's "
+                    f"output shape changed and {why} can no longer be checked")
+            elif block[field] != want:
+                problems_early.append(
+                    f"PMID:{block.get('pmid', '?')}: {field} is {block[field]!r}, expected "
+                    f"{want!r} - {why}")
+
+        flag(theca, "rows_complete", True,
+             "its entity counts would be a lower bound and the '12 proteins' sentence would rest "
+             "on a sample")
+        flag(theca, "term_list_provably_complete", True,
+             "the projection verdict on it would rest on a partial term list")
+        flag(theca, "projecting_database_rows", [],
+             "the review states this reference has no projecting-database rows")
+        flag(bioplex, "assigning_databases_provably_complete", True,
+             "the review's 'sum exactly to the total' sentence would be unproven")
+        P.extend([
+            ("scope, theca reference distinct entities",
+             r"reference annotates (\d+) entities across (\d+) terms",
+             (theca["distinct_entities_seen"], len(theca["true_annotations_per_term"])),
+             review, 1),
+            ("scope, BioPlex total annotations",
+             r"PMID:33961781 accounts for (\d+) GOA annotations",
+             (bioplex["total_annotations"],), review, 1),
+            ("scope, BioPlex exact protein-binding count",
+             r"of which (\d+) are GO:0005515 itself",
+             (bioplex["true_annotations_per_term"].get("GO:0005515", "MISSING"),), review, 1),
+            ("scope, BioPlex per-database split",
+             r"\(IntAct (\d+), ComplexPortal (\d+)\)",
+             (bioplex["true_annotations_per_db"].get("IntAct", "MISSING"),
+              bioplex["true_annotations_per_db"].get("ComplexPortal", "MISSING")), review, 1),
+            ("scope, profilin reference entity count",
+             r"yields (\d+) annotations across just (\d+) entities",
+             (prof["total_annotations"], prof["distinct_entities_seen"]), review, 1),
+        ])
+        # The projection argument on the two GO:0033011 ACCEPTs depends on three properties of
+        # PMID:35793634. If any changes, the prose must be re-read rather than the number bumped.
+        if theca_pheno is not None and theca_pheno != 1:
+            problems_early.append(
+                "PMID:35793634's GO:0007286 row no longer covers exactly one entity; the "
+                "'not a projection' argument on the GO:0033011 rows depends on it")
+        # And the BioPlex reference's projection tail is asserted in the review, so it must exist.
+        if not bioplex["projecting_database_rows"]:
+            problems_early.append(
+                "the review states PMID:33961781 carries a ComplexPortal projection tail, but "
+                "reference_scope.json no longer finds one")
 
     # Phrasings an earlier draft contained; each was a real error, so each stays retracted.
     RETRACTED = [
@@ -243,6 +371,11 @@ def main() -> int:
         "eleven human genes",
         "covering 11 human genes",
         "11 human genes across",
+        # Read as two experiments; it is one co-IP logged by two databases and reciprocally on
+        # both partners. Kept SHORT on purpose: the first version retracted the whole sentence
+        # "by IPI twice from PMID:18692047", which a reworded or **emphasised** variant walked
+        # straight past. The claim being retracted is the word "twice", so that is what is banned.
+        "IPI twice",
     ]
 
     ranking = r["divergent_clade_ranking"]
@@ -254,6 +387,7 @@ def main() -> int:
         RANKING_ROWS.append((setname, f"| {setname} | {block['n_contacts']} | {cells} |"))
 
     problems: list[str] = []
+    problems.extend(problems_early)
 
     for setname, row_text in RANKING_ROWS:
         if norm(row_text) not in review:
