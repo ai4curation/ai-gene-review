@@ -429,6 +429,48 @@ list and nothing validates it:
 No hand-written WITH/FROM was introduced; the `NEW` ISS row for `GO:0010595` lists only
 `UniProtKB:Q91ZV8`.
 
+## 9b. Merge conflicts with the sibling ADGRA3 review, and how they were resolved
+
+ADGRA3 (#2315) merged first and touched two files this branch also adds. Both resolutions were
+asserted rather than eyeballed, because the reflex is wrong on one of them.
+
+**`interpro/panther/PTHR45930/PTHR45930-metadata.yaml` — took main's.** Both branches ran
+`fetch-gene` on the same PANTHER family **27 seconds apart** (`19:50:35` vs `19:51:02`). Verified
+line-by-line before choosing: the files are 54 lines each and **exactly one** line differs,
+`_fetch_info.fetched_date`. Taking main's makes the file byte-identical to main, so this PR no longer
+touches it at all — the right outcome for a cache whose only difference is when it was fetched.
+
+**`publications/PMID_24550280.md` — took MINE, against the reflex.** main's copy is
+`full_text_available: false`, 80 lines; this branch's is `true`, 101 lines, with an extracted
+`## Full Text` section. Resolving toward main — "keep what is already merged" — would have **silently
+downgraded a cached publication from full text to abstract-only**, the defect class PR #2287 fixed
+repo-wide, and no validator would catch it. It matters here specifically: PMID:24550280 is one of the
+two ProP-PD/holdup papers underpinning the `GO:0030165` call, so the full text is load-bearing.
+
+The superset was asserted, not assumed, both before and after resolution:
+
+```python
+missing = [l for l in main_lines if l not in branch_lines and l.strip()]
+assert missing == ["full_text_available: false"]
+```
+
+Generalised afterwards over **every** publication this PR touches that also exists on main: none is
+downgraded.
+
+**Then everything the earlier merges had established was re-verified**, because a later merge can
+quietly undo an earlier resolution: all 18 gene files byte-identical to their pre-merge hashes;
+`cache/go/terms.csv` compared as a **multiset**, so main's pre-existing duplicate curies `GO:0001675`
+and `GO:0009566` are each confirmed still present **twice** (a set comparison would silently pass a
+collapse); only `GO:0090210` added; no new duplicate curies; `just validate human ADGRA2` passing on
+the merged tree; and `git status --porcelain` clean afterwards.
+
+**One process note.** GitHub reported `CONFLICTING`/`DIRTY` after the push and then recomputed to
+`MERGEABLE` — the stale-flag behaviour the campaign has seen repeatedly. My first local probe
+*appeared* to confirm a conflict, but `git merge-tree --write-tree` does not exist in git 2.37
+(added in 2.38), so the command had failed to parse and its non-zero exit read as "conflicts". A
+rejected query and a real negative result are indistinguishable downstream unless the exit status is
+checked. The authoritative probe is `git rev-list --count HEAD..origin/main`, which is **0**.
+
 ## 10. Files
 
 - `ADGRA2-bioinformatics/node_reach.py` → `node_reach.json` — PANTHER node reach, paginated with a
