@@ -108,7 +108,7 @@ counts are NOT promoted to matches.
 
 Magnesium is present in **4 of 4** structures (3HFW, 6G28, 6G2A, 6IUX). Potassium is present in **1 of 4** (3HFW).
 
-Every structure containing potassium is at the worst resolution in the set (1.92 A); the 3 better-resolved structures (6G28, 6G2A, 6IUX) contain none.
+Every structure containing potassium is at the worst resolution in the set (1.92 A); all 3 better-resolved structures (6G28, 6G2A, 6IUX) contain none.
 
 ## InterPro signature membership (the annotation route)
 

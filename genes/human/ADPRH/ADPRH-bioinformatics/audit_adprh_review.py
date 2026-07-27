@@ -567,6 +567,26 @@ def self_test() -> int:
     if any(p.startswith("H") for p in audit(raw, d10)):
         failures.append("check H fired on a non-COMPLETE review, where PENDING is legitimate")
 
+    # 9. the docstring's enumerated checks must match the checks actually implemented.
+    # The count drifted onto three prose surfaces after check I was added, so make the one
+    # surface that CAN enforce itself do so.
+    src_text = Path(__file__).read_text()
+    doc = src_text.split('"""')[1]
+    documented = set(re.findall(r"(?m)^  ([A-Z])  ", doc))
+    implemented = set(re.findall(r'problems\.append\(\s*\n?\s*f?"([A-Z])[0-9]?:', src_text))
+    # Check A is enforced by StrictLoader at PARSE time and so never reaches `problems`.
+    # Credit it only if the loader demonstrably rejects a duplicate key - established
+    # behaviourally here, not by grepping for the class name.
+    try:
+        yaml.load("a: 1\na: 2\n", Loader=StrictLoader)
+    except yaml.constructor.ConstructorError:
+        implemented.add("A")
+    if documented != implemented:
+        failures.append(
+            f"docstring documents {sorted(documented)} but the code implements "
+            f"{sorted(implemented)}"
+        )
+
     for f in failures:
         print("SELF-TEST FAIL:", f)
     print(f"self-test: {len(failures)} problem(s)")

@@ -38,11 +38,18 @@ produced the numbers.
 
 ## `audit_adprh_review.py`
 
-Eight invariant checks (A–H) on `../ADPRH-ai-review.yaml` that no repo validator performs:
+Nine invariant checks (A–I) on `../ADPRH-ai-review.yaml` that no repo validator performs:
 duplicate YAML keys via a strict loader, anchors/aliases, raw-vs-parsed quote
 reconciliation, GOA row reconciliation, the logical-opposite citation cross-product,
-summary-opener-vs-action agreement, `core_functions` agreement in both directions, and
-"a COMPLETE review contains no PENDING rows".
+summary-opener-vs-action agreement, `core_functions` agreement in both directions,
+"a COMPLETE review contains no PENDING rows", and "every row's `supporting_text` set must
+mention that row's own term".
+
+The letters are not maintained by hand: `--self-test` asserts that the checks enumerated in
+the module docstring are exactly the checks the code implements, crediting the parse-time
+check A only after demonstrating that the strict loader really rejects a duplicate key. That
+assertion exists because this count drifted onto three prose surfaces at once when check I
+was added.
 
 Two of its checks were found not to fire by break-testing rather than by reading, and one
 (H) was added only after running the audit against the un-reviewed `fetch-gene` stub, which

@@ -419,13 +419,53 @@ about the harness rather than about what the harness computes. **If a further ro
 only items of that kind, I will fix anything that could misfire on another machine or misstate
 a number, and decline changes that only reword an explanation** — the ADCK2 line.
 
+## Round 4: applying that criterion to itself
+
+Round 3's re-review returned three 🔵 items and the criterion above sorted them cleanly, which
+is the point of stating it in advance.
+
+**Fixed — misstated a number.** The notes and the `ADPRH-bioinformatics/README.md` both still
+said "eight invariant checks (A–H)" after check `I` was added, and so did the PR body: **three
+surfaces, drifted at once**, the "fixed in N places, landed in N−1" shape running in reverse.
+The durable response is not to correct the three sentences but to make the one surface that
+*can* enforce itself do so: `--self-test` now asserts that the letters enumerated in the module
+docstring are exactly the checks the code implements. Writing it exposed a real subtlety — check
+`A` is enforced by `StrictLoader` at **parse** time and never reaches `problems`, so a naive
+implementation reported it as documented-but-missing. It is now credited only after the loader
+is *demonstrated* to reject a duplicate key, and both directions are break-tested: deleting the
+`I` docstring line fires it, and disabling the duplicate-key rejection fires it too.
+
+**Fixed — could misfire on another machine.** The resolution clause computed "better-resolved
+structures" as *structures without potassium*, conflating the two properties. With the present
+four entries the answer is the same, but a structure tied at the worst resolution would have
+been mislabelled as better-resolved, and a null resolution would have been silently dropped.
+Now computed from resolution, with an explicit branch for ties and a printed note for any entry
+whose resolution is unavailable. The regenerated report is unchanged for the current data,
+which is the right outcome: **the fix was to the reasoning, not to the number.**
+
+**Declined — already-declared limitation.** That disjoint surface forms are necessary but not
+sufficient, since a quote can contain both its own term's form and another's (the `GO:0036211`
+quote also contains `arginine`). True, and the source already says so: check `I` matches surface
+forms, catches a cross-row slip, "and nothing subtler". Widening it to co-occurrence would mean
+forbidding quotes that legitimately mention two entities, which is the guard-that-gets-worked-
+around failure mode. The honest limitation stays declared rather than papered over.
+
+**And a coupling the fix exposed.** Rewording the generated sentence from "the 3
+better-resolved structures" to "all 3" **broke a `supporting_text` that quotes it** — four
+quotes in this review cite `RESULTS.md`, so any edit to the generator's prose can silently
+invalidate them. `checkquotes.py` caught it, which is precisely why it runs last, after the
+report has been regenerated. Worth stating as a general hazard: **a quote into a generated
+artifact is a two-way dependency**, and the direction that bites is the one where the
+generator changes and the quote does not.
+
 ## Committed guards
 
-`ADPRH-bioinformatics/audit_adprh_review.py` holds eight invariant checks (A–H) over the
+`ADPRH-bioinformatics/audit_adprh_review.py` holds nine invariant checks (A–I) over the
 emitted review YAML — strict duplicate-key loader, anchors/aliases, raw-vs-parsed quote
 reconciliation, GOA row reconciliation, the logical-opposite citation cross-product,
-summary-opener-vs-action agreement, `core_functions` agreement in both directions, and
-"a COMPLETE review contains no PENDING rows". `--self-test` is clean and every check is
+summary-opener-vs-action agreement, `core_functions` agreement in both directions,
+"a COMPLETE review contains no PENDING rows", and (added in round 2) "every row's
+`supporting_text` set must mention that row's own term". `--self-test` is clean and every check is
 break-tested in the direction it exists to catch.
 
 Three things were learned by breaking it rather than by reading it, and they are the part

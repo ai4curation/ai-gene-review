@@ -721,15 +721,43 @@ def report(res: dict) -> str:
         f"**{len(k)} of {len(entries)}** ({', '.join(k) if k else 'none'})."
     )
     A("")
-    if k and all(r is not None and r >= worst["resolution_A"] for r in k_res):
+    unresolved = [e["pdb_id"] for e in entries if e["resolution_A"] is None]
+    if unresolved:
+        # A missing resolution cannot be silently dropped from a resolution argument.
+        A(f"Resolution is unavailable for {', '.join(sorted(unresolved))}, so they are excluded here.")
+        A("")
+    if k and k_res and all(r is not None for r in k_res):
+        worst_k = max(k_res)
+        # "Better resolved" must be computed from RESOLUTION, not from "does not contain K" -
+        # the earlier version conflated the two, so a structure tied at the worst resolution
+        # would have been counted as better-resolved.
         better = sorted(
-            e["pdb_id"] for e in entries if e["resolution_A"] is not None and not e["has_K"]
+            e["pdb_id"]
+            for e in entries
+            if e["resolution_A"] is not None and e["resolution_A"] < worst_k
         )
-        A(
-            f"Every structure containing potassium is at the worst resolution in the set "
-            f"({worst['resolution_A']} A); the {len(better)} better-resolved structures "
-            f"({', '.join(better)}) contain none."
+        tied = sorted(
+            e["pdb_id"]
+            for e in entries
+            if e["resolution_A"] is not None and e["resolution_A"] == worst_k and not e["has_K"]
         )
+        if worst_k == max(
+            e["resolution_A"] for e in entries if e["resolution_A"] is not None
+        ) and not tied:
+            A(
+                f"Every structure containing potassium is at the worst resolution in the set "
+                f"({worst_k} A); all {len(better)} better-resolved structures "
+                f"({', '.join(better)}) contain none."
+            )
+        else:
+            A(
+                f"Potassium-containing structures reach {worst_k} A at best; "
+                f"{len(better)} structure(s) ({', '.join(better) if better else 'none'}) are "
+                f"better resolved"
+                + (f", and {len(tied)} ({', '.join(tied)}) are tied at that resolution "
+                   "without potassium" if tied else "")
+                + "."
+            )
     A("")
     A("## InterPro signature membership (the annotation route)")
     A("")
