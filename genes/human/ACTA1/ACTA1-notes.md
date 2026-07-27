@@ -375,6 +375,31 @@ is the assembly-competent species, the ADP protomer is the aged form that gives 
 filament polarity and that cofilin recognises — with the cross-review precedent demoted to
 corroboration.
 
+## A third error of my own: I relayed a sibling's claim as a fact
+
+Found while auditing my own numbers after the review round, and the most instructive of the
+three because nothing flagged it — it was internally consistent, verbatim-sourced and wrong.
+
+The `GO:0043531` row placed ACTA1 among a supposed pair of family members holding both
+nucleotide terms. That came from the merged ACTR10 review, whose line reads
+``GO:0005524`` ATP binding: ACTA1, ACT1` — a list about **ATP binding alone**, which I turned
+into a **count about two terms**. Measured across all 533 PTHR11937
+protein members: **31** carry `GO:0005524` and exactly
+**1** carries `GO:0043531` — ACTA1. It is the family's **sole** ADP
+binding holder, not one of two, and the corrected fact is stronger than the wrong one.
+
+The brief's rule is *relay a sibling's claim as a claim, not as a fact*, and I broke it in
+the specific way that is hardest to catch: a coordinator's or sibling's summary carries more
+apparent authority than the review it came from, and this one arrived pre-formatted as a
+quotable line.
+
+Getting the *right* answer took two attempts, and the first failure is the same shape as the
+WormBase one earlier in this review: querying by GO term alone returns page 1 of ~205,000
+(`GO:0043531`) and ~9.6 million (`GO:0005524`) annotations, and intersecting that page with
+the family yields an **empty set for both terms** — which reads as "no member carries this",
+the exact opposite of the truth. `nucleotide_terms_in_family.py` keys the query on the
+family's accessions instead, batches them, and asserts no batch was itself truncated.
+
 ## Action summary (50 GOA rows + 1 NEW)
 
 | action | n | what |

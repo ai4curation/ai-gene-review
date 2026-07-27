@@ -9,6 +9,7 @@ and `ruamel.yaml`, both already in the project environment.
 | `resolve_withfrom.py` | Who are ACTA1's WITH/FROM donors, and what evidence does each carry for the term it donated? | `withfrom_resolution.json` |
 | `actin_peptide_specificity.py` | Can shotgun proteomics attribute an actin peptide to ACTA1 specifically? | `peptide_specificity.json` |
 | `build_source_entities.py` | Do the review's `source_entities` and `supporting_entities` still match the GOA? | rewrites the review YAML; `--check` verifies |
+| `nucleotide_terms_in_family.py` | Which PTHR11937 members carry ATP binding, ADP binding, or both? | `nucleotide_terms_in_family.json` |
 | `audit_claims.py` | Do the review, the notes and this file still agree on every load-bearing number? | `--self-test` exercises the checks |
 
 Re-run order after any change: `resolve_withfrom.py` and `actin_peptide_specificity.py`
@@ -236,7 +237,36 @@ Recorded so the next reviewer knows they were run, not skipped.
   identifier is `Q6ZQX7-4`, which is a declared *isoform* of LIAT1 rather than a
   partial clone.
 
-## 4. Keeping the numbers honest
+## 4. A relayed claim, measured and refuted
+
+An earlier draft of the `GO:0043531` row placed ACTA1 among a supposed pair of family
+members holding both nucleotide terms. That was a list from the merged ACTR10 review,
+restated as a count of my own. `nucleotide_terms_in_family.py` measured it across all
+**533** PTHR11937 protein members:
+
+| term | family members carrying it |
+|---|---|
+| `GO:0005524` ATP binding | **31** |
+| `GO:0043531` ADP binding | **1** — ACTA1, by TAS |
+| both | **1** — ACTA1 alone |
+
+So the claim was wrong in both directions at once: 31 members carry ATP binding rather than
+two, and ACTA1 is the **sole** holder of ADP binding in the entire family rather than one of
+a pair. The sibling's list had been about ATP binding alone. *Relay a sibling review's claim
+as a claim, not as a fact* — and note the corrected fact is the stronger one.
+
+Two traps produced a wrong answer before the right one, both worth recording:
+
+- **Querying by GO term alone paginates into a false negative.** `GO:0043531` has ~205,000
+  annotations across GO and `GO:0005524` ~9.6 million. One unpaged request returns page 1 of
+  200; intersecting that with the family gives an **empty set**, which reads as "no member
+  carries this term" — the silent-zero shape again, and it is what the first attempt returned
+  for *both* terms. The query is therefore keyed on the family's own accessions.
+- **Per-accession queries do not finish** (533 members × 2 terms). QuickGO accepts a batched
+  `geneProductId` list, and each batch now asserts its own result was not truncated, so the
+  fix for trap 1 cannot silently reintroduce it.
+
+## 5. Keeping the numbers honest
 
 Two of the four scripts exist only to stop the review's own claims drifting, because
 that - not a wrong term or a fabricated quote - is what has actually gone wrong most
@@ -280,7 +310,7 @@ spells a small count as a word in one place and a digit in another (fixed by let
 claim carry equivalent variants). Both were reporting a regression where none existed,
 which is how a lint gets switched off.
 
-## 5. Guards
+## 6. Guards
 
 `resolve_withfrom.py --self-test` has five cases. Three are ordinary; two exist
 because they caught real defects in this script:

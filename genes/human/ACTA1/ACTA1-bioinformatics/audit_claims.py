@@ -31,6 +31,7 @@ SURFACES = {
 }
 PEPTIDES = HERE / "peptide_specificity.json"
 WITHFROM = HERE / "withfrom_resolution.json"
+NUCLEOTIDE = HERE / "nucleotide_terms_in_family.json"
 GOA = GENE / "ACTA1-goa.tsv"
 
 # Prose spells small counts as words; the lint compares against both forms.
@@ -49,6 +50,8 @@ RETRACTED = {
     "residues 1 to 30": "the ORF N-terminus; ACTA1's mature chain starts at residue 3, so the observable region is 3-30",
     "MCDEDETTALVCDNGSGLVK": "an ORF peptide that does not exist in vivo (INIT_MET removed, Cys-2 cleaved by ACTMAP)",
     "cross-linked between Lys-52 and Glu-272": "stated as fact; both CROSSLNK features are ECO:0000250 from beta-actin",
+    "one of only two gene products in this family carrying both":
+        "a sibling's ATP-binding list relayed as a two-term count; measured, 31 carry ATP binding and ACTA1 alone carries ADP binding",
 }
 
 
@@ -116,6 +119,20 @@ def required_claims() -> list[tuple[str, str, int]]:
         ("F-actin (all)", "Reactome's generic polymer, the vehicle for the epithelial pathways", 3),
         ("0.56", "the IntAct MI-score shared by all seven two-hybrid partners", 3),
     ]
+    if NUCLEOTIDE.exists():
+        nt = json.loads(NUCLEOTIDE.read_text())
+        claims += [
+            ((f"{nt['n_with_atp_binding']} members carry", f"| **{nt['n_with_atp_binding']}** |"),
+             "family members carrying GO:0005524, the figure that replaced a relayed claim", 1),
+            ((f"exactly {nt['n_with_adp_binding']} carries",
+              f"**{nt['n_with_adp_binding']}** carries `GO:0043531`"),
+             "ACTA1 is the family's sole ADP binding holder", 1),
+        ]
+        if not nt["subject_is_sole_adp_holder"]:
+            raise RuntimeError(
+                "nucleotide_terms_in_family.json no longer shows ACTA1 as the sole ADP "
+                "binding holder; the review's GO:0043531 reason asserts that it is"
+            )
     return claims
 
 
