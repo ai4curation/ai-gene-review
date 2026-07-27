@@ -28,6 +28,8 @@ import re
 import sys
 from pathlib import Path
 
+import importlib.util
+
 import yaml
 
 HERE = Path(__file__).resolve().parent
@@ -270,6 +272,43 @@ def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
             )
 
 
+def check_false_friend_helper(problems: list[str]) -> None:
+    """Pin the sweep's false-friend classifier with labels that discriminate the two rules.
+
+    The distinguishing case is `pyrroloquinoline quinone biosynthetic process`: it contains
+    the false friend AND matches on its own `quinone`, so the superseded "contains quinolin
+    and names no real CoQ species" rule would have excluded it while reporting the wrong
+    reason. Living in the audit rather than in a commit message means the next edit to that
+    function has to keep it true.
+    """
+    sweep = HERE / "coq_transport_term_check.py"
+    if not sweep.exists():
+        problems.append(f"sweep script missing: {sweep.name}")
+        return
+    spec = importlib.util.spec_from_file_location("_coq_sweep", sweep)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    fn = getattr(mod, "matched_only_via_quinoline", None)
+    if fn is None:
+        problems.append(
+            "sweep no longer defines matched_only_via_quinoline; the false-friend "
+            "classifier is unguarded."
+        )
+        return
+    for label, expected in [
+        ("quinolinic acid transmembrane transport", True),
+        ("pyrroloquinoline quinone biosynthetic process", False),
+        ("ubiquinol transport", False),
+        ("quinoline metabolic process", True),
+        ("ubiquinol-quinoline hybrid transport", False),
+    ]:
+        got = fn(label)
+        if got is not expected:
+            problems.append(
+                f"false-friend classifier: {label!r} -> {got}, expected {expected}"
+            )
+
+
 def check_raw_vs_parsed(problems: list[str]) -> None:
     """Guard against a duplicate YAML key deleting provenance before any gate can see it."""
     raw = REVIEW.read_text()
@@ -296,7 +335,7 @@ def check_raw_vs_parsed(problems: list[str]) -> None:
         )
 
 
-def run(review_text: str | None = None) -> list[str]:
+def run(review_text: str | None = None, notes_text: str | None = None) -> list[str]:
     problems: list[str] = []
     raw = review_text if review_text is not None else REVIEW.read_text()
     try:
@@ -304,7 +343,7 @@ def run(review_text: str | None = None) -> list[str]:
     except yaml.YAMLError as exc:
         return [f"YAML: {exc}"]
     goa = load_goa(GOA)
-    notes = NOTES.read_text()
+    notes = notes_text if notes_text is not None else NOTES.read_text()
     results = json.loads(RESULTS_JSON.read_text())
 
     check_row_coverage(doc, goa, problems)
@@ -314,7 +353,8 @@ def run(review_text: str | None = None) -> list[str]:
     check_retracted_phrasings(raw, notes, problems)
     check_sweep_exclusions_disclosed(raw, notes, problems)
     if review_text is None:
-        check_raw_vs_parsed(problems)
+        check_false_friend_helper(problems)
+    check_raw_vs_parsed(problems)
     return problems
 
 
@@ -322,6 +362,7 @@ def self_test() -> int:
     """Each mutation must make the audit fail. Assert the target exists before mutating,
     so a drifted anchor is an error rather than a guard that silently proves nothing."""
     base = REVIEW.read_text()
+    base_notes = NOTES.read_text()
     if run(base):
         print("SELF-TEST ABORTED: the unmutated document already fails")
         for p in run(base):
@@ -378,6 +419,22 @@ def self_test() -> int:
             failures += 1
         else:
             print(f"  correctly ignored: {name}")
+
+    # The two-surface disclosure guard has a notes branch that no review-text mutation can
+    # reach. Exercise it directly, or half of that loop is only asserted, never observed.
+    notes_mutations = [
+        ("drop the GO:1903222 disclosure from the NOTES surface", "GO:1903222", "GO:0000000"),
+    ]
+    for name, target, replacement in notes_mutations:
+        if target not in base_notes:
+            print(f"  BROKEN GUARD: notes mutation target for {name!r} not present")
+            failures += 1
+            continue
+        if not run(notes_text=base_notes.replace(target, replacement)):
+            print(f"  NOT CAUGHT: {name}")
+            failures += 1
+        else:
+            print(f"  caught: {name}")
 
     for name, target, replacement in mutations:
         if target not in base:

@@ -356,8 +356,12 @@ together are exhaustive, and the script says so.
 3. Adding `quinol` then produced the mirror error: **`"quinol"` *is* a substring of
    `"quinolinic"`**, so `GO:1903222 quinolinic acid transmembrane transport` passed every
    other filter as a genuine BP transport term. Quinolinic acid is a tryptophan-pathway NAD
-   precursor unrelated to CoQ. Excluded explicitly, and only when the label names no real CoQ
-   species, so a term mentioning both would still be caught.
+   precursor unrelated to CoQ. Excluded by deleting the `quinolin` substring and re-testing
+   the keywords: whatever still matches did not come from the false friend. The first
+   version of that rule instead asked "contains `quinolin` and names no real CoQ species",
+   which is *not* equivalent — `pyrroloquinoline quinone biosynthetic process` contains
+   `quinolin` and also matches on its own `quinone`, so the weaker rule would have excluded
+   it while reporting the wrong reason. Delete-and-retest keeps it.
 
 The brief's rule — *any substring test on a controlled vocabulary needs an anchor* — cost
 three rounds here, in both directions: too-loose matching invented hits, too-narrow matching
