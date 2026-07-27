@@ -39,6 +39,14 @@ ACTINS = {
 
 SUBJECT = "ACTA1"
 
+# ACTA1 is processed at its N-terminus: UniProt has INIT_MET 1 "Removed", CHAIN 2..377
+# (intermediate form, N-acetylcysteine at residue 2) and CHAIN 3..377 for the mature
+# protein, the acetylated cysteine being cleaved by ACTMAP. So the ORF sequence's
+# N-terminal tryptic peptide does not exist in vivo, and a targeted-proteomics experiment
+# built on it would name a species that cannot be detected. The mature chain is therefore
+# the primary analysis; the ORF is computed alongside it only to show the counts agree.
+MATURE_START = 3  # 1-based first residue of CHAIN 3..377
+
 # Peptide length window in which tryptic peptides are routinely observed by LC-MS/MS.
 MIN_LEN, MAX_LEN = 7, 30
 
@@ -136,12 +144,23 @@ def main() -> None:
         print(f"  {k:14} {v:5.1f}%")
     print(f"  skipped (unequal length, needs alignment): {', '.join(skipped)}")
 
-    digests = {name: digest(seq) for name, seq in seqs.items()}
-    subject = {p for p in digests[SUBJECT] if MIN_LEN <= len(p) <= MAX_LEN}
+    # Comparators contribute both their ORF and their own mature-chain digests, so a
+    # peptide is only called distinguishing if no other actin can produce it in either
+    # form. Not doing this would call an ACTA1 peptide unique merely because a comparator
+    # happens to present it after its own N-terminal processing.
     others: set[str] = set()
-    for name, peps in digests.items():
+    for name, seq in seqs.items():
         if name != SUBJECT:
-            others |= peps
+            others |= digest(seq) | digest(seq[MATURE_START - 1:])
+
+    mature = seqs[SUBJECT][MATURE_START - 1:]
+    subject = {p for p in digest(mature) if MIN_LEN <= len(p) <= MAX_LEN}
+
+    # Cross-check against the ORF form. The reviewer's point was that the ORF's
+    # N-terminal peptide is not observable; the counts are expected to be identical,
+    # and if they ever diverge that is a finding rather than a detail to smooth over.
+    orf_subject = {p for p in digest(seqs[SUBJECT]) if MIN_LEN <= len(p) <= MAX_LEN}
+    orf_unique = {p for p in orf_subject if p not in others}
 
     unique = sorted(p for p in subject if p not in others)
     shared = sorted(p for p in subject if p in others)
@@ -150,14 +169,20 @@ def main() -> None:
     # with the other sarcomeric actins is a different problem from one shared with
     # the ubiquitous cytoplasmic actins, because ACTB/ACTG1 are expressed in every
     # tissue the five HDA studies sampled.
-    cytoplasmic = digests["ACTB"] | digests["ACTG1"]
+    # Both forms again, for the same reason as the `others` set above.
+    cytoplasmic = set()
+    for name in ("ACTB", "ACTG1"):
+        cytoplasmic |= digest(seqs[name]) | digest(seqs[name][MATURE_START - 1:])
     shared_with_cytoplasmic = [p for p in shared if p in cytoplasmic]
 
     # Collapse missed-cleavage variants. Nine distinguishing peptides sounds like
     # nine independent handles, but most are nested extensions of the same span, so
     # the raw count overstates the evidence exactly as a whole-triad count would.
     # Group by overlap on the subject sequence and report BOTH numbers.
-    spans = sorted((seqs[SUBJECT].index(p), seqs[SUBJECT].index(p) + len(p))
+    # Coordinates are reported in full-length (ORF) numbering so they line up with
+    # UniProt's feature table, but they are computed on the mature chain, hence the offset.
+    off = MATURE_START - 1
+    spans = sorted((mature.index(p) + off, mature.index(p) + len(p) + off)
                    for p in unique)
     regions: list[list[int]] = []
     for start, end in spans:
@@ -168,6 +193,10 @@ def main() -> None:
 
     result = {
         "accessions": ACTINS,
+        "analysed_form": f"mature chain {MATURE_START}..{len(seqs[SUBJECT])} "
+                         "(UniProt CHAIN; INIT_MET removed and N-acetyl-Cys2 cleaved by ACTMAP)",
+        "n_unique_orf_form": len(orf_unique),
+        "orf_and_mature_counts_agree": len(orf_unique) == len(unique),
         "lengths": {k: len(v) for k, v in seqs.items()},
         "pairwise_identity_pct": ident,
         "identity_pairs_skipped_unequal_length": skipped,
@@ -186,8 +215,11 @@ def main() -> None:
     }
     OUT.write_text(json.dumps(result, indent=2) + "\n")
 
-    print(f"\ntryptic peptides of {SUBJECT} in the {MIN_LEN}-{MAX_LEN} aa window: "
+    print(f"\ntryptic peptides of the {SUBJECT} MATURE chain "
+          f"({MATURE_START}..{len(seqs[SUBJECT])}) in the {MIN_LEN}-{MAX_LEN} aa window: "
           f"{len(subject)}")
+    print(f"  (ORF form gives {len(orf_unique)} distinguishing peptides; "
+          f"{'agrees' if len(orf_unique) == len(unique) else 'DISAGREES - investigate'})")
     print(f"  distinguishing (found in no other human actin): {len(unique)} "
           f"({result['pct_unique']}%)")
     print(f"  shared with >=1 other human actin:              {len(shared)}")

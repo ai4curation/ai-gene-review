@@ -46,6 +46,9 @@ RETRACTED = {
         "a stale action tally from before the GO:0005829 rows were made consistent; it is 16",
     "| KEEP_AS_NON_CORE | 10 |": "a stale action tally; it is 13",
     "3 CDH1 Reactome cytosol": "implies a split verdict on GO:0005829; all eight rows are KEEP_AS_NON_CORE",
+    "residues 1 to 30": "the ORF N-terminus; ACTA1's mature chain starts at residue 3, so the observable region is 3-30",
+    "MCDEDETTALVCDNGSGLVK": "an ORF peptide that does not exist in vivo (INIT_MET removed, Cys-2 cleaved by ACTMAP)",
+    "cross-linked between Lys-52 and Glu-272": "stated as fact; both CROSSLNK features are ECO:0000250 from beta-actin",
 }
 
 

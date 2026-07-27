@@ -158,9 +158,26 @@ The nine peptides collapse to three regions, because most are nested
 missed-cleavage variants of the same span. Reporting nine would overstate the
 evidence:
 
-- `1-30` `MCDEDETTALVCDNGSGLVKAGFAGDDAPR` (the N-terminus, where actins diverge)
+- `3-30` `DEDETTALVCDNGSGLVKAGFAGDDAPR` (the N-terminus, where actins diverge)
 - `287-317` `CDIDIRKDLYANNVMSGGTTMYPGIADRMQK`
 - `338-361` `KYSVWIGGSILASLSTFQQMWITK`
+
+**The analysis runs on the mature chain, not the ORF** — a correction from PR review.
+UniProt has `INIT_MET 1 "Removed"`, `CHAIN 2..377` for the intermediate form with
+N-acetylcysteine at residue 2, and `CHAIN 3..377` for the mature protein after ACTMAP
+cleaves that acetylated cysteine. So the ORF's N-terminal tryptic peptide — the one
+beginning at Met-1, which an earlier version of this file printed — **does not exist in
+vivo**, and a targeted-proteomics experiment built on it would order a synthetic standard
+for a species that cannot be detected. (`audit_claims.py` treats that peptide string as
+retracted and fails if it reappears on any prose surface, which is why it is described
+here rather than quoted.)
+Comparators contribute both their ORF and their own mature-chain digests, so a peptide is
+called distinguishing only if no other actin can produce it in either form.
+
+The counts are **unchanged** — 63 peptides, 9 distinguishing, 3 regions, ORF and mature
+forms agree, and the script asserts that agreement and would flag a divergence rather than
+smooth it over. Only the peptide *identity* moves, and that is the part the experiment
+depends on.
 
 ### What this does and does not establish
 

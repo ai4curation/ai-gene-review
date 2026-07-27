@@ -342,6 +342,39 @@ Recorded because each is a general trap, not an ACTA1 quirk.
    cross-references. The corrected count is **24/24 donors with their own experimental
    evidence**, not 20/24 — and it is the number that makes the `GO:0015629` ACCEPT solid.
 
+## What PR review caught (two factual, three presentational)
+
+The reviewer approved with no blocking findings, and two of its five suggestions were real
+errors that I verified before conceding:
+
+1. **The peptide analysis digested the ORF, not the protein.** ACTA1 has `INIT_MET 1
+   "Removed"` and `CHAIN 3..377`, the acetylated Cys-2 of the intermediate form being
+   cleaved by ACTMAP, so the ORF's N-terminal tryptic peptide does not exist in vivo — and
+   my `suggested_experiments` entry named it, and gave the region as starting at residue 1
+   rather than 3. The observable peptide is **`DEDETTALVCDNGSGLVK`**, region **3-30**.
+   (The two retracted strings are deliberately not reproduced on any prose surface;
+   `audit_claims.py` fails if either reappears.) Recomputed on the mature
+   chain, with comparators contributing both their ORF and mature digests: **all counts are
+   unchanged** (63 / 9 / 14.3% / 54 / 29 / 3 regions), and the script now asserts that the
+   two forms agree. So the numbers were never wrong; the experiment was unbuildable. The
+   general shape is worth keeping — *a sequence analysis is only as biological as the
+   sequence it starts from*, and a UniProt `CHAIN` feature is where that is decided.
+2. **A by-similarity residue assignment stated as fact.** The description had ACTA1
+   cross-linked "between Lys-52 and Glu-272" by the *Vibrio cholerae* MARTX effectors;
+   UniProt tags both `CROSSLNK` features `ECO:0000250|UniProtKB:P60709`, i.e. transferred
+   from beta-actin. The cross-linking itself is real, the residue numbering on the skeletal
+   isoform is not measured, and the description now says so.
+
+The other three were presentational and all three were taken: `GO:0015629` now appears in
+`core_functions.locations` and its row explains why the child is accepted while the bare
+`GO:0005856` parent is demoted; the `GO:0051371` row explains why the evidence code is IDA
+rather than IPI (the paper names only "the Z-line protein alpha-actinin", so there is no
+partner accession to put in a with/from field, and inventing ACTN2 or ACTN3 would be a
+guess); and the `GO:0043531` reason now leads with the nucleotide cycle — ATP-bound G-actin
+is the assembly-competent species, the ADP protomer is the aged form that gives the
+filament polarity and that cofilin recognises — with the cross-review precedent demoted to
+corroboration.
+
 ## Action summary (50 GOA rows + 1 NEW)
 
 | action | n | what |
