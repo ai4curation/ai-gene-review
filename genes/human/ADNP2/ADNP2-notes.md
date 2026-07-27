@@ -213,6 +213,28 @@ name which one it relies on. It relies on the strict-subset kind, which class 3.
 The conclusion never depended on the over-reach: `per_entity_demonstrated` is computed as an
 **existential**, so it needs one qualifying node and has seven.
 
+### Fourth instance, and the structural fix that ends it
+
+I corrected the sentence in this file and **not** in `RESULTS.md`, because the same claim lived in **two
+emitters** — a hardcoded string in `render()` and a hand-written paragraph here. So the paragraph that
+retracted two false generalisations closed with a third, eighteen lines below its own refuting table:
+*"each is an individually adjudicated exclusion inside a node whose other members keep the term"* — false
+for the 8 entities in the 4 nodes where `node_members_with_mf = 0`, since there are no other members
+keeping the term.
+
+Patching the sentence a fourth time would have been the wrong fix. **The claim now has a single source:**
+`_shared_property_statement()` computes it from the same partition the table iterates, asserts the
+partition covers the whole exclusion set, and both `results.json` and `RESULTS.md` consume that one
+string. Quoted here verbatim from the emitted artifact rather than restated:
+
+> They share no property at all. 10 of the 18 sit in nodes whose other members keep the term, but the remaining 8 sit in 4 nodes where NO member keeps it, so not even the structural description holds across the set. What can be said is only per-node, which is why the table above is the claim and this sentence is not.
+
+The general rule, which is the durable part: **when a claim is wrong for the third time, stop correcting
+the wording and remove the second place it can be written.** Every hand-written version of this
+particular claim has been false — "the non-DNA-binding members", "none is a sequence-specific polymerase
+II transcription factor", "each sits in a node whose other members keep the term" — and each was refuted
+by a table in the same document. That is not a proofreading problem.
+
 **Corrected in round 4 — I had picked the weaker of two available precedents.** My first framing was
 that HOPX makes this filable: UniProt describes it as an *"Atypical homeodomain protein which does not
 bind DNA"*, it carries a `DNA_BIND` feature, and NTNU_SB still withheld `GO:0000981` from it while

@@ -609,6 +609,53 @@ def _dna_bind(accession: str) -> list[dict]:
     ]
 
 
+def _rendered_node_rows(text: str) -> set[str]:
+    """Node ids appearing as rows of the granularity table in the EMITTED RESULTS.md.
+
+    Reads the artifact that ships rather than the structure that produced it. The
+    original silent-filter defect was invisible to any check over `render()`'s inputs,
+    because the inputs were complete; only the output was short.
+    """
+    return set(re.findall(r"^\| `tfclass:([0-9.]+)` \|", text, re.M))
+
+
+def _shared_property_statement(granularity: list[dict], excluded: list[str]) -> str:
+    """The one place the "what does this set share?" claim is written.
+
+    It has to be derived from the partition rather than asserted, because every
+    hand-written version of it has been false: "the non-DNA-binding members" (refuted
+    by three excluded entities carrying a DNA_BIND feature), "none is a
+    sequence-specific polymerase II transcription factor" (refuted by NFX1, which binds
+    the X-box motif), and "each is an exclusion inside a node whose other members keep
+    the term" (refuted by the four nodes where no member keeps it).
+    """
+    by_node: dict[str, dict] = {}
+    for g in granularity:
+        by_node.setdefault(g["node"], g)
+    subset = [g for g in by_node.values() if g["node_members_with_mf"] > 0]
+    whole = [g for g in by_node.values() if g["node_members_with_mf"] == 0]
+    n_subset = sum(len(g["node_members_excluded"]) for g in subset)
+    n_whole = sum(len(g["node_members_excluded"]) for g in whole)
+    if n_subset + n_whole != len(excluded):
+        raise RuntimeError(
+            f"partition covers {n_subset + n_whole} entities but the exclusion set has "
+            f"{len(excluded)}; the shared-property statement would be computed over the "
+            f"wrong set"
+        )
+    if whole:
+        return (
+            f"They share no property at all. {n_subset} of the {len(excluded)} sit in "
+            f"nodes whose other members keep the term, but the remaining {n_whole} sit "
+            f"in {len(whole)} nodes where NO member keeps it, so not even the structural "
+            f"description holds across the set. What can be said is only per-node, which "
+            f"is why the table above is the claim and this sentence is not."
+        )
+    return (
+        f"All {len(excluded)} sit in nodes whose other members keep the term, so the set "
+        f"is uniformly structural even though it is biologically heterogeneous."
+    )
+
+
 def _entity_terms(anns: list[dict]) -> dict[str, set[str]]:
     """Distinct entities -> the set of terms each holds.
 
@@ -784,6 +831,14 @@ def tfclass_reach() -> dict:
             "with_a_note_identical_to_adnp2": [r["symbol"] for r in same_note],
         },
         "exclusion_granularity": {
+            # SINGLE SOURCE for the "what does this set share?" claim.  It was previously
+            # a hardcoded sentence in render() AND a separate sentence in the notes, so
+            # correcting one left the other standing -- which is how the same claim was
+            # wrong four rounds running.  Computed once here, from the same partition the
+            # table iterates, and consumed by render(); the notes quote render's output.
+            "shared_property_statement": _shared_property_statement(
+                granularity, cc_only
+            ),
             "per_entity_demonstrated": bool(per_entity),
             "nodes_where_a_strict_subset_is_excluded": [
                 {k: g[k] for k in ("symbol", "node", "node_members",
@@ -1123,12 +1178,15 @@ def render(d: dict) -> str:
         (g for g in subset if g["node"].startswith("3.1.")),
         key=lambda x: -x["node_members"],
     )
+    # Count and enumerate the SAME list. Previously the count was over `same_class` while
+    # the enumeration filtered to single-exclusion nodes, so the two could diverge silently.
+    same_class = [g for g in same_class if len(g["node_members_excluded"]) == 1]
     phrases = [
         f"**{', '.join(g['node_members_excluded'])} excluded alone out of "
         f"{g['node_members']} members of `tfclass:{g['node']}`**"
         for g in same_class
-        if len(g["node_members_excluded"]) == 1
     ]
+    assert len(phrases) == len(same_class)
     add(
         f"{len(same_class)} of the strict-subset nodes sit in the same TFClass class as "
         f"ADNP2: {', and '.join(phrases)} — while ADNP2's own node "
@@ -1144,16 +1202,23 @@ def render(d: dict) -> str:
         f"matters."
     )
     add("")
+    # The shared-property claim is NOT written here. It is computed once in
+    # tfclass_reach() and consumed, because three successive hand-written versions of it
+    # were false and the last one survived a correction purely by living in a second
+    # emitter.
     add(
-        f"That also settles what the 18 do **not** have in common. They are heterogeneous, and "
-        f"no property unites them: NFX1 *"
-        f"\"Binds to the X-box motif of MHC class II genes\"*, which is sequence-specific "
-        f"binding at a cis-regulatory region, and DMRTC1 is named a transcription factor. An "
-        f"earlier draft of these notes generalised them as \"the non-DNA-binding members\" and "
-        f"then as \"none is a sequence-specific polymerase II transcription factor\"; **both are "
-        f"false.** What they actually share is only this: each is an individually adjudicated "
-        f"exclusion inside a node whose other members keep the term."
+        f"That also settles what these {imp['entities_chromatin_only']} entities do **not** "
+        f"have in common. They are biologically heterogeneous: NFX1 "
+        f"*\"Binds to the X-box motif of MHC class II genes\"*, which is sequence-specific "
+        f"binding at a cis-regulatory region, and DMRTC1 is named a transcription factor. "
+        f"Three successive drafts generalised the set as \"the non-DNA-binding members\", then "
+        f"as \"none is a sequence-specific polymerase II transcription factor\", then as \"each "
+        f"is an exclusion inside a node whose other members keep the term\"; **all three are "
+        f"false**, each refuted by a table in this same document. So the statement below is "
+        f"computed from the partition rather than written:"
     )
+    add("")
+    add(f"> {gr['shared_property_statement']}")
     add("")
     add(
         f"**And the positive argument for ADNP2 is neither of those.** It is the measured "
@@ -1440,15 +1505,31 @@ def self_test() -> int:
         )
     if gr["subject_node"] != "3.1.8":
         failures.append(f"subject node moved: {gr['subject_node']}")
-    #     And every node printed in the table must be accounted for by one of the two
-    #     kinds -- the defect this round fixed was a filter dropping rows silently.
+    #     (c) The row-completeness check, retargeted. The previous version compared two
+    #     comprehensions over the SAME list -- a tautology that could never fail -- and it
+    #     inspected the INPUTS while the defect it was written for lived in render(). The
+    #     silent filter would still ship today. So assert over the EMITTED text: every node
+    #     in the data must appear as a row in the rendered table.
     nodes = {g["node"] for g in gr["all_excluded_entities_by_node"]}
-    kinds = {
-        g["node"]: (g["node_members_with_mf"] > 0)
-        for g in gr["all_excluded_entities_by_node"]
-    }
-    if set(kinds) != nodes:
-        failures.append("node kind partition does not cover every node")
+    if not md.exists():
+        failures.append("cannot check rendered row completeness: RESULTS.md absent")
+    else:
+        rendered = _rendered_node_rows(md.read_text())
+        if rendered != nodes:
+            failures.append(
+                f"rendered node table does not match the data: missing "
+                f"{sorted(nodes - rendered)}, unexpected {sorted(rendered - nodes)}"
+            )
+        #  and prove that check can fail, by deleting one row from a copy of the text.
+        one = sorted(nodes)[0]
+        mutated = "\n".join(
+            l for l in md.read_text().splitlines()
+            if not l.startswith(f"| `tfclass:{one}` |")
+        )
+        if _rendered_node_rows(mutated) == nodes:
+            failures.append(
+                "row-completeness check cannot detect a deleted table row -- it is vacuous"
+            )
 
     if failures:
         for f in failures:
