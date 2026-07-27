@@ -723,6 +723,19 @@ regeneration, because a `file:` quote into a generated artifact is a two-way dep
 Both blocking items were correct and both are now addressed. Recording them because the
 second one changed the review's factual content, not just its citations.
 
+**0. One item I over-corrected, and restored.** The first review's non-blocking #3 said
+the `GO:0050877` row rested on CHOPS cognitive impairment, which is the
+phenotype-as-function reasoning the `GO:0032968` row refuses. I withdrew the clause. On
+re-reading, **the reviewer withdrew the objection** — the row named the phenotype only to
+explain why the term is not removed, and said so. So the clause is **restored**, with the
+disclaimer made explicit rather than implicit, and the material I added while it was
+withdrawn (the term's breadth, the ubiquitous expression and embryonic-lethal null, and
+`PMID:22528490` as the only AFF4-specific nervous-system study and why it is not relied
+on) is **kept**, because that is what actually carries the verdict. The review history is
+recorded in the row itself rather than silently reverted: acting on a correction and then
+learning the correction was retracted is a normal outcome, and the reader should be able
+to see which parts of the reason survived which round.
+
 **1. `GO:0045600 positive regulation of fat cell differentiation` — proposed.** The
 reviewer's argument was an internal-consistency one and it lands: this review proposed a
 `NEW` row for `GO:0043923`, a viral hijack it calls non-core, while leaving the
