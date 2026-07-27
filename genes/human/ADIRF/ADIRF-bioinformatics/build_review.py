@@ -604,7 +604,7 @@ NEW_ROWS = [
                 "query: GAPDH is also called Cytosol by HPA and does carry GO:0005829 in "
                 "GOA, with the term id resolved through the same location-to-term mapping "
                 "used for ADIRF. GO:0005829 is not a descendant of GO:0005634, so this adds "
-                "genuinely new information rather than restating the nuclear rows. It is "
+                "genuinely new information rather than restating the nuclear rows. "
                 "This row rests on the HPA immunofluorescence call alone, which is sufficient "
                 "for it. It deliberately does NOT lean on the sub-diffusion-limit argument: at "
                 "7855 Da ADIRF is below the nuclear-pore passive-diffusion limit, but that "

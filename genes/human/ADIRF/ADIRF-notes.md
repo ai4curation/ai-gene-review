@@ -522,6 +522,23 @@ be silently reverted on the next regeneration.
 7. **A false claim caught before it shipped.** The homogeneity assertion on the PANTHER node
    was written into the review from expectation, and the guard refused it. That is the whole
    value of computing what you have already concluded by eye.
+8. **A hardcoded number beside a measured one.** `analyze_adirf.py` printed the literal
+   `"103 Actinopterygii"` inside an f-string while section A measures that count live, so the
+   two could drift apart silently — the same defect class as the teleost claim the section
+   exists to correct. Now derived from section A's result, with the literal asserted absent
+   from the source. Section F consequently depends on section A having run, so it **asserts
+   that dependency and refuses to substitute a literal** rather than trusting call order.
+9. **A new early return aborted the tests that follow it.** Adding that dependency guard
+   silently redirected all three existing section-F break-tests to the dependency message
+   instead of their intended targets — they were constructing an empty `Audit`. `_expect_problem`
+   now takes a `seed`, and the dependency test is the one case that deliberately does *not*
+   seed. Found by the break-tests failing with the *wrong message*, which is exactly why
+   asserting the message rather than the failure matters.
+10. **A string-surgery artefact reached the emitted YAML.** Replacing a phrase that spanned
+    wrapped string literals in the builder left `"...restating the nuclear rows. It is This row
+    rests on..."` in a `review.reason`, and because the YAML is generated it reproduced on every
+    run. Nothing in this repo checks emitted prose for well-formedness; the reviewer caught it.
+    Fixed at the builder, then verified in the *emitted* file rather than in the source.
 
 ### Quote coverage
 

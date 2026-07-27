@@ -842,6 +842,16 @@ def section_f(audit: Audit) -> None:
     two-sided control and a composition control, and reported whichever way it
     falls.
     """
+    # This section quotes section A's live teleost symbol count rather than a
+    # literal, so it depends on section A having run. Assert that instead of
+    # trusting call order: a hardcoded number and a measured one drift apart
+    # silently, which is the defect this whole section exists to correct.
+    if "A_muroidea_loss" not in audit.results:
+        audit.problems.append(
+            "[F] section_a has not run, so the teleost symbol count cannot be quoted "
+            "from a measurement -- refusing to substitute a literal")
+        return
+
     human = uniprot_entries([HUMAN_ADIRF], "accession,sequence")[HUMAN_ADIRF]["Sequence"]
     min_cov = round(MIN_ORTHOLOGUE_COVERAGE * len(human))
 
@@ -923,7 +933,8 @@ def section_f(audit: Audit) -> None:
         "shuffle_identity_range_pct": [min(shuffle_ids), max(shuffle_ids)],
         "teleost_orthologue_supported_by_alignment": all_pass,
         "ncbi_symbol_count_is_not_evidence": (
-            "The 103 Actinopterygii hits reported in section A are an NCBI symbol/alias "
+            f"The {audit.results['A_muroidea_loss']['ncbi_gene_counts']['Actinopterygii_ADIRF']} "
+            "Actinopterygii hits reported in section A are an NCBI symbol/alias "
             "count, i.e. orthology already asserted by an annotation pipeline. They are "
             "retained as context only; the conservation call here rests on the "
             "alignments above."),
@@ -1154,7 +1165,9 @@ def write_report(audit: Audit) -> str:
     f = r["F_teleost_conservation"]
     w("## F. Teleost conservation, adjudicated by alignment rather than by symbol count")
     w("")
-    w(f"The {"103 Actinopterygii"} figure in section A is an NCBI symbol/alias count -- orthology "
+    n_teleost_symbols = a["ncbi_gene_counts"]["Actinopterygii_ADIRF"]
+    w(f"The {n_teleost_symbols} Actinopterygii figure in section A is an NCBI symbol/alias "
+      f"count -- orthology "
       f"already asserted by an annotation pipeline -- so it cannot settle conservation, and "
       f"the only teleost sequence section C aligns is a 938-aa UniProt family member that "
       f"lands in the spurious bin. This section settles it on sequence.")
@@ -1227,13 +1240,21 @@ def write_report(audit: Audit) -> str:
 # self-test: break each guard in BOTH directions
 # --------------------------------------------------------------------------
 
-def _expect_problem(audit_fn, fragment: str, label: str) -> None:
+def _expect_problem(audit_fn, fragment: str, label: str, seed: dict | None = None) -> None:
     """Run a mutated audit and require a failure whose MESSAGE matches.
 
     Asserting the message, not merely the failure, is what distinguishes
     "the guard fired" from "something else broke first".
+
+    ``seed`` pre-populates ``audit.results`` so a section that depends on an
+    earlier section's output can be exercised past its dependency guard. Without
+    it, adding that guard silently redirected every section-F break-test to the
+    dependency message instead of its intended target -- a new early return
+    aborting the checks that follow it.
     """
     audit = Audit()
+    if seed:
+        audit.results.update(seed)
     audit_fn(audit)
     hits = [p for p in audit.problems if fragment in p]
     if not hits:
@@ -1241,6 +1262,12 @@ def _expect_problem(audit_fn, fragment: str, label: str) -> None:
             f"self-test {label}: expected a problem containing {fragment!r}, "
             f"got {audit.problems!r}")
     print(f"  ok  {label}: fired with {hits[0][:90]}...")
+
+
+# Minimal stand-in for section A's output, containing exactly the key section F
+# reads. Kept next to the break-tests so a change to what section F needs shows
+# up here rather than silently redirecting a test to the dependency message.
+_SECTION_A_SEED = {"A_muroidea_loss": {"ncbi_gene_counts": {"Actinopterygii_ADIRF": 0}}}
 
 
 def self_test() -> int:
@@ -1428,7 +1455,7 @@ def self_test() -> int:
     TELEOST_CONTROLS = dict(real_ctrl)
     TELEOST_CONTROLS["A0A8C1JCC4"] = (real_ctrl["A0A8C1JCC4"][0], True)  # invert
     try:
-        _expect_problem(section_f, "does not discriminate", "F/control-inverted")
+        _expect_problem(section_f, "does not discriminate", "F/control-inverted", seed=_SECTION_A_SEED)
     finally:
         TELEOST_CONTROLS = real_ctrl
 
@@ -1437,7 +1464,7 @@ def self_test() -> int:
     real_cov = MIN_ORTHOLOGUE_COVERAGE
     MIN_ORTHOLOGUE_COVERAGE = 0.05      # any alignment at all now "passes"
     try:
-        _expect_problem(section_f, "driven by amino-acid", "F/composition-driven")
+        _expect_problem(section_f, "driven by amino-acid", "F/composition-driven", seed=_SECTION_A_SEED)
     finally:
         MIN_ORTHOLOGUE_COVERAGE = real_cov
 
@@ -1446,16 +1473,27 @@ def self_test() -> int:
     real_token = REFSEQ_NAME_TOKEN
     REFSEQ_NAME_TOKEN = "haemoglobin subunit beta"
     try:
-        _expect_problem(section_f, "no longer described as", "F/accession-repurposed")
+        _expect_problem(section_f, "no longer described as", "F/accession-repurposed", seed=_SECTION_A_SEED)
     finally:
         REFSEQ_NAME_TOKEN = real_token
 
     # ---- F: happy direction ----------------------------------------------
     audit = Audit()
+    audit.results.update(_SECTION_A_SEED)
     section_f(audit)
     if audit.problems:
         raise AssertionError(f"self-test F/happy: real data raised {audit.problems!r}")
     print("  ok  F/happy: real data produces no problems")
+
+    # ---- F: quoting section A's count requires section A to have run ------
+    audit = Audit()          # deliberately empty: section_a has NOT run
+    section_f(audit)
+    hits = [p for p in audit.problems if "section_a has not run" in p]
+    if not hits:
+        raise AssertionError(
+            "self-test F/missing-dependency: section_f did not complain when section A's "
+            f"results were absent; got {audit.problems!r}")
+    print(f"  ok  F/missing-dependency: {hits[0][:88]}...")
 
     # ---- pagination guard: a clamped read must raise ---------------------
     real_get = globals()["_get"]
