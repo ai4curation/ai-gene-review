@@ -88,11 +88,17 @@ def family_protein_total() -> int:
     """
     if not METADATA.exists():
         raise SystemExit(f"missing {METADATA}; the PANTHER family cache is required")
-    for line in METADATA.read_text().splitlines():
-        m = re.match(r"\s*proteins:\s*(\d+)\s*$", line)
-        if m:
-            return int(m.group(1))
-    raise RuntimeError(f"no `proteins:` count found in {METADATA.name}")
+    # Require EXACTLY ONE match, as mature_chain_start() does. Taking the first `proteins:`
+    # line at any nesting would silently pick the wrong one if the metadata ever grew a
+    # second counter block - the reviewer's point, and the same "first match wins" laxity
+    # that makes a parser quietly authoritative about the wrong number.
+    hits = re.findall(r"^\s*proteins:\s*(\d+)\s*$", METADATA.read_text(), flags=re.M)
+    if len(hits) != 1:
+        raise RuntimeError(
+            f"expected exactly one `proteins:` count in {METADATA.name}, found "
+            f"{len(hits)}: {hits}; refusing to guess which is the family total"
+        )
+    return int(hits[0])
 
 
 def members() -> list[str]:

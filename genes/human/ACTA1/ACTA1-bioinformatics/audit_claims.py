@@ -152,6 +152,16 @@ def required_claims() -> list[tuple[str, str, int]]:
             # "reviewed" already occurs for unrelated reasons and would pass vacuously.
             (f"{nt['n_reviewed_members_queried']} reviewed",
              "the subset qualifier bound to the member count, on review/notes/RESULTS", 3),
+            # Pin the DENOMINATOR too. Last round I pinned the numerator's scope and left
+            # the family total hand-typed in prose, so a refreshed member list would move
+            # the JSON and fire the 533 guard while 88,887 and the derived 0.6% went stale
+            # in silence - the same numerator/denominator asymmetry that motivated parsing
+            # it in the script, fixed in one place and not the other.
+            ((f"{nt['n_proteins_in_family_per_panther_metadata']:,}",
+              str(nt["n_proteins_in_family_per_panther_metadata"])),
+             "the family protein total, which the prose states alongside the 533", 3),
+            (f"{nt['fraction_of_family_measured'] * 100:.1f}",
+             "the derived percentage of the family actually measured", 2),
         ]
     return claims
 

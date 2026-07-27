@@ -284,6 +284,16 @@ def main() -> None:
     # False and is reported as corruption. `all()` over an empty set is already True,
     # which is the correct reading: nothing disagrees, so nothing disagrees off the
     # N-terminus.
+    # Every differing peptide must have been located. A peptide present in neither form's
+    # sequence would drop out of `positions` and be skipped by all(), passing vacuously -
+    # impossible today because `mature` is a suffix of the ORF, but the guard should not
+    # depend on that staying true.
+    unlocated = sorted(diff - set(positions))
+    if unlocated:
+        raise SystemExit(
+            f"could not locate {len(unlocated)} differing peptide(s) in either form: "
+            f"{unlocated}; the agreement check cannot be evaluated"
+        )
     confined = all(v <= n_term_limit for v in positions.values())
     counts_agree = len(orf_unique) == len(unique)
 
