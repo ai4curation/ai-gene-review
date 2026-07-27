@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 7
 - Selected module genes: 4
 - Selected gene reviews curated: 4
-- Selected OpenScientist reports: in progress
+- Selected OpenScientist reports: 1 of 4 (`pydX`)
 
 ## Curated Boundary
 
@@ -44,6 +44,11 @@ autolink_gene_symbols: false
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
 
+2026-07-26: The `pydA` gene-level run timed out after 7200s with no report.
+The `pydX` run persisted a complete report and artifacts despite the wrapper
+returning a timeout status. Its PydX/PydA subunit assignment was reconciled;
+its explicitly noted FAD-versus-FMN ambiguity remains unresolved.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
@@ -59,7 +64,7 @@ PSEPK report; no report file was produced.
 | [ ] | `paaF` | PP_3284 | Q88HR9 | kegg:ppu00930 | PRESENT | CURATED | PRESENT | Enoyl-CoA hydratase-isomerase (EC 4.2.1.17) |
 | [x] | `hyuC` | PP_4034 | Q88FQ3 | kegg:ppu00410 | PRESENT | CURATED | MISSING | N-carbamoyl-beta-alanine amidohydrolase/allantoine amidohydrolase 2 (EC 3.5.1.6, EC 3.5.3.9) |
 | [x] | `pydB` | PP_4036 | A0A140FWK2 | kegg:ppu00410 | PRESENT | CURATED | MISSING | D-hydantoinase/dihydropyrimidinase (EC 3.5.2.2) |
-| [x] | `pydX` | PP_4037 | Q88FQ1 | kegg:ppu00410 | PRESENT | CURATED | MISSING | dihydrouracil dehydrogenase (NAD(+)) (EC 1.3.1.1) (Dihydrothymine dehydrogenase) (Dihydrouracil dehydrogenase) |
+| [x] | `pydX` | PP_4037 | Q88FQ1 | kegg:ppu00410 | PRESENT | CURATED | PRESENT (OpenScientist) | dihydrouracil dehydrogenase (NAD(+)) (EC 1.3.1.1) (Dihydrothymine dehydrogenase) (Dihydrouracil dehydrogenase) |
 | [x] | `pydA` | PP_4038 | Q88FQ0 | kegg:ppu00410 | PRESENT | CURATED | MISSING | dihydrouracil dehydrogenase (NAD(+)) (EC 1.3.1.1) (Dihydrothymine dehydrogenase) (Dihydrouracil dehydrogenase) |
 | [ ] | `mmsA-II` | PP_4667 | Q88E01 | kegg:ppu00562 | MISSING | MISSING | MISSING | methylmalonate-semialdehyde dehydrogenase (CoA acylating) (EC 1.2.1.27) |
 | [ ] | `panC` | PP_4700 | Q88DW8 | kegg:ppu00410 | PRESENT | CURATED | PRESENT | Pantothenate synthetase (PS) (EC 6.3.2.1) (Pantoate--beta-alanine ligase) (Pantoate-activating enzyme) |

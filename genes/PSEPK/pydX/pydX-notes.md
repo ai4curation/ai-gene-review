@@ -35,6 +35,14 @@ Source: Hidese et al., 2011, PMID:21169495, DOI:10.1128/JB.01178-10.
 - `"E. coli dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes"`
 - The indexed protein set includes the paired P. putida accessions Q88FQ1 and Q88FQ0.
 
+### OpenScientist report
+
+Source: `file:PSEPK/pydX/pydX-deep-research-openscientist.md`.
+
+- The report identifies PydX as the PreT-like electron-input subunit and PydA as the pyrimidine-reduction subunit of the heteromeric DPD.
+- Its assignment of electron-relay function agrees with the paired-gene evidence and domain architecture.
+- The report notes a flavin ambiguity: UniProt assigns FMN to Q88FQ1, whereas characterized electron-input orthologs are expected to carry FAD. The review therefore does not assert a resolved subunit-specific flavin identity.
+
 ## Curation conclusions
 
 - Accept DPD activity as a contribution to the assembled PydXA enzyme, with a qualifier caveat.
