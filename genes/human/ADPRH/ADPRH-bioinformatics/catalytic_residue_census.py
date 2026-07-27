@@ -62,6 +62,13 @@ CATALYTIC_SITES: dict[int, str] = {54: "S", 55: "D", 56: "D", 302: "D", 305: "S"
 UNIPROT = "https://rest.uniprot.org/uniprotkb"
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services"
 INTERPRO = "https://www.ebi.ac.uk/interpro/api"
+RCSB = "https://data.rcsb.org/rest/v1/core/entry"
+
+# Every PDB entry of human ADPRH listed in its UniProt cross-references.  Which metals
+# each one actually contains is the evidence behind the GO:0000287 and GO:0030955 rows,
+# and PMID:19407395's cached record is abstract-only and never mentions magnesium - so
+# without this the magnesium claim has no checkable source inside the repository.
+PDB_ENTRIES = ["3HFW", "6G28", "6G2A", "6IUX"]
 
 
 class AnalysisError(RuntimeError):
@@ -221,6 +228,27 @@ def map_positions(aligner, subject_seq: str, target_seq: str, positions: list[in
     return mapping, pct
 
 
+def fetch_pdb(pdb_id: str) -> dict:
+    d = _get_json(f"{RCSB}/{pdb_id}")
+    info = d.get("rcsb_entry_info", {})
+    ligands = info.get("nonpolymer_bound_components")
+    if ligands is None:
+        # An entry with no bound non-polymer components is a real answer; an entry
+        # missing the field is not.  Distinguish them rather than printing an empty list.
+        raise AnalysisError(f"{pdb_id}: no nonpolymer_bound_components field in the RCSB record")
+    res = info.get("resolution_combined") or []
+    cite = d.get("rcsb_primary_citation", {})
+    return {
+        "pdb_id": pdb_id,
+        "title": d["struct"]["title"],
+        "resolution_A": res[0] if res else None,
+        "ligands": sorted(ligands),
+        "has_MG": "MG" in ligands,
+        "has_K": "K" in ligands,
+        "pubmed": cite.get("pdbx_database_id_PubMed"),
+    }
+
+
 def read_panther_members() -> list[str]:
     if not PANTHER_ENTRIES.exists():
         raise AnalysisError(
@@ -350,6 +378,10 @@ def run() -> dict:
     interpro = {
         a: sorted(interpro_entries(a)) for a in ["P54922", "Q8NDY3", "Q9NX46"]
     }
+
+    pdb = [fetch_pdb(x) for x in PDB_ENTRIES]
+    if not any(e["has_MG"] for e in pdb):
+        raise AnalysisError("no ADPRH structure contains MG - the magnesium claim would be unsupported")
 
     # --- clades, taken from the Swiss-Prot entry-name stem (ADPRH_/ARHL1_/ADPRS_) ---
     def clade_of(entry_name: str) -> str:
@@ -508,6 +540,13 @@ def run() -> dict:
             for r in holders_broken
         ],
         "interpro_signatures": interpro,
+        "pdb_entries": pdb,
+        "identity_denominator": (
+            "aligned columns only (gaps excluded), i.e. identities / aligned positions; this "
+            "runs slightly higher than the conventional alignment-length denominator and is "
+            "applied identically to every member, so no comparison here is affected - but the "
+            "absolute figures are not directly comparable with externally quoted identities"
+        ),
         "clades": clades,
         "identity_stratification": stratification,
         "rows": rows,
@@ -570,6 +609,13 @@ def report(res: dict) -> str:
     )
     A("")
     A(
+        "Percent identity here is computed over **aligned columns only** (gaps excluded), which "
+        "runs slightly above the conventional alignment-length denominator. It is applied "
+        "identically to every member, so no comparison below is affected, but the absolute "
+        "figures should not be set against externally quoted identities."
+    )
+    A("")
+    A(
         "Two computed measures are used instead. **Clade consistency** -- the same substitution at "
         "the same column in every member of a clade is not alignment noise. **Substitution "
         "chemistry** -- " + "; ".join(st["conservative_pairs"]) + "."
@@ -628,6 +674,26 @@ def report(res: dict) -> str:
     A("`*` = not identical to the ADPRH residue. `ident+own-site/5` is `n/a` where the entry has no")
     A("BINDING/ACT_SITE features of its own, so the second condition cannot be evaluated; those")
     A("counts are NOT promoted to matches.")
+    A("")
+    A("## Metals actually present in the ADPRH structures")
+    A("")
+    A("| PDB | resolution (A) | bound non-polymer components | MG | K | PubMed |")
+    A("|---|---|---|---|---|---|")
+    for e in res["pdb_entries"]:
+        A(
+            f"| {e['pdb_id']} | {e['resolution_A']} | {', '.join(e['ligands'])} | "
+            f"{'yes' if e['has_MG'] else 'no'} | {'yes' if e['has_K'] else 'no'} | "
+            f"{e['pubmed'] or '-'} |"
+        )
+    A("")
+    n_mg = sum(1 for e in res["pdb_entries"] if e["has_MG"])
+    k_entries = [e["pdb_id"] for e in res["pdb_entries"] if e["has_K"]]
+    A(
+        f"Two magnesium ions per subunit are coordinated by the catalytic residues, and magnesium "
+        f"is present in **{n_mg} of {len(res['pdb_entries'])}** of these structures. Potassium is "
+        f"present in **{len(k_entries)}** ({', '.join(k_entries) if k_entries else 'none'}), the "
+        "lowest-resolution of the set, and does not recur in the two structures solved at 1.2 A."
+    )
     A("")
     A("## InterPro signature membership (the annotation route)")
     A("")
@@ -715,6 +781,22 @@ def self_test() -> int:
         problems.append("subject-sequence precondition did not fire on a wrong residue")
     finally:
         CATALYTIC_SITES = saved_sites
+
+    # 8. the PDB fetcher must return the metals, and must fail loudly on a bad id
+    e = fetch_pdb("3HFW")
+    if not (e["has_MG"] and e["has_K"]):
+        problems.append(f"3HFW should contain both MG and K; got {e['ligands']}")
+    e = fetch_pdb("6G28")
+    if e["has_K"]:
+        problems.append("6G28 should not contain K")
+    try:
+        fetch_pdb("ZZZZ")
+    except AnalysisError:
+        pass
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"bad PDB id raised the wrong error type: {exc!r}")
+    else:
+        problems.append("a nonexistent PDB id did not raise")
 
     for p in problems:
         print("SELF-TEST FAIL:", p)

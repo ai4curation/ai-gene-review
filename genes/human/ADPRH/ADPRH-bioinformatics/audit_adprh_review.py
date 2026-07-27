@@ -25,6 +25,8 @@ Checks
        G2 every term marked ACCEPT on a molecular_function row appears in core_functions,
           unless it is listed in ACCEPT_MF_NOT_CORE with a reason.  Unwritten is not the
           same as passing.
+  I  every supporting_text must contain a surface form of its OWN row's term.  A quote can
+     be verbatim, correctly attributed and about a different row; every other gate passes it.
   H  a review with status COMPLETE must contain no PENDING actions, no TODO summaries
      and no TODO description.  Found by running this audit against the fetch-gene stub,
      where every check but G passed on 15 entirely unreviewed rows.
@@ -57,6 +59,26 @@ ACCEPT_MF_NOT_CORE: dict[str, str] = {}
 # GO ids that are logically opposed to one another.  Checked as a pair regardless of
 # whether both are present, so the check is meaningful when one is added later.
 OPPOSITE_PAIRS: list[tuple[str, str]] = []
+
+# Check I.  Surface forms that a supporting_text must contain for the row's term to count
+# as quoted rather than merely asserted.  Keyed on the GO id, which is the stable entity -
+# the term label and the surrounding prose both get reworded, the id does not.
+#
+# LIMITATION, stated rather than implied: this matches SURFACE FORMS.  A quote that
+# supports the claim in words not listed here will be reported as a problem until a form
+# is added, and conversely a quote that merely contains the word is not thereby shown to
+# support the claim.  It catches the cross-row citation slip - a potassium quote under a
+# magnesium row - and nothing subtler.
+TERM_SURFACE_FORMS: dict[str, tuple[str, ...]] = {
+    "GO:0000287": ("magnesium", "mg2+", "mg(2+)", "| mg |", ", mg |"),
+    "GO:0030955": ("potassium", "k+", "k(+)", "| k, mg |"),
+    "GO:0003875": ("arginine", "adp-ribosylarginine", "hydrolase"),
+    "GO:0051725": ("de-adp-ribosyl", "de-modification", "removing one or more adp-ribose",
+                   "reversible modification", "hydrolase"),
+    "GO:0036211": ("reversible modification", "modification"),
+    "GO:0005576": ("extracellular", "cerebrospinal", "csf"),
+    "GO:0005515": ("interact", "two-hybrid", "two hybrid", "binary", "protein-protein"),
+}
 
 ACTION_WORDS = {
     "ACCEPT": ["accept"],
@@ -291,6 +313,49 @@ def audit(raw: str, data: dict) -> list[str]:
                 "molecular-function row - the exemption is unreachable"
             )
 
+    # ---- I: every supporting_text must be about its own row's term --------------
+    # The cross-row citation slip: a quote that is verbatim, correctly attributed, and
+    # about a DIFFERENT row.  Every mechanical gate in this repo passes it, because each
+    # validates a quote against its source and none against the claim it is attached to.
+    for i, a in enumerate(data.get("existing_annotations", [])):
+        tid = a["term"]["id"]
+        forms = TERM_SURFACE_FORMS.get(tid)
+        quotes = [
+            sb.get("supporting_text", "")
+            for sb in ((a.get("review") or {}).get("supported_by") or [])
+        ]
+        if not quotes:
+            continue  # a row with no supported_by is a separate question, not this check's
+        if forms is None:
+            problems.append(
+                f"I: existing_annotations[{i}] {tid} has quotes but no entry in "
+                "TERM_SURFACE_FORMS - the check cannot run and must not pass vacuously"
+            )
+            continue
+        norm = [" ".join(q.split()).lower() for q in quotes]
+        if not any(any(f in q for f in forms) for q in norm):
+            problems.append(
+                f"I: existing_annotations[{i}] {tid} ({a['term']['label']}) has "
+                f"{len(quotes)} supporting_text(s), none containing any surface form of its "
+                f"own term {forms}"
+            )
+    for i, cf in enumerate(data.get("core_functions") or []):
+        mf = cf.get("molecular_function") or {}
+        tid = mf.get("id")
+        quotes = [sb.get("supporting_text", "") for sb in (cf.get("supported_by") or [])]
+        if not tid or not quotes:
+            continue
+        forms = TERM_SURFACE_FORMS.get(tid)
+        if forms is None:
+            problems.append(f"I: core_functions[{i}] {tid} has no entry in TERM_SURFACE_FORMS")
+            continue
+        norm = [" ".join(q.split()).lower() for q in quotes]
+        if not any(any(f in q for f in forms) for q in norm):
+            problems.append(
+                f"I: core_functions[{i}] {tid} ({mf.get('label')}) has {len(quotes)} "
+                f"supporting_text(s), none containing any surface form of its own term {forms}"
+            )
+
     # ---- H: a COMPLETE review must contain no PENDING rows ----------------------
     # Added after running this audit against the fetch-gene stub: every check passed
     # except G, even though all 15 rows were still `action: PENDING`.  A guard that
@@ -440,6 +505,29 @@ def self_test() -> int:
     d9 = yaml.load(raw, Loader=StrictLoader)
     d9["description"] = "TODO: Add description for ADPRH"
     expect("H", raw, d9)
+
+    # I: move the potassium quote onto the magnesium row - the exact defect that shipped
+    dI = yaml.load(raw, Loader=StrictLoader)
+    row = next(
+        a
+        for a in dI["existing_annotations"]
+        if a["term"]["id"] == "GO:0000287" and a["original_reference_id"] == "PMID:30472116"
+    )
+    row["review"]["supported_by"] = [
+        {
+            "reference_id": "PMID:19407395",
+            "supporting_text": (
+                "hARH1 has been cloned, expressed heterologously in Escherichia coli, "
+                "purified and crystallized in complex with K(+) and ADP."
+            ),
+        }
+    ]
+    expect("I", raw, dI)
+
+    # I: a term with quotes but no surface forms declared must fail loudly, not pass
+    dI2 = yaml.load(raw, Loader=StrictLoader)
+    dI2["existing_annotations"][0]["term"]["id"] = "GO:9999998"
+    expect("I", raw, dI2)
 
     # H must NOT fire while the review is still in progress (the happy direction)
     d10 = yaml.load(raw, Loader=StrictLoader)

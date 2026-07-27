@@ -40,6 +40,8 @@ Members that hold `GO:0003875` while missing at least one catalytic residue:
 
 A single identity threshold was tried first and **rejected**: a single identity threshold from the largest observed gap; it lands at 65.4% between Dictyostelium ADPRH (48.4%) and mouse Adprh (82.4%), i.e. a taxonomic boundary, and would discard the ADPRHL1 signal.
 
+Percent identity here is computed over **aligned columns only** (gaps excluded), which runs slightly above the conventional alignment-length denominator. It is applied identically to every member, so no comparison below is affected, but the absolute figures should not be set against externally quoted identities.
+
 Two computed measures are used instead. **Clade consistency** -- the same substitution at the same column in every member of a clade is not alignment noise. **Substitution chemistry** -- S<->T (hydroxyl retained); D<->E (carboxylate retained).
 
 | clade | n | disruptive in EVERY member | disruptive substitutions | example member | hold GO:0003875 |
@@ -94,6 +96,17 @@ Positive control -- a member with its own **experimental** annotation to `GO:000
 `*` = not identical to the ADPRH residue. `ident+own-site/5` is `n/a` where the entry has no
 BINDING/ACT_SITE features of its own, so the second condition cannot be evaluated; those
 counts are NOT promoted to matches.
+
+## Metals actually present in the ADPRH structures
+
+| PDB | resolution (A) | bound non-polymer components | MG | K | PubMed |
+|---|---|---|---|---|---|
+| 3HFW | 1.92 | K, MG | yes | yes | - |
+| 6G28 | 1.23 | AR6, MG | yes | no | 30472116 |
+| 6G2A | 1.8 | A3R, MG | yes | no | 30472116 |
+| 6IUX | 1.195 | AR6, MG | yes | no | - |
+
+Two magnesium ions per subunit are coordinated by the catalytic residues, and magnesium is present in **4 of 4** of these structures. Potassium is present in **1** (3HFW), the lowest-resolution of the set, and does not recur in the two structures solved at 1.2 A.
 
 ## InterPro signature membership (the annotation route)
 

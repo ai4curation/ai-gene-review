@@ -216,8 +216,19 @@ six Mg2+ `BINDING` features and **no K+ feature**, and names only Mg2+ in `COFAC
 
 Following the ADGB `GO:0019825` lesson, I checked the definition rather than the label:
 `GO:0030955` is exactly "Binding to a potassium ion (K+)" — no functional-requirement claim —
-so a resolved K+ ion satisfies it and deleting the row would be the mirror error.
-`KEEP_AS_NON_CORE`.
+so a resolved K+ ion satisfies it and deleting the row would be the mirror error. Not `REMOVE`.
+
+**Revised in round 2 from `KEEP_AS_NON_CORE` to `MARK_AS_OVER_ANNOTATED`**, on the reviewer's
+suggestion, after finding a third argument I had not made. The first two were already here —
+the ion's provenance is the crystallisation cocktail, and it appears in 1 of 4 structures (now
+computed and tabulated in `RESULTS.md`: magnesium 4/4, potassium 1/4). The decisive one is that
+**UniProt read this same paper and reached the opposite conclusion** — it created six Mg2+
+`BINDING` features citing `ECO:0000269|PubMed:19407395` and created no potassium feature at all.
+That makes the disagreement two curators over one paper rather than this review against a
+curator, which is what `MARK_AS_OVER_ANNOTATED` is for. The ADGB precedent still holds for the
+*floor* — a measured complex satisfying a bare-binding definition is never a `REMOVE` — but
+ADGB's oxy complex was measured in solution at physiological affinity, and a buffer-derived ion
+in the lowest-resolution of four structures is not the same evidence.
 
 ## Interaction rows: one Y2H screen each, `NbExp` counting sub-methods again
 
@@ -290,7 +301,7 @@ review were absent from the provider record.
 | 10 | GO:0003875 | IDA | PMID:30472116 | ACCEPT |
 | 11 | GO:0051725 | IDA | PMID:30472116 | ACCEPT |
 | 12 | GO:0000287 | IDA | PMID:19407395 | ACCEPT |
-| 13 | GO:0030955 | IDA | PMID:19407395 | KEEP_AS_NON_CORE |
+| 13 | GO:0030955 | IDA | PMID:19407395 | MARK_AS_OVER_ANNOTATED |
 | 14 | GO:0003875 | IMP | PMID:8349667 | ACCEPT |
 | 15 | GO:0036211 | IMP | PMID:8349667 | MODIFY → GO:0051725 |
 
@@ -298,6 +309,73 @@ No `REMOVE`. The gene's own annotation set is in unusually good shape; the defec
 the human extracellular projection, two unreplicated Y2H rows, one redundant ancestor term,
 and — outside this gene's rows — the ADPRHL1 catalytic over-annotation and the missing α-NAD+
 term.
+
+## Round 2: the cross-row citation slip, and a wrong inference of my own
+
+The reviewer blocked on one thing, and it was a real defect of a kind no mechanical gate in
+this repo can see: **three `supporting_text` quotes attached to `GO:0000287 magnesium ion
+binding` never mentioned magnesium.** Two quoted the ARH1-vs-ARH3 arginine/serine specificity
+sentence and a catalytic-positions line; the third quoted *"…crystallized in complex with K(+)
+and ADP"* — which is the evidence for the **potassium** row two entries below it. Every quote
+was verbatim, correctly attributed, and passed `checkquotes.py`; the error is in the join
+between the quote and the row, exactly the ACBD3 diagnosis that *"quote validation cannot catch
+these; the error is in the joins."*
+
+Fixed three ways, not just by swapping text:
+
+1. `PMID:30472116`'s cached full text has an on-point sentence and it is now quoted:
+   [PMID:30472116 "The active sites of hARH1 and LchARH3 are structurally very similar and
+   contain residues for the coordination of two Mg2+ ions."]
+2. `PMID:19407395`'s cache is **abstract-only and contains no magnesium mention at all**
+   (`grep -ci 'magnesium|Mg2+|Mg(2'` returns 0), so no better quote exists in it. Rather than
+   leave a quote that cannot carry the claim, the census script was extended to query RCSB for
+   all four ADPRH structures, and the row now cites the computed table. The abstract quote is
+   retained with `full_text_unavailable: true`, which is what it is.
+3. The evidence is now **born in the repository**: `RESULTS.md` carries a metals table —
+   magnesium in **4 of 4** structures, potassium in **1 of 4** (3HFW, the lowest resolution) —
+   so the magnesium and potassium claims are both checkable by a reader with no network.
+
+**And a guard for it.** `audit_adprh_review.py` check `I` requires every `supporting_text` to
+contain a surface form of its own row's term, keyed on the **GO id** rather than on any wording
+that can drift. Run against `d86ff17d6` — the exact commit the reviewer blocked — it fires on
+precisely the three sites flagged and nothing else, and it is clean on the current file. The
+check declares its own limitation in the source: it matches surface forms, so it catches a
+cross-row slip and nothing subtler, and a term with quotes but no declared forms is a **loud
+failure** rather than a vacuous pass.
+
+### A wrong inference, corrected by measurement
+
+Both the reviewer and I read the standing `Label mismatch for 'GO:0003875'` warning as coming
+from a stale *ontology snapshot* used by the term validator; the reviewer suggested "refreshing
+the ontology snapshot", and I wrote in the PR body that the review should not be rewritten to
+match it. The premise was wrong. A controlled test settles it: with the stale label in
+`cache/go/terms.csv` the warning appears, and with the current label in that same file it
+disappears. **The expected label is read from `cache/go/terms.csv`.** So the fix was one line
+in the cache — which also stops this PR writing the older synonym into shared state, the
+reviewer's actual concern — and `just validate human ADPRH` is now `✓ Valid` with no warnings.
+
+The general point: the warning had been carried for two rounds with a confident explanation
+attached, and one thirty-second experiment refuted it.
+
+### Suggestions taken, and the one declined
+
+Taken: `GO:0030955` → `MARK_AS_OVER_ANNOTATED`; `PMID:16278211` `correctness` back to
+`VERIFIED`, because `correctness` describes *this* review's use of a reference and the
+miscitation is the provider's (kept in `review_notes`); `is_invalid` dropped from
+`PMID:12464675`, which is a wrong-gene collision rather than a retraction, with
+`relevance: NONE` + `correctness: WRONG_IDENTIFIER` carrying the signal; a clause added to
+`core_functions[0]` making the **mouse** provenance of both substrates explicit; and a line in
+`RESULTS.md` stating that % identity uses an aligned-columns denominator.
+
+Declined, with a reason: folding `core_functions[1]` (magnesium) into the hydrolase entry.
+`molecular_function` is single-valued in the schema, so folding means dropping `GO:0000287`
+from `core_functions` altogether — and the audit's check `G2` requires every ACCEPTed
+molecular-function term either to appear in `core_functions` or to carry a written exemption,
+precisely so a term cannot be quietly dropped. Writing that exemption would be the honest
+alternative, but the biology does not call for it: the two Mg2+ are coordinated by the same
+five residues whose substitution abolishes activity, so the ion is part of the catalytic
+machine rather than an accessory to it. Keeping it visible as a core function and saying why
+is better than hiding it behind an exemption.
 
 ## Committed guards
 
