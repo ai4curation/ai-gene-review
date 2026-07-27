@@ -176,10 +176,22 @@ So "the donors only carry the same family-level inference" is **false on every r
 **`GO:0050877 nervous system process` → KEEP_AS_NON_CORE.** Both donor experiments
 are at the descendant `GO:0007611 learning or memory` (verified: `GO:0007611`'s
 ancestor closure contains `GO:0050877`), and both are on **paralogs** — mouse Aff2,
-i.e. FMR2, the FRAXE intellectual-disability gene, and fly lilli. AFF4 has its own
-reason to touch the nervous system (cognitive impairment is the "C" of CHOPS
-syndrome), so the term is not wrong; but its support in GOA is paralog-derived and
-it is not what AFF4 does. Note also that the *"missense mutation in the ALF homology
+i.e. FMR2, the FRAXE intellectual-disability gene, and fly lilli.
+
+AFF4 does have a clinical connection to the nervous system — cognitive impairment is
+the "C" of CHOPS syndrome — and that is why the term is not removed. It is named as
+**context and explicitly not as evidence of a molecular function**, because the
+variants causing CHOPS are stabilising gain-of-function substitutions and reading such
+a phenotype as molecular involvement is the move the `GO:0032968` row refuses (see §16
+item 0 for the round in which I over-corrected this and then restored it). What carries
+the verdict is that the donors hold real experimental evidence at a descendant term,
+that `GO:0050877` is very broad against a ubiquitously expressed gene with an
+embryonic-lethal null, and that AFF4's only nervous-system-specific study of its own —
+`PMID:22528490`, on ghrelin-induced AMPK signalling in hypothalamic neurons — is a
+single unreplicated report this review does not rely on anywhere. Its support in GOA is
+paralogue-derived, and it is not what AFF4 does.
+
+Note also that the *"missense mutation in the ALF homology
 domain of Aff1 (Af4) ... reported in the robotic mouse, an ataxia mouse model"*
 [PMID:25730767] belongs to **AFF1**, not AFF4 — I had to check this rather than
 assume it, and it is exactly the sort of paralogue transfer this row invites.
