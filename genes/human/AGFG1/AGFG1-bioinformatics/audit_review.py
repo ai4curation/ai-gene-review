@@ -28,6 +28,15 @@ I. no committed JSON artifact in this directory may be empty. The round-1 review
 J. the RESULTS.md zinc-coordination table must agree with zinc_site.json. A prose
    table derived from a script is a two-way dependency; without this the table can
    drift from the artifact in either direction.
+K. retracted phrasings must not reappear on any curator-facing surface. Round 2's
+   correction landed in the `reason` and the `description` and NOT in the `summary`,
+   which is the position a reader looks at first - "fixed in N places, landed in
+   N-1" for the Nth time this campaign.
+
+   LIMITATION, stated rather than implied: check K matches FIXED PHRASES. It cannot
+   catch a paraphrase, and it deliberately exempts the patch scripts, whose whole
+   job is to name the string they replaced. A withdrawn claim still needs a human
+   re-read of the prose surfaces; this only stops the exact wording returning.
 
 Usage:
     uv run python audit_review.py
@@ -301,6 +310,50 @@ def audit_artifacts() -> list[str]:
             rows += 1
     if rows == 0:
         problems.append("J: matched zero zinc table rows - vacuous check")
+
+    problems.extend(audit_retracted_phrases())
+    return problems
+
+
+# Phrase -> why it was withdrawn. Fixed strings only; see the module docstring for
+# the limitation this carries.
+RETRACTED_PHRASES = {
+    "reference reports no GAP measurement": (
+        "attributes a negative to PMID:18809720, whose sentence asserts a "
+        "subfamily-level positive covering AGFG"
+    ),
+    "no GAP assay has ever been run": (
+        "states a search-derived negative as an existence claim"
+    ),
+    "no GAP assay has been reported on either human AGFG protein": (
+        "states a search-derived negative as an existence claim"
+    ),
+}
+# The patch scripts must name the strings they replace, so they are exempt by
+# design rather than by accident.
+EXEMPT_SUFFIXES = ("patch_selfreview.py", "patch_review_round2.py", "patch_review_round2b.py", "audit_review.py")
+
+
+def audit_retracted_phrases() -> list[str]:
+    """Check K. Scans the curator-facing surfaces of the gene folder."""
+    problems: list[str] = []
+    gene_dir = HERE.parent
+    surfaces = sorted(
+        p
+        for p in list(gene_dir.glob("*.yaml")) + list(gene_dir.glob("*.md")) + list(HERE.glob("*.md"))
+        if not p.name.endswith(EXEMPT_SUFFIXES)
+    )
+    if not surfaces:
+        problems.append("K: no surfaces to scan - vacuous check")
+        return problems
+    scanned = 0
+    for p in surfaces:
+        text = " ".join(p.read_text().split())  # normalise the dumper's line wrapping
+        scanned += 1
+        for phrase, why in RETRACTED_PHRASES.items():
+            if " ".join(phrase.split()) in text:
+                problems.append(f"K: {p.name} still contains '{phrase}' - {why}")
+    assert scanned, "scanned zero surfaces"
     return problems
 
 
@@ -403,7 +456,35 @@ def self_test() -> None:
     assert zj.read_text() == original, "failed to restore zinc_site.json"
     assert audit_artifacts() == [], f"artifact checks not clean after restore: {audit_artifacts()}"
 
-    print("self-test OK (10 break-tests, each asserting mutation + firing)")
+    # K, break-tested in the position the defect actually occupied: the summary of the
+    # GO:0005096 row, which is exactly where round 2's fix failed to land.
+    notes = HERE.parent / "AGFG1-notes.md"
+    original_notes = notes.read_text()
+    phrase = "reference reports no GAP measurement"
+    assert phrase not in original_notes, "baseline notes already contain the phrase"
+    with tempfile.TemporaryDirectory() as td:
+        backup = Path(td) / notes.name
+        shutil.copy2(notes, backup)
+        notes.write_text(original_notes + f"\nthe family's own {phrase} for either gene.\n")
+        assert notes.read_text() != original_notes, "mutation did not change the file"
+        probs = audit_retracted_phrases()
+        assert any(p.startswith("K:") and phrase in p for p in probs), (
+            f"check K did not fire; got {probs}"
+        )
+        # And it must survive the dumper's line wrapping, which is how the phrase
+        # hid from a naive grep in the first place.
+        notes.write_text(
+            original_notes + "\nthe family's own reference reports\nno GAP measurement for either gene.\n"
+        )
+        probs = audit_retracted_phrases()
+        assert any(p.startswith("K:") for p in probs), (
+            f"check K missed a line-wrapped instance; got {probs}"
+        )
+        shutil.copy2(backup, notes)
+    assert notes.read_text() == original_notes, "failed to restore the notes"
+    assert audit_retracted_phrases() == [], audit_retracted_phrases()
+
+    print("self-test OK (12 break-tests, each asserting mutation + firing)")
 
 
 def main() -> int:
