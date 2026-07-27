@@ -10,9 +10,15 @@
   "queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34"]
   [PMID:40703034 "the mutant does not insert preQ1 in tRNA"]
 - GO:0008479 currently defines the free-queuine reaction, so it was modified to
-  the chemically correct parent GO:0050147 while GO:0002099 records the exact
-  wobble-guanine process. A dedicated bacterial preQ1 transglycosylase MF term
-  would be preferable.
+  its actual pentosyltransferase parent GO:0016763 while GO:0002099 records the
+  exact wobble-guanine process. AmiGO confirms that GO:0008479 is restricted to
+  the RHEA:16633 free-queuine reaction and that GO:0016763 is one of its direct
+  `is_a` parents. GO:0050147 was rejected because it describes free-nucleoside
+  ribosyltransferase chemistry rather than a tRNA substrate. A dedicated
+  bacterial preQ1 transglycosylase MF term would be preferable.
+- The reviewed record assigns one zinc ion per subunit, so GO:0008270 zinc ion
+  binding is added as a missing annotation. [file:PSEPK/tgt/tgt-uniprot.txt
+  "Note=Binds 1 zinc ion per subunit."]
 - Upstream preQ0 production is outside scope; Tgt receives preQ1 from QueF and
   supplies preQ1-tRNA to QueA.
 
