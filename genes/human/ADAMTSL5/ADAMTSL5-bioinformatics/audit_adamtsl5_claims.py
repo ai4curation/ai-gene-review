@@ -96,11 +96,21 @@ def check(review_path, goa_path, problems):
     goa_rows = [r for r in csv.DictReader(goa_path.open(), delimiter="\t")]
     n_goa = len(goa_rows)
     anns = doc["existing_annotations"]
-    if len(anns) != n_goa:
+    # NEW entries are our own proposals, not GOA rows, so reconcile them EXPLICITLY
+    # rather than letting the count silently drift: reviewed == GOA, and the surplus
+    # must be exactly the NEW proposals.
+    new_rows = [a for a in anns if a["review"]["action"] == "NEW"]
+    reviewed = [a for a in anns if a["review"]["action"] != "NEW"]
+    if len(reviewed) != n_goa:
         problems.append(
-            f"coverage: {len(anns)} existing_annotations vs {n_goa} GOA rows")
+            f"coverage: {len(reviewed)} non-NEW existing_annotations vs {n_goa} GOA rows "
+            f"({len(new_rows)} NEW proposal(s))")
+    if len(anns) != n_goa + len(new_rows):
+        problems.append(
+            f"reconciliation: {len(anns)} entries != {n_goa} GOA rows + "
+            f"{len(new_rows)} NEW -- unexplained mismatch")
     goa_key = Counter((r["GO TERM"], r["GO EVIDENCE CODE"]) for r in goa_rows)
-    rev_key = Counter((a["term"]["id"], a["evidence_type"]) for a in anns)
+    rev_key = Counter((a["term"]["id"], a["evidence_type"]) for a in reviewed)
     if goa_key != rev_key:
         problems.append(f"coverage mismatch by (term, evidence): "
                         f"GOA-only={goa_key - rev_key}, review-only={rev_key - goa_key}")
