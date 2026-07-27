@@ -188,11 +188,30 @@ unmeasured generalisation for a retracted one is the ADCK5 pattern exactly: the 
 correction.
 
 **So I stopped generalising and measured what the set actually has in common.** The answer is
-structural, not biological: the 18 are spread across **11 distinct TFClass nodes**, and in each
-case the term is withheld from a **strict subset** of a node whose other members keep it. They share no
-property beyond being individually adjudicated exclusions. Two general lessons, and the second is the
-one worth carrying: a set assembled by a pipeline need not have a biological characterisation at all;
-and **when a generalisation is refuted, the fix is a measurement, not a weaker generalisation.**
+structural, not biological: the 18 are spread across **11 distinct TFClass nodes**, and they share
+no property beyond being pipeline exclusions. Two general lessons, and the second is the one worth
+carrying: a set assembled by a pipeline need not have a biological characterisation at all; and **when a
+generalisation is refuted, the fix is a measurement, not a weaker generalisation.**
+
+**And then I over-reached on the measurement too — third instance of the same shape.** I wrote that "in
+each case" the term is withheld from a strict subset while the rest keep it. My own committed
+`results.json` refutes that for **4 of the 11 nodes**: `tfclass:0.4.1` (NFX1/NFXL1),
+`2.1.7` (NR0B1/NR0B2), `2.7.2` (ZFPM1/ZFPM2) and `2.8.1` (ZC3H6/ZC3H8) have `node_members_with_mf = 0` —
+**every** member excluded, so there is no strict subset and no rest. That is **8 of the 18 entities**.
+
+Worse than the sentence: the rendered table showed only the 7 strict-subset nodes, because
+the renderer iterated a list filtered on `node_members_with_mf > 0`, **under a heading about "the 18" and
+with no statement that anything had been dropped.** Ten rows beneath a claim about eighteen is a stronger
+misreading than a wrong number would be, because nothing cues the reader to check. This is the campaign's
+no-silent-caps rule in a new place: it usually bites on API pagination, and here it bit on a *display*
+filter over data that was complete in the JSON all along.
+
+Corrected by printing **all 11 nodes with the kind labelled** — 7 strict-subset
+(10 entities) and 4 whole-node (8 entities), 10 + 8 = 18 — and the fix strengthens
+the argument rather than weakening it: **the import operates at both granularities**, so the ask has to
+name which one it relies on. It relies on the strict-subset kind, which class 3.1 already supplies twice.
+The conclusion never depended on the over-reach: `per_entity_demonstrated` is computed as an
+**existential**, so it needs one qualifying node and has seven.
 
 **Corrected in round 4 — I had picked the weaker of two available precedents.** My first framing was
 that HOPX makes this filable: UniProt describes it as an *"Atypical homeodomain protein which does not

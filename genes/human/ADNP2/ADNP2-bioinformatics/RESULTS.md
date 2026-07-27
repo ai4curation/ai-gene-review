@@ -147,22 +147,25 @@ ADNP2's own feature is 1043-1102 (Homeobox). So the fold-symmetry precedent is *
 
 HOPX still carries the **biological** half of the precedent — UniProt describes it as an atypical homeodomain protein that does not bind DNA, and it is in the exclusion set (asserted, not assumed: the script fails if it is not). What it does not carry is fold symmetry with ADNP2.
 
-**Is the exclusion a per-entity judgement or per-node coverage?** This decides whether the precedent supports the ask at all: if `GO_REF:0000113` could only withhold `GO:0000981` for a whole node, then excluding ADNP2 would also exclude ADNP — whose sequence-specific binding *is* measured — and the correct request would be a different one. Answer, from the data: **per-entity, demonstrated = True**. The 18 excluded entities are spread across 11 distinct nodes (0.4.1, 1.2.5, 2.1.7, 2.3.2, 2.5.1, 2.7.2, 2.8.1, 3.1.10, 3.1.3, 3.3.2, 7.1.1), and in these nodes the term is withheld from a **strict subset** while the rest keep it:
+**Is the exclusion a per-entity judgement or per-node coverage?** This decides whether the precedent supports the ask at all: if `GO_REF:0000113` could only withhold `GO:0000981` for a whole node, then excluding ADNP2 would also exclude ADNP — whose sequence-specific binding *is* measured — and the correct request would be a different one. Answer, from the data: **per-entity, demonstrated = True** (an existential: it holds if *any* node retains the term for some members while withholding it from a strict subset).
 
-| excluded entity | node | node members | keep the term | excluded |
+**The import uses both granularities, and that distinction has to be stated rather than filtered away.** The excluded entities are spread across 11 nodes, of which **7 withhold the term from a strict subset** (10 entities) while **4 withhold it from every member** (8 entities). All 11 are printed:
+
+| node | members | keep the term | excluded | kind |
 |---|---|---|---|---|
-| SMAD7 | `tfclass:7.1.1` | 8 | 6 | SMAD6, SMAD7 |
-| SMAD6 | `tfclass:7.1.1` | 8 | 6 | SMAD6, SMAD7 |
-| NCOA2 | `tfclass:1.2.5` | 22 | 19 | NCOA1, NCOA2, NCOA3 |
-| NCOA1 | `tfclass:1.2.5` | 22 | 19 | NCOA1, NCOA2, NCOA3 |
-| TFDP3 | `tfclass:3.3.2` | 11 | 10 | TFDP3 |
-| DMRTC1 | `tfclass:2.5.1` | 8 | 7 | DMRTC1 |
-| HMBOX1 | `tfclass:3.1.10` | 19 | 18 | HMBOX1 |
-| AEBP2 | `tfclass:2.3.2` | 20 | 19 | AEBP2 |
-| HOPX | `tfclass:3.1.3` | 47 | 46 | HOPX |
-| NCOA3 | `tfclass:1.2.5` | 22 | 19 | NCOA1, NCOA2, NCOA3 |
+| `tfclass:3.1.3` | 47 | 46 | HOPX | strict subset |
+| `tfclass:1.2.5` | 22 | 19 | NCOA1, NCOA2, NCOA3 | strict subset |
+| `tfclass:2.3.2` | 20 | 19 | AEBP2 | strict subset |
+| `tfclass:3.1.10` | 19 | 18 | HMBOX1 | strict subset |
+| `tfclass:3.3.2` | 11 | 10 | TFDP3 | strict subset |
+| `tfclass:7.1.1` | 8 | 6 | SMAD6, SMAD7 | strict subset |
+| `tfclass:2.5.1` | 8 | 7 | DMRTC1 | strict subset |
+| `tfclass:0.4.1` | 2 | 0 | NFX1, NFXL1 | **whole node** |
+| `tfclass:2.1.7` | 2 | 0 | NR0B1, NR0B2 | **whole node** |
+| `tfclass:2.7.2` | 2 | 0 | ZFPM1, ZFPM2 | **whole node** |
+| `tfclass:2.8.1` | 2 | 0 | ZC3H6, ZC3H8 | **whole node** |
 
-Two of those sit in the same TFClass class as ADNP2. **HOPX is excluded alone out of 47 members of `tfclass:3.1.3`, and HMBOX1 alone out of 19 members of `tfclass:3.1.10`** — while ADNP2's own node `tfclass:3.1.8` currently has 14/14 members holding the term. So single-entity exclusion inside a populated homeodomain node is something this import already does, twice, and the request needs no new mechanism and would not touch ADNP: it makes one node 13/14.
+2 of the strict-subset nodes sit in the same TFClass class as ADNP2: **HOPX excluded alone out of 47 members of `tfclass:3.1.3`**, and **HMBOX1 excluded alone out of 19 members of `tfclass:3.1.10`** — while ADNP2's own node `tfclass:3.1.8` currently has 14/14 members holding the term. So single-entity exclusion inside a populated homeodomain node is something this import already performs, twice within class 3.1, and the request needs no new mechanism and would not touch ADNP: it takes one node from 14/14 to 13/14. The wholly-excluded nodes are not the precedent ADNP2 needs — but they do show the import has the coarser granularity too, so naming which one the ask relies on matters.
 
 That also settles what the 18 do **not** have in common. They are heterogeneous, and no property unites them: NFX1 *"Binds to the X-box motif of MHC class II genes"*, which is sequence-specific binding at a cis-regulatory region, and DMRTC1 is named a transcription factor. An earlier draft of these notes generalised them as "the non-DNA-binding members" and then as "none is a sequence-specific polymerase II transcription factor"; **both are false.** What they actually share is only this: each is an individually adjudicated exclusion inside a node whose other members keep the term.
 

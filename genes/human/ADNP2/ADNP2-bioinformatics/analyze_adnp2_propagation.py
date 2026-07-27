@@ -1072,35 +1072,76 @@ def render(d: dict) -> str:
     )
     add("")
     gr = tf["exclusion_granularity"]
+    # Every node, split by kind.  An earlier revision rendered only the strict-subset
+    # nodes under a sentence about "the 18", silently dropping 4 nodes / 8 entities --
+    # a filter that omits rows without saying so.  Both kinds are printed here, and
+    # the counts are derived from the same structure the table iterates.
+    by_node = {}
+    for g in gr["all_excluded_entities_by_node"]:
+        by_node.setdefault(g["node"], g)
+    whole = [g for g in by_node.values() if g["node_members_with_mf"] == 0]
+    subset = [g for g in by_node.values() if g["node_members_with_mf"] > 0]
+    n_whole_ents = sum(len(g["node_members_excluded"]) for g in whole)
+    n_subset_ents = sum(len(g["node_members_excluded"]) for g in subset)
     add(
         f"**Is the exclusion a per-entity judgement or per-node coverage?** This decides "
         f"whether the precedent supports the ask at all: if `{TFCLASS_GOREF}` could only "
         f"withhold `{MF_TERM}` for a whole node, then excluding ADNP2 would also exclude "
         f"ADNP — whose sequence-specific binding *is* measured — and the correct request "
         f"would be a different one. Answer, from the data: **per-entity, demonstrated = "
-        f"{gr['per_entity_demonstrated']}**. The 18 excluded entities are spread across "
-        f"{len(gr['distinct_nodes_reached_by_the_exclusion_set'])} distinct nodes "
-        f"({', '.join(gr['distinct_nodes_reached_by_the_exclusion_set'])}), and in these "
-        f"nodes the term is withheld from a **strict subset** while the rest keep it:"
+        f"{gr['per_entity_demonstrated']}** (an existential: it holds if *any* node retains "
+        f"the term for some members while withholding it from a strict subset)."
     )
     add("")
-    add("| excluded entity | node | node members | keep the term | excluded |")
+    add(
+        f"**The import uses both granularities, and that distinction has to be stated rather "
+        f"than filtered away.** The excluded entities are spread across "
+        f"{len(by_node)} nodes, of which **{len(subset)} withhold the term from a strict "
+        f"subset** ({n_subset_ents} entities) while **{len(whole)} withhold it from every "
+        f"member** ({n_whole_ents} entities). All {len(by_node)} are printed:"
+    )
+    add("")
+    add("| node | members | keep the term | excluded | kind |")
     add("|---|---|---|---|---|")
-    for g in gr["nodes_where_a_strict_subset_is_excluded"]:
+    for g in sorted(subset, key=lambda x: -x["node_members"]) + sorted(
+        whole, key=lambda x: x["node"]
+    ):
+        kind = (
+            "strict subset"
+            if g["node_members_with_mf"]
+            else "**whole node**"
+        )
         add(
-            f"| {g['symbol']} | `tfclass:{g['node']}` | {g['node_members']} | "
-            f"{g['node_members_with_mf']} | {', '.join(g['node_members_excluded'])} |"
+            f"| `tfclass:{g['node']}` | {g['node_members']} | "
+            f"{g['node_members_with_mf']} | {', '.join(g['node_members_excluded'])} | {kind} |"
         )
     add("")
+    # The two class-3.1 figures the review quotes to NTNU_SB: read from the data, never
+    # retyped.  Round 4 fixed exactly this defect in the notes; hardcoding the same two
+    # numbers here would have reintroduced it in the file the notes are derived from.
+    same_class = sorted(
+        (g for g in subset if g["node"].startswith("3.1.")),
+        key=lambda x: -x["node_members"],
+    )
+    phrases = [
+        f"**{', '.join(g['node_members_excluded'])} excluded alone out of "
+        f"{g['node_members']} members of `tfclass:{g['node']}`**"
+        for g in same_class
+        if len(g["node_members_excluded"]) == 1
+    ]
     add(
-        f"Two of those sit in the same TFClass class as ADNP2. **HOPX is excluded alone out "
-        f"of 47 members of `tfclass:3.1.3`, and HMBOX1 alone out of 19 members of "
-        f"`tfclass:3.1.10`** — while ADNP2's own node `tfclass:{gr['subject_node']}` currently "
-        f"has {gr['subject_node_members_with_mf']}/{gr['subject_node_members']} members holding "
-        f"the term. So single-entity exclusion inside a populated homeodomain node is something "
-        f"this import already does, twice, and the request needs no new mechanism and would "
-        f"not touch ADNP: it makes one node "
-        f"{gr['subject_node_members_with_mf'] - 1}/{gr['subject_node_members']}."
+        f"{len(same_class)} of the strict-subset nodes sit in the same TFClass class as "
+        f"ADNP2: {', and '.join(phrases)} — while ADNP2's own node "
+        f"`tfclass:{gr['subject_node']}` currently has "
+        f"{gr['subject_node_members_with_mf']}/{gr['subject_node_members']} members holding "
+        f"the term. So single-entity exclusion inside a populated homeodomain node is "
+        f"something this import already performs, " + {1: "once", 2: "twice"}.get(len(phrases), f"{len(phrases)} times") + f" within class 3.1, and "
+        f"the request needs no new mechanism and would not touch ADNP: it takes one node from "
+        f"{gr['subject_node_members_with_mf']}/{gr['subject_node_members']} to "
+        f"{gr['subject_node_members_with_mf'] - 1}/{gr['subject_node_members']}. The "
+        f"wholly-excluded nodes are not the precedent ADNP2 needs — but they do show the "
+        f"import has the coarser granularity too, so naming which one the ask relies on "
+        f"matters."
     )
     add("")
     add(
@@ -1136,6 +1177,25 @@ def render(d: dict) -> str:
 # Self-test.  Each mutation is as fine-grained as the claim it certifies: a
 # mutation that blanks a whole input proves only that the check reads its input.
 # ---------------------------------------------------------------------------
+
+
+def _count_self_test_directions() -> int:
+    """Count the numbered directions in self_test()'s own source.
+
+    A hardcoded total is the first thing to go stale when a direction is added, and a
+    stale total is worse than none because it reads as reassurance. The comments that
+    enumerate the directions ARE the enumeration, so count those.
+    """
+    src = Path(__file__).read_text()
+    # Anchor on the DEFINITION at column 0, and take the LAST match. A plain
+    # `src.split("def self_test() -> int:")` is self-referential: that exact string
+    # occurs inside this function's own source, so the split lands here and the count
+    # comes back 0 -- a counter defeated by containing the thing it searches for.
+    parts = re.split(r"^def self_test\(\) -> int:\s*$", src, flags=re.M)
+    if len(parts) < 2:
+        return 0
+    body = parts[-1].split("\ndef ", 1)[0]
+    return len(re.findall(r"^    #\s*\d+[.)]", body, re.M))
 
 
 def self_test() -> int:
@@ -1338,11 +1398,70 @@ def self_test() -> int:
     finally:
         _dna_bind = real_dna_bind
 
+    # 12. The granularity block had no break-test at all, and its verdict is what the
+    #     ask to NTNU_SB now rests on. Two directions, both finer than blanking a query.
+    #     (a) If NO node retained the term for any member -- i.e. every exclusion were
+    #     whole-node -- per_entity_demonstrated must go False, because then excluding
+    #     ADNP2 would also exclude ADNP and the ask would be the wrong request.
+    real_qgo = globals()["quickgo_annotations"]
+
+    def only_whole_nodes(**params):
+        rs = real_qgo(**params)
+        wf = params.get("withFrom", "")
+        if wf.startswith("tfclass:") and wf != f"tfclass:{TFCLASS_NODE.split(':')[1]}":
+            return [a for a in rs if a["goId"] != MF_TERM]
+        return rs
+
+    globals()["quickgo_annotations"] = only_whole_nodes
+    try:
+        tf_mut = tfclass_reach()
+        if tf_mut["exclusion_granularity"]["per_entity_demonstrated"]:
+            failures.append(
+                "per_entity_demonstrated stayed True when every node was wholly excluded"
+            )
+    except RuntimeError:
+        pass  # an upstream assertion firing first is acceptable
+    finally:
+        globals()["quickgo_annotations"] = real_qgo
+
+    #     (b) The happy direction, and the specific claim the ask quotes: at least one
+    #     class-3.1 node must exclude exactly ONE member while the rest keep the term.
+    gr = tfclass_reach()["exclusion_granularity"]
+    singles_31 = [
+        g
+        for g in gr["all_excluded_entities_by_node"]
+        if g["node"].startswith("3.1.")
+        and g["node_members_with_mf"] > 0
+        and len(g["node_members_excluded"]) == 1
+    ]
+    if not singles_31:
+        failures.append(
+            "no class-3.1 node excludes exactly one member; the ask's precedent is gone"
+        )
+    if gr["subject_node"] != "3.1.8":
+        failures.append(f"subject node moved: {gr['subject_node']}")
+    #     And every node printed in the table must be accounted for by one of the two
+    #     kinds -- the defect this round fixed was a filter dropping rows silently.
+    nodes = {g["node"] for g in gr["all_excluded_entities_by_node"]}
+    kinds = {
+        g["node"]: (g["node_members_with_mf"] > 0)
+        for g in gr["all_excluded_entities_by_node"]
+    }
+    if set(kinds) != nodes:
+        failures.append("node kind partition does not cover every node")
+
     if failures:
         for f in failures:
             print("SELF-TEST FAILURE:", f, file=sys.stderr)
         return 1
-    print("self-test: 11/11 directions OK")
+    # Derived, not hardcoded: a literal count drifts the moment a direction is added,
+    # and then the reassuring number is the stale part.
+    n = _count_self_test_directions()
+    if n < 12:
+        print(f"SELF-TEST FAILURE: only {n} numbered directions found; the counter "
+              f"cannot see the enumeration", file=sys.stderr)
+        return 1
+    print(f"self-test: {n}/{n} directions OK")
     return 0
 
 
