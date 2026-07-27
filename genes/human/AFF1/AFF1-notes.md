@@ -243,12 +243,18 @@ parent is the LCA and there is no granularity defect to fix.
 
 - `GO:0032783` → **10 recipients, all *Drosophila melanogaster*** (lilli, Cdk9, CycT, Eaf, Ice1,
   Ice2, ear ×2, Uspl1l, CG8229);
-- `GO:0008023` only → **12 recipients**, of which every human one: AFF1, AFF4, CDK9, ELL, ELL2,
-  ELL3, EAF1, EAF2, MLLT1, MLLT3, ICE2.
+- `GO:0008023` only → **12 recipients**: the **11 human** ones (AFF1, AFF4, CDK9, ELL, ELL2, ELL3,
+  EAF1, EAF2, MLLT1, MLLT3, ICE2) plus **Drosophila Ell**.
 
-So the same reference, curated in one pass, gave the fly SEC subunits the specific complex term and
-left all twelve human subunits at the generic parent. And the consequence for AFF1 is a three-step
-detour: fly lilli's `GO:0032783` **IPI from this very paper** is the donor of human AFF1's
+Twenty-two gene products receive one of the two terms, 11 human and 11 *Drosophila*. **Not one of the
+11 human recipients got the specific term, and 10 of the 11 fly ones did.** Stated precisely because
+the exception matters: the split is not purely clade-based — *Drosophila* Ell is the twelfth
+parent-only recipient — so this is a per-annotation gap rather than a rule about clades. (An earlier
+draft of this section said "12 human", counting Ell among them; the enumerated list has 11 names and
+that mismatch is what surfaced the error. A count disagreeing with its own enumeration is the bug
+report, not a rounding detail.)
+
+And the consequence for AFF1 is a three-step detour: fly lilli's `GO:0032783` **IPI from this very paper** is the donor of human AFF1's
 `GO:0032783` **IBA**, while AFF1's own direct annotation from the same paper sits one level up. The
 specific term reached the gene by phylogenetic inference from a fly protein annotated in the same
 experiment that annotated the human protein.
@@ -256,7 +262,7 @@ experiment that annotated the human protein.
 UniProt's own reference table for that paper reads
 [file:human/AFF1/AFF1-uniprot.txt "RP   IDENTIFICATION IN THE SEC COMPLEX."], i.e. the curator's
 reading was SEC-specific. Hence `MODIFY GO:0008023 → GO:0032783`, and a `suggested_question` naming
-**all twelve affected human gene products once** rather than repeating it per gene.
+**all eleven affected human gene products once** rather than repeating it per gene.
 
 ## The other granularity call: polymerase specificity
 
@@ -404,7 +410,7 @@ review's position stated so the difference is visible:
 
 1. **`GO:0008023` IDA from `PMID:22195968`.** AFF4 carries the identical row. This review marks it
    `MODIFY → GO:0032783` on the within-reference clade asymmetry. If AFF4's review accepts it, the
-   two are inconsistent on one shared datum and the fix belongs upstream for all twelve human
+   two are inconsistent on one shared datum and the fix belongs upstream for all eleven human
    recipients at once.
 2. **Whether AFF1 and AFF4 share a complex.** This review treats it as unresolved. A review that
    asserts mutual exclusivity flatly would be over-reading `PMID:28955517`'s discussion against

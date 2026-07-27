@@ -37,6 +37,7 @@ Self-test:  uv run python audit_aff1_claims.py --self-test
 from __future__ import annotations
 
 import csv
+import json
 import re
 import sys
 from collections import Counter
@@ -467,6 +468,135 @@ def check_emitted_text(problems: list[str]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# G. counted claims must agree with their own enumeration AND with results.json
+# ---------------------------------------------------------------------------
+
+RESULTS_JSON = HERE / "results.json"
+
+# The human recipients of PMID:22195968's parent-only complex term.  The review
+# states this set in prose in several places, with a count and an explicit gene
+# list.  A shipped draft said "12 human recipients" beside a list of 11 names --
+# the count and its own enumeration disagreed, and nothing caught it.  This check
+# compares BOTH against the computed data, so neither the number nor the list can
+# drift alone.
+HUMAN_PARENT_ONLY = "human_parent_only_recipients"
+
+
+def _computed_human_parent_only() -> set[str]:
+    if not RESULTS_JSON.exists():
+        raise Problem(f"missing {RESULTS_JSON}; run analyze_aff1_annotations.py")
+    d = json.loads(RESULTS_JSON.read_text())
+    sp = d.get("reference_species_split")
+    if not sp:
+        raise Problem("results.json has no reference_species_split section")
+    par = sp["parent_recipients"]
+    out = set()
+    for acc in sp["parent_only_recipients"]:
+        who = par.get(acc, "")
+        if who.startswith("Homo sapiens"):
+            sym = who.split(" / ", 1)[1] if " / " in who else acc
+            out.add(sym)
+    if not out:
+        raise Problem("computed zero human parent-only recipients -- the check "
+                      "would pass vacuously")
+    return out
+
+
+def check_counted_claims(problems: list[str]) -> dict[str, Any]:
+    """Two clauses, and BOTH were defeated by their own first break-test.
+
+    * The number clause was case-sensitive, so "ALL ELEVEN" slipped past it.
+    * The enumeration clause matched the *correct* gene list literally, so
+      substituting a symbol made the pattern stop matching and the check went
+      silent -- a guard defeatable by breaking the thing it guards.
+
+    Fixed by matching on SHAPE rather than on content: any long comma/and
+    separated run of gene-symbol-like tokens is treated as the enumeration and its
+    SET is compared, and number words are matched case-insensitively.
+    """
+    computed = _computed_human_parent_only()
+    n = len(computed)
+    words = {1: "one", 2: "two", 3: "three", 10: "ten", 11: "eleven",
+             12: "twelve", 13: "thirteen"}
+    allowed = {str(n), words.get(n, str(n))}
+
+    # Widening the window admitted two false positives on the CLEAN file -- the
+    # digits of "GO:0032786 which the human IMP rows" and the "one" in "every one
+    # of its 12 human recipients". So: a negative lookbehind rejects a number that
+    # is part of a CURIE or a longer token, and the ambiguous small number words
+    # are dropped (every count this check exists for is >= 10, and bare digits are
+    # still matched).
+    NUMBER = r"(?<![:\w.])(?:\d+|ten|eleven|twelve|thirteen)"
+    findings = []
+    surfaces = [REVIEW, NOTES]
+    scanned = 0
+    n_number_claims = 0
+    n_enumerations = 0
+
+    for f in surfaces:
+        if not f.exists():
+            problems.append(f"counted-claim check cannot find {f.name}")
+            continue
+        scanned += 1
+        flat = re.sub(r"\s+", " ", f.read_text())
+
+        # Clause 1: any "<N> human <noun>" must state n.  Case-insensitive, because
+        # the first version of this check was defeated by "ALL ELEVEN".
+        for m in re.finditer(
+                # Allow up to two intervening words on EITHER side of "human":
+                # comparing the guard's 6 hits on the shipped file against the 8
+                # edits actually needed exposed "twelve AFFECTED human gene
+                # products" slipping through a pattern that required
+                # <number> immediately before "human".
+                rf"({NUMBER})\s+(?:of\s+its\s+)?(?:\w+\s+){{0,2}}?human\s+"
+                rf"(?:\w+\s+){{0,2}}?"
+                rf"(recipients|gene products|ones|subunits|rows)\b",
+                flat, re.IGNORECASE):
+            n_number_claims += 1
+            if m.group(1).lower() not in allowed:
+                ctx = flat[max(0, m.start() - 110):m.end() + 40]
+                # A documented retraction legitimately restates the wrong number.
+                if "earlier draft" in ctx.lower():
+                    continue
+                findings.append(
+                    f"{f.name}: states {m.group(1)!r} human {m.group(2)} but the "
+                    f"computed set has {n}: ...{ctx.strip()}...")
+
+        # Clause 2: match the enumeration by SHAPE -- a run of >=8 gene-symbol-like
+        # tokens separated by commas/"and" -- then compare the SET.  Matching the
+        # correct list literally is what made the first version silent when a
+        # symbol was substituted.
+        for m in re.finditer(
+                r"\b(?:[A-Z][A-Z0-9]{2,7})(?:(?:,\s*|,?\s+and\s+)"
+                r"(?:[A-Z][A-Z0-9]{2,7})){7,}", flat):
+            listed = {x.strip() for x in re.split(r",\s*|\s+and\s+", m.group(0))
+                      if x.strip()}
+            n_enumerations += 1
+            if listed != computed:
+                findings.append(
+                    f"{f.name}: enumerated gene set {sorted(listed)} != computed "
+                    f"{sorted(computed)} (missing {sorted(computed - listed)}, "
+                    f"unexpected {sorted(listed - computed)})")
+
+    if scanned == 0:
+        problems.append("counted-claim check scanned zero files -- vacuous")
+    if n_number_claims == 0:
+        problems.append("counted-claim check matched no '<N> human <noun>' claim, so "
+                        "its number clause could not fire")
+    if n_enumerations == 0:
+        problems.append("counted-claim check matched no gene enumeration, so its "
+                        "membership clause could not fire")
+    for x in findings:
+        problems.append(f"counted claim disagrees with the computed data: {x}")
+    return {"computed_n_human_parent_only": n,
+            "computed_set": sorted(computed),
+            "files_scanned": scanned,
+            "number_claims_checked": n_number_claims,
+            "enumerations_checked": n_enumerations,
+            "findings": findings}
+
+
+# ---------------------------------------------------------------------------
 # driver
 # ---------------------------------------------------------------------------
 
@@ -482,6 +612,7 @@ def audit() -> tuple[list[str], dict[str, Any]]:
     report["hedge_sweep"] = check_hedge_sweep(problems)
     report["source_entities"] = check_source_entities(problems)
     report["emitted_text_lint"] = check_emitted_text(problems)
+    report["counted_claims"] = check_counted_claims(problems)
     return problems, report
 
 
@@ -687,6 +818,32 @@ def self_test() -> int:
         REVIEW.write_text(t2.replace(needle, "super elongation complex.complex", 1))
     run_case("doubled token from implicit string concatenation",
              mut_doubled_token, "doubled token")
+
+    def mut_wrong_count() -> None:
+        t2 = REVIEW.read_text()
+        # Change the stated number while leaving the enumeration intact -- exactly
+        # the shipped defect. The mutation must be this fine: blanking the whole
+        # claim would also be caught by a far weaker implementation.
+        needle = "ALL ELEVEN human recipients"
+        if needle not in t2:
+            raise Problem("anchor for the wrong-count mutation is absent")
+        REVIEW.write_text(t2.replace(needle, "ALL TWELVE human recipients", 1))
+    run_case("stated count disagrees with the computed set", mut_wrong_count,
+             "counted claim disagrees with the computed data")
+
+    def mut_wrong_enumeration() -> None:
+        t2 = REVIEW.read_text()
+        needle = "AFF1, AFF4, CDK9, ELL, ELL2, ELL3, EAF1, EAF2, MLLT1, MLLT3 and\n      ICE2"
+        alt = "AFF1, AFF4, CDK9, ELL, ELL2, ELL3, EAF1, EAF2, MLLT1, MLLT3 and ICE2"
+        if needle in t2:
+            REVIEW.write_text(t2.replace(needle, needle.replace("EAF2", "AFF3"), 1))
+        elif alt in t2:
+            REVIEW.write_text(t2.replace(alt, alt.replace("EAF2", "AFF3"), 1))
+        else:
+            raise Problem("anchor for the wrong-enumeration mutation is absent")
+    run_case("enumerated gene set disagrees with the computed set",
+             mut_wrong_enumeration,
+             "counted claim disagrees with the computed data")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making

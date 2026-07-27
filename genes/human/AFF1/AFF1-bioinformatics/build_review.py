@@ -729,11 +729,13 @@ verdict(("GO:0008023", "IDA", "PMID:22195968"),
         "Correct but one level less specific than the same curator's own reading of "
         "the same paper. UniProt's reference table for PMID:22195968 records its "
         "contribution as identification in the SEC complex, yet the annotation landed "
-        "on the generic parent. The reference-projection test makes the pattern exact: "
-        "this reference gives the specific GO:0032783 to 10 recipients, ALL "
-        "Drosophila, and gives only GO:0008023 to every one of its 12 human "
-        "recipients - AFF1, AFF4, CDK9, ELL, ELL2, ELL3, EAF1, EAF2, MLLT1, MLLT3 and "
-        "ICE2."),
+        "on the generic parent. The reference-projection test makes the pattern exact. "
+        "Twenty-two gene products receive one of the two terms, 11 human and 11 "
+        "Drosophila. All 10 recipients of the specific GO:0032783 are Drosophila, and "
+        "ALL ELEVEN human recipients - AFF1, AFF4, CDK9, ELL, ELL2, ELL3, EAF1, EAF2, "
+        "MLLT1, MLLT3 and ICE2 - got only the generic GO:0008023. The split is not "
+        "purely clade-based: Drosophila Ell is the twelfth parent-only recipient, so "
+        "10 of the 11 fly subunits were refined and none of the 11 human ones was."),
     action="MODIFY",
     reason=(
         "GO:0032783 was verified to be an is_a/part_of descendant of GO:0008023, and "
@@ -744,7 +746,7 @@ verdict(("GO:0008023", "IDA", "PMID:22195968"),
         "human AFF1's GO:0032783 IBA. So the specific term reached AFF1 by "
         "phylogenetic inference from a fly protein annotated in the same experiment "
         "that annotated the human protein one level up. Fixing it at the reference "
-        "would retract the detour for all twelve human recipients at once; that "
+        "would retract the detour for all eleven human recipients at once; that "
         "recommendation is stated once, in suggested_questions, rather than repeated "
         "per gene."),
     proposed_replacement_terms=[dict(GO0032783)],
@@ -971,7 +973,7 @@ def build() -> dict:
             "records its contribution as identification in the SEC complex, which is "
             "the basis for refining the GO:0008023 row. Its projection profile is what "
             "revealed that the same reference gave the specific complex term to 10 "
-            "Drosophila recipients and only the generic parent to all 12 human ones."),
+            "Drosophila recipients and only the generic parent to all 11 human ones."),
         "PMID:31611376": (
             "PubMed-verified, full text available. The acetyl-mimic rescue experiment "
             "here is the cleanest evidence that the bridging function is AFF1's own "
@@ -1202,7 +1204,7 @@ def build() -> dict:
         {"question": (
             "PAINT/UniProt curation, stated once for all affected genes: "
             "PMID:22195968 gives GO:0032783 super elongation complex to 10 Drosophila "
-            "recipients and only the generic parent GO:0008023 to every one of its 12 "
+            "recipients and only the generic parent GO:0008023 to all eleven of its "
             "human recipients - AFF1, AFF4, CDK9, ELL, ELL2, ELL3, EAF1, EAF2, MLLT1, "
             "MLLT3 and ICE2 - even though UniProt's own reference table records the "
             "paper's contribution as \"IDENTIFICATION IN THE SEC COMPLEX\". The "
@@ -1210,7 +1212,10 @@ def build() -> dict:
             "is the donor of human AFF1's GO:0032783 IBA, so the specific term reaches "
             "the human gene by phylogenetic inference from a fly protein annotated in "
             "the same experiment. Would GOA consider refining the human rows at the "
-            "reference, which would fix twelve gene products in one edit?"),
+            "reference, which would fix eleven gene products in one edit? Note the "
+            "split is not purely clade-based - Drosophila Ell also received only the "
+            "parent - so this is a per-annotation gap rather than a rule about "
+            "clades."),
          "experts": ["GOA/UniProt curators", "GO Central PAINT curators"]},
         {"question": (
             "PANTHER node PTN000829417 assigns, to the same 79 recipients, both "
