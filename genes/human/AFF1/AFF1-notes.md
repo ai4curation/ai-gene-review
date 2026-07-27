@@ -493,8 +493,12 @@ it sharpens this review's own.** The shared `GO:0006354` IBA row carries
 `PANTHER:PTN000829417|UniProtKB:P51825` on *both* genes. Verified here rather than taken on report:
 the two GOA fields are byte-identical, and `P51825` **is AFF1** — so on AFF1's row that token is the
 **target itself** (a self-referential IBD, a PAINT curator judging the function core) while on AFF4's
-row the same token is a **paralogue**. Same field, different evidential status. That is a genuinely
-useful distinction this review did not draw, and it does not change the verdict here: the
+row the same token is a **paralogue**. Same field, different evidential status. To be precise about
+what was and was not already here: this review *does* identify the seed as self-referential — the
+`GO:0006355` and `GO:0006354` rows label it "human AFF1 itself (self-referential IBD seed)" and the
+`GO:0006354` summary calls the row self-referential. What it did **not** draw is the **cross-gene**
+half: that the identical field is paralogue-derived on AFF4, so the same bytes carry different
+evidential weight on the two genes. That half is AFF4's, and it does not change the verdict here: the
 polymerase-specificity argument for `GO:0006368` rests on the node asserting a Pol II-specific
 complex term of the same 79 recipients, not on who the seed is. Both positions are on the record in
 the two merged reviews, which is the right outcome.
@@ -515,8 +519,9 @@ and dropped out of this PR's diff entirely. Note this is *not* the forbidden
 main lacks, and the precondition `set(mine) - set(main) == {}` was checked before relying on it.
 
 The same-folder PANTHER artefacts collided the same way, harmlessly: both agents fetched
-`PTHR10528` within 13 microseconds of each other, so `PTHR10528-metadata.yaml` conflicted add/add on
-its `fetched_date` line alone — verified as the *only* difference by diffing the two blobs before
+`PTHR10528` about **13 milliseconds** apart (`…51.732839` vs `…51.745794`, a 12 955 µs gap — an
+earlier draft of this bullet said "microseconds", off by a factor of a thousand), so
+`PTHR10528-metadata.yaml` conflicted add/add on its `fetched_date` line alone — verified as the *only* difference by diffing the two blobs before
 accepting main's copy, with `PTHR10528-entries.csv` byte-identical. Five publications AFF4 also
 fetched were byte-identical too, so no full-text downgrade was possible on any of them.
 
@@ -553,10 +558,19 @@ failure the rest of the section is about.
   **901** residues of 1210; the shipped text rounded up by roughly a tenth, at all four of these
   sites: the top-level `description` (a qualitative overstatement, "almost entirely" rather than the
   three-quarters it is); the `GO:0003712` row's `reason`; `knowledge_gaps[2]`; and this file's own
-  domain-content bullet. The sites are named rather than quoted deliberately: reproducing the four
-  retracted figures verbatim would trip clause 3 of the guard, and the alternative — widening the
-  retraction exemption to admit them — is the bypass anyone smuggling the number back would use, so
-  the prose moves and the guard stays strict. A first attempt to locate the sites found only one of
+  domain-content bullet. The sites are named rather than quoted deliberately: reproducing the
+  retracted figures verbatim trips clause 3 of the guard — it did, on the first attempt — and the
+  alternative, widening the retraction exemption to admit them, is the bypass anyone smuggling the
+  number back would use, so the prose moves and the guard stays strict. (The PR reviewer suggested
+  this rationale was narrower than it reads, on the grounds that the spaced form `~1 000 of 1 210`
+  is not one clause 3 matches. Testing the committed pattern refutes that: it strips inner spaces
+  and commas, so that form yields 1000/1210 and does fire. **But the same test found a gap neither
+  of us had seen**: the `knowledge_gaps` site phrased its quantity as a *word* rather than a numeral,
+  and matched *nothing*, because the pattern required a digit. The clause
+  written to catch an estimated number was blind to the most obviously estimated form of it. Clause 3
+  now handles worded quantities, and run against the shipped version it fires on all three numeric
+  sites rather than two; the fourth site is the `description`'s qualitative "almost entirely", which
+  has no number and is correctly out of that clause's scope.) A first attempt to locate the sites found only one of
   the four, because the YAML wraps the others across lines and the search was not
   whitespace-normalised; that is the same trap that hides a wrapped claim from a naive
   `"..." in text`, and it is why clause 3 fires on more than one instance.

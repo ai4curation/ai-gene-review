@@ -600,11 +600,22 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
             if not f.exists():
                 continue
             flat = re.sub(r"\s+", " ", f.read_text())
+            # Numerals AND worded quantities. Testing a reviewer claim about this
+            # clause exposed a gap neither of us had seen: "about a thousand of its
+            # 1210 residues" -- one of the four sites the figure actually shipped at
+            # -- matched NOTHING, because "a thousand" carries no digit. The clause
+            # that exists to catch an estimated number was blind to the most
+            # obviously estimated form of it.
+            WORDED = {"a thousand": 1000, "one thousand": 1000,
+                      "a hundred": 100, "nine hundred": 900}
             for m in re.finditer(
-                    rf"(\d[\d ,]*)\s+of\s+(?:its\s+)?(\d[\d ,]*)\s+residues",
-                    flat):
-                a_, b_ = (int(x.replace(" ", "").replace(",", ""))
-                          for x in (m.group(1), m.group(2)))
+                    rf"((?:\d[\d ,]*)|(?:{'|'.join(WORDED)}))\s+of\s+"
+                    rf"(?:its\s+)?(\d[\d ,]*)\s+residues",
+                    flat, re.IGNORECASE):
+                g1 = m.group(1).strip().lower()
+                a_ = WORDED.get(g1) if g1 in WORDED else int(
+                    g1.replace(" ", "").replace(",", ""))
+                b_ = int(m.group(2).replace(" ", "").replace(",", ""))
                 if b_ != n_len:
                     continue          # not the whole-protein claim
                 n_disorder_claims += 1
@@ -1352,6 +1363,18 @@ def self_test() -> int:
         NOTES.write_text(n2)
     run_case("the only stated total is deleted", mut_delete_total,
              "compared no stated TOTAL")
+
+    def mut_worded_disorder() -> None:
+        # The form that was silently unmatched: a WORDED quantity. Distinct from
+        # mut_wrong_disorder, which uses digits -- so a clause that handles only
+        # numerals passes that one and fails this one.
+        t2 = REVIEW.read_text()
+        needle = "901 of its 1210 residues"
+        if needle not in t2:
+            raise Problem("anchor for the worded-disorder mutation is absent")
+        REVIEW.write_text(t2.replace(needle, "a thousand of its 1210 residues", 1))
+    run_case("disorder figure stated as a WORDED quantity", mut_worded_disorder,
+             "residues but the feature table gives")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making
