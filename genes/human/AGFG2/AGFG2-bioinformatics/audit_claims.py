@@ -495,6 +495,82 @@ def _read_results_md() -> str | None:
     return md.read_text() if md.exists() else None
 
 
+CENSUS_HEADER = "| clade (NCBI taxon) | `agfg2` | `agfg1` (control) |"
+
+
+def _parse_census_table(raw: str) -> list[dict]:
+    """Parse the clade-census table out of the EMITTED RESULTS.md.
+
+    Asserting over the file that ships, rather than over the structure that produced it,
+    is what makes a silently dropped or reformatted row detectable.
+    """
+    lines = raw.splitlines()
+    try:
+        start = next(i for i, l in enumerate(lines) if l.strip() == CENSUS_HEADER)
+    except StopIteration:
+        return []
+    rows = []
+    for line in lines[start + 2:]:                  # +2 skips the |---|---| separator
+        s = line.strip()
+        if not s.startswith("|"):
+            break
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) != 3:
+            break
+        clade, a2, a1 = cells
+
+        def num(c: str) -> int | None:
+            c = c.replace("*", "").strip()
+            return int(c) if c.isdigit() else None
+
+        rows.append({"clade_cell": clade, "agfg2": num(a2), "agfg1": num(a1)})
+    return rows
+
+
+def _check_census_table(raw: str, dist: dict, problems: list[str]) -> None:
+    rows = _parse_census_table(raw)
+    census = dist["census"]
+    if not rows:
+        problems.append("I: the clade-census table was not found in RESULTS.md")
+        return
+    # A dropped row is the failure this exists to catch, so reconcile the sets of clades
+    # rather than only the cells of the rows that happen to be present.
+    json_keys = {k.split()[0].rstrip(","): k for k in census}
+    table_keys = {r["clade_cell"].split(",")[0].strip(): r for r in rows}
+    missing = sorted(set(json_keys) - set(table_keys))
+    extra = sorted(set(table_keys) - set(json_keys))
+    if missing:
+        problems.append(f"I: clade-census table is missing rows for {missing}")
+    if extra:
+        problems.append(f"I: clade-census table has rows not in distribution.json: {extra}")
+    checked = 0
+    for short, key in json_keys.items():
+        row = table_keys.get(short)
+        if row is None:
+            continue
+        for label, expected in (("agfg2", census[key]["AGFG2"]["total"]),
+                                ("agfg1", census[key]["AGFG1_control"]["total"])):
+            got = row[label]
+            if got != expected:
+                problems.append(
+                    f"I: clade-census table {short}/{label} says {got}, "
+                    f"distribution.json says {expected}"
+                )
+            checked += 1
+        tx = census[key].get("taxon_id")
+        if tx is not None and str(tx) not in row["clade_cell"]:
+            problems.append(
+                f"I: clade-census table row for {short} does not carry its taxon id {tx}"
+            )
+            checked += 1
+    expected_cells = 2 * len(json_keys)
+    if checked < expected_cells:
+        problems.append(
+            f"I: only {checked} of {expected_cells} census cells were compared — "
+            f"the table check has lost coverage"
+        )
+
+
 def check_i_results_md(text: str, problems: list[str]) -> None:
     """RESULTS.md is cited as evidence, so its numbers are bound to the JSON too.
 
@@ -524,15 +600,14 @@ def check_i_results_md(text: str, problems: list[str]) -> None:
          "count of references swept for retractions"),
         (lit["queries"]["arfgap_activity_control"]["count"], " |",
          "ArfGAP-activity positive-control count (table cell)"),
-        (dist["census"]["Actinopterygii (bony fish)"]["AGFG2"]["total"], "** |",
-         "agfg2 bony-fish symbol census (table cell)"),
-        (dist["census"]["Sauropsida (reptiles+birds)"]["AGFG2"]["total"], "** |",
-         "agfg2 sauropsid symbol census (table cell)"),
-        (dist["census"]["Aves"]["AGFG1_control"]["total"], " |",
-         "agfg1 avian control count (table cell)"),
         (dist["census"]["Aves"]["AGFG2"]["total"], "** avian `agfg2`",
          "the avian agfg2/agfg1 asymmetry"),
     ]
+    # The clade census is a TABLE, so it is verified by parsing the emitted table and
+    # comparing cell by cell against the JSON, not by suffix-matching a hand-picked
+    # subset. Suffix bookkeeping bound 4 of 10 cells and silently lost coverage when the
+    # table was reformatted; a parser cannot lose cells without the row count changing.
+    _check_census_table(raw, dist, problems)
     intact = json.loads((HERE / "intact.json").read_text())
     md_intact = [
         (intact["total_records"], " records", "IntAct total record count"),
@@ -753,29 +828,53 @@ def self_test(text: str) -> int:
             continue
         print(f"  ok    {label} -> {hits[0][:110]}")
 
-    # Check I reads RESULTS.md, not the YAML, so its break-test must mutate that file's
+    # Check I reads RESULTS.md, not the YAML, so its break-tests must mutate that file's
     # text. Patching the module global the check resolves at call time keeps detector and
     # mutator on the same artifact, and the patch is asserted to be visible before use.
     global RESULTS_MD_OVERRIDE
     original = _read_results_md()
     assert original is not None, "RESULTS.md is missing; check I cannot be break-tested"
-    assert "R75 present" in original, "anchor for the check-I break-test has drifted"
-    mutated_md = original.replace("R75 present", "R999 present")
-    assert mutated_md != original, "check-I mutation changed nothing"
-    RESULTS_MD_OVERRIDE = mutated_md
-    try:
-        assert _read_results_md() == mutated_md, "the override did not take effect"
-        hits = [p for p in run(text) if p.startswith("I:")]
-    finally:
-        RESULTS_MD_OVERRIDE = None
-    if not hits:
-        print("  FAIL  I: RESULTS.md number contradicts the JSON: check I did not fire")
-        failures += 1
-    elif not any("R75 present" in h for h in hits):
-        print(f"  FAIL  I: fired but not with the expected message: {hits}")
-        failures += 1
-    else:
-        print(f"  ok    I: RESULTS.md number contradicts the JSON -> {hits[0][:110]}")
+
+    # Each mutation must be as FINE as the claim it certifies, and must replace EVERY
+    # occurrence — a `count=1` replace left a second copy of "R75 present" standing, so
+    # the check correctly did not fire and the break-test read as a guard failure. The
+    # taxon-id fixture likewise had to be narrowed: dropping the whole clade label made
+    # the row read as missing/extra instead of as missing-a-taxon-id, which is a coarser
+    # mutation than the distinction under test.
+    md_break_tests = [
+        ("I: a residue in RESULTS.md contradicts the JSON",
+         "R75 present", "R999 present", "R75 present"),
+        ("I: a census table CELL contradicts the JSON",
+         "| **72** | 50 |", "| **72** | 51 |", "agfg1"),
+        ("I: a census table ROW is deleted",
+         "| Amphibia, 8292 | **4** | 28 |\n", "", "missing rows"),
+        ("I: a census table row loses its taxon id (label intact)",
+         "| Aves, 8782 (⊂ Sauropsida)", "| Aves, (⊂ Sauropsida)", "taxon id"),
+    ]
+    for label, old, new, expect in md_break_tests:
+        if old not in original:
+            print(f"  FAIL  {label}: anchor {old!r} has drifted out of RESULTS.md")
+            failures += 1
+            continue
+        mutated_md = original.replace(old, new)   # every occurrence, not just the first
+        if mutated_md == original:
+            print(f"  FAIL  {label}: mutation was a no-op")
+            failures += 1
+            continue
+        RESULTS_MD_OVERRIDE = mutated_md
+        try:
+            assert _read_results_md() == mutated_md, "the override did not take effect"
+            hits = [p for p in run(text) if p.startswith("I:")]
+        finally:
+            RESULTS_MD_OVERRIDE = None
+        if not hits:
+            print(f"  FAIL  {label}: check I did not fire")
+            failures += 1
+        elif not any(expect in h for h in hits):
+            print(f"  FAIL  {label}: fired but not with {expect!r}: {hits}")
+            failures += 1
+        else:
+            print(f"  ok    {label} -> {hits[0][:110]}")
 
     for label, mutate, check in NO_FIRE_TESTS:
         mutated = mutate(text)
@@ -791,7 +890,7 @@ def self_test(text: str) -> int:
             print(f"  ok    {label} (correctly silent)")
 
     print()
-    n_break = len(BREAK_TESTS) + 1  # +1 for the RESULTS.md break-test above
+    n_break = len(BREAK_TESTS) + len(md_break_tests)
     total = n_break + len(NO_FIRE_TESTS)
     if failures:
         print(f"{failures} of {total} self-test(s) failed")

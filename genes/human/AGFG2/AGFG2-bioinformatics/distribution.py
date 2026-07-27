@@ -66,9 +66,10 @@ def census(gene: str, taxon: int) -> dict:
 
 
 def main() -> None:
-    out: dict = {"census": {}, "node_taxa": {}}
+    out: dict = {"census": {}, "node_taxa": {}, "clade_taxon_ids": dict(CLADES)}
     for label, tx in CLADES.items():
         out["census"][label] = {
+            "taxon_id": tx,
             "AGFG2": census("agfg2", tx),
             "AGFG1_control": census(CONTROL_GENE, tx),
         }

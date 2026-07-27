@@ -214,7 +214,7 @@ conclusion.
 
 ## Committed guard
 
-`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 12 break-tests plus 1 no-fire test.
+`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 15 break-tests plus 1 no-fire test.
 It gates the quotes (including the `file:` quotes that CI does not check), the GOA-row
 reconciliation in both directions, `source_entities` against the WITH/FROM field, a
 duplicate-key-rejecting YAML load with a raw-vs-parsed count, the residue claims against
@@ -321,6 +321,32 @@ entry dropped 2 quotes, and the 2 quotes added to the new `knowledge_gaps` entry
 `provenance`, which `checkquotes.py` does not walk. My own walker sees 52 = 45 + 7
 provenance quotes, all verbatim, including all 10 `file:` quotes. The numbers add up exactly,
 which is the only reason the 45 is trustworthy.
+
+## Review round 2 — approved again, two more suggestions, both taken
+
+1. **My round-1 fix cost a guard half its coverage.** Reformatting the clade census into a
+   table left check I binding 4 of the table's 10 cells, because the binding was
+   suffix-matching on hand-picked cells and the reformat changed the suffixes. The
+   reviewer caught it and verified the other six by hand. This is worth recording as a
+   *class*: a guard that matches formatted prose loses coverage silently whenever the prose
+   is reformatted, and it loses it in the direction of passing.
+
+   Fixed structurally rather than by adding six more suffixes: check I now **parses the
+   emitted table** out of `RESULTS.md` and compares it to `distribution.json` cell by cell,
+   reconciling the *sets* of clades so a dropped row is caught, checking each row's NCBI
+   taxon id, and failing if fewer cells were compared than the JSON has. Four break-tests
+   cover it — a wrong cell, a deleted row, a missing taxon id, and the residue check.
+
+   **Two of those break-tests failed on first run, both my fixtures rather than the guard.**
+   One used `replace(old, new, 1)` and left a second copy of `R75 present` standing, so the
+   check correctly did not fire; the other deleted the whole clade label, which made the row
+   read as *missing/extra* instead of as *missing-a-taxon-id* — a mutation coarser than the
+   distinction it was supposed to certify. Both were only visible by running them.
+
+2. **`resolution` was empty while `significance` carried resolution-shaped text.** Taken for
+   both gaps where it applied, not just the one flagged: the "what would settle it" sentences
+   moved into `resolution`, and `significance` now says why the gap matters. Fixing only the
+   flagged instance would have left the same inconsistency one entry away.
 
 ## Environment note
 
