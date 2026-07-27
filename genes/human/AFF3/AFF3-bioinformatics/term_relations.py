@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Assert every ancestry relation this review's argument leans on.
+
+Rule from the campaign brief: FETCH the relation, never infer it from the label.
+``regulates`` / ``positively_regulates`` do NOT subsume; only ``is_a`` / ``part_of``
+do, so every check here restricts ``relations`` to those two.
+
+Each entry in CLAIMS is (descendant, ancestor, expected_bool, why).
+Exits non-zero if any claim is wrong.
+
+Usage:
+    uv run python genes/human/AFF3/AFF3-bioinformatics/term_relations.py
+"""
+
+from __future__ import annotations
+
+import json
+import urllib.parse
+import urllib.request
+
+UA = {"User-Agent": "ai-gene-review/AFF3 (cjmungall@lbl.gov)"}
+ANC = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}/ancestors?relations=is_a,part_of"
+
+CLAIMS: list[tuple[str, str, bool, str]] = [
+    ("GO:0006368", "GO:0006354", True,
+     "MODIFY GO:0006354 -> GO:0006368 must be a DOWNWARD move (asserts strictly more)"),
+    ("GO:0006355", "GO:0010468", True,
+     "GO:0010468 is a redundant ancestor of the GO:0006355 IBA row"),
+    ("GO:0007611", "GO:0050877", True,
+     "both GO:0050877 donors' own experimental term is GO:0007611, i.e. BELOW the propagated term"),
+    ("GO:0001764", "GO:0050877", False,
+     "neuron migration is NOT a nervous system process: the GO:0050877 branch cannot carry AFF3's developmental role"),
+    ("GO:0016607", "GO:0005654", True,
+     "nuclear speck refines the existing nucleoplasm IDA rather than contradicting it"),
+    ("GO:0045190", "GO:0002443", True,
+     "isotype switching sits in the leukocyte-mediated immunity branch (sanity check on the CSR term)"),
+    ("GO:0035116", "GO:0030326", True,
+     "embryonic hindlimb morphogenesis is a child of embryonic limb morphogenesis"),
+    ("GO:0003712", "GO:0140110", True,
+     "transcription coregulator activity is a transcription regulator activity"),
+    ("GO:0003700", "GO:0003712", False,
+     "DNA-binding transcription factor activity and coregulator activity are SIBLINGS, not parent/child"),
+    ("GO:0003712", "GO:0003700", False,
+     "...and the converse also fails, so the two make different claims"),
+    # MEASURED, and it refuted my first guess: GO:0030674's only ancestors are
+    # GO:0003674 and GO:0060090. It is NOT under protein binding, so proposing it is
+    # not "a more informative GO:0005515" -- it is a different branch (molecular
+    # adaptor activity). Recorded because the wrong version of this claim was written
+    # first and the guard is what caught it.
+    ("GO:0030674", "GO:0005515", False,
+     "protein-macromolecule adaptor activity is NOT under protein binding"),
+    ("GO:0030674", "GO:0060090", True,
+     "...it is under molecular adaptor activity, a separate branch of MF"),
+]
+
+
+def ancestors(term: str) -> set[str]:
+    url = ANC.format(ids=urllib.parse.quote(term))
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=60) as fh:
+        d = json.load(fh)
+    res = d["results"]
+    if len(res) != 1:
+        raise SystemExit(f"FATAL: expected 1 result for {term}, got {len(res)}")
+    if res[0]["id"] != term:
+        raise SystemExit(f"FATAL: asked for {term}, QuickGO returned {res[0]['id']}")
+    return set(res[0].get("ancestors") or [])
+
+
+def main() -> None:
+    cache: dict[str, set[str]] = {}
+    problems = []
+    for desc, anc, expected, why in CLAIMS:
+        if desc not in cache:
+            cache[desc] = ancestors(desc)
+        got = anc in cache[desc]
+        ok = "OK " if got == expected else "FAIL"
+        rel = "IS" if got else "is NOT"
+        print(f"{ok}  {desc} {rel} a descendant of {anc}  (expected {expected})")
+        print(f"      {why}")
+        if got != expected:
+            problems.append((desc, anc, expected, got))
+    if problems:
+        raise SystemExit(f"\n{len(problems)} ancestry claim(s) WRONG: {problems}")
+    print(f"\nall {len(CLAIMS)} ancestry claims verified")
+
+
+if __name__ == "__main__":
+    main()
