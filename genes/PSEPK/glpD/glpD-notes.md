@@ -44,4 +44,8 @@ Source: `file:PSEPK/glpD/glpD-deep-research-openscientist.md`.
 
 - Accept GO:0004368 specifically as quinone-dependent activity.
 - Do not substitute an NAD-dependent glycerol-3-phosphate dehydrogenase term; that would reverse the physiological chemistry and use the wrong acceptor.
-- Accept G3P catabolism and the FAD-complex component; keep the broader G3P metabolic process as non-core.
+- Accept G3P catabolism and plasma-membrane association; keep the broader G3P metabolic process as non-core.
+- Leave the transferred FAD-complex component term UNDECIDED because no
+  target-specific oligomerization evidence or distinct GlpB/GlpC partners were
+  found. The available evidence establishes a monotopic GlpD enzyme, not the
+  composition of a molecular complex.
