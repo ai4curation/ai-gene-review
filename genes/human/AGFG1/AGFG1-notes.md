@@ -99,8 +99,10 @@ What tips `GO:0005096` to "keep, non-core" rather than "over-annotated":
   [PMID:38606629 "AGFG1 was identified with class I classical ARFs (i.e. ARF1 and ARF3),
   the class III ARF (ARF6), as well as ARL8B and ARL13A."] — absent from GOA and from the
   affinage record;
-* no GAP assay has ever been reported on the human protein, and none on either human
-  AGFG paralogue. `PMID:18809720`'s own AGFG section says only
+* no GAP measurement on the human protein is reported by any source consulted here, and
+  none for either human AGFG paralogue - a statement about those sources and about a
+  recorded Europe PMC query, not an existence claim. `PMID:18809720`'s own AGFG section
+  says only
   [PMID:18809720 "Much less information is available on AGFG2."] and says nothing about
   GAP activity for either.
 
