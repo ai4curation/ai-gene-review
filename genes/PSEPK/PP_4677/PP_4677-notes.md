@@ -39,6 +39,10 @@ Normalized curation statements used as exact YAML support:
   more specific phosphatidylethanolamine-biosynthesis process.
 - Mark GO:0016780 over-annotated because GO:0003882 captures the same activity
   with the correct donor and acceptor specificity.
-- Treat Q88DZ1 as a strong class-II PssA candidate, not as experimentally
+- Treat Q88DZ1 as a strong type-II PssA candidate, not as experimentally
   proven to carry most pathway flux. Its contribution relative to the
-  PLD-superfamily class-I candidate Q88GQ4 remains unresolved.
+  PLD-superfamily type-I candidate Q88GQ4 remains unresolved.
+- The type-I/type-II labels here follow the bacterial PssA nomenclature of
+  PMID:39693441. UniProt's statement that Q88DZ1 belongs to the CDP-alcohol
+  phosphatidyltransferase "class-I family" uses a separate family-classification
+  axis and therefore does not make Q88DZ1 a type-I PssA.

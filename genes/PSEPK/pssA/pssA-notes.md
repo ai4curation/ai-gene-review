@@ -46,8 +46,10 @@ These are distinct reactions. The PgsA activity and cardiolipin process are not 
 ## Curation conclusions
 
 - Accept GO:0003882 and phosphatidylethanolamine biosynthesis as core.
-- Retain cytosol as the core localization and mark the broader cytoplasm row
-  over-annotated.
+- Retain the seeded cytosol annotation, but record plasma membrane as the core
+  catalytic location because the type-I enzyme is active at the inner
+  membrane surface and inactive in its cytosolic state
+  [PMID:39693441, "the active state of PssA is associated with the inner membrane surface, contributing to PS synthesis, while the cytosolic form is inactive in this synthesis process"].
 - Remove GO:0008444 and GO:0032049.
 
 ## OpenScientist reconciliation
@@ -59,6 +61,11 @@ architecture labels: PLD-superfamily peripheral-membrane PssA is type I,
 whereas integral-membrane CDP-alcohol phosphatidyltransferase PssA is type II.
 The module follows the primary-literature nomenclature
 [PMID:39693441, "Type I PssA belongs to the phospholipase D (PLD) superfamily"].
+
+UniProt's statement that Q88GQ4 belongs to the CDP-alcohol
+phosphatidyltransferase "class-II family" uses a separate family-classification
+axis. It does not contradict the type-I PssA architecture defined by
+PMID:39693441.
 
 Normalized curation statement used as exact YAML support:
 
