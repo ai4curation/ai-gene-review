@@ -24,13 +24,14 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import csv
+import importlib.util
+import io
 import json
 import re
 import sys
 from pathlib import Path
-
-import importlib.util
 
 import yaml
 
@@ -274,6 +275,40 @@ def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
             )
 
 
+# Import names of the dependencies this directory actually declares. Classifying an
+# import failure as "environmental" against no reference set would announce an undeclared
+# or misspelled import -- a real defect in the analysis code -- as a missing wheel, and
+# skip it. Only a declared dependency going missing is an environment fact.
+_DIST_TO_IMPORT = {"biopython": "Bio", "pyyaml": "yaml", "requests": "requests"}
+
+
+def _declared_dependencies(directory: Path) -> set[str]:
+    """Top-level import names declared in this directory's pyproject.toml."""
+    pyproject = directory / "pyproject.toml"
+    if not pyproject.exists():
+        return set()
+    block = re.search(r"dependencies\s*=\s*\[(.*?)\]", pyproject.read_text(), re.S)
+    if not block:
+        return set()
+    names = set()
+    for raw in re.findall(r"[\"']([^\"']+)[\"']", block.group(1)):
+        dist = re.split(r"[<>=!~\[; ]", raw.strip(), 1)[0].lower()
+        names.add(_DIST_TO_IMPORT.get(dist, dist.replace("-", "_")))
+    return names
+
+
+def _is_missing_declared_dep(exc: BaseException, path: Path, module_name: str) -> bool:
+    """True only for a DECLARED third-party dependency that this environment lacks."""
+    if not isinstance(exc, ModuleNotFoundError):
+        return False
+    missing = getattr(exc, "name", None)
+    if missing in (None, module_name):
+        return False
+    if (path.parent / f"{missing}.py").exists():
+        return False  # a sibling script, so a genuine intra-repo break
+    return missing.split(".")[0] in _declared_dependencies(path.parent)
+
+
 _MODULE_CACHE: dict[str, object] = {}
 
 
@@ -306,11 +341,7 @@ def _load_local_module(path: Path):
             # make a missing wheel read as a claim failure and, because run(base) is
             # evaluated before every mutation, abort --self-test entirely -- turning a
             # degraded harness into an unrunnable one.
-            _MODULE_CACHE[key + ":environmental"] = (
-                isinstance(exc, ModuleNotFoundError)
-                and getattr(exc, "name", None) not in (None, name)
-                and not (path.parent / f"{exc.name}.py").exists()
-            )
+            _MODULE_CACHE[key + ":environmental"] = _is_missing_declared_dep(exc, path, name)
         else:
             _MODULE_CACHE[key] = mod
     return _MODULE_CACHE[key]
@@ -327,9 +358,13 @@ def _report_import_failure(path: Path, problems: list[str]) -> None:
     never silently reduces coverage either."""
     err = _MODULE_CACHE.get(str(path) + ":error", "unknown error")
     if _MODULE_CACHE.get(str(path) + ":environmental"):
-        print(f"  SKIPPED unit pin on {path.name}: {err} "
-              f"(environment lacks a dependency; this is not a claim defect, but the "
-              f"check did NOT run)")
+        # Announce once per path: --self-test calls run() ~16 times, and repeating the
+        # notice would bury the mutation log it is meant to be read alongside.
+        if not _MODULE_CACHE.get(str(path) + ":announced"):
+            _MODULE_CACHE[str(path) + ":announced"] = True
+            print(f"  SKIPPED unit pin on {path.name}: {err} "
+                  f"(environment lacks a declared dependency; this is not a claim defect, "
+                  f"but the check did NOT run)")
         return
     problems.append(_import_problem(path))
 
@@ -363,6 +398,74 @@ def check_prose_join_helper(problems: list[str]) -> None:
         got = fn(items)
         if got != expected:
             problems.append(f"prose join: {items} -> {got!r}, expected {expected!r}")
+
+
+def check_import_failure_reporter(problems: list[str]) -> None:
+    """Pin _report_import_failure on both classes, and the dependency classifier itself.
+
+    Cheap because the reporter reads only _MODULE_CACHE, so both paths can be exercised by
+    seeding synthetic keys -- no monkeypatching and no broken file on disk. This is the
+    branch that decides whether a failure is the reviewer's problem or the environment's,
+    so getting it wrong is exactly the "degraded harness reads as a defect" failure it was
+    added to prevent.
+    """
+    fake = HERE / "__synthetic_for_audit__.py"
+    key = str(fake)
+    saved = {k: _MODULE_CACHE.get(k) for k in
+             (key, key + ":error", key + ":environmental", key + ":announced")}
+    try:
+        # Genuine break must be reported.
+        _MODULE_CACHE[key + ":error"] = "RuntimeError: synthetic"
+        _MODULE_CACHE[key + ":environmental"] = False
+        _MODULE_CACHE.pop(key + ":announced", None)
+        found: list[str] = []
+        _report_import_failure(fake, found)
+        if len(found) != 1:
+            problems.append(
+                f"import reporter: a genuine break produced {len(found)} problems, expected 1"
+            )
+        # Missing declared dependency must skip rather than report, and must announce
+        # exactly once however many times run() calls it. Output is captured so this pin
+        # neither emits a notice about a file that does not exist nor suppresses a real one.
+        _MODULE_CACHE[key + ":environmental"] = True
+        _MODULE_CACHE.pop(key + ":announced", None)
+        skipped: list[str] = []
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            _report_import_failure(fake, skipped)
+            _report_import_failure(fake, skipped)
+        if skipped:
+            problems.append(
+                f"import reporter: a missing declared dependency was reported as a "
+                f"problem ({skipped[0]}) instead of skipped"
+            )
+        notices = buf.getvalue().count("SKIPPED unit pin")
+        if notices != 1:
+            problems.append(
+                f"import reporter: two calls emitted {notices} SKIPPED notices, expected "
+                f"exactly 1 (announce once per path, not once per run)"
+            )
+        # And the classifier must not call an undeclared module a dependency.
+        undeclared = ModuleNotFoundError("No module named 'definitely_not_declared'")
+        undeclared.name = "definitely_not_declared"
+        if _is_missing_declared_dep(undeclared, fake, "_x"):
+            problems.append(
+                "import classifier: an UNDECLARED missing module was classified as an "
+                "environment fact; an undeclared or misspelled import is a code defect."
+            )
+        declared = ModuleNotFoundError("No module named 'requests'")
+        declared.name = "requests"
+        if not _is_missing_declared_dep(declared, fake, "_x"):
+            problems.append(
+                "import classifier: a DECLARED dependency (requests) was not recognised, "
+                "so a missing wheel would report as a claim defect."
+            )
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                _MODULE_CACHE.pop(k, None)
+            else:
+                _MODULE_CACHE[k] = v
 
 
 def check_false_friend_helper(problems: list[str]) -> None:
@@ -466,6 +569,7 @@ def run(review_text: str | None = None, notes_text: str | None = None) -> list[s
     # None of the three below needs a gate: the two unit pins inspect sibling modules
     # rather than the document, and the raw/parsed check now inspects whichever document
     # run() was given instead of re-reading REVIEW from disk.
+    check_import_failure_reporter(problems)
     check_false_friend_helper(problems)
     check_prose_join_helper(problems)
     check_raw_vs_parsed(raw, problems)
