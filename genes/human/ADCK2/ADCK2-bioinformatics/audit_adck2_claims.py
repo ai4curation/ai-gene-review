@@ -272,6 +272,20 @@ def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
             )
 
 
+_SWEEP_MODULE_CACHE: dict[str, object] = {}
+
+
+def _load_sweep_module(path: Path):
+    """Import the sweep module once per process; run() is called ~15x by --self-test."""
+    key = str(path)
+    if key not in _SWEEP_MODULE_CACHE:
+        spec = importlib.util.spec_from_file_location("_coq_sweep", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _SWEEP_MODULE_CACHE[key] = mod
+    return _SWEEP_MODULE_CACHE[key]
+
+
 def check_false_friend_helper(problems: list[str]) -> None:
     """Pin the sweep's false-friend classifier with labels that discriminate the two rules.
 
@@ -285,9 +299,7 @@ def check_false_friend_helper(problems: list[str]) -> None:
     if not sweep.exists():
         problems.append(f"sweep script missing: {sweep.name}")
         return
-    spec = importlib.util.spec_from_file_location("_coq_sweep", sweep)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    mod = _load_sweep_module(sweep)
     fn = getattr(mod, "matched_only_via_quinoline", None)
     if fn is None:
         problems.append(
@@ -310,13 +322,21 @@ def check_false_friend_helper(problems: list[str]) -> None:
 
 
 def check_raw_vs_parsed(raw: str, problems: list[str]) -> None:
-    """Guard against a duplicate YAML key deleting provenance before any gate can see it.
+    """Reconcile raw ``- reference_id:`` lines against parsed ``supported_by`` entries.
 
-    Takes the document text rather than re-reading REVIEW from disk. Re-reading made this
-    the one check that inspected a *different* document from the rest of run() whenever a
-    mutated document was passed in, which had to be papered over with a gate; the arithmetic
-    here is self-consistent on any input, so passing the text removes both the gate and the
-    trap.
+    NOT a duplicate-key guard, despite what this docstring used to claim. StrictLoader owns
+    that case outright: ``_no_duplicates`` raises ``ConstructorError``, a ``YAMLError``
+    subclass, and ``run()`` returns early on it, so a duplicated key never reaches here.
+    Verified by injecting one -- ``run()`` returns a single "YAML: duplicate key" problem and
+    this check is never called.
+
+    What the count comparison still catches is the residual: a ``supported_by`` entry that
+    has lost its ``reference_id`` key, or a ``reference_id`` line buried in a block scalar
+    where parsing will not see it. The check earns its place, just not for the reason
+    originally stated.
+
+    Takes the document text rather than re-reading REVIEW from disk, so it inspects the same
+    document as every other check in ``run()`` and needs no gate.
     """
     raw_count = len(re.findall(r"^\s*- reference_id:", raw, re.M))
     doc = yaml.safe_load(raw)
@@ -336,8 +356,11 @@ def check_raw_vs_parsed(raw: str, problems: list[str]) -> None:
     if raw_count != parsed_count:
         problems.append(
             f"raw/parsed: {raw_count} '- reference_id:' lines in the file but "
-            f"{parsed_count} parsed supported_by entries. Do not explain the gap away - a "
-            f"duplicate mapping key silently discards the earlier value."
+            f"{parsed_count} parsed supported_by entries. Do not explain the gap away - "
+            f"derive the expected count independently. Likely causes: a supported_by entry "
+            f"that has lost its reference_id key, or a reference_id line inside a block "
+            f"scalar. (Duplicate mapping keys cannot cause this - StrictLoader rejects "
+            f"those before this check runs.)"
         )
 
 
@@ -395,6 +418,12 @@ def self_test() -> int:
          "gene_symbol: ADCK2\ndescription_note: there is no purified protein, and ADCK2 is"
          " a serine/threonine kinase"),
         ("drop the GO:1903222 sweep-exclusion disclosure", "GO:1903222", "GO:0000000"),
+        # Drives check_raw_vs_parsed: renaming the key drops a raw "- reference_id:"
+        # line while the parsed supported_by entry survives, so the counts diverge. This
+        # became testable only once the check took the document text instead of re-reading
+        # REVIEW from disk.
+        ("strip a reference_id key from a supported_by entry",
+         "    - reference_id: PMID:34362905", "    - reference_id_typo: PMID:34362905"),
         ("decoy negator across a full stop", "gene_symbol: ADCK2",
          "gene_symbol: ADCK2\ndescription_note: the assay was not run. ADCK2 is a"
          " serine/threonine kinase"),

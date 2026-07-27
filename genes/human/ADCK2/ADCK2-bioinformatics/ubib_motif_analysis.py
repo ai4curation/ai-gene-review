@@ -89,6 +89,17 @@ REF_SITES: dict[str, tuple[int, str]] = {
 CONSERVATIVE = [set("AGSTP"), set("ILVMFC"), set("DENQ"), set("KRH"), set("FYW")]
 
 
+def _english_list(items: list[str]) -> str:
+    """Join for prose: 'A', 'A and B', 'A, B and C'. A bare ' and '.join degrades to
+    'A and B and C' as soon as a third member appears -- unreachable at the current
+    membership, which is exactly why it would go unnoticed when membership changes."""
+    if not items:
+        return "none"
+    if len(items) == 1:
+        return items[0]
+    return f"{', '.join(items[:-1])} and {items[-1]}"
+
+
 def conservative(a: str, b: str) -> bool:
     return any(a in g and b in g for g in CONSERVATIVE)
 
@@ -464,7 +475,7 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
             L.append(
                 f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
                 f"position, Gly is carried by {len(a1_gly)} proteins: the same "
-                f"{'/'.join(sorted(expected_gly))} pair plus {' and '.join(crossers)}. "
+                f"{'/'.join(sorted(expected_gly))} pair plus {_english_list(crossers)}. "
                 f"That set therefore cuts across the pairing rather than along it, so the "
                 f"claim is specifically about the A339-equivalent position and not about "
                 f"the A-rich loop as a whole."
