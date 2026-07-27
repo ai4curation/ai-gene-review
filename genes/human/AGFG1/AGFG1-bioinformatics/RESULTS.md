@@ -53,6 +53,28 @@ GAP activity"* — yet ADAP1's motif is complete. **Sequence retention of the ap
 necessary and demonstrably not sufficient**, so it cannot on its own establish
 `GO:0005096` for AGFG1, and equally it removes any structural ground for withdrawing it.
 
+**Both clauses of that sentence matter, and the first one cuts the other way.** Raised in
+review, and correctly: the clause before the ADAP exception is a *blanket positive* that
+covers this subfamily, because the paper classifies the 31 human ArfGAPs into ten
+subfamilies, AGFG is one of them, and only the ADAPs are excepted. Quoting the ADAP half as
+a control while passing over that would be a verbatim-but-selectively-bounded quotation.
+Four checkable grounds for discounting its AGFG instance rather than treating it as the
+measurement:
+
+1. the clause carries **no citation**, while the sentences on either side of it cite
+   specific papers (Liu et al. 2005; Bowzard et al. 2007);
+2. it is stated at **subfamily level** and names no species, protein or assay;
+3. the paper's own **AGFG section** — where a specific claim would live — says nothing
+   about GAP activity for either paralogue, only *"Much less information is available on
+   AGFG2."*;
+4. the same paragraph warns that *"some ArfGAPs use their GAP domain to bind Arf without
+   promoting GTP hydrolysis"*, which is exactly the distinction a subfamily-level summary
+   cannot settle.
+
+So the blanket clause raises the **prior** that some AGFG member is catalytically active —
+part of why the row is kept rather than marked over-annotated — without supplying the
+measurement that would make it core.
+
 ## 2. The zinc is really there, and it is held by the four predicted cysteines
 
 `zinc_site.py` computes the Zn coordination shell from the deposited coordinates of both

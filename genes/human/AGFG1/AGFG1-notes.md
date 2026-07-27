@@ -87,6 +87,20 @@ activity."] — and ADAP1's CX2CX16CX2CX4R is complete. **An intact apparatus is
 and demonstrably not sufficient.** So the motif result cannot be used to certify
 `GO:0005096` either.
 
+**Round 2 of review caught that I was using half of that sentence.** Its first clause is a
+blanket *positive* covering the AGFG subfamily — the paper puts the 31 human ArfGAPs into
+ten subfamilies, AGFG is one, and only the ADAPs are excepted — so quoting the ADAP half as
+a control while passing over the rest is the "verbatim but selectively bounded" defect, and
+no gate can see it because the quote *is* verbatim. Both clauses are now argued, with four
+checkable grounds for discounting the blanket clause's AGFG instance: it carries no
+citation while the sentences either side of it do; it is stated at subfamily level and names
+no species, protein or assay; the paper's own AGFG section supplies no measurement; and the
+same paragraph warns that [PMID:18809720 "some ArfGAPs use their GAP domain to bind Arf
+without promoting GTP hydrolysis"], which is precisely what a subfamily-level summary cannot
+settle. Net effect on the verdict: none — but it does mean the clause raises the *prior* of
+catalytic competence, which is part of why the row is kept rather than marked
+over-annotated.
+
 What tips `GO:0005096` to "keep, non-core" rather than "over-annotated":
 
 * the *Drosophila* orthologue's GAP function is genetically required
