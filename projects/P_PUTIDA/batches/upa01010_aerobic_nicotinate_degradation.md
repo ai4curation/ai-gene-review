@@ -36,7 +36,7 @@ autolink_gene_symbols: false
 - [x] Review the existing Falcon deep-research reports for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [#2325](https://github.com/ai4curation/ai-gene-review/pull/2325).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
