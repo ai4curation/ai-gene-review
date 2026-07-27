@@ -402,7 +402,23 @@ committed scripts, each with `--self-test`:
 |---|---|
 | `analyze_aebp2.py` | every number in this file and in the review YAML; 12 checks, all with positive controls |
 | `check_review_quotes.py` | every `supporting_text` verbatim, including the `file:` quotes CI skips entirely and the `provenance` blocks `checkquotes.py` does not walk; strict duplicate-key loader; anchor refusal; raw-vs-parsed reconciliation |
-| `audit_review_consistency.py` | summary opener vs action, same-term-same-action, the hedge sweep, complex-not-in-locations, description hygiene, isoform scoping on `NEW` rows, and the notes verdict table in **both** directions |
+| `audit_review_consistency.py` | summary opener vs action, same-term-same-action, the hedge sweep, complex-not-in-locations, description hygiene, isoform scoping on `NEW` rows, the notes verdict table in **both** directions, and 13 prose numbers tied to `results.json` |
+
+**A number that refused to add up, caught in self-review.** Two surfaces said the PRC2
+molecular-function census covered "eleven" proteins. It covers **twelve** — the table has
+twelve rows, and `EPOP` is the twelfth, absent from the `GO:0031507` tally only because it
+carries that term by no evidence at all. The adjacent claim, "eight of eleven hold
+`GO:0031507` by NAS alone", was *correct* for a different denominator (11 of the 12 carry
+the term), which is exactly why the wrong one read as consistent. Fixed to name the
+denominator explicitly in both places.
+
+The structural fix, not just the text fix: `audit_review_consistency.py` check H now reads
+each such number out of `results.json` and requires the prose to contain the measured
+value, so a changed query breaks the check instead of quietly falsifying the sentence.
+Adding it immediately caught a second instance of the same class — the ARBA condition-set
+count was **spelled out as a word**, and a number written as a word is invisible to any
+check that greps for the digit. Both directions are break-tested: a drifted digit fires,
+and so does a digit respelled as a word.
 
 Two real defects in my own code were found only by writing the break-tests, never by
 reading:

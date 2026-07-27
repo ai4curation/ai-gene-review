@@ -20,6 +20,10 @@ G. **The notes' verdict table agrees with the YAML**, term by term, both directi
    every term in the YAML has a notes row naming its action, and every term named in the
    notes table exists in the YAML. Writing only the first direction is how a stale notes
    row survives.
+H. **Prose numbers are tied to ``results.json``.** A hand-written count drifts the moment
+   the underlying query changes, and it drifted here: the PRC2 census covers 12 proteins and
+   two surfaces said "eleven". Each claim below names the JSON key it comes from, so a
+   changed measurement breaks the check instead of quietly falsifying the sentence.
 
     uv run --no-project python audit_review_consistency.py
     uv run --no-project python audit_review_consistency.py --self-test
@@ -76,6 +80,93 @@ STRUCTURED_TERM_SLOTS = {
     "molecular_function", "contributes_to_molecular_function", "directly_involved_in",
     "locations", "anatomical_locations", "substrates", "in_complex",
 }
+
+RESULTS_JSON = HERE / "results.json"
+
+# Check H. Each entry is (label, key path into results.json, a function turning the measured
+# value into the exact substring the prose must contain, and the surfaces it must appear in).
+# Selecting on the measured NUMBER means a changed measurement breaks the check; selecting on
+# the sentence would not, because the sentence is what gets reworded.
+NUMERIC_CLAIMS = [
+    (
+        "size of the PRC2 molecular-function census",
+        lambda r: len(r["prc2_mf_census"]["subunits"]),
+        lambda v: f"the {v} PRC2-associated proteins surveyed",
+        ("review",),
+    ),
+    (
+        "size of the PRC2 census, second surface",
+        lambda r: len(r["prc2_mf_census"]["subunits"]),
+        lambda v: f"one of the {v} PRC2-associated human proteins surveyed",
+        ("review",),
+    ),
+    (
+        "GO:0031507 NAS-only count",
+        lambda r: len(r["prc2_mf_census"]["GO_0031507_NAS_only_subunits"]),
+        lambda v: f"{v} of those 11 hold it by NAS alone",
+        ("review",),
+    ),
+    (
+        "TFClass recipients denominator",
+        lambda r: r["tfclass_dbtf"]["n_recipients"],
+        lambda v: f"GO_REF:0000113 covers {v} human",
+        ("review",),
+    ),
+    (
+        "TFClass DbTF numerator",
+        lambda r: r["tfclass_dbtf"]["n_with_GO_0000981_dbtf_activity"],
+        lambda v: f"{v} of which (97.5%) receive GO:0000981",
+        ("review",),
+    ),
+    (
+        "TFClass withheld-set size",
+        lambda r: r["tfclass_dbtf"]["n_without_GO_0000981"],
+        lambda v: f"AEBP2 is one of {v} given",
+        ("review",),
+    ),
+    (
+        "PANTHER node recipient count",
+        lambda r: r["panther_node"]["n_recipients"],
+        lambda v: f"the node reaches {v}",
+        ("review",),
+    ),
+    (
+        "PANTHER node GO:0035098 recipients",
+        lambda r: r["panther_node"]["n_with_both_terms"],
+        lambda v: f"gives GO:0035098 to only {v} of them",
+        ("review",),
+    ),
+    (
+        "ARBA condition-set count",
+        lambda r: r["funfam_match"]["n_condition_sets"],
+        lambda v: f"from {v} alternative condition sets",
+        ("review",),
+    ),
+    (
+        "PDB entries with an AEBP2 chain",
+        lambda r: r["pdb_constructs"]["n_pdb_entries_with_an_AEBP2_chain"],
+        lambda v: f"of {v} PDB entries resolving",
+        ("review",),
+    ),
+    (
+        "N-terminally truncated PDB constructs",
+        lambda r: r["pdb_constructs"]["n_n_terminally_truncated"],
+        lambda v: f"{v} declare an N-terminally truncated construct",
+        ("review", "notes"),
+    ),
+    (
+        "GO:0180000 annotation count in GOA",
+        lambda r: r["go0180000"]["n_annotations_in_goa"],
+        lambda v: f"GO:0180000 has {v} annotations in GOA",
+        ("review",),
+    ),
+    (
+        "isoform-2 overlap with the nucleosome-binding region",
+        lambda r: r["isoform_mapping"]["overlap_residues"],
+        lambda v: f"removes {v} of the 23 residues",
+        ("review",),
+    ),
+]
 
 FORBIDDEN_IN_DESCRIPTION = (
     "this review", "curation", "GOA", "should be annotated", "should not be annotated",
@@ -207,6 +298,33 @@ def audit(review_path: Path = REVIEW, notes_path: Path = NOTES) -> list[str]:
             f"{len(annotations)} entries"
         )
 
+    # --- H. prose numbers tied to results.json --------------------------------------
+    if not RESULTS_JSON.exists():
+        problems.append(
+            f"{RESULTS_JSON.name} missing - run analyze_aebp2.py; check H cannot run and "
+            "would otherwise pass vacuously"
+        )
+    else:
+        import json as _json
+        measured = _json.loads(RESULTS_JSON.read_text())
+        surfaces = {"review": review_path.read_text(), "notes": notes}
+        if not NUMERIC_CLAIMS:
+            problems.append("NUMERIC_CLAIMS is empty - check H would pass vacuously")
+        for label, extract, phrase_of, where in NUMERIC_CLAIMS:
+            try:
+                value = extract(measured)
+            except (KeyError, TypeError) as exc:
+                problems.append(f"check H: cannot read {label} from results.json: {exc}")
+                continue
+            phrase = phrase_of(value)
+            for surface in where:
+                text = " ".join(surfaces[surface].split())
+                if " ".join(phrase.split()) not in text:
+                    problems.append(
+                        f"check H: {surface} does not state the measured {label} "
+                        f"({value}); expected the phrase {phrase!r}"
+                    )
+
     print(f"audited {len(annotations)} annotation rows, "
           f"{len(doc.get('core_functions') or [])} core functions, "
           f"{len(by_term)} distinct existing terms; {len(problems)} problem(s)")
@@ -316,6 +434,26 @@ def self_test() -> int:
     expect("G: no verdict table",
            raw, "would pass vacuously",
            re.sub(r"^\| `GO:.*$", "", notes_raw, flags=re.M))
+
+    # H forward: a prose number that no longer matches the measurement must fire. The
+    # mutation is exactly the distinction claimed - one digit - not a blanked surface that
+    # a much weaker implementation would also catch.
+    anchor_h = "one of the 12 PRC2-associated human proteins surveyed"
+    if anchor_h not in raw:
+        failures.append(f"check-H anchor absent: {anchor_h!r}")
+    else:
+        expect("H: prose number drifted from the measurement",
+               raw.replace(anchor_h, "one of the 11 PRC2-associated human proteins surveyed", 1),
+               "does not state the measured size of the PRC2 census")
+    # H second direction: a number written as a WORD is invisible to the check, which is the
+    # defect that produced this guard. Spelling it out must fire, not pass.
+    anchor_h2 = "from 8 alternative condition sets"
+    if anchor_h2 not in raw:
+        failures.append(f"check-H word-form anchor absent: {anchor_h2!r}")
+    else:
+        expect("H: number spelled as a word",
+               raw.replace(anchor_h2, "from eight alternative condition sets", 1),
+               "does not state the measured ARBA condition-set count")
 
     # vacuity: an empty annotation list must fail loudly.
     expect("vacuous review", "id: Q6ZN18\ndescription: x\n", "pass vacuously")
