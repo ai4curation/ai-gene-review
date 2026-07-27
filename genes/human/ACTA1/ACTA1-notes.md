@@ -359,8 +359,8 @@ errors that I verified before conceding:
    two forms agree. So the numbers were never wrong; the experiment was unbuildable. The
    general shape is worth keeping — *a sequence analysis is only as biological as the
    sequence it starts from*, and a UniProt `CHAIN` feature is where that is decided.
-2. **A by-similarity residue assignment stated as fact.** The description had ACTA1
-   cross-linked "between Lys-52 and Glu-272" by the *Vibrio cholerae* MARTX effectors;
+2. **A by-similarity residue assignment stated as fact.** The description gave the two
+   MARTX cross-link residue positions as though they had been measured on ACTA1;
    UniProt tags both `CROSSLNK` features `ECO:0000250|UniProtKB:P60709`, i.e. transferred
    from beta-actin. The cross-linking itself is real, the residue numbering on the skeletal
    isoform is not measured, and the description now says so.
@@ -382,11 +382,19 @@ three because nothing flagged it — it was internally consistent, verbatim-sour
 
 The `GO:0043531` row placed ACTA1 among a supposed pair of family members holding both
 nucleotide terms. That came from the merged ACTR10 review, whose line reads
-``GO:0005524`` ATP binding: ACTA1, ACT1` — a list about **ATP binding alone**, which I turned
-into a **count about two terms**. Measured across all 533 PTHR11937
-protein members: **31** carry `GO:0005524` and exactly
-**1** carries `GO:0043531` — ACTA1. It is the family's **sole** ADP
-binding holder, not one of two, and the corrected fact is stronger than the wrong one.
+`GO:0005524` ATP binding: ACTA1, ACT1 — a list about **ATP binding alone**, which I turned
+into a **count about two terms**. Measured across all 533 reviewed (Swiss-Prot) PTHR11937
+members: **31 reviewed members carry** `GO:0005524` and exactly **1** carries `GO:0043531` —
+ACTA1. It is the **sole** ADP binding holder among reviewed entries, not one of two, and the
+corrected fact is stronger than the wrong one.
+
+**The scope qualifier is not a hedge, and PR review was right to insist on it.** That member
+list comes from InterPro's reviewed-only endpoint, so 533 is ~0.6% of the 88,887 proteins
+PTHR11937's metadata reports. An earlier draft called it the whole family, which the
+measurement does not support. The family-wide version is an *argument* and is now labelled as
+one: ACTA1's `GO:0043531` is manual TAS, unreviewed entries get only IEA, and no IEA pipeline
+maps the actin fold to ADP binding — so an unreviewed holder is unlikely, but unlikely is not
+measured.
 
 The brief's rule is *relay a sibling's claim as a claim, not as a fact*, and I broke it in
 the specific way that is hardest to catch: a coordinator's or sibling's summary carries more
@@ -399,6 +407,55 @@ WormBase one earlier in this review: querying by GO term alone returns page 1 of
 the family yields an **empty set for both terms** — which reads as "no member carries this",
 the exact opposite of the truth. `nucleotide_terms_in_family.py` keys the query on the
 family's accessions instead, batches them, and asserts no batch was itself truncated.
+
+## A fourth error, and the reviewer found it in a guard I had just written
+
+The second review approved but left three notes on the new script code. All three were
+real, and two were defects in guards — the class this review had already tripped over twice.
+
+1. **`orf_and_mature_counts_agree` compared cardinalities, not sets.** Fixing it
+   immediately exposed a live disagreement the count had masked: both forms yield exactly
+   **9** distinguishing peptides, but the sets differ in **4** members. So the cheap check
+   was certifying an agreement that did not hold.
+
+   The right invariant turned out to be *narrower* than "sets agree", because the sets are
+   not supposed to be identical — modelling the N-terminal processing is the whole point, so
+   the N-terminal peptides must differ. What is asserted now is: the counts agree **and every
+   peptide the two forms disagree about lies at the N-terminus**. A divergence anywhere else
+   would mean the offset had corrupted the digest.
+
+2. **And then that guard did not fire when I broke it.** Setting `MATURE_START = 50` should
+   have been rejected; instead the script produced a confident, wrong region (`50-64
+   GQKDSYVGDEAQSKR`) with no complaint. The cause: I had written the tolerance as
+   `MATURE_START + 1`, so it **scaled with the parameter under test** — a bigger offset bought
+   itself a wider window. *A guard whose tolerance is set by the thing it guards is worse than
+   no guard, because it still reports success.* The tolerance is now a fixed constant grounded
+   in the biology (N-terminal processing removes at most a couple of residues), and
+   `MATURE_START = 50` is rejected outright.
+
+   Break-testing further showed an honest limit: `MATURE_START = 4` passes every check and
+   yields region `4-30`. The guard distinguishes a *corrupting* offset from a *plausible* one,
+   not a correct one from an off-by-one. So the number is no longer typed in at all —
+   `mature_chain_start()` parses it from the CHAIN feature in `ACTA1-uniprot.txt` whose note
+   matches the entry's RecName, and fails if that is not exactly one feature. It returns 3,
+   agreeing with the value I had hand-typed; the point is that it is now derived rather than
+   transcribed. *Any constant read out of prose and typed in is a latent bug.*
+
+3. **`MATURE_START = 3` was documented for ACTA1 but reused for all six comparators.** ACTB
+   is annotated `CHAIN 1..375` *and* `CHAIN 2..375` "N-terminally processed", so its
+   observable forms begin at residue 1 or 2 and slicing it at 3 both mis-stated its processing
+   and missed a form. Comparators now contribute their digests at offsets 0, 1 and 2, which
+   only enlarges the comparator pool and so only shrinks the distinguishing set — conservative
+   by construction, and independent of any per-gene annotation being complete.
+
+4. **The reviewer also found a hole in the claim lint itself:** a retracted phrasing had
+   survived in a post-mortem because an embedded quotation mark split the matched substring.
+   The guard was evadable by punctuation while still reporting OK. `flatten()` now strips
+   quotation marks and normalises dashes, and it caught the surviving instance on the next
+   run.
+
+Every headline number survived all of this unchanged: 63 peptides, 9 distinguishing (14.3%),
+54 shared, 29 shared with ACTB/ACTG1, 3 regions at 3-30, 287-317 and 338-361.
 
 ## Action summary (50 GOA rows + 1 NEW)
 

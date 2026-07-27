@@ -1,11 +1,26 @@
 """Which PTHR11937 members carry ATP binding, ADP binding, or both?
 
 Written to check a claim this review had inherited from the merged ACTR10 review and
-restated as its own: that "ACTA1 is one of only two gene products in this family that
-carry both". The measurement refuted it. ACTA1 is the **only** member of PTHR11937
-carrying GO:0043531 ADP binding at all, and 31 members carry GO:0005524 ATP binding -
-so the sibling's list, which was about ATP binding alone, had been converted into a
-count about two terms. Relay a sibling review's claim as a claim, not as a fact.
+restated as its own: that ACTA1 was one of a pair of family members carrying both terms.
+The measurement refuted it - but read the SCOPE of what is measured, because it is
+narrower than "the family".
+
+SCOPE. The member list comes from interpro/panther/PTHR11937/PTHR11937-entries.csv,
+which this repo builds from InterPro's **reviewed-only** protein endpoint
+(fetch_interpro_family_simple.py: /protein/reviewed/entry/...). That is 533 Swiss-Prot
+entries, against the 88,887 proteins PTHR11937's own metadata reports - about 0.6%. So
+every count here is over the REVIEWED subset, and the script says so in its output and
+in its JSON keys. A claim about the whole family is not something this measurement makes.
+
+RESULT (reviewed subset): 31 members carry GO:0005524 ATP binding and exactly one -
+ACTA1 - carries GO:0043531 ADP binding, so ACTA1 is the sole holder of both. The
+sibling's list had been about ATP binding alone. Relay a sibling review's claim as a
+claim, not as a fact.
+
+Whether it extends family-wide is an ARGUMENT, not this measurement, and is labelled as
+one wherever it is used: ACTA1's GO:0043531 is a manual TAS annotation, unreviewed
+TrEMBL entries receive only IEA, and no IEA pipeline maps the actin fold to ADP binding -
+so an unreviewed member acquiring the term is unlikely. Unlikely is not measured.
 
 Two traps this script exists to avoid, both of which produced a wrong answer first:
 
@@ -16,7 +31,13 @@ Two traps this script exists to avoid, both of which produced a wrong answer fir
    keyed on the family's own accessions.
 2. **Per-accession queries are too slow to finish** (533 members x 2 terms). QuickGO
    accepts a comma-separated geneProductId list, so requests are batched, and each
-   batch asserts its result was not itself truncated.
+   batch asserts its result was not itself truncated - by comparing the reported hit
+   count against the number of rows ACTUALLY RETURNED, never against the requested page
+   size, since a service that clamps the limit would satisfy a constant-based check while
+   handing back fewer rows.
+
+goUsage=descendants over is_a,part_of is set, matching the sibling resolve_withfrom.py, so
+a member annotated only to a child term is counted rather than missed.
 """
 import csv
 import json
@@ -74,16 +95,22 @@ def holders(accs: list[str], go_id: str) -> dict[str, dict]:
         chunk = accs[i:i + BATCH]
         ids = ",".join(f"UniProtKB:{a}" for a in chunk)
         url = ("https://www.ebi.ac.uk/QuickGO/services/annotation/search?geneProductId="
-               + urllib.parse.quote(ids, safe=",:") + f"&goId={go_id}&limit={PAGE}")
+               + urllib.parse.quote(ids, safe=",:") + f"&goId={go_id}&limit={PAGE}"
+               + "&goUsage=descendants&goUsageRelationships=is_a,part_of")
         d = get(url)
         total = d["numberOfHits"]
-        # Refuse a silently truncated batch. Without this the script would report a
-        # subset as if it were the whole answer - the same failure the term-keyed query
-        # produces, just harder to notice.
-        if total > PAGE:
+        returned = len(d["results"])
+        # Refuse a silently truncated batch. Compare the hit count against what was
+        # ACTUALLY RETURNED, never against the requested page size: a service that clamps
+        # the limit rather than rejecting it would satisfy a constant-based check while
+        # handing back fewer rows, which is exactly the silent truncation this guard
+        # exists to prevent. (Measured: QuickGO does honour limit=200 here - but the
+        # check must not depend on that remaining true.)
+        if total > returned:
             raise RuntimeError(
-                f"{go_id} batch at offset {i} returned {total} hits, above the page size "
-                f"{PAGE}; reduce BATCH or add paging rather than trusting page one"
+                f"{go_id} batch at offset {i} reports {total} hits but returned only "
+                f"{returned} rows; the response is truncated. Reduce BATCH or add paging "
+                "rather than trusting the first page."
             )
         for r in d["results"]:
             acc = r["geneProductId"].split(":")[-1].split("-")[0]
@@ -94,12 +121,15 @@ def holders(accs: list[str], go_id: str) -> dict[str, dict]:
 
 def main() -> None:
     accs = members()
-    print(f"{len(accs)} PTHR11937 protein members, batched {BATCH} at a time")
+    print(f"{len(accs)} REVIEWED (Swiss-Prot) PTHR11937 members, batched {BATCH} at a time")
+    print(f"  scope: {len(accs)} of the 88,887 proteins PTHR11937 metadata reports "
+          f"({len(accs) / 88887:.1%}); InterPro's /protein/reviewed/ endpoint is "
+          "reviewed-only, so nothing here is a claim about the whole family")
     per_term = {go: holders(accs, go) for go in TERMS}
 
     for go, label in TERMS.items():
         h = per_term[go]
-        print(f"\n{go} {label}: {len(h)} family member(s)")
+        print(f"\n{go} {label}: {len(h)} reviewed member(s)")
         for acc, rec in sorted(h.items(), key=lambda kv: kv[1]["symbol"]):
             print(f"  {acc:8} {rec['symbol']:12} {','.join(sorted(rec['evidence']))}")
 
@@ -110,21 +140,29 @@ def main() -> None:
         raise RuntimeError(
             f"{SUBJECT} (ACTA1) does not carry both terms; the review says it does"
         )
+    print("\nNOTE: counts are over REVIEWED entries only. goUsage=descendants is set (as in "
+          "the sibling resolve_withfrom.py), so a member annotated to a child term counts.")
 
     result = {
         "family": "PTHR11937",
-        "n_members_queried": len(accs),
+        "member_scope": "reviewed (Swiss-Prot) members only, from InterPro's "
+                        "/protein/reviewed/ endpoint",
+        "n_reviewed_members_queried": len(accs),
+        "n_proteins_in_family_per_panther_metadata": 88887,
+        "fraction_of_family_measured": round(len(accs) / 88887, 4),
         "terms": TERMS,
         "holders": {
             go: {a: {"symbol": r["symbol"], "evidence": sorted(r["evidence"])}
                  for a, r in sorted(h.items())}
             for go, h in per_term.items()
         },
-        "n_with_atp_binding": len(per_term["GO:0005524"]),
-        "n_with_adp_binding": len(per_term["GO:0043531"]),
+        "n_reviewed_with_atp_binding": len(per_term["GO:0005524"]),
+        "n_reviewed_with_adp_binding": len(per_term["GO:0043531"]),
         "accessions_with_both": both,
-        "n_with_both": len(both),
-        "subject_is_sole_adp_holder": list(per_term["GO:0043531"]) == [SUBJECT],
+        "n_reviewed_with_both": len(both),
+        "subject_is_sole_adp_holder_among_reviewed": list(per_term["GO:0043531"]) == [SUBJECT],
+        "go_usage": "descendants over is_a,part_of - a member annotated only to a child "
+                    "term is counted, matching the sibling resolve_withfrom.py",
     }
     OUT.write_text(json.dumps(result, indent=2) + "\n")
     print(f"\nwrote {OUT}")

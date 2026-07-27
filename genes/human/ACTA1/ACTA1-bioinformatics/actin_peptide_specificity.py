@@ -45,7 +45,34 @@ SUBJECT = "ACTA1"
 # N-terminal tryptic peptide does not exist in vivo, and a targeted-proteomics experiment
 # built on it would name a species that cannot be detected. The mature chain is therefore
 # the primary analysis; the ORF is computed alongside it only to show the counts agree.
-MATURE_START = 3  # 1-based first residue of CHAIN 3..377
+# ACTA1's mature chain start is PARSED from the local UniProt record rather than typed in.
+# A number transcribed from a feature table by hand is a latent bug: it cannot be checked
+# against anything, and the guard below can only tell a corrupting offset from a plausible
+# one, not a correct one from an off-by-one within the processing window (MATURE_START = 4
+# yields region 4-30 and passes every check). Reading it from the source removes the class.
+UNIPROT_TXT = HERE.parent / "ACTA1-uniprot.txt"
+
+# N-terminal offsets applied to the COMPARATORS, in residues removed. ACTA1's own mature
+# start is 3, but that number is specific to ACTA1 and must not be reused for the others:
+# ACTB (P60709) is annotated CHAIN 1..375 *and* CHAIN 2..375 "N-terminally processed", so
+# its observable forms begin at residue 1 or 2, and slicing it at 3 would both mis-state its
+# processing and miss a form. Rather than look up six CHAIN features and depend on their
+# completeness, every comparator contributes its digest at all three offsets. This can only
+# ENLARGE the comparator peptide pool and therefore only shrink the distinguishing set, so
+# the error direction is conservative by construction.
+COMPARATOR_OFFSETS = (0, 1, 2)
+
+# How far into the sequence a peptide may start and still count as "N-terminal" for the
+# ORF-versus-mature agreement check below. This MUST be a fixed constant grounded in the
+# biology - N-terminal processing of an actin removes at most a couple of residues - and must
+# NOT be derived from MATURE_START. An earlier version used MATURE_START + 1, which made the
+# tolerance scale with the parameter under test: setting MATURE_START to 50 widened the
+# window to 51, so the check accepted its own corruption and reported a confident, wrong
+# region (50-64) with no complaint. A guard whose tolerance is set by the thing it guards is
+# worse than no guard, because it still reports success.
+N_TERMINAL_TOLERANCE = 4
+
+MATURE_START = 0  # replaced at run time by mature_chain_start()
 
 # Peptide length window in which tryptic peptides are routinely observed by LC-MS/MS.
 MIN_LEN, MAX_LEN = 7, 30
@@ -54,6 +81,36 @@ MIN_LEN, MAX_LEN = 7, 30
 # rather than merely divergent. The conventional actins span 375-377 aa, so 5 admits the
 # genuine N-terminal-processing differences and nothing else.
 MAX_LENGTH_DEFICIT = 5
+
+
+def mature_chain_start() -> int:
+    """First residue of ACTA1's mature chain, from the UniProt FT table.
+
+    Picks the CHAIN feature whose /note matches the entry's RecName, i.e. the mature
+    protein rather than the "intermediate form" that still carries N-acetyl-Cys2. Fails
+    loudly if the record does not yield exactly one such feature, because silently
+    defaulting would reintroduce the hand-typed constant this replaces.
+    """
+    if not UNIPROT_TXT.exists():
+        raise SystemExit(f"missing {UNIPROT_TXT}; run: just fetch-gene human ACTA1")
+    text = UNIPROT_TXT.read_text()
+    rec = re.search(r"^DE   RecName: Full=([^;]+);", text, flags=re.M)
+    if not rec:
+        raise RuntimeError(f"no RecName in {UNIPROT_TXT.name}")
+    want = rec.group(1).strip()
+    starts = [
+        int(m.group(1))
+        for m in re.finditer(
+            r'^FT   CHAIN\s+(\d+)\.\.\d+\n(?:FT\s+/note="([^"]+)")',
+            text, flags=re.M)
+        if m.group(2) == want
+    ]
+    if len(starts) != 1:
+        raise RuntimeError(
+            f"expected exactly one CHAIN feature noted {want!r} in {UNIPROT_TXT.name}, "
+            f"found {len(starts)}: {starts}"
+        )
+    return starts[0]
 
 
 def fetch_sequence(acc: str) -> str:
@@ -105,6 +162,15 @@ def identity(a: str, b: str) -> float:
 
 
 def main() -> None:
+    global MATURE_START
+    MATURE_START = mature_chain_start()
+    print(f"mature chain start parsed from {UNIPROT_TXT.name}: residue {MATURE_START}")
+    if MATURE_START > N_TERMINAL_TOLERANCE:
+        raise SystemExit(
+            f"MATURE_START={MATURE_START} exceeds N_TERMINAL_TOLERANCE="
+            f"{N_TERMINAL_TOLERANCE}; a chain start that far in is not N-terminal "
+            "processing, and the ORF-versus-mature agreement check would be vacuous"
+        )
     seqs = {name: fetch_sequence(acc) for name, acc in ACTINS.items()}
     for name, seq in seqs.items():
         print(f"{name:6} {ACTINS[name]}  {len(seq)} aa")
@@ -151,7 +217,8 @@ def main() -> None:
     others: set[str] = set()
     for name, seq in seqs.items():
         if name != SUBJECT:
-            others |= digest(seq) | digest(seq[MATURE_START - 1:])
+            for off in COMPARATOR_OFFSETS:
+                others |= digest(seq[off:])
 
     mature = seqs[SUBJECT][MATURE_START - 1:]
     subject = {p for p in digest(mature) if MIN_LEN <= len(p) <= MAX_LEN}
@@ -169,10 +236,11 @@ def main() -> None:
     # with the other sarcomeric actins is a different problem from one shared with
     # the ubiquitous cytoplasmic actins, because ACTB/ACTG1 are expressed in every
     # tissue the five HDA studies sampled.
-    # Both forms again, for the same reason as the `others` set above.
+    # All comparator offsets again, for the same reason as the `others` set above.
     cytoplasmic = set()
     for name in ("ACTB", "ACTG1"):
-        cytoplasmic |= digest(seqs[name]) | digest(seqs[name][MATURE_START - 1:])
+        for off in COMPARATOR_OFFSETS:
+            cytoplasmic |= digest(seqs[name][off:])
     shared_with_cytoplasmic = [p for p in shared if p in cytoplasmic]
 
     # Collapse missed-cleavage variants. Nine distinguishing peptides sounds like
@@ -191,12 +259,50 @@ def main() -> None:
         else:
             regions.append([start, end])
 
+    # Comparing SETS rather than cardinalities matters, and not only in principle: both
+    # forms yield exactly 9 distinguishing peptides, so an equal-count test passes, yet the
+    # sets differ in 4 members. An equal-cardinality check would have certified an agreement
+    # that does not hold.
+    #
+    # But the sets are not SUPPOSED to be identical - modelling the N-terminal processing is
+    # the whole point of the change, so the two N-terminal peptides necessarily differ. The
+    # invariant worth asserting is therefore narrower and stronger: the counts must agree,
+    # and every peptide the two forms disagree about must lie at the N-terminus. A divergence
+    # anywhere else would mean the offset had corrupted the digest, and that is what this
+    # catches.
+    diff = orf_unique ^ set(unique)
+    n_term_limit = N_TERMINAL_TOLERANCE
+    positions = {}
+    for pep in diff:
+        for form, seq_ in (("orf", seqs[SUBJECT]), ("mature", mature)):
+            i = seq_.find(pep)
+            if i != -1:
+                positions[pep] = i + 1 + (0 if form == "orf" else MATURE_START - 1)
+                break
+    confined = bool(diff) and all(v <= n_term_limit for v in positions.values())
+    counts_agree = len(orf_unique) == len(unique)
+
+    print(f"  (ORF form gives {len(orf_unique)} distinguishing peptides; counts "
+          f"{'agree' if counts_agree else 'DISAGREE'})")
+    print(f"  ORF/mature sets differ in {len(diff)} peptide(s), all at the N-terminus: "
+          f"{confined}")
+    if not counts_agree or not confined:
+        raise SystemExit(
+            "ORF and mature analyses disagree beyond the N-terminal peptides "
+            f"(counts_agree={counts_agree}, confined_to_n_terminus={confined}, "
+            f"positions={positions}); the offset has corrupted the digest rather than "
+            "merely modelled the processing"
+        )
+
     result = {
         "accessions": ACTINS,
         "analysed_form": f"mature chain {MATURE_START}..{len(seqs[SUBJECT])} "
                          "(UniProt CHAIN; INIT_MET removed and N-acetyl-Cys2 cleaved by ACTMAP)",
         "n_unique_orf_form": len(orf_unique),
         "orf_and_mature_counts_agree": len(orf_unique) == len(unique),
+        "orf_and_mature_sets_agree": sorted(orf_unique) == sorted(unique),
+        "orf_vs_mature_symmetric_difference": sorted(orf_unique ^ set(unique)),
+        "orf_vs_mature_difference_confined_to_n_terminus": confined,
         "lengths": {k: len(v) for k, v in seqs.items()},
         "pairwise_identity_pct": ident,
         "identity_pairs_skipped_unequal_length": skipped,
@@ -218,8 +324,6 @@ def main() -> None:
     print(f"\ntryptic peptides of the {SUBJECT} MATURE chain "
           f"({MATURE_START}..{len(seqs[SUBJECT])}) in the {MIN_LEN}-{MAX_LEN} aa window: "
           f"{len(subject)}")
-    print(f"  (ORF form gives {len(orf_unique)} distinguishing peptides; "
-          f"{'agrees' if len(orf_unique) == len(unique) else 'DISAGREES - investigate'})")
     print(f"  distinguishing (found in no other human actin): {len(unique)} "
           f"({result['pct_unique']}%)")
     print(f"  shared with >=1 other human actin:              {len(shared)}")

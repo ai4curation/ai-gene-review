@@ -50,6 +50,10 @@ RETRACTED = {
     "residues 1 to 30": "the ORF N-terminus; ACTA1's mature chain starts at residue 3, so the observable region is 3-30",
     "MCDEDETTALVCDNGSGLVK": "an ORF peptide that does not exist in vivo (INIT_MET removed, Cys-2 cleaved by ACTMAP)",
     "cross-linked between Lys-52 and Glu-272": "stated as fact; both CROSSLNK features are ECO:0000250 from beta-actin",
+    "533 PTHR11937 protein members":
+        "unqualified; the list is InterPro's reviewed-only subset, ~0.6% of 88,887 proteins",
+    "sole holder of ADP binding in the entire family":
+        "not what was measured; the measurement covers 533 reviewed entries only",
     "one of only two gene products in this family carrying both":
         "a sibling's ATP-binding list relayed as a two-term count; measured, 31 carry ATP binding and ACTA1 alone carries ADP binding",
 }
@@ -64,7 +68,15 @@ def flatten(text: str) -> str:
     false-negative shape as a silent zero. Also undoes YAML's doubled-apostrophe
     escaping so a quoted scalar matches the same string as the markdown.
     """
-    return re.sub(r"\s+", " ", text.replace("''", "'"))
+    text = text.replace("''", "'")
+    # Strip quotation marks and normalise dashes. Load-bearing for the RETRACTED check,
+    # not cosmetic: the reviewer found that a retracted phrase survived in a post-mortem
+    # because an embedded quotation mark split the matched substring - i.e. the guard was
+    # evadable by punctuation, which is worse than no guard because it still reports OK.
+    text = text.replace('"', "").replace("\u201c", "").replace("\u201d", "")
+    text = text.replace("\u2018", "").replace("\u2019", "'")
+    text = text.replace("\u2014", "-").replace("\u2013", "-")
+    return re.sub(r"\s+", " ", text)
 
 
 def load_surfaces() -> dict[str, str]:
@@ -121,18 +133,20 @@ def required_claims() -> list[tuple[str, str, int]]:
     ]
     if NUCLEOTIDE.exists():
         nt = json.loads(NUCLEOTIDE.read_text())
+        atp, adp = nt["n_reviewed_with_atp_binding"], nt["n_reviewed_with_adp_binding"]
         claims += [
-            ((f"{nt['n_with_atp_binding']} members carry", f"| **{nt['n_with_atp_binding']}** |"),
-             "family members carrying GO:0005524, the figure that replaced a relayed claim", 1),
-            ((f"exactly {nt['n_with_adp_binding']} carries",
-              f"**{nt['n_with_adp_binding']}** carries `GO:0043531`"),
-             "ACTA1 is the family's sole ADP binding holder", 1),
+            ((f"{atp} reviewed members carry", f"| **{atp}** |"),
+             "reviewed family members carrying GO:0005524, the figure that replaced a "
+             "relayed claim", 1),
+            ((f"exactly {adp} carries", f"**{adp}** carries `GO:0043531`"),
+             "ACTA1 is the sole ADP binding holder among reviewed members", 1),
+            # The scope qualifier must travel with the number, on every surface. A count
+            # over 533 reviewed entries restated as a fact about an 88,887-protein family
+            # is the error this pins. The phrase is deliberately specific - a bare
+            # "reviewed" already occurs for unrelated reasons and would pass vacuously.
+            (f"{nt['n_reviewed_members_queried']} reviewed",
+             "the subset qualifier bound to the member count, on review/notes/RESULTS", 3),
         ]
-        if not nt["subject_is_sole_adp_holder"]:
-            raise RuntimeError(
-                "nucleotide_terms_in_family.json no longer shows ACTA1 as the sole ADP "
-                "binding holder; the review's GO:0043531 reason asserts that it is"
-            )
     return claims
 
 
@@ -248,6 +262,22 @@ def check(surfaces: dict[str, str]) -> list[str]:
     if f"{goa_rows} GOA rows" not in blob:
         problems.append(f"no surface states the GOA row count ({goa_rows} GOA rows)")
     problems.extend(duplicate_key_problems())
+
+    if NUCLEOTIDE.exists():
+        nt = json.loads(NUCLEOTIDE.read_text())
+        if not nt.get("subject_is_sole_adp_holder_among_reviewed"):
+            problems.append(
+                "nucleotide_terms_in_family.json no longer shows ACTA1 as the sole ADP "
+                "binding holder among reviewed members, which the GO:0043531 reason asserts"
+            )
+        # The measurement covers the reviewed subset only; if a future run silently widened
+        # to the whole family the prose qualifier would become wrong rather than merely
+        # conservative, so pin the scope too.
+        if nt.get("n_reviewed_members_queried") != 533:
+            problems.append(
+                f"reviewed member count is {nt.get('n_reviewed_members_queried')}, not the "
+                "533 the review's prose states; update both together"
+            )
     return problems
 
 

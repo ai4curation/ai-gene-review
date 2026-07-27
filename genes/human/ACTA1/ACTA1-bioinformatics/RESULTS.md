@@ -175,10 +175,30 @@ here rather than quoted.)
 Comparators contribute both their ORF and their own mature-chain digests, so a peptide is
 called distinguishing only if no other actin can produce it in either form.
 
-The counts are **unchanged** — 63 peptides, 9 distinguishing, 3 regions, ORF and mature
-forms agree, and the script asserts that agreement and would flag a divergence rather than
-smooth it over. Only the peptide *identity* moves, and that is the part the experiment
-depends on.
+The counts are **unchanged** — 63 peptides, 9 distinguishing, 3 regions. Only the peptide
+*identity* moves, and that is the part the experiment depends on.
+
+**What the ORF-versus-mature check asserts, and what it cannot.** The two forms give the same
+counts but their distinguishing sets differ in 4 members — the N-terminal peptides, which is
+exactly what modelling the processing is *for*. So the assertion is not "the sets agree"; it
+is that the counts agree **and every peptide the two forms disagree about lies at the
+N-terminus**, a divergence anywhere else meaning the offset corrupted the digest. The
+tolerance for "N-terminal" is a fixed constant grounded in the biology and deliberately **not**
+derived from the offset under test: an earlier version used `MATURE_START + 1`, which let a
+bogus offset of 50 buy itself a 51-residue window and pass, emitting a confident wrong region.
+
+Break-testing that fix showed its honest limit — an offset of 4 is *plausible* processing and
+passes — so the value is no longer hardcoded. `mature_chain_start()` parses it from the
+`CHAIN` feature in `ACTA1-uniprot.txt` whose note matches the entry's `RecName`, and fails
+unless that is exactly one feature. It returns 3, agreeing with the previously hand-typed
+value; the point is that it is now derived from the record rather than transcribed from it.
+
+**Comparator offsets.** ACTA1's mature start is 3, but that is specific to ACTA1 and is not
+reused: ACTB is annotated `CHAIN 1..375` *and* `CHAIN 2..375` "N-terminally processed", so its
+observable forms begin at residue 1 or 2. Every comparator therefore contributes its digest at
+offsets 0, 1 and 2. This can only enlarge the comparator pool and so only shrink the
+distinguishing set — conservative by construction, and it does not depend on six `CHAIN`
+annotations being complete.
 
 ### What this does and does not establish
 
@@ -241,8 +261,8 @@ Recorded so the next reviewer knows they were run, not skipped.
 
 An earlier draft of the `GO:0043531` row placed ACTA1 among a supposed pair of family
 members holding both nucleotide terms. That was a list from the merged ACTR10 review,
-restated as a count of my own. `nucleotide_terms_in_family.py` measured it across all
-**533** PTHR11937 protein members:
+restated as a count of my own. `nucleotide_terms_in_family.py` measured it across all **533
+reviewed (Swiss-Prot)** PTHR11937 members:
 
 | term | family members carrying it |
 |---|---|
@@ -250,10 +270,29 @@ restated as a count of my own. `nucleotide_terms_in_family.py` measured it acros
 | `GO:0043531` ADP binding | **1** — ACTA1, by TAS |
 | both | **1** — ACTA1 alone |
 
-So the claim was wrong in both directions at once: 31 members carry ATP binding rather than
-two, and ACTA1 is the **sole** holder of ADP binding in the entire family rather than one of
-a pair. The sibling's list had been about ATP binding alone. *Relay a sibling review's claim
-as a claim, not as a fact* — and note the corrected fact is the stronger one.
+So the claim was wrong in both directions at once: 31 reviewed members carry ATP binding
+rather than two, and ACTA1 is the **sole** holder of ADP binding **among reviewed members**
+rather than one of a pair. The sibling's list had been about ATP binding alone. *Relay a
+sibling review's claim as a claim, not as a fact* — and note the corrected fact is the
+stronger one.
+
+**Read the scope, because it is narrower than "the family".** The member list is built from
+InterPro's **reviewed-only** protein endpoint (`fetch_interpro_family_simple.py`:
+`/protein/reviewed/entry/...`), so 533 is about **0.6%** of the **88,887** proteins
+PTHR11937's own metadata reports. Every figure in the table is over that reviewed subset, and
+the JSON keys say so (`n_reviewed_with_adp_binding`,
+`subject_is_sole_adp_holder_among_reviewed`). A count over 533 entries must not be restated as
+a fact about 88,887.
+
+Whether the result extends family-wide is an **argument, not this measurement**, and is
+offered as one: ACTA1's `GO:0043531` is a manual **TAS** annotation, unreviewed TrEMBL entries
+receive only IEA, and no IEA pipeline maps the actin fold to ADP binding — so an unreviewed
+member holding the term is unlikely. Unlikely is not measured, and the prose does not pretend
+otherwise.
+
+`goUsage=descendants` over `is_a,part_of` is set, matching the sibling `resolve_withfrom.py`,
+so a member annotated only to a child term is counted rather than missed. Setting it left both
+counts unchanged at 31 and 1.
 
 Two traps produced a wrong answer before the right one, both worth recording:
 
@@ -263,8 +302,13 @@ Two traps produced a wrong answer before the right one, both worth recording:
   carries this term" — the silent-zero shape again, and it is what the first attempt returned
   for *both* terms. The query is therefore keyed on the family's own accessions.
 - **Per-accession queries do not finish** (533 members × 2 terms). QuickGO accepts a batched
-  `geneProductId` list, and each batch now asserts its own result was not truncated, so the
-  fix for trap 1 cannot silently reintroduce it.
+  `geneProductId` list, and each batch asserts its own result was not truncated — by comparing
+  the reported hit count against the **number of rows actually returned**, never against the
+  requested page size. That distinction is the point: a service that *clamps* an over-large
+  limit rather than rejecting it would satisfy a constant-based check while handing back fewer
+  rows, which is the silent truncation the guard exists to prevent. (Measured: QuickGO does
+  honour `limit=200` here — but the check must not depend on that staying true.) Re-running
+  after the fix left the counts identical at 31 and 1.
 
 ## 5. Keeping the numbers honest
 
