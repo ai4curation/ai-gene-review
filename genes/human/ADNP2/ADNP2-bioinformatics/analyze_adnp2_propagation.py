@@ -27,6 +27,15 @@ E. donor_evidence       -- for each IBD seed named in an ADNP2 IBA row, what
                            the reference behind it.
 F. opposite_pair_test   -- intersect the reference sets of any logically opposed
                            term pair. Reported even though it comes back negative.
+G. tfclass_reach        -- the node-reach census behind the GO:0000981 verdict and
+                           behind this review's ask to NTNU_SB: which genes does
+                           tfclass:3.1.8 reach, what does the GO_REF:0000113 import
+                           look like as a whole, and which entities does it already
+                           EXCLUDE from GO:0000981. Emits the exclusion set as a
+                           list, not a count: a curator acting on this needs a
+                           diffable set of accessions, and the numbers in the review
+                           prose have to be reproducible from here rather than
+                           asserted.
 
 Every network query asserts its HTTP status and that pagination is complete, so a
 rejected query cannot be mistaken for an empty result.
@@ -563,6 +572,130 @@ def opposite_pair_test() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# G. TFClass node reach and the import's own exclusion set
+# ---------------------------------------------------------------------------
+
+TFCLASS_NODE = "tfclass:3.1.8"
+TFCLASS_GOREF = "GO_REF:0000113"
+MF_TERM = "GO:0000981"   # DNA-binding TF activity, RNA polymerase II-specific
+CC_TERM = "GO:0000785"   # chromatin
+
+# The subject and its paralogue must both appear in the node's reach. A census that
+# does not contain the gene it is about is a broken query, not an empty result --
+# the same positive-control discipline as the NAP scan.
+TFCLASS_REACH_CONTROLS = {"UniProtKB:Q6IQ32", "UniProtKB:Q9H2P0"}
+
+# The precedent the review's ask to NTNU_SB rests on: a homeodomain protein that
+# UniProt says does not bind DNA, which carries a DNA_BIND feature anyway, and which
+# this import already excludes from GO:0000981.
+HOPX = "Q9BPY8"
+
+
+def _dna_bind(accession: str) -> list[dict]:
+    d = uniprot(accession, "ft_dna_bind,cc_function,id")
+    return [
+        {
+            "start": f["location"]["start"]["value"],
+            "end": f["location"]["end"]["value"],
+            "note": f.get("description", ""),
+        }
+        for f in d.get("features", [])
+        if f["type"] == "DNA binding"
+    ]
+
+
+def _entity_terms(anns: list[dict]) -> dict[str, set[str]]:
+    """Distinct entities -> the set of terms each holds.
+
+    Derived as a set of gene-product ids, never from an annotation total: one entity
+    can hold several annotations for the same term, so an annotation count is not an
+    entity count.
+    """
+    out: dict[str, set[str]] = {}
+    for a in anns:
+        out.setdefault(a["geneProductId"], set()).add(a["goId"])
+    return out
+
+
+def tfclass_reach() -> dict:
+    node = quickgo_annotations(withFrom=TFCLASS_NODE)
+    node_ents = _entity_terms(node)
+    symbols = {a["geneProductId"]: a.get("symbol") for a in node}
+
+    missing = TFCLASS_REACH_CONTROLS - set(node_ents)
+    if missing:
+        raise RuntimeError(
+            f"positive control failed: {sorted(missing)} absent from the {TFCLASS_NODE} "
+            f"reach. The census cannot be about a gene it does not contain."
+        )
+
+    imp = quickgo_annotations(reference=TFCLASS_GOREF)
+    imp_ents = _entity_terms(imp)
+    doublet = {MF_TERM, CC_TERM}
+    with_mf = sorted(k for k, v in imp_ents.items() if v == doublet)
+    cc_only = sorted(k for k, v in imp_ents.items() if v == {CC_TERM})
+    other = sorted(k for k, v in imp_ents.items() if v not in (doublet, {CC_TERM}))
+    if len(with_mf) + len(cc_only) + len(other) != len(imp_ents):
+        raise RuntimeError("entity partition does not sum to the entity total")
+
+    imp_symbols = {a["geneProductId"]: a.get("symbol") for a in imp}
+    hopx_id = f"UniProtKB:{HOPX}"
+    if hopx_id not in cc_only:
+        raise RuntimeError(
+            f"the HOPX precedent is not in the {TFCLASS_GOREF} chromatin-only exclusion "
+            f"set, so the review's argument from it does not hold. Re-derive the ask "
+            f"before citing HOPX."
+        )
+    hopx_dna_bind = _dna_bind(HOPX)
+    adnp2_dna_bind = _dna_bind("Q6IQ32")
+    if not hopx_dna_bind or not adnp2_dna_bind:
+        raise RuntimeError(
+            "the precedent rests on BOTH proteins carrying a DNA_BIND feature; one is "
+            f"missing (HOPX={hopx_dna_bind}, ADNP2={adnp2_dna_bind})"
+        )
+
+    evidence = Counter(a["goEvidence"] for a in imp)
+    return {
+        "node": TFCLASS_NODE,
+        "node_annotations": len(node),
+        "node_entities": len(node_ents),
+        "node_reach": [
+            {
+                "gene_product": k,
+                "symbol": symbols.get(k),
+                "terms": sorted(v),
+            }
+            for k, v in sorted(node_ents.items(), key=lambda x: str(symbols.get(x[0])))
+        ],
+        "node_term_signatures": {
+            ",".join(sorted(s)): c
+            for s, c in Counter(frozenset(v) for v in node_ents.values()).items()
+            for s in [sorted(s)]
+        },
+        "import": {
+            "reference": TFCLASS_GOREF,
+            "annotations": len(imp),
+            "entities": len(imp_ents),
+            "evidence_codes": dict(evidence),
+            "entities_with_the_doublet": len(with_mf),
+            "entities_chromatin_only": len(cc_only),
+            "entities_other_signature": len(other),
+            # The exclusion set as a SET, not a number: this is what a curator would
+            # diff against, and it is the payload of the ask to NTNU_SB.
+            "chromatin_only_exclusion_set": [
+                {"gene_product": k, "symbol": imp_symbols.get(k)} for k in cc_only
+            ],
+        },
+        "hopx_precedent": {
+            "accession": HOPX,
+            "in_exclusion_set": True,
+            "dna_bind_features": hopx_dna_bind,
+            "adnp2_dna_bind_features": adnp2_dna_bind,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
 
@@ -576,6 +709,7 @@ def build() -> dict:
         "propagation_audit": propagation_audit(),
         "donor_evidence": donor_evidence(),
         "opposite_pair_test": opposite_pair_test(),
+        "tfclass_reach": tfclass_reach(),
     }
 
 
@@ -738,6 +872,74 @@ def render(d: dict) -> str:
     add("")
     add(f"{op['result']} (opposed pairs found: {op['opposed_pairs_found']})")
     add("")
+
+    tf = d["tfclass_reach"]
+    imp = tf["import"]
+    add("## G. TFClass node reach, and the import's own exclusion set")
+    add("")
+    add(
+        f"`{tf['node']}` reaches **{tf['node_entities']}** human gene products "
+        f"({tf['node_annotations']} annotations). Positive control: the subject "
+        f"(`UniProtKB:Q6IQ32`) and its paralogue (`UniProtKB:Q9H2P0`) are both present, "
+        f"so this is a census of the right set. Per-entity term signatures: "
+        f"{tf['node_term_signatures']}."
+    )
+    add("")
+    add("| gene product | symbol | terms received |")
+    add("|---|---|---|")
+    for r in tf["node_reach"]:
+        add(f"| {r['gene_product']} | {r['symbol']} | {', '.join(r['terms'])} |")
+    add("")
+    add(
+        f"So every gene the node reaches receives the identical pair, which means "
+        f"`{MF_TERM}` on ADNP2 is a property of class membership rather than a judgement "
+        f"about ADNP2."
+    )
+    add("")
+    add(
+        f"Widening to the whole import: **`{imp['reference']}` = {imp['annotations']} "
+        f"annotations over {imp['entities']} distinct entities**, evidence codes "
+        f"{imp['evidence_codes']}. Of those entities, **{imp['entities_with_the_doublet']}** "
+        f"receive `{CC_TERM}`+`{MF_TERM}`, **{imp['entities_chromatin_only']}** receive "
+        f"`{CC_TERM}` alone, and {imp['entities_other_signature']} carry some other "
+        f"signature. Entity counts are derived as a distinct set of gene-product ids, not "
+        f"from the annotation total."
+    )
+    add("")
+    add(
+        f"The **{imp['entities_chromatin_only']} chromatin-only entities are the import's "
+        f"own negative control** — the pipeline already withholds the molecular-function "
+        f"term where it does not apply. Listed as a set rather than a count, because this "
+        f"is the payload of the ask to NTNU_SB and a curator needs something diffable:"
+    )
+    add("")
+    add("| gene product | symbol |")
+    add("|---|---|")
+    for r in imp["chromatin_only_exclusion_set"]:
+        add(f"| {r['gene_product']} | {r['symbol']} |")
+    add("")
+    hp = tf["hopx_precedent"]
+    def _spans(feats: list[dict]) -> str:
+        return ", ".join(f"{f['start']}-{f['end']}" for f in feats)
+    hopx_spans = _spans(hp["dna_bind_features"])
+    adnp2_spans = _spans(hp["adnp2_dna_bind_features"])
+    add(
+        f"**The HOPX precedent, checked rather than asserted.** `{hp['accession']}` is in "
+        f"that exclusion set (asserted, not assumed — the script fails if it is not), and "
+        f"it carries a `DNA_BIND` feature at {hopx_spans} "
+        f"just as ADNP2 does at {adnp2_spans}. "
+        f"So a homeodomain-bearing protein with an annotated DNA-binding feature is already "
+        f"excluded from `{MF_TERM}` by this very import, and the criterion in force is "
+        f"whether the protein binds DNA rather than whether it has the fold. That is the "
+        f"basis for asking that ADNP2 join the set."
+    )
+    add("")
+    add(
+        f"Note what does **not** depend on any of this: the `{MF_TERM}` verdict rests on "
+        f"the quoted three-clause failure against `GO:0003700`'s definition. This section "
+        f"supports the upstream ask, not the annotation action."
+    )
+    add("")
     return "\n".join(L) + "\n"
 
 
@@ -848,11 +1050,63 @@ def self_test() -> int:
     if uniprot("Q6IQ32", "sequence,id")["primaryAccession"] != "Q6IQ32":
         failures.append("merged-accession guard mangled a live accession")
 
+    # 7. The TFClass census must fail if its positive control is absent -- i.e. if the
+    #    census does not contain the gene it is about.  The mutation is as fine as the
+    #    claim: it removes ONE control accession, not the whole query.
+    global TFCLASS_REACH_CONTROLS
+    real_controls = TFCLASS_REACH_CONTROLS
+    try:
+        TFCLASS_REACH_CONTROLS = real_controls | {"UniProtKB:P00000"}
+        tfclass_reach()
+        failures.append("tfclass census passed with a control absent from the node reach")
+    except RuntimeError as e:
+        if "positive control failed" not in str(e):
+            failures.append(f"tfclass control raised the wrong error: {e}")
+    finally:
+        TFCLASS_REACH_CONTROLS = real_controls
+
+    # 8. The HOPX precedent must be VERIFIED, not assumed.  Point the check at a
+    #    protein that is in the import but NOT in the chromatin-only set, and the
+    #    guard must refuse -- otherwise the review could cite a precedent that is not
+    #    actually excluded.  ADNP2 itself is the ideal wrong answer: it is in the
+    #    import and receives the doublet.
+    global HOPX
+    real_hopx = HOPX
+    try:
+        HOPX = "Q6IQ32"
+        tfclass_reach()
+        failures.append("HOPX precedent check passed for a protein NOT in the exclusion set")
+    except RuntimeError as e:
+        if "not in the" not in str(e):
+            failures.append(f"HOPX precedent check raised the wrong error: {e}")
+    finally:
+        HOPX = real_hopx
+
+    # 9. The happy direction, which is the one that usually goes untested: with
+    #    everything correct the census must actually produce a non-empty reach, a
+    #    non-empty exclusion set, and a partition that sums.  A guard that only ever
+    #    fires on breakage cannot tell you it works when nothing is broken.
+    tf = tfclass_reach()
+    if tf["node_entities"] < 2:
+        failures.append(f"tfclass node reach implausibly small: {tf['node_entities']}")
+    imp = tf["import"]
+    if not imp["chromatin_only_exclusion_set"]:
+        failures.append("exclusion set is empty; the negative-control argument is vacuous")
+    if (
+        imp["entities_with_the_doublet"]
+        + imp["entities_chromatin_only"]
+        + imp["entities_other_signature"]
+        != imp["entities"]
+    ):
+        failures.append("entity partition does not sum on the happy path")
+    if not tf["hopx_precedent"]["dna_bind_features"]:
+        failures.append("HOPX DNA_BIND feature missing on the happy path")
+
     if failures:
         for f in failures:
             print("SELF-TEST FAILURE:", f, file=sys.stderr)
         return 1
-    print("self-test: 6/6 directions OK")
+    print("self-test: 9/9 directions OK")
     return 0
 
 

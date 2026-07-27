@@ -87,3 +87,55 @@ ADNP's rat-Compara block covers **19 terms**. Terms from that block that also ap
 
 NEGATIVE -- ADNP2 carries no logically opposed term pair, so the cross-product defect found on ADIPOQ cannot occur here. (opposed pairs found: 0)
 
+## G. TFClass node reach, and the import's own exclusion set
+
+`tfclass:3.1.8` reaches **14** human gene products (28 annotations). Positive control: the subject (`UniProtKB:Q6IQ32`) and its paralogue (`UniProtKB:Q9H2P0`) are both present, so this is a census of the right set. Per-entity term signatures: {'GO:0000785,GO:0000981': 14}.
+
+| gene product | symbol | terms received |
+|---|---|---|
+| UniProtKB:Q9H2P0 | ADNP | GO:0000785, GO:0000981 |
+| UniProtKB:Q6IQ32 | ADNP2 | GO:0000785, GO:0000981 |
+| UniProtKB:Q8IX15 | HOMEZ | GO:0000785, GO:0000981 |
+| UniProtKB:Q6ZSZ6 | TSHZ1 | GO:0000785, GO:0000981 |
+| UniProtKB:Q9NRE2 | TSHZ2 | GO:0000785, GO:0000981 |
+| UniProtKB:Q63HK5 | TSHZ3 | GO:0000785, GO:0000981 |
+| UniProtKB:P37275 | ZEB1 | GO:0000785, GO:0000981 |
+| UniProtKB:O60315 | ZEB2 | GO:0000785, GO:0000981 |
+| UniProtKB:Q9C0A1 | ZFHX2 | GO:0000785, GO:0000981 |
+| UniProtKB:Q15911 | ZFHX3 | GO:0000785, GO:0000981 |
+| UniProtKB:Q86UP3 | ZFHX4 | GO:0000785, GO:0000981 |
+| UniProtKB:Q9UKY1 | ZHX1 | GO:0000785, GO:0000981 |
+| UniProtKB:Q9Y6X8 | ZHX2 | GO:0000785, GO:0000981 |
+| UniProtKB:Q9H4I2 | ZHX3 | GO:0000785, GO:0000981 |
+
+So every gene the node reaches receives the identical pair, which means `GO:0000981` on ADNP2 is a property of class membership rather than a judgement about ADNP2.
+
+Widening to the whole import: **`GO_REF:0000113` = 1436 annotations over 727 distinct entities**, evidence codes {'ISA': 1436}. Of those entities, **709** receive `GO:0000785`+`GO:0000981`, **18** receive `GO:0000785` alone, and 0 carry some other signature. Entity counts are derived as a distinct set of gene-product ids, not from the annotation total.
+
+The **18 chromatin-only entities are the import's own negative control** — the pipeline already withholds the molecular-function term where it does not apply. Listed as a set rather than a count, because this is the payload of the ask to NTNU_SB and a curator needs something diffable:
+
+| gene product | symbol |
+|---|---|
+| UniProtKB:O15105 | SMAD7 |
+| UniProtKB:O43541 | SMAD6 |
+| UniProtKB:P51843 | NR0B1 |
+| UniProtKB:P61129 | ZC3H6 |
+| UniProtKB:Q12986 | NFX1 |
+| UniProtKB:Q15466 | NR0B2 |
+| UniProtKB:Q15596 | NCOA2 |
+| UniProtKB:Q15788 | NCOA1 |
+| UniProtKB:Q5H9I0 | TFDP3 |
+| UniProtKB:Q5HYR2 | DMRTC1 |
+| UniProtKB:Q6NT76 | HMBOX1 |
+| UniProtKB:Q6ZN18 | AEBP2 |
+| UniProtKB:Q6ZNB6 | NFXL1 |
+| UniProtKB:Q8IX07 | ZFPM1 |
+| UniProtKB:Q8N5P1 | ZC3H8 |
+| UniProtKB:Q8WW38 | ZFPM2 |
+| UniProtKB:Q9BPY8 | HOPX |
+| UniProtKB:Q9Y6Q9 | NCOA3 |
+
+**The HOPX precedent, checked rather than asserted.** `Q9BPY8` is in that exclusion set (asserted, not assumed — the script fails if it is not), and it carries a `DNA_BIND` feature at 3-62 just as ADNP2 does at 1043-1102. So a homeodomain-bearing protein with an annotated DNA-binding feature is already excluded from `GO:0000981` by this very import, and the criterion in force is whether the protein binds DNA rather than whether it has the fold. That is the basis for asking that ADNP2 join the set.
+
+Note what does **not** depend on any of this: the `GO:0000981` verdict rests on the quoted three-clause failure against `GO:0003700`'s definition. This section supports the upstream ask, not the annotation action.
+

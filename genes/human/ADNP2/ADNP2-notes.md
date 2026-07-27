@@ -282,6 +282,59 @@ Affinage's own GO grounding lists `partners: CHD4, CBX1, BRG1, ADNP`. `ADNP` is 
 paper states *"no ADNP was copurified with ADNP2 and vice versa"* — which is another instance of the
 rule that the provider's structured grounding is a lead, never evidence.
 
+## Review round 3 — the census got an artifact
+
+The reviewer's remaining item was the campaign's own standing rule turned back on me, and it was right:
+the TFClass node-reach census existed **only as prose** in the review YAML and in this file. Nothing in
+`analyze_adnp2_propagation.py`, `results.json` or `RESULTS.md` produced the 14-gene reach, the
+1436/727/709/18 counts, or the HOPX precedent — while the NAP positive control and the PxVxL null sitting
+immediately beside it were both fully reproducible. So the one claim held to a lower evidentiary standard
+than its neighbours was also **the one claim leaving the repo as a concrete ask to an external curation
+group**, which is precisely the wrong place for it. *Evidence must be born in the repository.*
+
+Added `tfclass_reach()` (section G). It emits:
+
+- the node's reach as a **gene list with symbols and the term set each member receives**, not a count;
+- the import-wide figures with entity counts derived as a **distinct set of gene-product ids**, never
+  from the annotation total (the ACTR8 conflation);
+- the chromatin-only **exclusion set as a set of accessions**, because that is the payload of the ask —
+  a curator can diff 18 accessions, but cannot do anything with the number 18;
+- the HOPX precedent with both proteins' `DNA_BIND` spans computed (HOPX 3–62, ADNP2 1043–1102).
+
+Three assertions make the section refuse to report rather than mislead: the subject *and* its paralogue
+must both appear in the node's reach (a census that does not contain the gene it is about is a broken
+query); HOPX must actually be in the chromatin-only set (or the argument from it is false); and both
+proteins must actually carry a `DNA_BIND` feature. Three new self-test directions, one per assertion,
+with the mutations kept **as fine as the claims** — the positive-control test removes a single accession
+rather than blanking the query, and the precedent test points the check at ADNP2 itself, which is in the
+import but receives the doublet, so it is exactly the plausible wrong answer.
+
+**The ninth direction is the happy path**, which is the one that usually goes unwritten: with nothing
+broken, the reach must be non-empty, the exclusion set must be non-empty, the entity partition must sum,
+and the `DNA_BIND` features must be present. A guard that only ever fires on breakage cannot tell you it
+works when nothing is broken.
+
+Also took the 🔵: the `GO:0000122` reason cited "mouse and zebrafish" data while `supported_by` carried
+only the mouse quote. `PMID:41822989` added.
+
+Nothing here changes a verdict. `GO:0000981` → `GO:0140110` rests on the quoted three-clause failure
+against `GO:0003700`'s definition, and section G says so explicitly so a later reader does not mistake
+the census for the argument.
+
+### A numeric discrepancy that was my checker, again
+
+Verifying the new `file:` quotes, my quote walker reported **62 raw against 52 parsed**. Rather than
+find a story for the gap, I derived the expected decomposition independently: `Finding` objects carry
+`supporting_text` but **no `reference_id` of their own** — they inherit the enclosing `Reference`'s id —
+and there are exactly **10** findings across the references. 52 + 10 = 62. The walker was wrong, not the
+data. Fixed to resolve a finding's reference from its enclosing object, after which all 62 quotes verify
+(57 `PMID:`, 5 `file:`), and the independent cross-check agrees: `checkquotes.py` covers 55 and the 7
+`knowledge_gaps[].provenance` quotes it does not walk make 62.
+
+Two decompositions of the same total, derived separately and agreeing, is the standard the brief asks
+for — and it is the third time on this gene that a number refusing to add up was my instrumentation
+rather than the artifact.
+
 ## Process notes
 
 - **The pre-write hook blocked on 12 valid full-text quotes.** It resolves paths against
