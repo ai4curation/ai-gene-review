@@ -9,13 +9,19 @@
   eukaryotic reaction that inserts free queuine. [file:PSEPK/tgt/tgt-uniprot.txt
   "queuine precursor 7-aminomethyl-7-deazaguanine (PreQ1) at position 34"]
   [PMID:40703034 "the mutant does not insert preQ1 in tRNA"]
-- GO:0008479 currently defines the free-queuine reaction, so it was modified to
-  its actual pentosyltransferase parent GO:0016763 while GO:0002099 records the
-  exact wobble-guanine process. AmiGO confirms that GO:0008479 is restricted to
-  the RHEA:16633 free-queuine reaction and that GO:0016763 is one of its direct
-  `is_a` parents. GO:0050147 was rejected because it describes free-nucleoside
-  ribosyltransferase chemistry rather than a tRNA substrate. A dedicated
-  bacterial preQ1 transglycosylase MF term would be preferable.
+- QuickGO GO:0008479 (retrieved 2026-07-27) defines `"guanosine34 in tRNA +
+  queuine = guanine + queuosine34 in tRNA"` and cross-references RHEA:16633,
+  the free-queuine reaction.
+- The repository's GOC-maintained rules apply GO:0008479 to bacterial Tgt:
+  `file:rules/arba/_interpro2go.txt` maps IPR004803 to GO:0008479, and
+  `file:rules/unirule/UR000079182/UR000079182.json` pairs GO:0008479 with
+  EC 2.4.2.29 and the preQ1 reaction RHEA:24104.
+- The review therefore accepts the existing machine-sourced GO:0008479 mapping
+  with an explicit ontology-conflict caveat rather than demoting the core
+  activity to broad GO:0016763. A dedicated bacterial preQ1 transglycosylase
+  molecular-function term is proposed under GO:0016763.
+- GO:0050147 remains unsuitable because it describes free-nucleoside
+  ribosyltransferase chemistry rather than a tRNA substrate.
 - The reviewed record assigns one zinc ion per subunit, so GO:0008270 zinc ion
   binding is added as a missing annotation. [file:PSEPK/tgt/tgt-uniprot.txt
   "Note=Binds 1 zinc ion per subunit."]
