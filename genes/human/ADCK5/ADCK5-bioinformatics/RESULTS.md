@@ -91,25 +91,45 @@ break-tests and none by reading it:
 
 ### The class that kept recurring, and the invariant that closes it
 
-Four blocking items in this PR were one thing: **a claim about a paralog's database record,
-asserted in prose with nothing in the repo to check it against.** The parity framing, ADCK2's
-SubCell provenance, the supplied-vs-corroborated split, and the MitoCoP row — the last being
-the other half of the very sentence whose first half was fixed the round before. (For the
-record, since this paragraph names the same paralogs: their SL-0173 rests on
-`PubMed:33988507`, an assay ADCK5 was never in.) Fixing these one at a time was losing to the
-rate of discovery.
+Four review items in this PR were one thing: **a claim about a paralog's database record,
+asserted in prose with nothing in the repo to check it against.** The parity framing
+(blocking), the supplied-vs-corroborated split (blocking), the MitoCoP row (blocking), and
+ADCK2's SubCell provenance (raised as a suggestion) — the MitoCoP row being the other half of
+the very sentence whose first half was fixed the round before. (For the record, since this
+paragraph names the same paralogs: their SL-0173 rests on `PubMed:33988507`, an assay ADCK5
+was never in.) Fixing these one at a time was losing to the rate of discovery.
 
 So `check_cross_gene_claims` closes the class. Every cross-gene *record* claim must be
 **covered**: the fact lives in `family_census.json` and is re-asserted against the committed
-JSON — eight dimensions (IBA rows, the MitoCoP `GO:0005739` HTP row, EC numbers, the Ser/Thr
-keyword, `SUBCELLULAR LOCATION`, `NOT|` rows, the screen-provenance partition, and the exact
-per-gene tag sets the table above pins). And a prose unit naming a paralog alongside a record
-token in a dimension **nothing covers** fails — which is what makes this close the class
-rather than patch an instance. Literature claims about paralogs stay out of scope: those are
-anchored by `supporting_text` and already checked verbatim against the cached publications.
+JSON, or against the committed PAINT table — **nine dimensions**: IBA rows, the MitoCoP
+`GO:0005739` HTP row, EC numbers, the Ser/Thr keyword, `SUBCELLULAR LOCATION`, `NOT|` rows,
+the screen-provenance partition, the exact per-gene tag sets pinned by the table in the
+localisation section below, and the PAINT node's terms and seed.
 
-39 self-tests, each exercised in the direction it exists to catch and in the happy
-direction, plus invariants about the harness itself. Two replay **real** defects from this
+**What makes it close the class rather than enumerate it** is that the *trigger* is generic.
+Any unit naming a paralog alongside a **record-shaped token** — an evidence code, `GO_REF:`,
+`ECO:` id, SubCell id, EC number or PANTHER node id — must route to a covered dimension, and
+fails if it does not. A bare `GO:xxxxxxx` is deliberately excluded: it names a *term*, and
+terms are discussed throughout the literature prose. An earlier version keyed the trigger on
+the token→dimension map itself, whose keys mapped one-to-one onto the covered dimensions, so
+the uncovered branch was **unreachable for any real prose** — it closed the enumerated
+dimensions while claiming to close the class. The self-test proves the difference by running the two
+failures a reviewer *predicted* would be the fifth instance — a claim about which evidence
+code backs a paralog's positive kinase row, and a claim about a paralog's annotation and
+experimental counts — and requiring both to fail **without any token being added first**. The
+probe strings live in the audit script rather than here, since writing a hypothetical false
+claim into a scanned surface would trip the very guard being described.
+
+Literature claims about paralogs stay out of scope, and that exclusion is narrow and stated:
+those are anchored by `supporting_text` and already checked verbatim against the cached
+publications. Exactly one unit carries a documented exemption, with its reason recorded in
+`RECORD_GATE_EXEMPTIONS`.
+
+Every guard is exercised in the direction it exists to catch **and** in the happy
+direction, plus invariants about the harness itself; `--self-test` reports the count
+rather than this file hardcoding it, because that number drifted three times while the
+suite grew and a hand-written figure that has to track a computed one is exactly the
+drift this whole file argues against. Two replay **real** defects from this
 PR's own history, frozen as fixtures: the unhedged compartment paragraph and the
 pre-retraction parity units.
 

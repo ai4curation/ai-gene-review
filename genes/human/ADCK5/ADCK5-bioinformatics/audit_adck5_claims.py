@@ -44,6 +44,10 @@ REVIEW_YAML = GENE_DIR / "ADCK5-ai-review.yaml"
 MOTIF_JSON = HERE / "results.json"
 CENSUS_JSON = HERE / "family_census.json"
 PARTNER_JSON = HERE / "partner_localisation.json"
+PAINT_TSV = (
+    GENE_DIR.parent.parent.parent
+    / "interpro" / "panther" / "PTHR43173" / "PTHR43173-paint.tsv"
+)
 
 # The paragraph that actually shipped with the withdrawn compartment claim unhedged, frozen
 # as a file. It was originally read from branch commit 419dc9e37 by `git show` - but a
@@ -276,20 +280,44 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
 PARALOGS = ("ADCK1", "ADCK2", "COQ8A", "COQ8B")
 PARALOG_RE = re.compile(r"\b(ADCK1|ADCK2|COQ8A|COQ8B)\b")
 
+# The GATE is generic, not a fixed list. RECORD_TOKENS below routes a unit to the dimension
+# that covers it, but what *triggers* the requirement is any record-SHAPED token, so a claim
+# in a dimension nobody thought to enumerate still fails. Getting this wrong once is the
+# reason it is written this way: an earlier version keyed the gate on RECORD_TOKENS itself,
+# whose keys mapped 1:1 onto the covered dimensions, so the "uncovered dimension" branch was
+# unreachable for any real prose and the guard closed the enumerated dimensions, not the class.
+#
+# A bare GO:xxxxxxx is deliberately NOT a record signature: it names a TERM, and terms are
+# discussed throughout the literature prose about what paralogs were shown to do. Evidence
+# codes, GO_REF ids, ECO ids, SubCell ids, EC numbers and PANTHER node ids are record-shaped.
+RECORD_SIGNATURE_RE = re.compile(
+    r"GO_REF:|ECO:\d{7}|\bEC[ =]?\d|SL-0\d|\bPTN\d|\b(IBA|IDA|IPI|IMP|HTP|IEA|ISS)\b"
+)
+
+# Units exempt from the gate, each with a stated reason. Keyed on a stable substring rather
+# than an index. Keep this SHORT: every entry is a claim no computation covers.
+RECORD_GATE_EXEMPTIONS = {
+    # The record token here (IPI) is ADCK5's OWN evidence code; the paralog appears only in a
+    # literature clause about COQ8A's measured topology, anchored to PMID:27499294.
+    "Bare \"protein binding\" supported by a single yeast two-hybrid partner":
+        "record token is ADCK5's own IPI; the COQ8A mention is literature-anchored",
+}
+
 # record-token -> dimension name. A token in a paralog-mentioning unit demands that dimension.
 RECORD_TOKENS = {
     r"\bIBA\b": "iba",
     r"PMID:34800366|MitoCoP": "mitocop_row",
     r"EC[= ]?2\.7|2\.7\.-\.-|2\.7\.11\.-": "ec",
-    r"Ser/Thr-kinase keyword|Serine/threonine-protein kinase keyword|keyword": "keyword",
+    r"Ser/Thr-kinase keyword|Serine/threonine-protein kinase keyword|kinase keyword|keyword removal|UniProt keyword": "keyword",
     r"SL-0173|SL-0162|SUBCELLULAR LOCATION|subcellular location": "subcellular",
     r"NOT\|": "negated",
     r"ECO:0000269\|PubMed:33988507|PubMed:33988507|PMID:33988507": "screen_provenance",
     r"ECO:0000269\|PubMed:(11888884|24270420|25498144)": "tag_sets",
+    r"PTN\d+|PTHR43173|PAINT|SGD:S000004243|MCP2": "paint_node",
 }
 
 
-def _coverage(census_doc: dict) -> dict[str, callable]:
+def _coverage(census_doc: dict, paint_text: str | None = None) -> dict[str, callable]:
     """dimension -> assertion re-derived from the COMMITTED census JSON."""
     c = census_doc["census"]
     prov = census_doc["mitochondrial_localisation_provenance"]
@@ -381,16 +409,40 @@ def _coverage(census_doc: dict) -> dict[str, callable]:
             f"the per-gene tag table in RESULTS.md is stale: {bad}" if bad else None
         )
 
+    def paint_node():
+        # Asserted against the committed PAINT table, not the census: PTHR43173's single
+        # annotated node, its three terms and its single yeast seed are what the review's
+        # PAINT question and the notes both rest on.
+        # Content is injectable so the self-test never writes to the tracked table. An
+        # earlier version mutated it in place and restored it, which round-tripped the line
+        # endings and left the file dirty - the same hazard already fixed once for the
+        # sibling-script probe.
+        if paint_text is None and not PAINT_TSV.exists():
+            return f"PAINT table missing: {PAINT_TSV}"
+        raw = paint_text if paint_text is not None else PAINT_TSV.read_text()
+        rows = [l.split("\t") for l in raw.splitlines()[1:] if l.strip()]
+        nodes = {r[1] for r in rows}
+        terms = sorted({r[2] for r in rows if r[1] == "PTN005148758"})
+        seeds = sorted({s for r in rows if r[1] == "PTN005148758" for s in r[6].split("|")})
+        if nodes != {"PTN005148758"}:
+            return f"PTHR43173 no longer has exactly one annotated node: {sorted(nodes)}"
+        if terms != ["GO:0005743", "GO:0007005", "GO:0055088"]:
+            return f"PTN005148758's terms changed: {terms}"
+        if seeds != ["SGD:S000004243"]:
+            return f"PTN005148758 is no longer seeded by MCP2 alone: {seeds}"
+        return None
+
     return {
         "iba": iba, "mitocop_row": mitocop, "ec": ec, "keyword": keyword,
         "subcellular": subcellular, "negated": negated, "screen_provenance": screen,
-        "tag_sets": tag_sets,
+        "tag_sets": tag_sets, "paint_node": paint_node,
     }
 
 
-def check_cross_gene_claims(census_doc: dict, texts: dict[str, str]) -> list[str]:
+def check_cross_gene_claims(census_doc: dict, texts: dict[str, str],
+                            paint_text: str | None = None) -> list[str]:
     problems: list[str] = []
-    coverage = _coverage(census_doc)
+    coverage = _coverage(census_doc, paint_text)
 
     # 1. Every covered dimension must still hold against the committed JSON.
     for dim, fn in coverage.items():
@@ -398,26 +450,41 @@ def check_cross_gene_claims(census_doc: dict, texts: dict[str, str]) -> list[str
         if msg:
             problems.append(f"cross-gene claim [{dim}]: {msg}")
 
-    # 2. No prose unit may make a record claim in a dimension nothing covers.
-    seen_dims = set()
+    # 2. THE GATE. Any unit naming a paralog alongside a record-shaped token must route to a
+    #    covered dimension. Generic by construction, so a claim in a dimension nobody
+    #    enumerated fails rather than passing silently.
+    triggered_by_surface: dict[str, int] = {}
     for name, text in texts.items():
+        triggered_by_surface.setdefault(name, 0)
         for unit in _paragraphs(text, name):
-            if not PARALOG_RE.search(unit):
+            if not (PARALOG_RE.search(unit) and RECORD_SIGNATURE_RE.search(unit)):
                 continue
-            for pattern, dim in RECORD_TOKENS.items():
-                if re.search(pattern, unit, re.I):
-                    seen_dims.add(dim)
-                    if dim not in coverage:
-                        problems.append(
-                            f"{name}: makes a cross-gene claim in dimension {dim!r}, which "
-                            f"nothing in family_census.json asserts. Compute it, scope it "
-                            f"down, or delete it."
-                        )
-    if not seen_dims:
-        problems.append(
-            "cross-gene guard is vacuous: no prose unit paired a paralog with a record token, "
-            "so the invariant proved nothing. Check PARALOG_RE / RECORD_TOKENS."
-        )
+            if any(k in unit for k in RECORD_GATE_EXEMPTIONS):
+                continue
+            triggered_by_surface[name] += 1
+            dims = {d for pat, d in RECORD_TOKENS.items() if re.search(pat, unit, re.I)}
+            uncovered = {d for d in dims if d not in coverage}
+            if uncovered:
+                problems.append(
+                    f"{name}: cross-gene claim in dimension(s) {sorted(uncovered)}, which "
+                    f"nothing in family_census.json asserts. Compute it, scope it down, or "
+                    f"delete it."
+                )
+            elif not dims:
+                problems.append(
+                    f"{name}: a unit names a paralog alongside a record-shaped token "
+                    f"({RECORD_SIGNATURE_RE.search(unit).group()!r}) but matches no covered "
+                    f"dimension. Either add a dimension that asserts it against a committed "
+                    f"artifact, add a documented exemption, or scope the claim down. Unit "
+                    f"starts: {unit.strip()[:80]!r}"
+                )
+    # Per surface, not corpus-wide - third time this shape has come up in this file.
+    for required in ("ADCK5-ai-review.yaml", "ADCK5-bioinformatics/RESULTS.md"):
+        if triggered_by_surface.get(required, 0) == 0:
+            problems.append(
+                f"cross-gene guard matched nothing in {required}, so the invariant proved "
+                f"nothing there. Check PARALOG_RE / RECORD_SIGNATURE_RE."
+            )
     return problems
 
 
@@ -1106,16 +1173,69 @@ def self_test() -> int:
         mut(bad)
         expect_flag(f"cross-gene: {desc}", good, census=bad, match=marker)
 
-    # The class-closer itself: a NEW cross-gene dimension that nothing asserts must fail.
+    # THE CLASS-CLOSER. These are the reviewer's own predictions of what the fifth instance
+    # would look like, and they must fail WITHOUT anyone adding a token first. An earlier
+    # version could only be exercised by injecting a token into RECORD_TOKENS at runtime -
+    # which tested "maintainer adds a token and forgets coverage", not the case the prose
+    # promised. If these three ever pass, the guard has stopped closing the class.
+    for probe, why in [
+        (
+            "COQ8B's positive GO:0004672 row is IDA from PMID:38425362.",
+            "a new cross-gene claim about a paralog's evidence code (predicted instance 1)",
+        ),
+        (
+            "ADCK1 has 8 annotations of which 4 are experimental (IDA).",
+            "a new cross-gene claim about a paralog's annotation counts (predicted instance 2)",
+        ),
+        (
+            "COQ8A carries an ISS row for GO:0004672.",
+            "a new cross-gene claim in a dimension nobody enumerated (ISS)",
+        ),
+    ]:
+        expect_flag(
+            why,
+            {**good, "ADCK5-notes.md": good["ADCK5-notes.md"] + "\n\n" + probe + "\n"},
+            match="no covered dimension",
+        )
+
+    # The routed-but-uncovered branch, which is the other half of the gate.
     RECORD_TOKENS[r"ZZ_UNCOVERED_TOKEN_ZZ"] = "an_uncovered_dimension"
     try:
         expect_flag(
-            "a cross-gene claim in a dimension nothing in the census asserts",
-            {**good, "ADCK5-notes.md": good["ADCK5-notes.md"] + "\n\nCOQ8A ZZ_UNCOVERED_TOKEN_ZZ.\n"},
+            "a maintainer adds a record token and forgets to add its coverage",
+            {
+                **good,
+                "ADCK5-notes.md": good["ADCK5-notes.md"]
+                + "\n\nCOQ8A ZZ_UNCOVERED_TOKEN_ZZ with an IDA row.\n",
+            },
             match="an_uncovered_dimension",
         )
     finally:
         RECORD_TOKENS.pop(r"ZZ_UNCOVERED_TOKEN_ZZ", None)
+
+    # paint_node, asserted against the committed PAINT table. Content is INJECTED, so the
+    # tracked file is never written to.
+    _paint = PAINT_TSV.read_text()
+    _before = PAINT_TSV.stat().st_mtime_ns
+    for mutated, desc, marker in [
+        (_paint.replace("GO:0055088", "GO:9999999"), "the PAINT node's term set changed",
+         "terms changed"),
+        (_paint.replace("SGD:S000004243", "SGD:SXXXXXXXX"), "the PAINT node's seed changed",
+         "seeded by MCP2"),
+        (_paint.replace("PTN005148758", "PTN000000001", 1), "a second PAINT node appeared",
+         "exactly one annotated node"),
+    ]:
+        probs = check_cross_gene_claims(census, all_surfaces(good), paint_text=mutated)
+        if any(marker in p for p in probs):
+            print(f"  PASS (caught): {desc}")
+        else:
+            failures.append(f"{desc}: paint_node guard did not fire")
+            print(f"  FAIL (missed): {desc}")
+    if PAINT_TSV.stat().st_mtime_ns != _before:
+        failures.append("self-test touched the tracked PAINT table")
+        print("  FAIL: tracked PAINT table was written to")
+    else:
+        print("  PASS: tracked PAINT table never written to")
 
     # Granularity now runs on every invocation, so break-test it there too.
     expect_flag(
