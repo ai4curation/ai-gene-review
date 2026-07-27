@@ -51,6 +51,7 @@ PARTNER_JSON = HERE / "partner_localisation.json"
 # have silently lost its fixture the moment the PR landed. Freeze the evidence, don't
 # reference it.
 HISTORICAL_FIXTURE = HERE / "fixtures" / "historical_unhedged_compartment_paragraph.md"
+PARITY_FIXTURE = HERE / "fixtures" / "historical_unhedged_parity_units.md"
 
 PROSE_SURFACES = [RESULTS_MD, NOTES_MD, REVIEW_YAML]
 
@@ -113,6 +114,56 @@ WITHDRAWN_SCAN_GLOBS = ["*.md", "*.yaml", "ADCK5-bioinformatics/*.py", "ADCK5-bi
 # list NOTCH2NLA among partners, or name it in a verdict table, do not, and a first version
 # keyed on "mentions the partner AND any compartment word" produced three false positives on
 # exactly those.
+# ---------------------------------------------------------------------------------------
+# Second structural invariant, for this review's OTHER retracted claim.
+#
+# An earlier draft argued the UniProt SL-0173 (Mitochondrion) vs SL-0162 (Membrane) split
+# between the ADCK paralogs and ADCK5 showed identical evidence being treated differently.
+# It does not: ADCK1 and ADCK2 each hold an experimental ECO:0000269|PubMed:33988507
+# localisation from a kinome-wide screen whose library did not contain ADCK5. The retraction
+# had to be applied FOUR times, and the occurrence that survived longest was in a
+# `reference_review` note - a low-salience surface nobody re-reads.
+#
+# A literal phrase pin is the wrong instrument (paraphrase defeats it, as this PR already
+# demonstrated), so this is keyed on the CONTRAST: any unit that discusses a paralog's
+# UniProt subcellular treatment must also carry the untested-assay clause.
+# ---------------------------------------------------------------------------------------
+PARITY_TOPIC_RE = re.compile(r"\bADCK1\b|\bADCK2\b", re.I)
+PARITY_CONTEXT_RE = re.compile(r"SL-0173|SL-0162|subcellular location|SubCell", re.I)
+PARITY_HEDGE_RES = [
+    re.compile(r"33988507"),
+    re.compile(r"absent from (the|its) .*library", re.I),
+    re.compile(r"untested", re.I),
+    re.compile(r"never (been )?tested", re.I),
+    re.compile(r"did not contain ADCK5", re.I),
+]
+
+
+def check_parity_hedge(texts: dict[str, str]) -> list[str]:
+    """Discussing a paralog's UniProt localisation obliges you to note the assay asymmetry."""
+    problems: list[str] = []
+    triggered_by_surface: dict[str, int] = {}
+    for name, text in texts.items():
+        triggered_by_surface.setdefault(name, 0)
+        for i, unit in enumerate(_paragraphs(text, name)):
+            if not (PARITY_TOPIC_RE.search(unit) and PARITY_CONTEXT_RE.search(unit)):
+                continue
+            triggered_by_surface[name] += 1
+            if not any(r.search(unit) for r in PARITY_HEDGE_RES):
+                problems.append(
+                    f"{name}: a unit contrasts ADCK1/ADCK2 UniProt subcellular treatment with "
+                    f"ADCK5's without noting that their SL-0173 rests on an assay ADCK5 was "
+                    f"never in (PubMed:33988507). This review retracted the parity framing. "
+                    f"Unit starts: {unit.strip()[:90]!r}"
+                )
+    if not any(triggered_by_surface.values()):
+        problems.append(
+            "parity-hedge guard is vacuous: no unit matched the topic on any surface, so the "
+            "invariant proved nothing. Check PARITY_TOPIC_RE / PARITY_CONTEXT_RE."
+        )
+    return problems
+
+
 COMPARTMENT_TOPIC_RE = re.compile(r"NOTCH2NLA|Q7Z3S9", re.I)
 COMPARTMENT_CONTEXT_RE = re.compile(r"secreted|cytoplasm|cytosol", re.I)
 # Any ONE of these counts as the hedge being present.
@@ -148,13 +199,29 @@ def _paragraphs(text: str, name: str = "") -> list[str]:
         # fail on a clean interpreter; and a parse introduces a failure branch whose only
         # sane fallback is "treat the file as one blob", which is exactly the file-level
         # behaviour this function exists to abolish. No parse, no silent fallback.
+        # Block scalars must be tracked, or prose inside them gets split at any line that
+        # merely LOOKS like a key. Found by this file's own parity guard: the summary text
+        # "...not fixable in GO: ADCK1 and ADCK2 receive SL-0173..." was cut in two at "GO:",
+        # separating a claim from the clause that qualifies it two sentences later. A
+        # splitter that fragments a scalar is as wrong as one that merges a whole file.
         units: list[str] = []
         cur: list[str] = []
+        scalar_indent: int | None = None
         for line in text.splitlines():
+            indent = len(line) - len(line.lstrip())
+            stripped = line.strip()
+            if scalar_indent is not None:
+                # Inside a block scalar: anything more indented than its key belongs to it.
+                if not stripped or indent > scalar_indent:
+                    cur.append(line)
+                    continue
+                scalar_indent = None
             if YAML_KEY_RE.match(line):
                 if cur:
                     units.append("\n".join(cur))
                 cur = [line]
+                if BLOCK_SCALAR_RE.search(line):
+                    scalar_indent = indent
             else:
                 cur.append(line)
         if cur:
@@ -226,6 +293,10 @@ REQUIRED_CLAIMS = [
     ("A209", 2),  # A-rich loop alanine
     ("D382", 2),  # DFG aspartate (cited in the suggested kinase-dead control)
     ("17 of 25", 2),
+    # Load-bearing since the parity retraction: it is what makes ADCK5's missing
+    # UniProt mitochondrial annotation "untested" rather than "tested and negative".
+    ("absent from the library", 2),
+    ("33988507", 3),
 ]
 
 
@@ -265,6 +336,9 @@ RESIDUE_TOKEN_RE = re.compile(r"\b([A-Z]\d{2,3})\b")
 # A YAML mapping key, with or without a leading list dash. Used to split a review file
 # into per-field units without a YAML parser.
 YAML_KEY_RE = re.compile(r"^\s*(?:-\s+)?[A-Za-z_][A-Za-z0-9_]*:")
+# A key introducing a block scalar (`>-`, `>`, `|`, `|-`, `|+`, `>+`), possibly with a
+# trailing comment. Everything more-indented below it is scalar content, not structure.
+BLOCK_SCALAR_RE = re.compile(r":\s*[|>][-+]?\s*$")
 
 
 def check_residue_calls(motif: dict, texts: dict[str, str]) -> list[str]:
@@ -515,6 +589,7 @@ def run_checks(texts: dict[str, str], motif: dict, census: dict, partner: dict) 
     problems += check_partner_numbers(partner, texts)
     problems += check_withdrawn(texts)
     problems += check_compartment_hedge(all_surfaces(texts))
+    problems += check_parity_hedge(all_surfaces(texts))
     problems += check_required_claims(texts)
     return problems
 
@@ -746,6 +821,45 @@ def self_test() -> int:
         no_topic_in_yaml,
         match="matched nothing in ADCK5-ai-review.yaml",
     )
+
+    # --- the parity guard, in both directions, against the REAL pre-retraction text ---
+    if not PARITY_FIXTURE.exists():
+        failures.append(f"parity regression fixture missing: {PARITY_FIXTURE}")
+        print("  FAIL (fixture missing): parity retraction replay")
+    else:
+        parity_hist = PARITY_FIXTURE.read_text()
+        if "SL-0173" not in parity_hist:
+            failures.append("parity fixture no longer contains the contrast; replay proves nothing")
+            print("  FAIL (fixture corrupted): parity retraction replay")
+        else:
+            expect_flag(
+                "the REAL pre-retraction parity units, replayed from the frozen fixture",
+                {**good, "ADCK5-notes.md": parity_hist},
+                match="contrasts ADCK1/ADCK2 UniProt subcellular treatment",
+            )
+    expect_clean("parity claim discussed and properly qualified", good)
+
+    # The splitter must not fragment a block scalar at prose that merely looks like a key.
+    # This is how "…not fixable in GO: ADCK1 and ADCK2 receive SL-0173…" got cut in two,
+    # separating a claim from its qualifying clause and producing a false positive.
+    probe = (
+        "existing_annotations:\n"
+        "- review:\n"
+        "    summary: >-\n"
+        "      Something about GO: ADCK1 and ADCK2 receive SL-0173 here, and the qualifying\n"
+        "      clause saying the screen library did not contain ADCK5 lives two lines later.\n"
+        "    action: ACCEPT\n"
+    )
+    probe_units = _paragraphs(probe, "probe.yaml")
+    joined = [u for u in probe_units if "SL-0173" in u]
+    if len(joined) != 1 or "did not contain ADCK5" not in joined[0]:
+        failures.append(
+            f"splitter fragmented a block scalar at a prose colon: the SL-0173 sentence and "
+            f"its qualifying clause landed in different units ({len(joined)} unit(s) matched)"
+        )
+        print("  FAIL: splitter fragments block scalars at prose colons")
+    else:
+        print("  PASS: splitter keeps a block scalar whole across prose colons")
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them

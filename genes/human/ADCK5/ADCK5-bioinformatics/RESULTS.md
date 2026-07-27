@@ -89,8 +89,10 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-26 self-tests, each exercised in the direction it exists to catch and in the happy
-direction, plus two invariants about the harness itself.
+29 self-tests, each exercised in the direction it exists to catch and in the happy
+direction, plus invariants about the harness itself. Two of them replay **real** defects
+from this PR's own history, frozen as fixtures: the unhedged compartment paragraph and the
+pre-retraction parity units.
 
 ## Question
 
@@ -203,6 +205,22 @@ dedicated *experimental* localisation from the subcellular kinome atlas that ADC
 **But ADCK5 lacks it because it was never assayed**, not because it was assayed and found
 elsewhere. That paper says so: *"ADCK5 and OBSCN were absent from the library"*. QuickGO returns
 **0** annotations for Q3MIX3 from `PMID:33988507`, consistent with absence of testing.
+
+The passage supports a slightly stronger reading than a bare absence. It is reconciling the
+screen's 22 mitochondrial kinases against the MitoCarta2.0 mitochondrial proteome, and it lists
+two kinds of exception: ADCK5 and OBSCN, *absent from the library*; and FASTK and PAK5, which
+were in the library and which the authors tested and called non-mitochondrial. ADCK5 is in the
+first group — a mitochondrial candidate the assay never reached, not one it examined and
+rejected. `family_census.json` also records that the same screen supplied the
+`ECO:0000269|PubMed:33988507` localisation for **ADCK1, ADCK2, COQ8A and COQ8B** — the entire
+rest of the human UbiB family. ADCK5 is the only member it could not assess.
+
+The evidence tags behind this are now computed into `family_census.json` by
+`family_annotation_census.py` rather than described in prose, and the script asserts the
+corrected claim: if ADCK1 or ADCK2 ever loses its experimental mitochondrial location, or if
+ADCK5 gains one, the run fails and the correction request must be revised. A cross-gene claim
+has to be checkable from the repository, not from a live query someone once ran — which is the
+defect that let the original parity claim stand for four surfaces.
 
 So the UniProt correction request in the review is posed on ADCK5's own evidence — its MitoCoP
 membership, 17 of 25 mitochondrial interactome partners, and the family's exclusively

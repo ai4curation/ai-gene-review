@@ -71,8 +71,40 @@ def quickgo_all(acc: str) -> list[dict]:
 def uniprot_entry(acc: str) -> dict:
     return get(
         f"https://rest.uniprot.org/uniprotkb/{acc}.json"
-        "?fields=accession,id,protein_name,keyword,cc_function,ec"
+        "?fields=accession,id,protein_name,keyword,cc_function,ec,cc_subcellular_location"
     )
+
+
+def subcellular_evidence(entry: dict) -> list[dict]:
+    """Each SUBCELLULAR LOCATION term with the evidence codes and sources behind it.
+
+    Recorded because this review argues about *why* UniProt gives ADCK1 and ADCK2 a
+    mitochondrial location and ADCK5 only a membrane one. An earlier draft asserted the three
+    rested on identical evidence; they do not - ADCK1 and ADCK2 carry
+    ECO:0000269|PubMed:33988507, an experimental localisation from a kinome-wide screen whose
+    library did not contain ADCK5, so the asymmetry is untested-versus-tested. A cross-gene
+    claim of that kind has to be checkable from the repository, not only from a live query
+    someone once ran - so the evidence tags are captured here rather than described in prose.
+    """
+    out = []
+    for c in entry.get("comments", []):
+        if c["commentType"] != "SUBCELLULAR LOCATION":
+            continue
+        for loc in c.get("subcellularLocations", []):
+            v = loc.get("location", {})
+            out.append(
+                {
+                    "location": v.get("value"),
+                    "evidence": sorted(
+                        {
+                            f"{e.get('evidenceCode')}"
+                            + (f"|{e.get('source')}:{e.get('id')}" if e.get("source") else "")
+                            for e in v.get("evidences", [])
+                        }
+                    ),
+                }
+            )
+    return out
 
 
 def main() -> int:
@@ -121,6 +153,7 @@ def main() -> int:
         census[sym] = {
             "accession": acc,
             "entry_name": entry_name,
+            "subcellular_locations": subcellular_evidence(ent),
             "reviewed": ent["entryType"].startswith("UniProtKB reviewed"),
             "ec_numbers": ecs,
             "has_ser_thr_kinase_keyword": "Serine/threonine-protein kinase" in kws,
@@ -161,6 +194,38 @@ def main() -> int:
         if not census[s]["has_ser_thr_kinase_keyword"]:
             problems.append(f"claim 2: {s} no longer has the Ser/Thr-kinase keyword")
 
+    # ---- the corrected cross-gene localisation claim, asserted ----
+    # ADCK1 and ADCK2 hold an EXPERIMENTAL (ECO:0000269|PubMed:33988507) mitochondrial
+    # location that ADCK5 does not; ADCK5's only location is a non-experimental membrane
+    # inference. The asymmetry is untested-versus-tested, not identical evidence handled
+    # differently: that screen's library did not contain ADCK5. This review previously
+    # asserted the opposite, so the corrected form is pinned here rather than left to prose.
+    def _mito_experimental(sym: str) -> bool:
+        return any(
+            loc["location"] == "Mitochondrion"
+            and any(e.startswith("ECO:0000269") for e in loc["evidence"])
+            for loc in census[sym]["subcellular_locations"]
+        )
+
+    # Both paralogs' SL-0173 rests on PubMed:33988507, an assay ADCK5 was never in.
+    for sym in ("ADCK1", "ADCK2"):
+        if not _mito_experimental(sym):
+            problems.append(
+                f"localisation claim: {sym} no longer carries an experimental (ECO:0000269) "
+                f"Mitochondrion location; the review's account of the SL-0173/SL-0162 "
+                f"asymmetry rests on it"
+            )
+    if _mito_experimental("ADCK5"):
+        problems.append(
+            "localisation claim: ADCK5 now HAS an experimental Mitochondrion location, so the "
+            "UniProt correction request in suggested_questions is satisfied and stale"
+        )
+    if any(loc["location"] == "Mitochondrion" for loc in census["ADCK5"]["subcellular_locations"]):
+        problems.append(
+            "localisation claim: ADCK5's SUBCELLULAR LOCATION now includes Mitochondrion; "
+            "the correction request has been actioned upstream and must be revised"
+        )
+
     OUT.write_text(json.dumps({"census": census, "problems": problems}, indent=2) + "\n")
 
     hdr = f"{'gene':<8}{'EC':<12}{'S/T kw':<8}{'ann':<5}{'IBA':<5}{'exp':<5}{'IBA node(s)':<18}{'NOT|'}"
@@ -175,6 +240,11 @@ def main() -> int:
             f"{(','.join(c['iba_nodes']) or '-'):<18}"
             f"{len(c['negated_annotations'])}"
         )
+    print()
+    print("UniProt SUBCELLULAR LOCATION and the evidence behind it:")
+    for sym in GENES:
+        for loc in census[sym]["subcellular_locations"]:
+            print(f"  {sym:<8}{loc['location']:<16}{','.join(loc['evidence']) or '(none)'}")
     print()
     for sym in GENES:
         c = census[sym]
