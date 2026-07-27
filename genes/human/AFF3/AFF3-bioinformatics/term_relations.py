@@ -86,6 +86,15 @@ CLAIMS: list[tuple[str, str, bool, str]] = [
     ("GO:0032968", "GO:0045893", True,
      "the third signed donor term is also POSITIVE, completing the claim the GO:0006355 "
      "reason makes"),
+    # Round 3: the GO:0003711 NEW row's reason asserts that GO:0003711 and GO:0003712 are
+    # SIBLINGS with neither ancestor closure containing the other. Only the shared-parent leg
+    # was checked; the reciprocal non-containment pair was not, unlike the equivalent
+    # GO:0003700/GO:0003712 pair above. Both directions now asserted.
+    ("GO:0003711", "GO:0003712", False,
+     "elongation factor activity is NOT under coregulator activity"),
+    ("GO:0003712", "GO:0003711", False,
+     "...nor the converse, so the two are genuinely siblings and the GO:0003711 NEW row adds "
+     "a statement rather than refining the GO:0003712 IBA"),
 ]
 
 

@@ -68,6 +68,7 @@ EDITS: list[tuple[Path, str, str]] = [
     # the anchor assertion caught it, which is exactly the hyphen/en-dash/em-dash trap
     # the campaign brief warns about for quote matching.
     (GENE / "AFF3-notes.md",
+     # find-anchor: the retracted hand-counted figure, quoted here only to locate it.
      """- **CDK9 in 5 records across 4 distinct publications and 4 distinct methods** (anti-tag co-IP,
   pull down, TAP ×2; MI 0.73) — `PMID:23455922`, `PMID:23602568`, `PMID:32707033`,
   `PMID:33961781`.
@@ -81,6 +82,7 @@ EDITS: list[tuple[Path, str, str]] = [
 - **MLLT1 (ENL)** in 2 records from 1 publication by anti-tag co-IP (`PMID:33961781`), MI 0.35 -
   a SEC module component."""),
     (GENE / "AFF3-bioinformatics" / "RESULTS.md",
+     # find-anchor: the retracted hand-counted figure, quoted here only to locate it.
      """  is nothing to adjudicate. IntAct nonetheless returns 14 records (all retrieved), with **CDK9
   in 5 records across 4 distinct publications and 4 distinct methods** (anti-tag co-IP, pull
   down, TAP x2; MI 0.73) and **MLLT1/ENL** by anti-tag co-IP. The two SEC modules AFF3 bridges

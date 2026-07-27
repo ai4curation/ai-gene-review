@@ -106,7 +106,7 @@ identical bytes in all three GOA records.
 
 ## 3. Ancestry claims, fetched not assumed (`term_relations.py`)
 
-20 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
+22 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
 edges cannot be mistaken for subsumption). The script exits non-zero if any claim is wrong.
 
 | claim | result |
@@ -131,6 +131,8 @@ edges cannot be mistaken for subsumption). The script exits non-zero if any clai
 | `GO:0021795` is a descendant of `GO:0050877` | **false** — the migration evidence is the off-branch half |
 | `GO:0003711` is a descendant of `GO:0140110` | true — closes the sibling claim's second leg |
 | `GO:0032968` is a descendant of `GO:0045893` | true — the third signed donor term is positive too |
+| `GO:0003711` is a descendant of `GO:0003712` | **false** |
+| `GO:0003712` is a descendant of `GO:0003711` | **false** — the reciprocal pair, so the sibling claim is checked in both directions |
 
 **This guard has now caught two of my own claims, which is the argument for having it.**
 

@@ -110,17 +110,30 @@ def _as_int(tok: str) -> int | None:
 # runs on every audit, and the exemption is PER-OCCURRENCE -- a sentence asserting the
 # retracted premise passes only if the surrounding window marks it as retracted.
 SIGN_RE = re.compile(r"[^.]*disagree[sd]? in \*?sign\*?[^.]*\.", re.I)
-RETRACT_RE = re.compile(
+
+# A retracted claim must be quotable in three legitimate contexts: narrating its own
+# retraction, serving as a find-and-replace ANCHOR in a repair script, and serving as a
+# PATTERN or fixture in the guard that detects it. Forbidding those would make the guard
+# unable to coexist with its own implementation -- and a guard that forbids legitimate
+# practice gets worked around rather than obeyed.
+#
+# The exemption stays PER-OCCURRENCE (a window around each match), not per-file. That
+# distinction is the whole point: a file-scoped exemption is what let two instances survive
+# inside the file it exempted, which is guard-defeat mode "an exemption coarser than the
+# thing it exempts". Both directions are break-tested.
+NARRATED_RE = re.compile(
     r"retract|wrong|earlier draft|earlier version|earlier wording|misread|misreading|"
-    r"refuted|was false", re.I)
+    r"refuted|was false|is actually|hand-counted|surviving|still assert|premise|"
+    r"anchor|pattern|fixture|guard|break-test|ACCEPTED, both fixed|failures\.append|"
+    r"startswith|finditer|re\.compile", re.I)
 
 
 def check_sign_claim(flat: str) -> list[str]:
-    """Every 'donors disagree in sign' sentence must be narrated as retracted."""
+    """Every 'donors disagree in sign' sentence must be narrated, anchored or patterned."""
     out = []
     for m in SIGN_RE.finditer(flat):
         window = flat[max(0, m.start() - 260): m.end() + 260]
-        if not RETRACT_RE.search(window):
+        if not NARRATED_RE.search(window):
             out.append(
                 f"H: unnarrated 'donors disagree in sign' claim (retracted in round 2, and "
                 f"GO:0032786 is POSITIVE): {m.group(0).strip()[:150]!r}"
@@ -140,6 +153,12 @@ def check_intact_counts(flat: str) -> list[str]:
     for m in CDK9_COUNT_RE.finditer(flat):
         n += 1
         got = tuple(_as_int(m.group(k)) for k in ("rec", "pub", "meth"))
+        # Same per-occurrence narration/anchor exemption as the sign guard: the repair
+        # script must contain the wrong counts as its find anchors, and this file must
+        # contain them as fixtures.
+        window = flat[max(0, m.start() - 260): m.end() + 260]
+        if got != want and NARRATED_RE.search(window):
+            continue
         if got != want:
             out.append(
                 f"H: retracted IntAct count restated: prose says CDK9 = {got} "
@@ -487,13 +506,31 @@ def self_test() -> int:
     elif "four distinct publications and four" not in shipped.stdout:
         # After this fix is committed, HEAD no longer holds the defect; fall back to a
         # synthetic mutation but say which path was taken rather than passing silently.
-        computed = "records across 5 distinct publications and"
-        if computed not in text:
-            failures.append("H IntAct count: neither HEAD nor the current text carries a "
-                            "checkable form, so this direction is vacuous")
+        # Pick an occurrence whose window is NOT narrated, and assert that before
+        # mutating: otherwise the per-occurrence exemption legitimately suppresses the
+        # synthetic mutation and the direction fails for the wrong reason -- which is
+        # exactly what happened the first time this fallback ran.
+        # The RAW anchor must belong to the UN-NARRATED occurrence. There are two CDK9
+        # count sentences; the first sits inside a window that explains the retraction and
+        # is exempt by design, so mutating it fails for the wrong reason. This anchor is
+        # unique to the second, and the raw/flat distinction matters because the phrase is
+        # line-wrapped differently at the two sites.
+        flat_now = norm(text)
+        targets = [m for m in CDK9_COUNT_RE.finditer(flat_now)
+                   if not NARRATED_RE.search(
+                       flat_now[max(0, m.start() - 260): m.end() + 260])]
+        anchor = "5 distinct publications and 3 distinct methods ("
+        n_anchor = text.count(anchor)
+        if not targets:
+            failures.append("H IntAct count: every occurrence sits in a narrated window, so "
+                            "no synthetic mutation can exercise the guard here -- say so "
+                            "rather than passing")
+        elif n_anchor != 1:
+            failures.append(f"H IntAct count: raw anchor found {n_anchor} times, expected 1; "
+                            f"this direction would be vacuous or ambiguous")
         else:
-            recount = text.replace(computed,
-                                   "records across 4 distinct publications and", 1)
+            recount = text.replace(
+                anchor, "4 distinct publications and 3 distinct methods (", 1)
             expect("H retracted IntAct count (synthetic; HEAD is already fixed)",
                    recount, "H: retracted IntAct count restated")
     else:
@@ -562,12 +599,40 @@ def self_test() -> int:
     recount = text.replace("    action: REMOVE", "    action: NEW", 1)
     expect("GOA reconciliation", recount, "GOA reconciliation")
 
+    # Sibling-surface sweep, both directions. This is round 3's point: the two prose guards
+    # were scoped to the review YAML while the folder-wide sweep lived in a one-shot script,
+    # so the notes, RESULTS.md and the scripts had no standing guard.
+    notes = (HERE.parent / "AFF3-notes.md").read_text()
+    injected = notes.replace(
+        "## Process",
+        "## Process\n\nThe GO:0006355 row is kept unsigned because its donors disagree in "
+        "sign.\n", 1)
+    assert injected != notes, "sibling-sweep mutation did not change the document"
+    probs = audit_sibling_surfaces({"AFF3-notes.md": injected})
+    hit = [p for p in probs if p.startswith("H: unnarrated 'donors disagree in sign'")
+           and "AFF3-notes.md" in p]
+    if not hit:
+        failures.append("sibling sweep: an unnarrated sign claim injected into the NOTES did "
+                        f"not fire; got {probs[:2]}")
+    else:
+        print(f"  ok  sibling sweep fires on a non-YAML surface: {hit[0][:120]}")
+
+    # ...and the other direction: the anchors and patterns that legitimately quote the
+    # retracted claims must stay silent, or the guard cannot coexist with its own repair
+    # scripts and would be worked around rather than obeyed.
+    clean = audit_sibling_surfaces()
+    if clean:
+        failures.append(f"sibling sweep: fires on the unmutated folder, whose remaining "
+                        f"occurrences are all anchors, patterns or narrated history: {clean}")
+    else:
+        print("  ok  sibling sweep silent on anchors, patterns and narrated history")
+
     # Happy path must be clean -- a check can be wrong about success as easily as
     # about failure.
-    baseline = audit(text)
+    baseline = audit(text) + audit_sibling_surfaces()
     if baseline:
         failures.append(f"HAPPY PATH: audit reports {len(baseline)} problem(s) on the "
-                        f"unmutated file: {baseline}")
+                        f"unmutated tree: {baseline}")
     else:
         print("  ok  happy path clean")
 
@@ -580,12 +645,47 @@ def self_test() -> int:
     return 0
 
 
+def audit_sibling_surfaces(override: dict[str, str] | None = None) -> list[str]:
+    """Run the two prose guards over EVERY surface in the gene folder, not just the YAML.
+
+    Round 3's point, and it is the right one: `check_intact_counts` and `check_sign_claim`
+    were scoped to the review YAML while the folder-wide sweep lived inside a one-shot repair
+    script, so the notes, RESULTS.md and the scripts had no STANDING guard -- which is exactly
+    how the docstring and the PIP4K2A bullet survived a round. The sweep now lives here and
+    runs on every audit.
+
+    The CDK9-count guard's vacuity branch is deliberately suppressed per file: most surfaces
+    legitimately do not state the counts, and requiring each one to would make the check fire
+    everywhere. The vacuity condition is still enforced, once, against the review YAML.
+    """
+    problems: list[str] = []
+    scanned = 0
+    for p in sorted(HERE.parent.rglob("*")):
+        if not p.is_file() or p.suffix not in {".md", ".yaml", ".py"}:
+            continue
+        if p == REVIEW:
+            continue  # covered by the main audit, vacuity branch included
+        raw = (override or {}).get(p.name, p.read_text(errors="ignore"))
+        flat = norm(raw)
+        scanned += 1
+        for prob in check_sign_claim(flat):
+            problems.append(f"{prob}  [in {p.name}]")
+        for prob in check_intact_counts(flat):
+            if prob.startswith("H: no CDK9 count sentence found"):
+                continue  # not every surface must state the counts
+            problems.append(f"{prob}  [in {p.name}]")
+    if scanned == 0:
+        problems.append("H: sibling-surface sweep scanned ZERO files -- a checker that finds "
+                        "nothing to check is reporting coverage it does not have")
+    return problems
+
+
 def main() -> int:
     if not REVIEW.exists():
         raise SystemExit(f"FATAL: missing {REVIEW}")
     if "--self-test" in sys.argv:
         return self_test()
-    probs = audit(REVIEW.read_text())
+    probs = audit(REVIEW.read_text()) + audit_sibling_surfaces()
     for p in probs:
         print(f"PROBLEM {p}")
     print(f"\n{len(probs)} problem(s)")

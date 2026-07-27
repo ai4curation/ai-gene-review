@@ -514,3 +514,46 @@ redistribution of CDK9 and cyclin T1 to AFF3 sites required strong over-producti
 AFF3's own speckle localisation is a baseline observation; `intact_partners.py`'s docstring still
 said "5 records" a full round after the prose had been corrected to 6; and PIP4K2A was listed as
 a singleton when it has 2 records across 2 publications.
+
+## Review round 3: approved, three tooling suggestions taken, and a stopping criterion
+
+Round 3 approved on the head and raised three non-blocking suggestions. All three were taken,
+because each closed a real hole rather than rewording prose:
+
+1. **The new UniProt `file:` quote lived only in `AFF3-notes.md`**, which `verify_file_quotes.py`
+   does not walk — so the one quote added to *answer* a fabrication-surface criticism was itself
+   outside the gate. It is now in the `GO:0001822` row's `supported_by`, inside both quote
+   checkers (15 `file:` quotes verified byte-exact, 75 total).
+2. **The two prose guards were scoped to the review YAML** while the folder-wide sweep lived
+   inside a one-shot repair script — which is precisely how the `intact_partners.py` docstring
+   and the PIP4K2A bullet survived a round. `audit_sibling_surfaces()` now runs both guards over
+   every `.md`, `.yaml` and `.py` in the gene folder on every audit, and it fails loudly if it
+   scans zero files.
+3. **The `GO:0003711`/`GO:0003712` reciprocal non-containment pair was unchecked**, unlike the
+   equivalent `GO:0003700`/`GO:0003712` pair. Both directions now asserted — 22 claims.
+
+**Widening the sweep immediately produced ten false positives, and that is the interesting
+part.** Repair scripts must contain the retracted strings as their *find anchors*, and the guard
+must contain them as *patterns* — so a naive folder-wide sweep forbids the guard from coexisting
+with its own implementation. The exemption vocabulary was widened to cover anchors, patterns and
+fixtures, kept strictly **per-occurrence** (never per-file, the mode that failed in round 2), two
+find-anchors were labelled as such in `fix_intact_counts.py`, and both directions are
+break-tested: the sweep fires on an unnarrated sign claim injected into the notes, and stays
+silent on the anchors and narrated history that remain by design.
+
+The synthetic IntAct-count break-test then failed **for the right reason and had to be repaired**:
+the per-occurrence exemption legitimately suppressed the mutation, because the first of the two
+CDK9 count sentences sits inside a window explaining the retraction. The test now selects an
+un-narrated occurrence explicitly, asserts one exists, and uses a raw anchor unique to it — the
+raw and whitespace-normalised forms differ because the phrase is line-wrapped differently at the
+two sites. A break-test that fails because the exemption worked is not evidence the guard is
+broken, and distinguishing the two took reading the window rather than the result.
+
+**Stopping criterion.** Rounds 2 and 3 changed **no GO term, no action, no evidence code, no
+quote and no reported number** in the curation itself — every item was about where a claim was
+written, which surface a guard scanned, or which ancestry pair was pinned. The curation content
+has been stable since `2bf0d3d5e`. So: I will still fix anything that misstates a number,
+misattributes a source, or lets a guard report coverage it does not have. I will not keep
+refining the guards' own prose, and I am not looking for further tooling symmetry for its own
+sake. If a later round finds a factual defect in the annotations, that is a different matter and
+gets fixed.
