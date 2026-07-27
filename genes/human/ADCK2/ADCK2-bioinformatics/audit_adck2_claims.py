@@ -329,7 +329,16 @@ def _is_missing_declared_dep(exc: BaseException, path: Path, module_name: str) -
     # not a missing wheel: "import requests.sessionz" raises with name requests.sessionz,
     # whose top-level component is declared and present. Only an absent top-level package
     # is an environment fact.
-    return importlib.util.find_spec(top) is None
+    # This function is called from inside _load_local_module's exception handler, whose
+    # documented contract is that it returns rather than raises -- a raising check aborts
+    # every later check. find_spec can itself raise (a ValueError for a module with no
+    # __spec__, an ImportError while importing a parent package), so the one call that can
+    # is made total here. Not error-hiding: any failure resolves to False, i.e. REPORT the
+    # import failure rather than excuse it, which is this classifier's safe direction.
+    try:
+        return importlib.util.find_spec(top) is None
+    except Exception:  # noqa: BLE001 - deliberately total; failure means "report"
+        return False
 
 
 _MODULE_CACHE: dict[str, object] = {}
@@ -426,11 +435,19 @@ def check_prose_join_helper(problems: list[str]) -> None:
 def check_import_failure_reporter(problems: list[str]) -> None:
     """Pin _report_import_failure on both classes, and the dependency classifier itself.
 
-    Cheap because the reporter reads only _MODULE_CACHE, so both paths can be exercised by
-    seeding synthetic keys -- no monkeypatching and no broken file on disk. This is the
-    branch that decides whether a failure is the reviewer's problem or the environment's,
-    so getting it wrong is exactly the "degraded harness reads as a defect" failure it was
-    added to prevent.
+    Mostly cheap: the reporter reads only _MODULE_CACHE, so its two paths are exercised by
+    seeding synthetic keys, with no broken file on disk. The two classifier assertions that
+    depend on whether a wheel is installed DO scope importlib.util.find_spec for their
+    duration, restoring it in a finally -- one because the absent-wheel branch is
+    unreachable in a healthy environment, the other because the installed-wheel branch is
+    unreachable in a degraded one. Pinning either to the ambient environment would make
+    this pin report a claim defect on a machine that merely lacks a dependency, which is
+    the failure it exists to prevent.
+
+    Note the limit of the mandatory-map assertion below: it pins that every declared
+    distribution HAS an entry in _DIST_TO_IMPORT, not that the entry is correct. Checking
+    correctness would mean importing each name, which is environment-dependent and so
+    reintroduces the very coupling this docstring is about.
     """
     fake = HERE / "__synthetic_for_audit__.py"
     key = str(fake)
@@ -480,19 +497,32 @@ def check_import_failure_reporter(problems: list[str]) -> None:
                 "import classifier: an UNDECLARED missing module was classified as an "
                 "environment fact; an undeclared or misspelled import is a code defect."
             )
-        if _is_missing_declared_dep(_mnfe("requests.sessionz"), fake, "_x"):
-            problems.append(
-                "import classifier: a bad SUBMODULE of an installed declared dependency "
-                "was excused as a missing wheel; requests is present, so that is a typo "
-                "in the sibling script."
-            )
-        # The absent-wheel branch depends on the environment, so it is unreachable while
-        # every declared dependency is installed. Reached by scoping find_spec to report
-        # the package absent, restored immediately -- the only way to exercise it at all.
+        # Scope find_spec to report the package PRESENT, mirroring the absent-wheel case
+        # below. Without this the assertion hardcodes the requests wheel: on a machine
+        # without it, "import requests.sessionz" genuinely IS a missing-wheel event, the
+        # classifier correctly returns True, and this pin would report a claim defect
+        # saying "requests is present" in an environment where it is not.
         real_find_spec = importlib.util.find_spec
         try:
             importlib.util.find_spec = (
-                lambda n, *a, **k: None if n == "requests" else real_find_spec(n, *a, **k)
+                lambda n, *a, **k: object() if n == "requests"
+                else real_find_spec(n, *a, **k)
+            )
+            if _is_missing_declared_dep(_mnfe("requests.sessionz"), fake, "_x"):
+                problems.append(
+                    "import classifier: a bad SUBMODULE of an installed declared "
+                    "dependency was excused as a missing wheel; the top-level package is "
+                    "present, so that is a typo in the sibling script."
+                )
+        finally:
+            importlib.util.find_spec = real_find_spec
+        # The absent-wheel branch depends on the environment, so it is unreachable while
+        # every declared dependency is installed. Reached by scoping find_spec to report
+        # the package absent, restored immediately -- the only way to exercise it at all.
+        real_find_spec2 = importlib.util.find_spec
+        try:
+            importlib.util.find_spec = (
+                lambda n, *a, **k: None if n == "requests" else real_find_spec2(n, *a, **k)
             )
             if not _is_missing_declared_dep(_mnfe("requests"), fake, "_x"):
                 problems.append(
@@ -500,7 +530,7 @@ def check_import_failure_reporter(problems: list[str]) -> None:
                     "recognised, so a missing wheel would report as a claim defect."
                 )
         finally:
-            importlib.util.find_spec = real_find_spec
+            importlib.util.find_spec = real_find_spec2
         # Every declared distribution must be mapped, or it silently leaves the declared
         # set and re-opens the failure this classifier exists to fix.
         _declared, unmapped = _declared_dependencies(HERE)
