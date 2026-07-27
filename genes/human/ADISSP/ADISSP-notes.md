@@ -159,13 +159,22 @@ adenovirus…", Fig. 4a). The browning and glucose-tolerance panels in the same 
 nothing more. It would be easy, and wrong, to read the paragraph as showing that human ADISSP
 produced the metabolic phenotype.
 
-## 9. `GO:0007189` is over-annotated on one clause, and no replacement term exists
+## 9. `GO:0007189` names a receptor class nobody measured — MODIFY to `GO:0141163`
+
+**This section was rewritten after review. The first version concluded `MARK_AS_OVER_ANNOTATED`
+with no replacement, on the stated grounds that no correct term existed. That was wrong, and it was
+wrong for an instructive reason: I checked the ancestors of `GO:0007189` and one sideways candidate
+(`GO:0141156`), and stopped. I never looked at the regulation-of branch, which is exactly where an
+extracellular ligand whose measured output is "the cAMP/PKA cassette runs harder" belongs. The
+reviewer on PR #2340 pushed on precisely that gap.**
 
 What PMID:36496438 measures, well: cAMP rises in transgenic inguinal WAT and falls in the
 adipose-specific knockout; PKA substrate and HSL phosphorylation move both ways; purified protein
 activates PKA dose- and time-dependently; labelled protein binds the adipocyte surface competably
 [PMID:36496438 "a specific binding of Adissp to adipose tissue sections was detected, which can be
-competed away by incubation with Adissp-containing conditioned medium"].
+competed away by incubation with Adissp-containing conditioned medium"]. Both directions in one
+sentence: [PMID:36496438 "Adipose-specific Adissp deletion decreases cAMP content and PKA activity,
+suppresses inguinal WAT browning, and leads to HFD-induced obesity and hyperglycemia"].
 
 What it does not measure: that the receptor is a G-protein-coupled receptor. The authors call it
 putative throughout [PMID:36496438 "Together, our data suggest that Adissp activates PKA signaling
@@ -175,17 +184,28 @@ treatment with the PKA inhibitor H89 and was blocked by Melittin, an inhibitor f
 the heterotrimeric G protein"] — melittin, a membrane-active bee-venom peptide, at 1 µM for 24 h,
 n = 3.
 
-`GO:0007189`'s definition is a **G protein-coupled receptor** signalling pathway transmitting
-through adenylyl cyclase activation; its comment does permit annotating ligands, but only of a
-pathway known to be of that kind. Unmeasured rather than refuted, so
-`MARK_AS_OVER_ANNOTATED`, not `REMOVE`.
+Three candidate homes were then evaluated, and the resolution is `MODIFY` to
+**`GO:0141163 positive regulation of cAMP/PKA signal transduction`**:
 
-No replacement is proposed, deliberately. Every ancestor of `GO:0007189` keeps the GPCR in its
-definition, so there is nothing to generalise to. `GO:0141156 cAMP/PKA signal transduction` is the
-obvious sideways candidate and is wrong for a different reason: it is defined as an *intracellular*
-signalling cassette, which an extracellular ligand is not part of. Ancestor closures of both were
-fetched and neither contains the other, so moving there would be a sideways move into a second
-wrong term. The missing receptor is recorded in `knowledge_gaps` instead.
+| candidate | verdict |
+|---|---|
+| an ancestor of `GO:0007189` | impossible — **every** ancestor retains the GPCR in its definition |
+| `GO:0141156 cAMP/PKA signal transduction` | wrong — defined as an *intracellular* signalling cassette, which an extracellular ligand is not part of |
+| `GO:0045762 positive regulation of adenylate cyclase activity` | closer, but asserts more than the data (see below) |
+| **`GO:0141163 positive regulation of cAMP/PKA signal transduction`** | **fits** — a regulation term, so a ligand can regulate the cassette without being in it, and it makes no claim about receptor class |
+
+`GO:0045762` was the reviewer's own suggestion and is the one to explain declining. The paper
+measures **cAMP content** in transgenic and knockout tissue, not adenylate cyclase activity, and a
+rise in cAMP content does not discriminate increased synthesis from reduced phosphodiesterase
+activity. `GO:0045762` would assert the synthesis mechanism specifically; `GO:0141163` is satisfied
+either way, so it asserts exactly what was shown. GO itself points the same way: the obsoletion
+comment on `GO:0043950 positive regulation of cAMP-mediated signaling` directs users to
+`GO:0141163` (naming `GO:0045762`-style cyclase regulation only as the alternative).
+
+Verified before use: `GO:0141163` is current, is a biological process, and neither it nor
+`GO:0007189` is an ancestor of the other — so this is a move between branches, not a change of
+granularity, which is consistent with `MODIFY`. `REMOVE` would still be wrong: the receptor's class
+is unmeasured, not refuted, and the missing receptor identity is recorded in `knowledge_gaps`.
 
 ## 10. `GO:1901224` → `GO:0043123`: canonical, not non-canonical
 
@@ -346,3 +366,65 @@ So the two are not competing choices: the parent was chosen because the endocrin
 hormone activity is established for the mouse protein and untested for the human one, and refining
 to `GO:0005179` later would retract nothing. The `suggested_questions` entry now states this
 relationship rather than merely contrasting the terms.
+
+## 18. Review round on PR #2340
+
+Approved on the first pass with four non-blocking suggestions, all four addressed. Recording what
+changed, and what the process taught, since two of the four found genuine holes.
+
+**1. The regulation-of branch (real gap, verdict changed).** See the rewritten §9. My argument for
+"no replacement term exists" had checked the ancestors of `GO:0007189` and one sideways candidate,
+and never looked at regulation-of. `GO:0007189` is now `MODIFY` → `GO:0141163 positive regulation of
+cAMP/PKA signal transduction`. Note that the term I landed on is *not* the one suggested
+(`GO:0045762`), and the reason for preferring it — cAMP *content* was measured, not cyclase
+activity, so `GO:0045762` would assert a synthesis-versus-degradation distinction the data do not
+make — is itself worth keeping.
+
+**2. Prose-only IntAct evidence (real gap, artifact added).** Seven PMIDs, the 1012-versus-27 hub
+null and the 4-of-13 partner fraction were asserted inside a `reason` string with nothing behind
+them. They are now computed by `ADISSP-bioinformatics/analyze_adissp.py`, which reproduces every
+figure I had written by hand and adds one I had not checked: the annotation's own reference,
+PMID:32024300, is **not** among the seven IntAct publications, so those datasets are genuinely
+additional rather than the same evidence re-counted.
+
+**3. The 90.2% identity figure (provenance, artifact added).** Same script, with a self-identity
+positive control and a refusal to compare unequal-length sequences rather than truncating them.
+
+**4. Two uncited cached publications (addressed).** `PMID:22814378` (the N-acetylome study behind
+UniProt's `ECO:0007744` evidence for N-acetylalanine at residue 2) and `PMID:12665801` (the direct
+protein sequencing of residues 2–11 that underlies `PE 1`) are now listed in `references` with
+`reference_review` notes explaining what each supports and why nothing is quoted from them.
+
+### Two defects in my own harness, found this round
+
+- **A stale claim survived one edit.** After changing the action, a `knowledge_gaps` statement still
+  read "the GPCR term is flagged as over-annotated on its receptor clause". Found by grepping the
+  *stable entity* (`GO:0007189` plus the verdict word) across every surface rather than re-reading
+  the prose. This is the "fixed in N places, landed in N−1" recurrence, caught only because the
+  sweep was run.
+- **A guard-verification harness defeated by shell quoting.** My break-test loop reported
+  `exit=0` for three break-tests that were in fact failing correctly, because
+  `echo "$(basename $f) exit=$?"` evaluates `$?` *after* the command substitution, so it reports
+  `basename`'s status, not the tested script's. For several minutes I had three guards that looked
+  broken and were fine. The rule this reinforces: capture the exit status into a variable on the
+  line immediately after the command, before any other command — including one hidden inside a
+  string. A verification harness is code and fails like code.
+
+Also worth recording as a **non-confirmation**: the anchor-assertion discipline earned its keep
+twice this round. Both times I guessed at a multi-line string to replace and guessed wrong; both
+times the `assert anchor in text` refused to run rather than silently changing nothing.
+
+### Sweep B rescoped, and why
+
+Making `GO:0007189` a `MODIFY` immediately produced a **false positive** in my own
+`core_functions` ↔ rows check: it demanded that `GO:0043123`, the NF-κB `MODIFY` replacement, appear
+in `core_functions`, when that row is deliberately non-core. The two directions need different
+scopes, and conflating them is what caused it:
+
+- **direction 1 (permitted):** a `core_functions` term must be backed by a row kept in some form —
+  `ACCEPT`, `NEW`, *or* a `MODIFY` row's proposed replacement;
+- **direction 2 (required):** only `ACCEPT`/`NEW` rows must appear in `core_functions`. A `MODIFY`
+  row can be non-core exactly as a `KEEP_AS_NON_CORE` row is.
+
+Both directions were then break-tested independently, plus the happy path that had been falsely
+firing, so neither direction is vacuous and the exception is not a blanket widening.
