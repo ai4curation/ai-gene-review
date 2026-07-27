@@ -206,10 +206,14 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
     # "ADCK2 has no measured activity, and ADCK2 is a serine/threonine kinase" would be
     # suppressed by an incidental "no" belonging to a different clause. Punctuation and
     # coordinating conjunctions both close the window.
+    # The clause-boundary lookahead is what does the work; the character budget is only a
+    # backstop and must not be tight enough to reject a legitimate negation. 30 was too
+    # short -- "no experiment has ever shown that <claim>" puts 32 characters between the
+    # negator and the claim -- so it is 60, which the boundary check keeps safe.
     negator = re.compile(
         r"\b(?:not|never|neither|nor|no|cannot|rather than|instead of|without|"
         r"isn't|dis(?:proved|proven)|refut\w*)\b(?:(?!\band\b|\bbut\b|\bwhile\b|"
-        r"\bwhereas\b|\bhowever\b)[^.;,:])" r"{0,30}$",
+        r"\bwhereas\b|\bhowever\b)[^.;,:])" r"{0,60}$",
         re.I,
     )
     for pattern, why in [
@@ -219,7 +223,7 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
         (r"ADCK2 .{0,40}\bcatalys(?:es|is|ing) a step", "refuted by the labelling experiment"),
     ]:
         for m in re.finditer(pattern, blob, re.I):
-            preceding = blob[max(0, m.start() - 60): m.start()]
+            preceding = blob[max(0, m.start() - 90): m.start()]
             if negator.search(preceding):
                 continue  # a negated mention is the correct statement, not a retracted one
             problems.append(f"retracted phrasing present ({why}): {m.group(0)!r}")
@@ -315,6 +319,11 @@ def self_test() -> int:
         ("negated kinase claim", "gene_symbol: ADCK2",
          "gene_symbol: ADCK2\ndescription_note: it is not the case that ADCK2 is a"
          " serine/threonine kinase"),
+        # A long but genuine negation: 32 characters separate the negator from the claim,
+        # which the earlier 30-character budget wrongly rejected.
+        ("long-range negation in the same clause", "gene_symbol: ADCK2",
+         "gene_symbol: ADCK2\ndescription_note: no experiment has ever shown that ADCK2 is"
+         " a serine/threonine kinase"),
     ]
     for name, target, replacement in must_not_fire:
         if target not in base:

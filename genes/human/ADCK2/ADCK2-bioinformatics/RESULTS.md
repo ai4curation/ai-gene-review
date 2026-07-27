@@ -31,7 +31,7 @@ Clustal Omega MSA (EBI REST) of the UbiB family plus a canonical protein kinase 
 
 `COQ8A_HUMAN` is the projection reference; `KAPCA_HUMAN` is the negative control (a canonical Ser/Thr protein kinase outside the UbiB family).
 
-**These identity figures are properties of this MSA, not of the sequence pairs, and are not comparable across alignments.** Adding one sequence to the input set moved every figure in this table -- the control alone shifted by several points when yeast Cqd2 was added -- because Clustal Omega's gap placement depends on the whole input. Do not compare a number here against one computed from a different membership; recompute instead.
+**These identity figures are properties of this MSA, not of the sequence pairs, and are not comparable across alignments.** Clustal Omega's gap placement depends on the whole input set, so adding or removing a single sequence moves every figure in this table. They were computed over the 9 sequences listed above; do not compare them against numbers derived from a different membership, recompute instead.
 
 ## Alignment register, judged by the negative control
 
@@ -86,7 +86,7 @@ PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human ADCK1/
 
 The split is **exactly the ADCK2/Cqd1 orthologue pair against everything else**, including Cqd2 and ADCK1, which carry the suppressor alanine. So a single residue reproduces the published orthology assignment, and it does so reciprocally: the two branches differ at precisely the position whose substitution was shown to change COQ8A's behaviour. This corroborates the pairing; it does not by itself show the two branches differ functionally.
 
-**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` position, Gly is carried by 4 proteins (ADCK2, CQD1, CQD2, ADCK1) -- a set that includes Cqd2 and ADCK1 and therefore cuts across the pairing rather than along it. The claim is specifically about the A339-equivalent position, not about the A-rich loop as a whole.
+**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` position, Gly is carried by 4 proteins (ADCK2, CQD1, CQD2, ADCK1), a set that also includes ADCK1 and CQD2 and therefore cuts across the pairing rather than along it. The claim is specifically about the A339-equivalent position, not about the A-rich loop as a whole.
 
 ## Bottom line
 

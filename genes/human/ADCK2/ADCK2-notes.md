@@ -329,11 +329,10 @@ query could have returned a hit.
 Redone in `ADCK2-bioinformatics/coq_transport_term_check.py` with two complementary sweeps that
 each could have:
 
-- **Label sweep:** all **80** GO terms whose label mentions ubiquinone / coenzyme Q / quinone.
-  Seven have transport-flavoured labels and every one is an *electron transport* term, where
-  the electron is the cargo and the quinone the acceptor — a different sense of the word. (The
-  script's first run reported these as hits; the substring test on "transport" needed the
-  same kind of anchoring the campaign brief warns about.)
+- **Label sweep:** all **102** GO terms whose label mentions ubiquinone / coenzyme Q /
+  quinone / **quinol**. Every transport-flavoured one among them is an *electron transport*
+  term, where the electron is the cargo and the quinone the acceptor — a different sense of
+  the word.
 - **Branch sweep:** the **2584 distinct** descendants of `GO:0006869`, `GO:0010876`,
   `GO:0032365`, `GO:0120009` and `GO:0006810`. Zero ubiquinone-specific children.
 
@@ -341,6 +340,26 @@ Each candidate is printed with the reason it was excluded, so the filtering is a
 than buried in the verdict. Sweep 1 would catch a term classified in the wrong branch; sweep 2
 a term whose label avoids the word. The absence is evidence only to the extent those two
 together are exhaustive, and the script says so.
+
+**Three substring traps in one small script**, all the same error wearing different clothes:
+
+1. `"transport" in name` matched **"electron transport"**, giving 8 spurious hits on the first
+   run. Ubiquinone there is the electron *acceptor*, not the cargo.
+2. **`"quinone"` does not match `"ubiquinol"`.** The reviewer caught this: my original keyword
+   set left *both* sweeps blind to any term named after the reduced form — the exact shared
+   blind spot the two-sweep design exists to rule out — and ubiquinol-named GO terms do exist
+   (6 in this repo's own cache). Adding `quinol` pulled in four real terms that had been
+   invisible (`GO:0006122`, `GO:0008121`, `GO:0009486`, `GO:0009496`), all correctly
+   adjudicated out.
+3. Adding `quinol` then produced the mirror error: **`"quinol"` *is* a substring of
+   `"quinolinic"`**, so `GO:1903222 quinolinic acid transmembrane transport` passed every
+   other filter as a genuine BP transport term. Quinolinic acid is a tryptophan-pathway NAD
+   precursor unrelated to CoQ. Excluded explicitly, and only when the label names no real CoQ
+   species, so a term mentioning both would still be caught.
+
+The brief's rule — *any substring test on a controlled vocabulary needs an anchor* — cost
+three rounds here, in both directions: too-loose matching invented hits, too-narrow matching
+hid a whole chemical species.
 
 ## 10. Cross-gene note for the concurrent ADCK1 review
 

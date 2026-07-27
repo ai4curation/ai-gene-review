@@ -12,10 +12,11 @@ that enumeration was guaranteed to find nothing regardless of whether such a ter
 The claim is load-bearing (it justifies a ``proposed_new_terms`` entry), so it is
 re-established here from two directions that *could* return a hit:
 
-1. **Label sweep.** Every GO term whose label or synonym mentions ubiquinone / coenzyme Q /
-   quinone is retrieved, and each is classified by whether it sits in the transport or
-   localization branch.  If a CoQ transport term exists under any name, it must appear here
-   unless its label avoids all three words.
+1. **Label sweep.** Every GO term whose **label** matches one of the ``KEYWORDS`` is
+   retrieved (QuickGO's text search also indexes synonyms, but the filter applied here is
+   on the label alone), and each is classified by whether it reads as transport or
+   localization.  If a CoQ transport term exists under any name, it must appear here unless
+   its label avoids every keyword.
 2. **Branch sweep.** The descendants of the relevant transport/localization terms are
    enumerated and searched for any ubiquinone-specific child.  This catches a term whose
    label uses different words but which is correctly classified.
@@ -43,7 +44,13 @@ TRANSPORT_ROOTS = {
     "GO:0006810": "transport",
 }
 
-KEYWORDS = ("ubiquinone", "coenzyme q", "quinone")
+# "quinol" is NOT covered by "quinone" -- the two words share no such substring, and GO
+# does name terms after the reduced form ("mitochondrial electron transport, ubiquinol to
+# cytochrome c", "3-demethylubiquinol 3-O-methyltransferase activity"). Omitting it left
+# BOTH sweeps blind to a hypothetical "ubiquinol transport" term, which is precisely the
+# shared blind spot the two-sweep design exists to rule out. "quinol" subsumes "ubiquinol"
+# as a substring, so listing it once is sufficient.
+KEYWORDS = ("ubiquinone", "coenzyme q", "quinone", "quinol")
 TRANSPORTY = ("transport", "localization", "localisation", "distribution", "transfer",
               "translocation", "import", "export", "efflux", "influx", "trafficking")
 
@@ -53,6 +60,14 @@ TRANSPORTY = ("transport", "localization", "localisation", "distribution", "tran
 # script reported 8 spurious hits. Every exclusion below is printed with its reason, so
 # the filtering is auditable rather than hidden inside the verdict.
 EXCLUDE_LABEL = ("electron transport",)
+
+# Widening KEYWORDS with "quinol" immediately produced the mirror of the same trap:
+# "quinol" is a substring of "quinolinic"/"quinoline", an unrelated tryptophan-pathway
+# chemical family, and GO:1903222 "quinolinic acid transmembrane transport" sailed through
+# every other filter as a genuine transport process. Excluded unless the label also names
+# a real CoQ species, so a term mentioning both would still be caught.
+QUINOLINE_FALSE_FRIEND = "quinolin"
+REAL_COQ = ("ubiquinone", "ubiquinol", "coenzyme q")
 
 
 def get(url: str) -> dict:
@@ -161,6 +176,10 @@ def main() -> int:
         elif any(x in name.lower() for x in EXCLUDE_LABEL):
             print(f"  excluded {cid} ({name}): 'electron transport' - the electron is the "
                   f"cargo, the quinone is the acceptor")
+        elif (QUINOLINE_FALSE_FRIEND in name.lower()
+              and not any(x in name.lower() for x in REAL_COQ)):
+            print(f"  excluded {cid} ({name}): matched only because 'quinol' is a substring "
+                  f"of 'quinolin'; quinoline/quinolinic acid is an unrelated chemical family")
         elif aspect != "biological_process":
             print(f"  excluded {cid} ({name}): aspect is {aspect}, not a transport process")
         else:

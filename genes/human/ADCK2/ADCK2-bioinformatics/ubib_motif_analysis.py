@@ -294,11 +294,11 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
     L.append("")
     L.append(
         "**These identity figures are properties of this MSA, not of the sequence pairs, "
-        "and are not comparable across alignments.** Adding one sequence to the input set "
-        "moved every figure in this table -- the control alone shifted by several points "
-        "when yeast Cqd2 was added -- because Clustal Omega's gap placement depends on the "
-        "whole input. Do not compare a number here against one computed from a different "
-        "membership; recompute instead."
+        "and are not comparable across alignments.** Clustal Omega's gap placement depends "
+        "on the whole input set, so adding or removing a single sequence moves every figure "
+        f"in this table. They were computed over the {len(order)} sequences listed above; "
+        "do not compare them against numbers derived from a different membership, "
+        "recompute instead."
     )
     L.append("")
     L.append("## Alignment register, judged by the negative control")
@@ -451,13 +451,31 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
             "pairing; it does not by itself show the two branches differ functionally."
         )
         L.append("")
-        L.append(
-            f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
-            f"position, Gly is carried by {len(a1_gly)} proteins "
-            f"({', '.join(a1_gly)}) -- a set that includes Cqd2 and ADCK1 and therefore "
-            f"cuts across the pairing rather than along it. The claim is specifically about "
-            f"the A339-equivalent position, not about the A-rich loop as a whole."
-        )
+        # Gate the interpretation on the computed set, exactly as the Arich_A3 sentence is
+        # gated. Hardcoding "includes Cqd2 and ADCK1" would silently become false if the
+        # membership or the alignment changed.
+        crossers = sorted(set(a1_gly) - expected_gly)
+        if set(a1_gly) == expected_gly:
+            L.append(
+                "The adjacent `Arich_A1` position splits the same way, so both projected "
+                "A-rich columns support the pairing."
+            )
+        elif crossers:
+            L.append(
+                f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
+                f"position, Gly is carried by {len(a1_gly)} proteins "
+                f"({', '.join(a1_gly)}), a set that also includes "
+                f"{' and '.join(crossers)} and therefore cuts across the pairing rather "
+                f"than along it. The claim is specifically about the A339-equivalent "
+                f"position, not about the A-rich loop as a whole."
+            )
+        else:
+            L.append(
+                f"At the adjacent `Arich_A1` position Gly is carried by "
+                f"{', '.join(a1_gly) if a1_gly else 'no protein'}, a subset of the "
+                f"A339-equivalent Gly set, so that column neither supports nor contradicts "
+                f"the pairing."
+            )
     else:
         L.append(
             f"The split is **not** the clean ADCK2/Cqd1-versus-rest pattern: Gly is carried "
