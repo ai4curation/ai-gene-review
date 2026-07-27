@@ -193,6 +193,28 @@ Note what this does *not* say: it is not a claim that the TFClass classification
 ADNP2 among the ZF-homeodomain proteins is correct taxonomy, and the same node's `GO:0000785` is
 right. Only the molecular-function step is over-read.
 
+## The reciprocal node-reach question, and what it shows about the containment
+
+Having asked "which nodes carry this term", I asked the other half: **which node's reach is exactly my
+gene set, and what did it give them?** `PTN000405125` is the **only** node in PTHR15740 that PAINT has
+annotated at all, so human ADNP and human ADNP2 receive **byte-identical IBA rows** — same two terms,
+same node, same WITH/FROM strings, character for character.
+
+That sharpens the headline result rather than softening it, and it is worth stating precisely because
+it is easy to over-read in the flattering direction. **The containment of the NAP material to ADNP is
+not a fine-grained PAINT judgement distinguishing the paralogues.** PAINT cannot distinguish them here
+at all. The containment follows from Ensembl Compara projecting along orthologues, plus the fact that
+the one clade-spanning route happens to carry only two generic terms. Those are two different claims,
+and only the first is a mechanism.
+
+It also leaves a symmetrical coverage gap: ADNP's sequence-specific DNA binding and ADNP2's
+HP1-mediated heterochromatin targeting are each well characterised and each clade-restricted, and
+neither reaches its own clade by IBA. Filed as a PAINT recommendation, **stated once for both genes**
+rather than repeated per gene (the AADACL2/3/4 lesson): `GO:0070087` is a good candidate for the
+*family* node, since the PxVxL is conserved between the paralogues and across vertebrates, both bind
+HP1, and this review and the merged ADNP review independently reached the same term. The DNA-sequence
+specificity and the SINE-versus-ERV target split are the things that must *not* go there.
+
 ## Review round 2
 
 Reviewer `ai4c-reviewer` returned `CHANGES_REQUESTED` with one blocking item and three suggestions. I
