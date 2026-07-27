@@ -200,12 +200,38 @@ def main() -> int:
     # inference. The asymmetry is untested-versus-tested, not identical evidence handled
     # differently: that screen's library did not contain ADCK5. This review previously
     # asserted the opposite, so the corrected form is pinned here rather than left to prose.
+    # startswith, not ==: COQ8A/COQ8B use "Mitochondrion membrane". With an exact match a
+    # refinement of ADCK1's line would raise a false alarm, and - worse - a refinement of
+    # ADCK5's would make BOTH staleness checks below pass silently, which is the direction
+    # that matters.
+    def _mito_locs(sym: str) -> list[dict]:
+        return [
+            loc
+            for loc in census[sym]["subcellular_locations"]
+            if str(loc["location"]).startswith("Mitochondrion")
+        ]
+
     def _mito_experimental(sym: str) -> bool:
         return any(
-            loc["location"] == "Mitochondrion"
-            and any(e.startswith("ECO:0000269") for e in loc["evidence"])
-            for loc in census[sym]["subcellular_locations"]
+            any(e.startswith("ECO:0000269") for e in loc["evidence"]) for loc in _mito_locs(sym)
         )
+
+    # Partition the family by what PMID:33988507 (the kinome-wide imaging screen) actually did
+    # for each gene's UniProt localisation. This review previously said the screen "supplied"
+    # the localisation for all four paralogs; for COQ8A and COQ8B it is one tag among several
+    # and the latest of them, so it CORROBORATED rather than supplied. The distinction is
+    # computed here so the prose can be held to it instead of restating it from memory.
+    SCREEN = "33988507"
+    provenance: dict[str, list[str]] = {"sole": [], "corroborating": [], "absent": []}
+    for sym in GENES:
+        tags = sorted({e for loc in _mito_locs(sym) for e in loc["evidence"]})
+        screen_tags = [e for e in tags if SCREEN in e]
+        if not screen_tags:
+            provenance["absent"].append(sym)
+        elif len(tags) == 1:
+            provenance["sole"].append(sym)
+        else:
+            provenance["corroborating"].append(sym)
 
     # Both paralogs' SL-0173 rests on PubMed:33988507, an assay ADCK5 was never in.
     for sym in ("ADCK1", "ADCK2"):
@@ -215,18 +241,33 @@ def main() -> int:
                 f"Mitochondrion location; the review's account of the SL-0173/SL-0162 "
                 f"asymmetry rests on it"
             )
-    if _mito_experimental("ADCK5"):
+    # One check, not two: the earlier pair had the second subsuming the first.
+    if _mito_locs("ADCK5"):
         problems.append(
-            "localisation claim: ADCK5 now HAS an experimental Mitochondrion location, so the "
-            "UniProt correction request in suggested_questions is satisfied and stale"
+            "localisation claim: ADCK5's SUBCELLULAR LOCATION now includes a Mitochondrion "
+            "term; the UniProt correction request in suggested_questions has been actioned "
+            "upstream and must be revised"
         )
-    if any(loc["location"] == "Mitochondrion" for loc in census["ADCK5"]["subcellular_locations"]):
+    if provenance["sole"] != ["ADCK1", "ADCK2"] or provenance["absent"] != ["ADCK5"]:
         problems.append(
-            "localisation claim: ADCK5's SUBCELLULAR LOCATION now includes Mitochondrion; "
-            "the correction request has been actioned upstream and must be revised"
+            f"localisation provenance changed: screen-as-sole-evidence={provenance['sole']}, "
+            f"screen-corroborating={provenance['corroborating']}, "
+            f"no-screen-evidence={provenance['absent']}. The review states the screen SUPPLIED "
+            f"the localisation for ADCK1/ADCK2 and CORROBORATED it for COQ8A/COQ8B, and that "
+            f"ADCK5 alone has none."
         )
 
-    OUT.write_text(json.dumps({"census": census, "problems": problems}, indent=2) + "\n")
+    OUT.write_text(
+        json.dumps(
+            {
+                "census": census,
+                "mitochondrial_localisation_provenance": provenance,
+                "problems": problems,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
 
     hdr = f"{'gene':<8}{'EC':<12}{'S/T kw':<8}{'ann':<5}{'IBA':<5}{'exp':<5}{'IBA node(s)':<18}{'NOT|'}"
     print(hdr)
@@ -240,6 +281,12 @@ def main() -> int:
             f"{(','.join(c['iba_nodes']) or '-'):<18}"
             f"{len(c['negated_annotations'])}"
         )
+    print()
+    print(
+        f"PMID:33988507 is the SOLE cited evidence for {provenance['sole']}, "
+        f"one tag among several (corroborating) for {provenance['corroborating']}, "
+        f"and absent for {provenance['absent']}."
+    )
     print()
     print("UniProt SUBCELLULAR LOCATION and the evidence behind it:")
     for sym in GENES:

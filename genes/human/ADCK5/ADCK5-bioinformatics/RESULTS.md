@@ -89,7 +89,7 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-29 self-tests, each exercised in the direction it exists to catch and in the happy
+31 self-tests, each exercised in the direction it exists to catch and in the happy
 direction, plus invariants about the harness itself. Two of them replay **real** defects
 from this PR's own history, frozen as fixtures: the unhedged compartment paragraph and the
 pre-retraction parity units.
@@ -194,6 +194,7 @@ Two findings, both asserted by the script so they fail loudly if the databases m
    keyword. ADCK1 is intermediate: `EC 2.7.-.-` but the keyword retained.
 
 ### Why ADCK1 and ADCK2 get a mitochondrial UniProt annotation and ADCK5 does not
+#### (they were in an imaging screen, PubMed:33988507, whose library did not contain ADCK5)
 
 Worth stating precisely, because the obvious reading is wrong. All three genes carry the same
 MitoCoP HTP row (`PMID:34800366`), so it looks as though UniProt is treating identical evidence
@@ -211,9 +212,22 @@ screen's 22 mitochondrial kinases against the MitoCarta2.0 mitochondrial proteom
 two kinds of exception: ADCK5 and OBSCN, *absent from the library*; and FASTK and PAK5, which
 were in the library and which the authors tested and called non-mitochondrial. ADCK5 is in the
 first group — a mitochondrial candidate the assay never reached, not one it examined and
-rejected. `family_census.json` also records that the same screen supplied the
-`ECO:0000269|PubMed:33988507` localisation for **ADCK1, ADCK2, COQ8A and COQ8B** — the entire
-rest of the human UbiB family. ADCK5 is the only member it could not assess.
+rejected. `family_census.json` also records what that screen did for each paralog's UniProt
+localisation, and the two cases are not the same — `mitochondrial_localisation_provenance`
+partitions them:
+
+| gene | `ECO:0000269` tags on its mitochondrial location | role of the screen |
+|---|---|---|
+| ADCK1 | `PubMed:33988507` | **sole** evidence — supplied it |
+| ADCK2 | `PubMed:33988507` | **sole** evidence — supplied it |
+| COQ8A | `PubMed:11888884` (2002), `PubMed:25498144`, `PubMed:33988507` | one of three, and the latest — **corroborated** it |
+| COQ8B | `PubMed:24270420` (2013), `PubMed:33988507` | one of two, and the later — **corroborated** it |
+| **ADCK5** | *none* | **absent from the library** |
+
+An earlier draft said the screen "supplied" the localisation for all four, which the JSON in
+the same commit refuted. The load-bearing conclusion is unaffected and is what the partition
+asserts: all four paralogs were in the library and **ADCK5 is the only member it could not
+assess.** The script fails if that partition changes.
 
 The evidence tags behind this are now computed into `family_census.json` by
 `family_annotation_census.py` rather than described in prose, and the script asserts the

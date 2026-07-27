@@ -84,10 +84,12 @@ need direct assay. GOA reflects this correctly today by carrying no MF term at a
 - UniProt gives only `SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass membrane`
   protein `{ECO:0000305}` — a curator inference from a *predicted* `TRANSMEM 50..67`
   (`ECO:0000255`). That maps to SubCell `SL-0162` → the `GO:0016020 membrane` IEA row.
+
 - The mitochondrion is better supported: MitoCoP high-confidence mitochondrial proteome
   (PMID:34800366, HTP); [PMID:25498144 "In eukaryotes, UbiB homologs are found exclusively
   in mitochondria"]; and 17 of ADCK5's 25 distinct IntAct partners from the mitochondrial
   interactome study (PMID:27499296) are UniProt-annotated to the mitochondrion.
+
 - **Asymmetry worth reporting, correctly attributed.** ADCK1 and ADCK2 receive
   `SL-0173 Mitochondrion` → `GO:0005739` from UniProt; ADCK5 receives only `SL-0162 Membrane`.
   My first reading was that the difference lay in UniProt's `SUBCELLULAR LOCATION` line rather
@@ -96,12 +98,14 @@ need direct assay. GOA reflects this correctly today by carrying no MF term at a
   `SUBCELLULAR LOCATION: Mitochondrion {ECO:0000269|PubMed:33988507}`, MitoCoP is not cited in
   that entry at all, and ADCK2's entry carries the same `ECO:0000269|PubMed:33988507`. Both
   paralogs have a dedicated experimental localisation that ADCK5 does not.
+
 - **But the reason ADCK5 lacks it is absence of testing, not a negative result** — that study
   states plainly [PMID:33988507 "ADCK5 and OBSCN were absent from the library"]. QuickGO
   returns 0 annotations for Q3MIX3 from that reference, consistent with never having been
   assayed. So the UniProt correction request stands, but on ADCK5's own evidence (MitoCoP HTP;
   17/25 mitochondrial interactome partners; family-wide mitochondrial distribution) rather
   than on a parity that does not hold.
+
 - Submitochondrial assignment (inner membrane?) is **not** established for ADCK5. Combining
   "mitochondrion (HTP)" with "membrane (predicted TM)" to assert `GO:0031966` would be a
   composite claim; left as a suggested experiment instead.

@@ -129,7 +129,18 @@ WITHDRAWN_SCAN_GLOBS = ["*.md", "*.yaml", "ADCK5-bioinformatics/*.py", "ADCK5-bi
 # UniProt subcellular treatment must also carry the untested-assay clause.
 # ---------------------------------------------------------------------------------------
 PARITY_TOPIC_RE = re.compile(r"\bADCK1\b|\bADCK2\b", re.I)
-PARITY_CONTEXT_RE = re.compile(r"SL-0173|SL-0162|subcellular location|SubCell", re.I)
+PARITY_CONTEXT_RE = re.compile(
+    # Deliberately about UniProt's TREATMENT of localisation, not about mitochondria in
+    # general: a bare "mitochondrial localisation" alternative was tried and fired on the
+    # PAINT question and a knowledge_gaps entry, neither of which is about SubCell at all.
+    r"SL-0173|SL-0162|subcellular location|SubCell|mitochondrial UniProt|"
+    r"UniProt (mitochondrial|localisation|localization)",
+    re.I,
+)
+# The heading of the RESULTS.md section this guard protects - "Why ADCK1 and ADCK2 get a
+# mitochondrial UniProt annotation and ADCK5 does not" - was invisible to the first
+# pattern. Benign in itself, but it is the paraphrase escape the guard exists to resist,
+# sitting on the first line of the thing being guarded.
 PARITY_HEDGE_RES = [
     re.compile(r"33988507"),
     re.compile(r"absent from (the|its) .*library", re.I),
@@ -140,7 +151,14 @@ PARITY_HEDGE_RES = [
 
 
 def check_parity_hedge(texts: dict[str, str]) -> list[str]:
-    """Discussing a paralog's UniProt localisation obliges you to note the assay asymmetry."""
+    """Discussing a paralog's UniProt localisation obliges you to note the assay asymmetry.
+
+    Unlike check_compartment_hedge this deliberately has NO one-paragraph lookahead. The unit
+    that most needs qualifying here is a section *heading*, and a heading that states the
+    contrast is read on its own - in a table of contents, in a diff, in search results - so
+    letting the body below satisfy it would exempt exactly the surface that travels furthest
+    from its context.
+    """
     problems: list[str] = []
     triggered_by_surface: dict[str, int] = {}
     for name, text in texts.items():
@@ -156,11 +174,16 @@ def check_parity_hedge(texts: dict[str, str]) -> list[str]:
                     f"never in (PubMed:33988507). This review retracted the parity framing. "
                     f"Unit starts: {unit.strip()[:90]!r}"
                 )
-    if not any(triggered_by_surface.values()):
-        problems.append(
-            "parity-hedge guard is vacuous: no unit matched the topic on any surface, so the "
-            "invariant proved nothing. Check PARITY_TOPIC_RE / PARITY_CONTEXT_RE."
-        )
+    # Per surface, not corpus-wide - the same correction check_compartment_hedge already
+    # carries. A corpus-wide counter stays satisfied while the guard goes blind on the review
+    # YAML, which is where the parity claim's most consequential statements live.
+    for required in ("ADCK5-ai-review.yaml", "ADCK5-bioinformatics/RESULTS.md"):
+        if triggered_by_surface.get(required, 0) == 0:
+            problems.append(
+                f"parity-hedge guard matched nothing in {required}, where the ADCK1/ADCK2 "
+                f"comparison is made. Either it was removed, or PARITY_TOPIC_RE / "
+                f"PARITY_CONTEXT_RE no longer match it and the guard is vacuous there."
+            )
     return problems
 
 
@@ -860,6 +883,24 @@ def self_test() -> int:
         print("  FAIL: splitter fragments block scalars at prose colons")
     else:
         print("  PASS: splitter keeps a block scalar whole across prose colons")
+
+    # A prose surface whose units are too coarse defeats both hedge guards silently - the
+    # ADCK5-notes.md Localisation section had no blank lines and ran as one list-level unit.
+    # This is the coarse-unit shape again, so it gets an invariant rather than a fix-and-hope.
+    COARSE = 1500
+    for surface in ("ADCK5-notes.md", "ADCK5-bioinformatics/RESULTS.md"):
+        oversized = [
+            u for u in _paragraphs(all_surfaces(good)[surface], surface) if len(u) > COARSE
+        ]
+        if oversized:
+            failures.append(
+                f"{surface} has {len(oversized)} unit(s) over {COARSE} chars; the hedge guards "
+                f"run per unit, so a coarse unit lets an unhedged claim ride along with an "
+                f"unrelated hedge. First: {oversized[0].strip()[:70]!r}"
+            )
+            print(f"  FAIL: {surface} has over-coarse units")
+        else:
+            print(f"  PASS: {surface} units are fine-grained enough for the hedge guards")
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them
