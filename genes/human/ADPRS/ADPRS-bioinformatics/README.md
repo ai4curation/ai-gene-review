@@ -1,6 +1,6 @@
 # ADPRS computed evidence
 
-One script, stdlib only, no third-party dependencies.
+Two scripts. `verify_adprs_claims.py` is stdlib only; `audit_row_quotes.py` needs PyYAML.
 
 ```bash
 uv run python verify_adprs_claims.py --fetch      # query APIs -> results.json + RESULTS.md
@@ -24,6 +24,27 @@ What it recomputes, and which claim in `ADPRS-ai-review.yaml` each supports:
 | 5. GO branch placement of the ADP-ribosyl hydrolases | the ontology question in `suggested_questions` |
 | 6. IntAct HuRI records and partner promiscuity | `MARK_AS_OVER_ANNOTATED` on both `GO:0005515` rows |
 | 7. retraction/erratum scan | the `reference_review` notes on `PMID:30045870` and `PMID:30100084` |
+
+## `audit_row_quotes.py` — the quote-relevance guard
+
+```bash
+uv run python audit_row_quotes.py            # audit ADPRS-ai-review.yaml
+uv run python audit_row_quotes.py --self-test
+```
+
+The repo's reference validator checks that a `supporting_text` is a **verbatim substring**
+of its cited paper. It does not check that the sentence is *about the row it sits under* —
+so a mitochondrial-matrix quote under a `nucleus` row passes every automated gate while
+supporting nothing. Nine such rows shipped in commit `aa019d486` and were caught in review.
+
+This guard requires, per row, either a quote matching a topic pattern declared for that
+GO id (or for its `proposed_replacement_terms`, since a MODIFY row's quote should support
+the term it is moving *to*), or a `full_text_unavailable: true` marker **and** an explicit
+limitation in `reason` — both halves, or the escape hatch becomes a bypass.
+
+Break-test F runs it against the YAML at `aa019d486`, the version that actually shipped
+the defect. What it cannot do is judge whether an on-topic sentence actually *entails* the
+claim; that is a reading task, and the docstring says so.
 
 Deliberate limitation, also stated inside the script and in `RESULTS.md`: the judgement
 that `PMID:33769608` contains no poly(ADP-ribose) experiment is a reading of the full

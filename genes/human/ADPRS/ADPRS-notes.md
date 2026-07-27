@@ -303,3 +303,96 @@ including one that flips a single boolean to prove the report is sensitive to th
 sibling-versus-descendant claim rather than merely to a blanked input. What it explicitly
 does **not** mechanise is the reading judgement in Finding 3 — a phrase-presence check
 cannot prove the absence of an experiment, and the file says so.
+
+## Round 2 — the reviewer found nine quotes that were verbatim and off-topic
+
+The repo's reference validator checks that a `supporting_text` is a **verbatim substring**
+of its cited paper. It does not check that the sentence is *about the row it sits under*.
+Nine `supported_by` entries here passed every automated gate while citing something else —
+a mitochondrial-matrix sentence under `nucleus`, one sequence-identity sentence reused
+under `cytoplasm` and twice under PARG activity, a localisation sentence under an activity
+row, and the paper's own **title** under both protein-binding rows. All nine are fixed.
+
+Two of the fixes are not "find a better quote", because for four rows **no better quote
+exists in the cached record**:
+
+- `GO:0005634 EXP PMID:17991898` — the cached copy is abstract-only and the abstract is
+  entirely mitochondrial. UniProt records `Nucleus {ECO:0000269|PubMed:17991898}` from the
+  full text.
+- `GO:0005737 EXP PMID:16278211` — abstract-only, and purely biochemical; no localisation
+  sentence at all.
+- `GO:0140290` / `GO:0140292` `IDA PMID:33186521` — abstract-only, and the one ARH3
+  sentence names mono-ADPr without naming the **serine** linkage that both terms assert.
+- `GO:0005634 IDA PMID:30045870` — abstract-only; supports recruitment to DNA lesions
+  (necessarily nuclear) but never says "nucleus". Note UniProt cites this paper for
+  *Chromosome*, not *Nucleus*, which matches what the abstract says.
+
+Those rows now carry a `full_text_unavailable: true` marker plus an explicit statement of
+the limitation in `reason`, and the claim is anchored on a paper that does state it. A
+recorded absence beats a verbatim quote about something else, which looks checked and is
+not.
+
+A fifth case is worth separating: `GO:0005759 EXP PMID:34479984` has **full text
+available**, and the word "matrix" occurs **0 times** in it (against 89 for
+"mitochondri"). The paper measures the organelle by MitoID imaging and fractionation;
+UniProt's *matrix* assignment for this reference must rest on detail the text does not
+spell out. Per CLAUDE.md an experimental call is not overruled from incomplete evidence,
+so the row stays ACCEPT with the limitation stated, and the matrix claim is anchored on
+`PMID:17991898`, which demonstrates PAR-degrading activity *inside* the matrix directly.
+
+### The guard, and its own three defects
+
+`ADPRS-bioinformatics/audit_row_quotes.py` makes the rule executable: every row must have
+a quote matching a topic pattern declared **for its GO id** (the stable entity), or a
+`full_text_unavailable` marker **and** a stated limitation — both halves, or the escape
+hatch becomes a bypass for the defect it guards.
+
+Running it caught three more rows the reviewer had not listed, and **three defects in the
+guard itself**:
+
+1. `\bMg\b` did not match **`MgA`/`MgB`** — the exact residues the `GO:0000287` row is
+   about. A word-boundary pattern that excludes the specific form of the word it is
+   looking for.
+2. `Ser-ADPr` did not match **`Ser-linked`**, the Drosophila paper's wording.
+3. **A MODIFY row was judged against the term it is moving away from.** On
+   `GO:0004649 IMP PMID:33769608` the whole finding is that the quote is *not* about
+   poly(ADP-ribose); the guard should test against the **replacement** term. Fixed by
+   collecting topics from `proposed_replacement_terms` too — and by failing loudly if a
+   replacement term has no declared pattern, rather than skipping it.
+
+Break-test F runs the guard against the YAML at commit `aa019d486` — the version that
+actually shipped the defect — and it fires on precisely the `GO:0005634` row. A self-test
+proves the guards you thought of fire; running against the shipped defect is the stronger
+claim.
+
+### A provider error inherited into `core_functions`
+
+`core_functions` said the O-acetyl-ADP-ribose rate exceeds the poly(ADP-ribose) rate "by
+orders of magnitude". `PMID:17075046` says only
+[PMID:17075046 "ARH3-catalyzed generation of ADP-ribose from O-acetyl-ADP-ribose was
+significantly faster than from poly(ADP-ribose)."] The 250-fold figure in the same
+abstract is a **different comparison** —
+[PMID:17075046 "The rate of O-acetyl-ADP-ribose hydrolysis by recombinant ARH3 was
+250-fold that observed with ARH1; ARH2 and poly(ADP-ribose) glycohydrolase were
+inactive."] — ARH3 against **ARH1**, not against PAR.
+
+The affinage record makes exactly that conflation: *"at a rate 250-fold faster than its
+hydrolysis of poly(ADP-ribose)"*. So this is a provider error that reached the review
+through background knowledge rather than through a quoted sentence — the campaign rule
+"never quote an affinage sentence" does not protect against absorbing its arithmetic. Both
+sentences are now quoted side by side so the distinction cannot collapse again.
+
+### Two suggestions judged, one taken and one declined
+
+- **`GO:0000287` as a standalone core function — taken.** Removed. Magnesium is a property
+  of ADPRS's catalytic centre, not a function anyone would list if asked what the gene
+  does; the two Mg quotes and the MgA/MgB role split moved into the serine-hydrolase core
+  function's description, where they explain catalysis. The GOA row stays ACCEPT.
+- **`GO:0006287` as REMOVE rather than MARK_AS_OVER_ANNOTATED — declined, on a specific
+  ground.** The compartment argument shows the *route* is invalid (a mitochondrial-matrix
+  reaction cannot inherit a nucleoplasmic pathway's GO term); it does not show the biology
+  is false. ADPRS is genuinely recruited to nuclear DNA lesions and erases the ADP-ribose
+  marks laid down during single-strand break repair, and PARG — the other non-gap-filling
+  recipient of the identical Reactome term — is likewise a real participant. REMOVE would
+  need a positive demonstration that ADPRS is absent from base-excision repair, and none
+  exists.
