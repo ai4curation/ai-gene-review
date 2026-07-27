@@ -436,9 +436,10 @@ two genes (same term, evidence code, reference and WITH/FROM). **Seven agree; th
 | `GO:0010468` IEA `GO_REF:0000002` | **MODIFY → `GO:0006355`** | ACCEPT |
 | `GO:0003712`, `GO:0005634`, `GO:0006355`, `GO:0032783`, `GO:0050877`, and both shared `GO:0005515` rows | — | agree |
 
-Read carefully, only the first is a substantive disagreement; the other two are the *same
-assessment implemented differently*, which is still an inconsistency worth resolving because the
-two reviews recommend different things for identical rows.
+**All three are the same assessment implemented differently** — this is a correction to an
+earlier draft of this section, which called the `GO:0008023` divergence substantive because it had
+not read far enough into that row's reason. It still matters, because two reviews recommend
+different things for identical rows, but neither review is wrong about the biology.
 
 **`GO:0006354`** — we agree on the biology. AFF4's review independently reaches `GO:0006368` as
 the right term on its own human evidence, and verified the same ancestor closure. It implements
@@ -451,14 +452,22 @@ verified ancestor of terms the gene already holds. AFF4 accepts on that basis; t
 MODIFYs on the upstream argument that `IPR007797` supports the more precise term for every
 protein it matches. Again a mechanism difference on a shared assessment.
 
-**`GO:0008023` — the real divergence, and I think both checks are right about different
-questions.** AFF4's review ran the *projection* test (does the phenotype spread across the
+**`GO:0008023`.** AFF4's review ran the *projection* test (does the phenotype spread across the
 subunits?) and reports a clean negative, which this review's own data confirms: the paper's
-functional term `GO:0042795` sits on 7 entities and reaches neither AFF4 nor AFF1. That is
-sound. But it is not the question this review asked. The *granularity* question — which
-recipients of this reference got the child term `GO:0032783` — has a different answer: **10 of
-the 11 Drosophila recipients did, and none of the 11 human ones.** The two tests are orthogonal,
-and a negative on projection does not bear on granularity.
+functional term `GO:0042795` sits on 7 entities and reaches neither AFF4 nor AFF1. That is sound.
+
+**And it also asked the granularity question** — an earlier draft of this section said it had not,
+which was wrong and is the reason this paragraph exists. Its reason ends *"GO:0008023 is a verified
+ancestor of GO:0032783, so core_functions records the specific complex and not this parent"*, and
+its `core_functions.in_complex` is `GO:0032783`, identical to this review's. So both reviews reached
+the same place and differ only in whether the parent row is modified or left standing beside a
+specific `core_functions` entry.
+
+What is genuinely unique to this review is therefore **not either gene's verdict** but the
+measurement behind the upstream recommendation: resolving every recipient's organism shows **10 of
+the 11 Drosophila recipients got the child term and none of the 11 human ones did**, which is an
+argument about the annotation pipeline rather than about AFF1 or AFF4. The projection and
+granularity tests are orthogonal, and a negative on the first does not bear on the second.
 
 One checkable correction for that review: it states this term reaches **16** entities and
 enumerates 16. The fully-paginated count is **17** — the enumeration omits **human ICE2
@@ -477,28 +486,53 @@ gene-level differences, not propagation defects.
 AFF1 and AFF4 have **opposite** effects on osteogenesis (`PMID:28955517`), so any term moved
 between them in either direction inverts the biology. Neither review does this.
 
-## Where the risk actually sat, across six review rounds
+## Where the review effort actually went
 
-Worth recording for whoever reviews AFF2, AFF3 or AFF4 next. **Not one reviewer finding was
-about the curation.** No term, action, evidence code, qualifier, quote or reported biological
-number was ever challenged. All eleven findings were about claims made *about the checks*:
+Worth recording for whoever reviews AFF2, AFF3 or AFF4 next, and **corrected twice** — the first
+two drafts of this section overstated its own claim in two ways that the PR reviewer caught, which
+is itself the most on-brand thing in this file.
 
-| class | instances |
+**What is true.** No **GOA row's** term, evidence code or reference was ever challenged, no
+`supporting_text` was ever wrong, no biological claim in the description or the reasons was ever
+refuted, and the seven MODIFY/NEW proposals stand exactly as first written. The curation
+deliverable has been byte-stable in every structured field since round 2.
+
+**What the first draft got wrong, and why it matters.** It said no term was "ever challenged". That
+is false: round 1 found `core_functions[0].directly_involved_in` carrying `GO:0032968` **together
+with its ancestor** `GO:0006355`, and commit `72c74fa` removed the ancestor. That is a change to a
+structured curation field in response to a review finding, and writing it out of the record to make
+a tidier story is exactly the failure the rest of this file is about. It also attributed *all* the
+findings to the reviewer when two — the 11-vs-12 recipient count (`d4de157`) and the disorder figure
+(`2206410`) — were found here, by deriving a number independently and comparing.
+
+**The honest shape.** One finding touched a curation field (the redundant ancestor above). Every
+other finding was about a claim made *about the checks*:
+
+| class | notes |
 |---|---|
-| a count disagreeing with its own enumeration | 3 (the human recipient set; the `MODIFY` row count; the stated total) |
-| a number estimated where a derivable one existed | 1 (disorder coverage: 901, not "~1000") |
-| a guard scoped to the failure already known | 2 (check G's first two clauses; the tally clause) |
-| a check matching only its own exemption, i.e. vacuous | 2 (clause 4's prose regex; the total sub-clause) |
-| a report string asserting what it never read | 1 (the `in_complex`/`locations` live instance) |
-| a silent-nothing lookup where siblings raise | 1 |
-| prose duplicated or narrating process in a biology field | 1 |
+| a count disagreeing with its own enumeration | three times: the human recipient set, the `MODIFY` row count, the stated total |
+| a number estimated where a derivable one existed | once: disorder coverage was "~1000", the feature table gives 901 |
+| a guard scoped to the failure already known | twice: check G's first clauses, then the tally clause |
+| a check matching only its own exemption, i.e. vacuous | twice: clause 4's prose regex, and the total sub-clause |
+| a report string asserting what it never read | once: the `in_complex`/`locations` live instance |
+| a silent-nothing lookup where its siblings raise | once |
+| prose duplicated, or narrating process in a biology field | three times |
+| a sibling's work characterised without reading far enough into it | once: see the AFF4 section above |
 
-Two further defects were found by the guards' own break-tests failing, not by reading the code —
-a case-sensitive number match and an enumeration regex that required the *correct* list, so
-substituting a symbol made the check go silent. The generalisable lesson is the campaign's own:
-a passing self-test proves the guards you thought of fire, and the coverage question stays a
-reading question. The cheapest detector by far was **deriving an expected number independently
-and comparing** — it found four of the eleven.
+Two further defects were found only by the guards' own break-tests **failing** — a case-sensitive
+number match, and an enumeration regex that required the *correct* list so substituting a symbol
+made the check go silent. That is the entry to carry forward: a passing self-test proves the guards
+you thought of fire, and coverage stays a reading question.
+
+**The cheapest detector by far was deriving an expected number independently and comparing.** It
+found four defects unaided. The second cheapest was reading a sibling's record rather than
+summarising it from memory — which is how the AFF4 comparison above got fixed, and how it was
+wrong in the first place.
+
+**One process failure of mine, recorded because it is the kind that repeats.** After posting a
+"stopping here" comment I pushed the AFF4 comparison **without reading the review that had landed
+in between**, so the first of these two corrections sat unaddressed for a whole round. A stopping
+criterion is not a reason to stop reading the thread.
 
 ## Process
 
