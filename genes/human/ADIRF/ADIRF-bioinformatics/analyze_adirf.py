@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 import time
 import urllib.error
@@ -1270,6 +1271,32 @@ def _expect_problem(audit_fn, fragment: str, label: str, seed: dict | None = Non
 _SECTION_A_SEED = {"A_muroidea_loss": {"ncbi_gene_counts": {"Actinopterygii_ADIRF": 0}}}
 
 
+def assert_no_hardcoded_counts() -> None:
+    """Refuse a hardcoded copy of any number this script measures.
+
+    A previous version printed the Actinopterygii symbol count as a bare literal
+    beside the live section-A measurement of the same quantity, so the two could
+    drift apart silently.  The fix was to derive it -- but describing that fix as
+    "asserted absent from the source" was itself unbacked, because the scan
+    existed only in a throwaway edit script.  This is that scan, living next to
+    the thing it guards.
+    """
+    src = Path(__file__).read_text()
+    # Match the SHAPE -- a literal digit run immediately before the name of a
+    # clade whose count section A measures -- rather than storing the full
+    # strings. Storing them made the guard match its own vocabulary list, which
+    # is the same self-reference trap a retracted-phrase matcher falls into.
+    # A derived emission reads "{n_teleost_symbols} Actinopterygii", which has no
+    # digits and so cannot match.
+    pattern = re.compile(r"\d+\s+(?:Actinopterygii|Aves|avian|Sciuridae|Muroidea)")
+    hits = sorted(set(pattern.findall(src)))
+    if hits:
+        raise AssertionError(
+            f"hardcoded copies of measured quantities found in {Path(__file__).name}: "
+            f"{hits} -- derive them from audit.results instead, or they will drift "
+            f"from the measurement they duplicate")
+
+
 def self_test() -> int:
     print("self-test: break each guard in the direction it exists for, and in the")
     print("happy direction, asserting the failure MESSAGE not merely the failure.")
@@ -1495,6 +1522,44 @@ def self_test() -> int:
             f"results were absent; got {audit.problems!r}")
     print(f"  ok  F/missing-dependency: {hits[0][:88]}...")
 
+    # ---- a guard whose message cannot be delivered is not a guard ---------
+    # An incomplete run must print FAILED INVARIANTS, not die on a KeyError
+    # inside write_report. Exercised by dropping a section's results.
+    audit = Audit()
+    audit.results.update(_SECTION_A_SEED)
+    absent = [k for k in ("A_muroidea_loss", "B_ipr_reach", "C_signature_promiscuity",
+                          "D_hpa_vs_goa", "E_panther_node_reach",
+                          "F_teleost_conservation") if k not in audit.results]
+    if not absent:
+        raise AssertionError("self-test report/incomplete: the fixture is complete, so "
+                             "the completeness check cannot be exercised")
+    try:
+        write_report(audit)
+    except KeyError:
+        pass    # exactly the failure main() must now pre-empt
+    else:
+        raise AssertionError("self-test report/incomplete: write_report tolerated a "
+                             "missing section, so main()'s completeness check is "
+                             "unreachable and proves nothing")
+    print(f"  ok  report/incomplete: write_report raises on {absent[:2]}..., which is why "
+          f"main() checks completeness before calling it")
+
+    # ---- the source scan must fire on a reintroduced literal --------------
+    real_read = Path.read_text
+    try:
+        Path.read_text = lambda self, *a, **k: (
+            f'w("The {103} Actinopterygii figure")' if self.name == Path(__file__).name
+            else real_read(self, *a, **k))
+        try:
+            assert_no_hardcoded_counts()
+        except AssertionError as exc:
+            assert "hardcoded copies" in str(exc), f"wrong failure: {exc}"
+            print(f"  ok  source-scan: {str(exc)[:80]}...")
+        else:
+            raise AssertionError("source scan did not fire on a reintroduced literal")
+    finally:
+        Path.read_text = real_read
+
     # ---- pagination guard: a clamped read must raise ---------------------
     real_get = globals()["_get"]
 
@@ -1533,6 +1598,7 @@ def main() -> int:
     ap.add_argument("--self-test", action="store_true",
                     help="break-test the guards instead of running the audit")
     args = ap.parse_args()
+    assert_no_hardcoded_counts()
     if args.self_test:
         return self_test()
 
@@ -1547,6 +1613,24 @@ def main() -> int:
     (HERE / "results.json").write_text(
         json.dumps({"problems": audit.problems, **audit.results},
                    indent=2, sort_keys=True) + "\n")
+
+    # write_report reads every section's key unconditionally, so a section that
+    # returned early would kill the run with a KeyError BEFORE the problems
+    # below are printed -- i.e. the guard's message would never reach the
+    # operator. Check for completeness first and report instead.
+    expected = ("A_muroidea_loss", "B_ipr_reach", "C_signature_promiscuity",
+                "D_hpa_vs_goa", "E_panther_node_reach", "F_teleost_conservation")
+    absent = [k for k in expected if k not in audit.results]
+    if absent:
+        audit.problems.append(
+            f"section(s) did not complete and produced no results: {absent}; "
+            f"RESULTS.md was NOT regenerated so it cannot silently go stale")
+        print(f"wrote {HERE/'results.json'} (RESULTS.md skipped: {absent})")
+        print("FAILED INVARIANTS:")
+        for p in audit.problems:
+            print("  -", p)
+        return 1
+
     (HERE / "RESULTS.md").write_text(write_report(audit))
     print(f"wrote {HERE/'results.json'} and {HERE/'RESULTS.md'}")
     if audit.problems:

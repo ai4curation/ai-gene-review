@@ -534,7 +534,25 @@ be silently reverted on the next regeneration.
    now takes a `seed`, and the dependency test is the one case that deliberately does *not*
    seed. Found by the break-tests failing with the *wrong message*, which is exactly why
    asserting the message rather than the failure matters.
-10. **A string-surgery artefact reached the emitted YAML.** Replacing a phrase that spanned
+10. **A guard whose message could not be delivered.** `write_report` reads every section's
+    results key unconditionally, so a section that took its new early return would kill the
+    run with a `KeyError` *before* `main()` printed the FAILED INVARIANTS block — the guard
+    would fire and the operator would never see why. `main()` now checks section completeness
+    first, reports, and declines to regenerate `RESULTS.md` so it cannot silently go stale.
+11. **A guard that matched its own vocabulary.** The source scan added to back the claim
+    "the literal is asserted absent" stored the forbidden strings as literals, so it found
+    itself — the same self-reference trap a retracted-phrase matcher falls into. Restructured
+    to match the *shape* (`\d+\s+(?:Actinopterygii|Aves|…)`), and the docstring documenting the
+    defect was **reworded rather than exempted**, since an exemption is the bypass anyone
+    wanting to reintroduce the literal would use. The break-test fixture synthesises the
+    violating string at runtime only (`{103} Actinopterygii` in source has a brace between the
+    digits and the clade, so it cannot match while the formatted value does).
+12. **A claim about a check that did not exist.** The round-3 commit message said the literal
+    was "asserted absent from the source"; the scan lived in a throwaway edit script, not in
+    the repository. That is the "a verification you performed is not a verification that
+    exists" failure. The scan is now committed next to the thing it guards and runs in both
+    modes.
+13. **A string-surgery artefact reached the emitted YAML.** Replacing a phrase that spanned
     wrapped string literals in the builder left `"...restating the nuclear rows. It is This row
     rests on..."` in a `review.reason`, and because the YAML is generated it reproduced on every
     run. Nothing in this repo checks emitted prose for well-formedness; the reviewer caught it.
