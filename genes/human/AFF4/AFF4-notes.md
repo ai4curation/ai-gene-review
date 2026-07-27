@@ -488,9 +488,13 @@ Subcellular additional location:  Nucleoli fibrillar center, Nuclear bodies
   It reported a clean zero over the first 30. Adding `PMID:28955517` in response to
   review took it to **2 of 32**: that paper carries a **2020 erratum**
   (`PMID:32257529`), which the check found rather than I did. The erratum's cached
-  record says only *"This corrects the article"*, so what was corrected cannot be
-  established from anything available here; that is stated as unknown in the reference
-  review and in the `GO:0045669` row rather than assumed immaterial. This is why the
+  record states the correction in full: the second lane of Fig. 7b was mislabelled and
+  should be **siAFF4**, the α-tubulin images in Figs. 6b and 7b were misused and have been
+  replaced, and the authors state it *"does not affect any of our original conclusions"*.
+  Reading the source paper places both panels in the **mechanism** figures rather than in
+  the assays annotated from — Fig. 6b is the AFF1→DKK1 protein blot, Fig. 7b the AFF4→ID1
+  protein blot. **I first recorded the scope as unknown; §17 records why that was wrong.**
+  This is why the
   check must be re-run whenever a reference is added, and why the report now renders a
   non-zero result explicitly instead of only announcing nulls.
 - **Logical-opposite citation cross-product** (positive vs negative regulation of the
@@ -777,18 +781,119 @@ Reading the paper made three things true that I had not known:
   cross-check this pair has produced.
 - **It carries a 2020 erratum**, `PMID:32257529`, which the committed check found rather
   than I did — the corrections check went from 0 of 30 to **2 of 32** purely by adding the
-  reference. The erratum's cached record says only *"This corrects the article"*, so the
-  scope is unknown and is stated as unknown in both the reference review and the
-  `GO:0045669` row, which is flagged `DISPUTED` rather than `VERIFIED` for that reason.
+  reference. Its scope is **narrow, specific and stated in the cached record**: the second
+  lane of Fig. 7b was mislabelled and should be **siAFF4**, the α-tubulin images in
+  Figs. 6b and 7b were misused and replaced, and the authors state it *"does not affect any
+  of our original conclusions"*. Reading the source paper shows both are protein blots in
+  the **mechanism** figures — Fig. 6b the AFF1→DKK1 western, Fig. 7b the AFF4→ID1 western —
+  so neither is among the differentiation or bone-formation assays the `GO:0045669` row
+  rests on, and the reference is `VERIFIED`. **I first recorded the scope as unknown; §17
+  records why.**
 
-The four non-blocking items were also taken. `GO:0050877`'s CHOPS clause is **withdrawn**
-(§5) because using a gain-of-function developmental phenotype as evidence of molecular
-involvement is the move the `GO:0032968` row explicitly refuses, and a review cannot
-refuse it in one place and rely on it in another; the row stays `KEEP_AS_NON_CORE` on the
-donors' own evidence and the term's breadth. `GO:0003712` moved from `molecular_function`
+The four non-blocking items were also taken. `GO:0050877`'s CHOPS clause was first
+withdrawn and is now **restored with its disclaimer made explicit** (§5, and item 0 above):
+withdrawing it responded to a review point the reviewer then retracted on re-reading, and
+the row now states plainly that the phenotype is named as context and not as evidence of a
+molecular function. The row stays `KEEP_AS_NON_CORE` on the donors' own evidence and the
+term's breadth. `GO:0003712` moved from `molecular_function`
 to `contributes_to_molecular_function`, removing an unexplained asymmetry with
 `GO:0003711` and converging with the AFF1 review. The nine `GO:0030674` MODIFY rows now
 state what licenses the replacement — the gene's aggregate structural evidence, not each
 row's own reference. And the `GO:0006354` reason now rests its verdict on the WITH/FROM
 fact that is checkable from the committed GOA tables, citing the sibling review as a
 cross-reference rather than as evidence.
+
+## 17. The worst error in this review: a stale flag, and a fact I called unknowable
+
+Recorded in full because it is the class of failure this PR spends the most effort
+policing, and I produced a live instance of it in the same commits.
+
+**What happened.** I asserted in **five places** — three in the review YAML, two here —
+that the scope of `PMID:28955517`'s 2020 erratum *"cannot be established from anything
+available here"*. It could. `publications/PMID_32257529.md`, a file **this PR commits**,
+has a `## Full Text` section that states it exactly:
+
+> *"we regrettably found that the second lane of originally published Fig. 7b was labeled
+> incorrectly. It should be siAFF4. And in Figs. 6b and Fig. 7b, the images of a-tublin
+> were inadvertently misused. The correct images have been replaced. We sincerely
+> apologize for this oversight, but it does not affect any of our original conclusions."*
+
+**What misled me.** That file's frontmatter reads `full_text_available: false` — while the
+body is in the same file, twenty lines below. I read the flag and stopped. The flag is
+stale, and it is stale in the direction that suppresses exactly the reading the annotation
+needed.
+
+**Why this is not a small slip.** This is a known defect class in this repo: PR #2287
+removed **80** stale `full_text_unavailable` flags across 24 reviews *precisely because
+the flag suppresses the extraction the annotation needs*, and 39 of them sat on references
+with empty `findings`. The campaign brief also carries the mirror rule — never *set* such
+a flag without checking the cache. I knew both and still trusted the flag over the file.
+
+**And the sign of the error was inverted, which is the harmful part.** I was not merely
+vague: I warned a reader that something in a paper my annotation rests on *might* be
+wrong, when the record says the authors' conclusions stand and — verified independently
+against the source paper's own full text — the two corrected panels are protein blots in
+the **mechanism** figures (Fig. 6b the AFF1→DKK1 western, Fig. 7b the AFF4→ID1 western),
+neither of which is among the differentiation or bone-formation assays the `GO:0045669`
+row quotes. A hedge that is both unnecessary and pointed at the wrong thing is worse than
+no hedge, because a curator would spend time on it.
+
+**Fixed, on all five surfaces**, found by grepping the phrasing rather than editing from
+memory: the erratum's actual scope is now stated; `PMID:28955517` goes from `DISPUTED` to
+`VERIFIED`, since the `DISPUTED` marking rested *solely* on the scope being unknown; and
+the one AFF4-relevant detail — the mislabelled lane should be **siAFF4** — is named
+instead of sitting behind an "unknown".
+
+**Rules I would put in the brief.**
+
+1. **Never trust `full_text_available: false`. Grep the body.** The flag and the content
+   live in the same file and can disagree; the flag is the unreliable one.
+2. **A claim that something is unknowable is a factual claim, and it is checkable.** It
+   deserves the same verification as a positive claim, and it is more dangerous, because
+   nothing downstream will contradict it — an absence produces no error.
+3. **When you hedge, check which way the hedge points.** "This may be unreliable" and
+   "this is reliable and here is why" are different messages to a curator, and getting the
+   sign wrong wastes their attention rather than protecting it.
+4. The cached record's own fetch metadata is a *defect worth reporting*: this file was
+   written with `full_text_extraction_method: xml` and a populated `## Full Text` section,
+   yet `full_text_available: false`. I have not hand-edited the cache, since
+   `publications/` is machine-generated and marked do-not-edit, but the fetcher appears to
+   mis-set the flag for short Correction records and that is worth a fix upstream.
+
+### 17b. Applying the mirror rule to my own flags found a second instance
+
+Having been caught trusting one stale flag, I audited **every** `full_text_unavailable`
+this review sets — 15 at reference level and 6 at supporting-text level — against the
+cache **body** rather than against the frontmatter. Two mismatches, and they resolve
+differently, which is the point of inspecting rather than counting:
+
+| reference | frontmatter | `## Full Text` body | verdict |
+|---|---|---|---|
+| `PMID:32257529` (the erratum) | `false` | 509 chars, **states the whole correction** | **materially wrong** — fixed on all five surfaces |
+| `PMID:22190034` (HIV–human complexes) | `false` | 2 594 chars | **benign** — the body is the abstract restated plus a Methods Summary, with no results section |
+| the other 19 | `false` | 0 chars | flag correct |
+
+For `PMID:22190034` I read the body rather than assuming either way. It contains no
+mention of AFF4, ELL2, P-TEFb, CDK9 or the super elongation complex, so the
+`full_text_unavailable: true` marking is materially correct even though a byte-count
+detector flags it. That is a **junk/partial extraction**, the same shape as the cached
+publication in the ADPRS conflict whose extra length was a failed PDF grab — so *length is
+not a proxy for content*, in either direction.
+
+**And my first grep of that body was itself wrong.** Searching for `AFF`, `ELL` and `Tat`
+unanchored returned 2, 8 and 3 "hits" — every one of them inside an ordinary word
+(*machinery*, *cellular*, *cell lines*, *affinity*, *facilitates*, *transfected*). Had I
+counted instead of reading the context, I would have concluded the body was full of
+gene mentions and manufactured a second false alarm out of the fix for the first. **Any
+substring test against a gene symbol needs a word boundary**, and the campaign already
+knows this from `"reviewed" in entryType` matching *un*reviewed.
+
+So the durable rule is three-part, not one: **grep the body, not the flag; read the body,
+not its length; and anchor the grep.**
+
+The check is now committed as `audit_aff4_review.py` check **J**, with an enumerated
+exemption list carrying the reason for each allowed case rather than a size threshold, and
+a break-test that fires on `PMID:32257529` — the exact reference the defect shipped on,
+which is a stronger claim than a self-test. The two byte counts in the table above are the
+script's, after a first draft of this section hand-counted them as 700 and 2 608; a number
+worth stating is worth taking from the tool that computes it.

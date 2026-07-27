@@ -25,6 +25,8 @@ H. the hedge sweep, over EVERY structured slot: nothing this review declines in
    prose may be asserted flatly in a slot.
 I. quote SUBJECT: every row must have at least one PMID quote naming AFF4 or the row's
    own partner. Verbatim is not the same as relevant and nothing else checks it.
+J. ``full_text_unavailable`` flags must agree with the cache BODY, not with the cache's own
+   frontmatter flag. This review shipped the harm that rule exists to prevent.
 
 Usage::
 
@@ -548,6 +550,71 @@ def check_i_quote_subject(data: dict, problems: list[str]) -> None:
         problems.append("[I] examined zero rows with PMID quotes -- refusing a vacuous pass.")
 
 
+# References whose cache has a `## Full Text` body that does NOT invalidate the
+# `full_text_unavailable` flag, each with the reason it was inspected and allowed. An
+# enumerated exception, not a size threshold: length is not a proxy for content.
+FULLTEXT_FLAG_EXEMPT = {
+    "PMID:22190034": "body is the abstract restated plus a Methods Summary, with no results "
+                     "section and no mention of AFF4, ELL2, P-TEFb, CDK9 or the super "
+                     "elongation complex -- inspected, not inferred from its length",
+}
+
+
+def check_j_fulltext_flags(data: dict, problems: list[str]) -> None:
+    """Every ``full_text_unavailable: true`` must agree with the cache BODY, not the
+    cache's own frontmatter flag.
+
+    This review shipped an instance of the harm: `PMID:32257529`'s frontmatter reads
+    ``full_text_available: false`` while the body twenty lines below states the whole
+    correction, and five surfaces of this review consequently asserted that the erratum's
+    scope could not be established. PR #2287 removed 80 such stale flags across the corpus
+    for exactly this reason -- the flag suppresses the extraction the annotation needs.
+    So the flag is never the authority; the body is.
+    """
+    seen = 0
+
+    def bodies(ref: str) -> int:
+        if not ref.startswith("PMID:"):
+            return 0
+        _, txt = source_text(ref)
+        if "## Full Text" not in txt:
+            return 0
+        return len(txt.split("## Full Text", 1)[1].strip())
+
+    def flagged(ref: str, where: str) -> None:
+        nonlocal seen
+        seen += 1
+        n = bodies(ref)
+        if n < 200 or ref in FULLTEXT_FLAG_EXEMPT:
+            return
+        problems.append(
+            f"[J] {where} marks {ref} full_text_unavailable, but its cache has a "
+            f"{n}-character `## Full Text` body. Read the body before flagging -- the "
+            "frontmatter flag is the unreliable half of the file. If the body is a junk or "
+            "partial extraction, add the reference to FULLTEXT_FLAG_EXEMPT with the reason."
+        )
+
+    for r in data.get("references") or []:
+        if r.get("full_text_unavailable"):
+            flagged(r["id"], f"references[{r['id']}]")
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k in ("supported_by", "provenance", "findings") and isinstance(v, list):
+                    for e in v:
+                        if isinstance(e, dict) and e.get("full_text_unavailable"):
+                            flagged(e["reference_id"], f"{k} entry")
+                walk(v)
+        elif isinstance(node, list):
+            for e in node:
+                walk(e)
+
+    walk(data)
+    if seen == 0:
+        problems.append("[J] examined zero full_text_unavailable flags -- refusing a vacuous pass.")
+
+
 def audit(text: str | None = None) -> list[str]:
     problems: list[str] = []
     data, raw = load_review(text)  # check A: raises on duplicate keys / anchors
@@ -559,6 +626,7 @@ def audit(text: str | None = None) -> list[str]:
     check_g_core_functions(data, problems)
     check_h_hedge_sweep(data, problems)
     check_i_quote_subject(data, problems)
+    check_j_fulltext_flags(data, problems)
     return problems
 
 
@@ -759,6 +827,24 @@ def self_test() -> int:
         f"the mutation also tripped check C, so this test does not isolate check I: {got}")
     _expect_problem(mutated, "[I]", "names AFF4 or the row's partner",
                     "I: a row whose only PMID quote names neither gene nor partner is caught")
+
+    # J: a full_text_unavailable flag on a reference whose cache body states the very
+    #    thing the review would otherwise call unknowable. The mutation must target the
+    #    erratum specifically, because that is the reference the defect actually shipped on.
+    era = """- id: PMID:32257529
+  title: 'Correction to: AFF1 and AFF4 differentially regulate the osteogenic differentiation
+    of human MSCs.'
+  publication_type: COMMENT_EDITORIAL"""
+    assert base.count(era) == 1, "fixture drifted: the erratum reference anchor is gone"
+    _, ertxt = source_text("PMID:32257529")
+    assert "## Full Text" in ertxt and len(ertxt.split("## Full Text", 1)[1].strip()) >= 200, (
+        "fixture drifted: PMID:32257529's cache no longer has a full-text body, so this "
+        "break-test would pass vacuously")
+    assert "PMID:32257529" not in FULLTEXT_FLAG_EXEMPT, \
+        "fixture drifted: the erratum is exempted, so check J could not fire on it"
+    _expect_problem(base.replace(era, era + "\n  full_text_unavailable: true", 1),
+                    "[J]", "character `## Full Text` body",
+                    "J: a full_text_unavailable flag contradicted by the cache body is caught")
 
     print("all break-tests passed")
     return 0
