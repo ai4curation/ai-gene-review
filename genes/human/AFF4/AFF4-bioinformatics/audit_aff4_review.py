@@ -23,6 +23,8 @@ F. every ``summary`` opens with a clause naming its own row's action.
 G. core_functions <-> existing_annotations, in BOTH directions.
 H. the hedge sweep, over EVERY structured slot: nothing this review declines in
    prose may be asserted flatly in a slot.
+I. quote SUBJECT: every row must have at least one PMID quote naming AFF4 or the row's
+   own partner. Verbatim is not the same as relevant and nothing else checks it.
 
 Usage::
 
@@ -474,6 +476,78 @@ def check_h_hedge_sweep(data: dict, problems: list[str]) -> None:
             )
 
 
+"""Subject tokens that make a quote about THIS gene rather than about something else."""
+SUBJECT_TOKENS = (r"\bAFF4\b", r"\bAff4\b", r"\bMCEF\b", r"\bAF5q31\b", r"\bAF4\b")
+
+# Rows whose quotes deliberately do NOT name AFF4, with the reason. Each is a case where
+# naming a different entity IS the evidence, so a blanket rule would be wrong -- but the
+# exemption is enumerated per row rather than left to a global "usually fine".
+SUBJECT_EXEMPT = {
+    ("GO:0050877", "IBA"): "the whole point of the row is that the donor evidence is on "
+                           "paralogues (mouse Aff2/Fmr2 and Drosophila lilli), not on AFF4",
+    ("GO:0034976", "IEA"): "the whole point of the row is that the donor's reference is a "
+                           "genipin/lung-injury study in which Aff4 is not the subject",
+}
+
+
+def check_i_quote_subject(data: dict, problems: list[str]) -> None:
+    """Every quote must name the entity its row is about.
+
+    Verbatim is not the same as relevant, and nothing else in this repo checks it. Two
+    refinements that cost a round elsewhere are built in:
+      * on a MODIFY row the subject is the **proposed replacement**, not the term the row
+        is moving away from;
+      * a quote may instead name the row's **interaction partner**, since a partner-naming
+        sentence is exactly what a protein-binding row needs.
+    Quotes into the computed audit artifact are exempt: those rows carry accessions and
+    GO ids rather than symbols, by design.
+    """
+    n_rows = 0
+    for a in data["existing_annotations"]:
+        key = (a["term"]["id"], a["evidence_type"])
+        partners = []
+        for e in a.get("extensions") or []:
+            lab = (e.get("term") or {}).get("label", "")
+            partners += [w for w in re.split(r"[ /()]+", lab) if len(w) > 2]
+        pmid_quotes = [sb for sb in a["review"].get("supported_by") or []
+                       if sb["reference_id"].startswith("PMID:")]
+        if not pmid_quotes:
+            continue
+        n_rows += 1
+
+        def names_subject(q: str) -> bool:
+            return (any(re.search(pat, q) for pat in SUBJECT_TOKENS)
+                    or any(pr in q for pr in partners))
+
+        # The gate is PER ROW: the ADPRS defect was a row whose evidence was entirely
+        # about a different subject. A per-QUOTE rule would reject legitimate contextual
+        # quotes (a sentence establishing that the compartment belongs to polymerase I,
+        # say) and a guard that forbids legitimate practice gets worked around, not obeyed.
+        if not any(names_subject(sb["supporting_text"]) for sb in pmid_quotes):
+            if key not in SUBJECT_EXEMPT:
+                problems.append(
+                    f"[I] {key[0]} {key[1]} ({a['review']['action']}): not one of its "
+                    f"{len(pmid_quotes)} PMID quotes names AFF4 or the row's partner "
+                    f"{partners or '(none)'}, and the row is not an enumerated exemption."
+                )
+        # Contextual quotes that name neither are reported but do not fail, EXCEPT that a
+        # quote from an abstract-only cache must say so, otherwise it reads as evidence
+        # about the gene when the gene-specific data are in text we do not have.
+        for sb in pmid_quotes:
+            if names_subject(sb["supporting_text"]) or key in SUBJECT_EXEMPT:
+                continue
+            _, src = source_text(sb["reference_id"])
+            abstract_only = re.search(r"^full_text_available:\s*false", src, re.M) is not None
+            if abstract_only and not sb.get("full_text_unavailable"):
+                problems.append(
+                    f"[I] {key[0]} {key[1]}: contextual quote from {sb['reference_id']} names "
+                    "neither AFF4 nor the partner and comes from an abstract-only cache, but "
+                    "carries no full_text_unavailable flag -- the limitation must be stated."
+                )
+    if n_rows == 0:
+        problems.append("[I] examined zero rows with PMID quotes -- refusing a vacuous pass.")
+
+
 def audit(text: str | None = None) -> list[str]:
     problems: list[str] = []
     data, raw = load_review(text)  # check A: raises on duplicate keys / anchors
@@ -484,6 +558,7 @@ def audit(text: str | None = None) -> list[str]:
     check_f_summary_openers(data, problems)
     check_g_core_functions(data, problems)
     check_h_hedge_sweep(data, problems)
+    check_i_quote_subject(data, problems)
     return problems
 
 
@@ -650,6 +725,40 @@ def self_test() -> int:
     finally:
         CORE_FUNCTION_TERM_SLOTS = saved
     assert not audit(base), "restore failed: the file is no longer clean"
+
+    # I: a row all of whose PMID quotes name neither the gene nor its partner. The
+    #    mutation must keep the quote VERBATIM in its source, so that check C stays
+    #    silent and only check I can fire -- a mutation coarser than that (an invented
+    #    quote) would be caught by a much weaker implementation and would not
+    #    discriminate. A row with exactly ONE PMID quote is required, because the gate
+    #    is per row.
+    only_quote = """    - reference_id: PMID:25730767
+      supporting_text: Transcriptome and chromatin immunoprecipitation sequencing (ChIP-seq)
+        analyses demonstrated similar alterations of genome-wide binding of AFF4, cohesin
+        and RNAP2 in CdLS and CHOPS syndrome.
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-112379"""
+    assert base.count(only_quote) == 1, "fixture drifted: the single-PMID-quote row anchor is gone"
+    src = (REPO / "publications" / "PMID_25730767.md").read_text()
+    replacement = "Transcriptional elongation is critical for gene expression regulation during"
+    assert norm(replacement) in norm(src), (
+        "fixture drifted: the substitute quote is not verbatim in PMID:25730767, so check C "
+        "would fire instead of check I and the test would not discriminate")
+    assert not any(re.search(pat, replacement) for pat in SUBJECT_TOKENS), \
+        "fixture drifted: the substitute quote names AFF4, so check I could not fire"
+    mutated = base.replace(only_quote, only_quote.replace(
+        """supporting_text: Transcriptome and chromatin immunoprecipitation sequencing (ChIP-seq)
+        analyses demonstrated similar alterations of genome-wide binding of AFF4, cohesin
+        and RNAP2 in CdLS and CHOPS syndrome.""",
+        f"supporting_text: {replacement}"), 1)
+    got = audit(mutated)
+    assert not [x for x in got if x.startswith("[C]")], (
+        f"the mutation also tripped check C, so this test does not isolate check I: {got}")
+    _expect_problem(mutated, "[I]", "names AFF4 or the row's partner",
+                    "I: a row whose only PMID quote names neither gene nor partner is caught")
 
     print("all break-tests passed")
     return 0

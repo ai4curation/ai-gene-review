@@ -593,9 +593,41 @@ by its passing:
    the hedge sweep as usually framed is scoped to molecular-function slots, and
    `locations` is where a "not core" judgement is most easily contradicted.
 
+5. **A truncated quote that dropped the clause naming the gene.** A ninth check (I) was
+   added after a hand pass noticed that quotes were not being tested for *relevance* at
+   all — the repo's validator checks only that a quote is verbatim. It found, among
+   others, that the `PMID:24985467` quote read
+   *"A single point mutation in cyclin T1 eliminates binding to Hexim1, Cdk9 and"* — cut
+   off at "and", which is exactly where the title continues *"…RNA **but not to AFF4** and
+   enforces repression of HIV transcription."* The truncation removed the only mention of
+   AFF4 and inverted what the citation appeared to say. This is the "quote to the end of
+   the interpreting clause" rule, failing in the most literal possible way. Also replaced
+   two title-only citation-marker quotes with substantive sentences, and added a
+   subject-naming quote to the four rows that had none.
+6. **Check I had to be restructured after its first version was too strict.** Per-quote,
+   it rejected legitimate contextual quotes (a sentence establishing that the fibrillar
+   centre belongs to polymerase I is *about* polymerase I, necessarily). A guard that
+   forbids legitimate practice gets worked around rather than obeyed, so the gate is now
+   **per row** — at least one PMID quote must name AFF4 or the row's partner — with two
+   deliberate exemptions enumerated by row (`GO:0050877` and `GO:0034976`, where naming a
+   *different* entity is the evidence), and with a secondary rule that a contextual quote
+   from an abstract-only cache must carry `full_text_unavailable`. Note the MODIFY
+   refinement: on a MODIFY row the subject is the **proposed replacement**, not the term
+   being moved away from.
+
 Both scripts also refuse vacuous passes: `uniprot_quote_check` raises on an empty
 quote list, `correction_status` raises with no positive controls, and every check that
 iterates raises rather than returning success when it iterated over nothing.
+
+Two of my own patch scripts also wrote **unsatisfiable** verification assertions before
+landing, which is worth recording because the shape recurs. `assert new in t and old not
+in t` can never pass when `old` is a **substring of `new`** — which it is for any edit
+that *extends* or is *inserted before* the anchor, i.e. three of the four quote fixes
+here. The satisfiable invariant is `t.count(old) == expected * new.count(old)`. And a
+third assertion used a hand-guessed constant (`== 4`, `== 1`) where the true value
+included occurrences in a reference `title:` line; every expectation is now derived from
+the pre-edit file and the residual occurrences are checked to be titles rather than
+quotes.
 
 Also worth noting what the analysis script's own assertions rejected: a first draft of
 §12 of these notes claimed only one of AFF4's three InterPro signatures carries an
