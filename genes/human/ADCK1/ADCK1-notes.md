@@ -71,8 +71,26 @@ The GO record matches: COQ8A (Q8NI60) and COQ8B (Q96D53) each carry
 PMID:27499294 — while COQ8A simultaneously carries `GO:0016301 kinase activity` (IDA,
 two references) and `GO:0043531 ADP binding` (IDA, PMID:25498144). So the curated
 consensus is precise: *not a protein kinase; still a nucleotide-using enzyme.*
-(A 2024 paper, PMID:38425362, adds a non-negated `GO:0004672` IDA to COQ8B, which now
-contradicts that gene's own NOT row. Noted, not relied on.)
+**The one exception, and it is a real one.** A 2024 paper does demonstrate protein-kinase
+activity for a UbiB protein:
+[PMID:38425362 "Intact protein MS validated this idea: COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites"].
+It is the source of COQ8B's non-negated `GO:0004672` IDA, which now sits alongside that
+gene's own `NOT|enables GO:0004672` row. Two caveats bound how far it reaches:
+
+1. The enzyme is an **ancestral reconstruction**, not the extant human protein —
+   [PMID:38425362 "Ancestral COQ8A and COQ8B were purified as membrane-bound recombinant proteins; however, COQ8A produced very low yields compared with COQ8B."]
+   — and the paper never states that it switched to extant COQ8B for the phosphorylation
+   experiment.
+2. The **residue class was not determined** ("at multiple sites"), so this does not
+   establish Ser/Thr specificity for any UbiB protein.
+
+The same paper also rules out small-molecule kinase activity:
+[PMID:38425362 "Critically, GC/MS analyses did not detect any phosphorylated CoQ intermediates, suggesting that the enzyme is not a small-molecule kinase."]
+
+*I initially wrote, twice, that no UbiB protein had been shown to phosphorylate a protein
+substrate in trans. That was false, and the refuting paper was already in my cache — the
+same failure shape as the ACBD3 acyl-CoA reversal. Corrected at every site; the UniProt
+recommendation survives on the narrower and still-sound grounds above.*
 
 ## 3. Which motifs ADCK1 actually retains — measured, not asserted
 
@@ -231,11 +249,19 @@ a NEW annotation rather than left as narrative.
   the UniProt cross-references, yet **zero** `GO:0005515` rows in GOA. There is nothing
   to over-annotate and nothing to prune; the check is vacuous for this gene and is
   recorded as such rather than skipped.
-- **Sibling/paralog consistency.** No other ADCK-family gene has a merged review in
-  this repo (`genes/human/ADCK2|ADCK5|COQ8A|COQ8B` do not exist), so there is no
-  merged sibling verdict on the same rows to agree or disagree with. If ADCK2 or ADCK5
-  is reviewed later, the `GO:0055088` IBA is the row to compare — ADCK5 is in the same
-  PANTHER *family* but does **not** carry it.
+- **Sibling/paralog consistency.** *Corrected after an initial wrong answer:* `COQ8A`
+  and `COQ8B` **do** have merged reviews (both landed in PR #2108, the CoQ10 module;
+  both `status: INITIALIZED` but with real verdicts). `ADCK2` and `ADCK5` have none.
+  No row is shared between those reviews and this one, so there is no direct
+  disagreement, but the framing lines up: COQ8A's review ACCEPTs both NOT rows,
+  MODIFYs `GO:0016301 kinase activity` → `GO:0016887 ATP hydrolysis activity`, MODIFYs
+  the `GO:0004672` ISS → `GO:0005524` + `GO:0016887`, and MARK_AS_OVER_ANNOTATEDs
+  `GO:0016310 phosphorylation` — i.e. the same "not a protein kinase, still a
+  nucleotide-using enzyme" reading this review takes. **One divergence worth flagging
+  to whoever owns those files:** COQ8B's review ACCEPTs its non-negated `GO:0004672`
+  IDA *and* ACCEPTs its `NOT|enables GO:0004672` IDA, which cannot both be right as
+  they stand. If ADCK2 or ADCK5 is reviewed later, the `GO:0055088` IBA is the row to
+  compare — ADCK5 is in the same PANTHER *family* but does **not** carry it.
 - **`is_active_in` vs `located_in`.** The `GO:0005743` row uses `is_active_in`, which
   presupposes an activity exerted there. ADCK1's demonstrated role (regulating
   YME1L1-dependent OPA1/IMMT handling) is exerted at the inner membrane whether or not
