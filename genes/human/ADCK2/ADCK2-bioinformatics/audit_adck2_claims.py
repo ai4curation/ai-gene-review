@@ -309,9 +309,15 @@ def check_false_friend_helper(problems: list[str]) -> None:
             )
 
 
-def check_raw_vs_parsed(problems: list[str]) -> None:
-    """Guard against a duplicate YAML key deleting provenance before any gate can see it."""
-    raw = REVIEW.read_text()
+def check_raw_vs_parsed(raw: str, problems: list[str]) -> None:
+    """Guard against a duplicate YAML key deleting provenance before any gate can see it.
+
+    Takes the document text rather than re-reading REVIEW from disk. Re-reading made this
+    the one check that inspected a *different* document from the rest of run() whenever a
+    mutated document was passed in, which had to be papered over with a gate; the arithmetic
+    here is self-consistent on any input, so passing the text removes both the gate and the
+    trap.
+    """
     raw_count = len(re.findall(r"^\s*- reference_id:", raw, re.M))
     doc = yaml.safe_load(raw)
 
@@ -352,9 +358,11 @@ def run(review_text: str | None = None, notes_text: str | None = None) -> list[s
     check_motif_claims(doc, notes, results, problems)
     check_retracted_phrasings(raw, notes, problems)
     check_sweep_exclusions_disclosed(raw, notes, problems)
-    if review_text is None:
-        check_false_friend_helper(problems)
-    check_raw_vs_parsed(problems)
+    # Neither of these depends on the caller's overrides, and neither needs a gate:
+    # the helper check inspects the sweep module, and the raw/parsed check now inspects
+    # whichever document run() was given.
+    check_false_friend_helper(problems)
+    check_raw_vs_parsed(raw, problems)
     return problems
 
 
