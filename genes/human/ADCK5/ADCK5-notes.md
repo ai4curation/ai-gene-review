@@ -122,7 +122,7 @@ NOTCH2NLA is `Secreted`/`Cytoplasm`, human-specific, and functions in neural pro
 proliferation. Y2H places both proteins in the yeast nucleus and so removes the targeting
 constraint.
 
-**The compartment objection is an assumption, and is stated as one.** It holds if ADCK5's
+**The compartment argument is an assumption, and is stated as one.** It holds if ADCK5's
 kinase-like domain faces the matrix, as COQ8A's C-terminus is measured to do [PMID:27499294
 "endogenous COQ8A is partially buried in the inner mitochondrial membrane with its C-terminus
 facing the matrix"] — but ADCK5's own sidedness has never been measured, and an outer-membrane

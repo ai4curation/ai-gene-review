@@ -32,9 +32,10 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 HERE = Path(__file__).resolve().parent
 GENE_DIR = HERE.parent
@@ -46,9 +47,12 @@ MOTIF_JSON = HERE / "results.json"
 CENSUS_JSON = HERE / "family_census.json"
 PARTNER_JSON = HERE / "partner_localisation.json"
 
-# The commit whose RESULTS.md still asserted the withdrawn compartment claim. Used by
-# --self-test as a real regression fixture rather than a synthetic mutation.
-HISTORICAL_MISS_COMMIT = "419dc9e37"
+# The paragraph that actually shipped with the withdrawn compartment claim unhedged, frozen
+# as a file. It was originally read from branch commit 419dc9e37 by `git show` - but a
+# branch-local SHA does not survive squash-merge, so the strongest test in this suite would
+# have silently lost its fixture the moment the PR landed. Freeze the evidence, don't
+# reference it.
+HISTORICAL_FIXTURE = HERE / "fixtures" / "historical_unhedged_compartment_paragraph.md"
 
 PROSE_SURFACES = [RESULTS_MD, NOTES_MD, REVIEW_YAML]
 
@@ -122,9 +126,40 @@ SIDEDNESS_HEDGE_RES = [
 ]
 
 
-def _paragraphs(text: str) -> list[str]:
-    """Blank-line separated blocks. Works for markdown prose and for YAML block scalars,
-    which contain no blank lines and so arrive as single blocks."""
+def _paragraphs(text: str, name: str = "") -> list[str]:
+    """Split a surface into the units the hedge invariant is enforced over.
+
+    **This must be structure-aware, and the reason is a bug that shipped.** The first version
+    split on blank lines only. `ADCK5-ai-review.yaml` contains *zero* blank lines, so the
+    entire 550-line file came back as ONE paragraph - making the "paragraph-local" guard
+    file-level again on the single most important surface, which is exactly the failure it
+    was written to fix. The hedge in the GO:0016020 row was silently satisfying the check for
+    an unhedged claim in a different annotation 60 lines away.
+
+    So YAML is split by *scalar value*: each summary, reason, gap_statement, boundary,
+    question and so on is its own unit, which is the granularity a reader actually reasons
+    over. Markdown keeps blank-line paragraphs.
+    """
+    if name.endswith((".yaml", ".yml")):
+        try:
+            doc = yaml.safe_load(text)
+        except yaml.YAMLError:
+            # Fall back loudly rather than silently degrading to the broken behaviour.
+            return [f"__UNPARSEABLE_YAML__ {text}"]
+        out: list[str] = []
+
+        def walk(o):
+            if isinstance(o, str):
+                out.append(o)
+            elif isinstance(o, dict):
+                for v in o.values():
+                    walk(v)
+            elif isinstance(o, list):
+                for v in o:
+                    walk(v)
+
+        walk(doc)
+        return out
     return [b for b in re.split(r"\n\s*\n", text)]
 
 
@@ -139,12 +174,20 @@ def check_compartment_hedge(texts: dict[str, str]) -> list[str]:
     problems: list[str] = []
     triggered = 0
     for name, text in texts.items():
-        paras = _paragraphs(text)
+        paras = _paragraphs(text, name)
         for i, para in enumerate(paras):
             if not (COMPARTMENT_TOPIC_RE.search(para) and COMPARTMENT_CONTEXT_RE.search(para)):
                 continue
             triggered += 1
-            window = para + "\n" + (paras[i + 1] if i + 1 < len(paras) else "")
+            # Markdown paragraphs often continue an argument into the next block, so allow a
+            # one-paragraph lookahead there. A YAML scalar is a self-contained field written
+            # by one author about one thing, and the next scalar is usually an unrelated key -
+            # letting it satisfy the hedge is how the file-level version went wrong. No
+            # lookahead for YAML.
+            if name.endswith((".yaml", ".yml")):
+                window = para
+            else:
+                window = para + "\n" + (paras[i + 1] if i + 1 < len(paras) else "")
             if not any(r.search(window) for r in SIDEDNESS_HEDGE_RES):
                 problems.append(
                     f"{name}: a paragraph discusses the ADCK5-NOTCH2NLA compartment argument "
@@ -392,14 +435,12 @@ def all_surfaces(texts: dict[str, str]) -> dict[str, str]:
     Files are keyed by path relative to the gene directory, and the prose surfaces are keyed
     the same way, so RESULTS.md is not scanned twice under two different keys.
     """
-    out = {
-        str(p.relative_to(GENE_DIR)): t
-        for p, t in zip(PROSE_SURFACES, (texts.get(p.name, "") for p in PROSE_SURFACES))
-    }
-    # Let a caller-supplied (possibly mutated) text win over what is on disk.
+    # A caller-supplied (possibly mutated) text wins; anything absent falls back to DISK,
+    # never to an empty string. Blanking an unsupplied surface would silently shrink the
+    # scanned corpus and turn a partial `texts` dict into a false pass.
+    out = {}
     for p in PROSE_SURFACES:
-        if p.name in texts:
-            out[str(p.relative_to(GENE_DIR))] = texts[p.name]
+        out[str(p.relative_to(GENE_DIR))] = texts.get(p.name, p.read_text())
     this_file = Path(__file__).resolve()
     for pattern in WITHDRAWN_SCAN_GLOBS:
         for f in sorted(GENE_DIR.glob(pattern)):
@@ -481,13 +522,26 @@ def self_test() -> int:
         else:
             print(f"  PASS (accepted good input): {desc}")
 
-    def expect_flag(desc: str, texts, motif=motif, census=census, partner=partner):
+    def expect_flag(desc: str, texts, motif=motif, census=census, partner=partner, match=None):
+        """`match` names a substring the offending message must contain.
+
+        Without it a break-test passes when ANY check fires, so a mutation could be
+        'caught' by a completely unrelated guard while the one under test stayed blind -
+        presence without the distinguishing attribute.
+        """
         probs = run_checks(texts, motif, census, partner)
-        if probs:
-            print(f"  PASS (caught): {desc}")
-        else:
+        if not probs:
             failures.append(f"{desc}: expected a problem, got none")
             print(f"  FAIL (missed): {desc}")
+            return
+        if match is not None and not any(match in p for p in probs):
+            failures.append(
+                f"{desc}: something fired but not the guard under test "
+                f"(no message contains {match!r}); got {probs}"
+            )
+            print(f"  FAIL (wrong guard fired): {desc}")
+            return
+        print(f"  PASS (caught): {desc}")
 
     # happy direction first - a guard can be wrong about success as easily as failure
     expect_clean("unmodified surfaces", good)
@@ -588,7 +642,6 @@ def self_test() -> int:
     # --- the compartment-hedge guard, both directions ---
     # Catch: strip every hedge marker while leaving the topic in place. A literal-phrase
     # matcher cannot see this; the co-occurrence invariant must.
-    import re as _re
     unhedged = {}
     for k, v in good.items():
         for r in SIDEDNESS_HEDGE_RES:
@@ -613,23 +666,56 @@ def self_test() -> int:
     # read from git rather than retyped. A synthetic mutation only proves the guard catches
     # the failure I imagined; this proves it catches the one that really happened. A
     # file-level version of this check passed here, which is why the guard is paragraph-local.
-    hist = subprocess.run(
-        ["git", "show", f"{HISTORICAL_MISS_COMMIT}:genes/human/ADCK5/ADCK5-bioinformatics/RESULTS.md"],
-        capture_output=True, text=True, cwd=str(GENE_DIR),
-    ).stdout
-    if "makes the pairing implausible" not in hist:
+    if not HISTORICAL_FIXTURE.exists():
         failures.append(
-            f"cannot replay the historical defect: commit {HISTORICAL_MISS_COMMIT} no longer "
-            f"contains the flagged wording, so this regression test proves nothing"
+            f"regression fixture missing: {HISTORICAL_FIXTURE}. The historical-defect replay "
+            f"is the strongest test here; a missing fixture must fail loudly, not be skipped."
         )
-        print("  FAIL (regression fixture unavailable): historical defect replay")
+        print("  FAIL (fixture missing): historical defect replay")
     else:
-        expect_flag("the REAL historical defect, replayed verbatim from git", {**good, "RESULTS.md": hist})
+        hist = HISTORICAL_FIXTURE.read_text()
+        if "makes the pairing implausible" not in hist:
+            failures.append(
+                "the regression fixture no longer contains the flagged wording, so the replay "
+                "would prove nothing"
+            )
+            print("  FAIL (fixture corrupted): historical defect replay")
+        else:
+            expect_flag(
+                "the REAL historical defect, replayed from the frozen fixture",
+                {**good, "RESULTS.md": hist},
+                match="compartment argument",
+            )
 
     # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}
     expect_flag("results.json has no positioned residues (guard must not pass vacuously)",
                 good, motif=empty_motif)
+
+    # --- invariants about the harness itself, not about the gene ---
+    # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them
+    # would shrink the scanned corpus and turn a partial dict into a false pass.
+    partial = m_partial = all_surfaces({"ADCK5-notes.md": good["ADCK5-notes.md"]})
+    blanked = [k for k, v in partial.items() if not v.strip()]
+    if blanked:
+        failures.append(f"all_surfaces() blanked {blanked} when given a partial dict")
+        print("  FAIL: all_surfaces() blanks omitted surfaces")
+    else:
+        print("  PASS: all_surfaces() falls back to disk for omitted surfaces")
+
+    # The regression fixture deliberately CONTAINS the unhedged claim. If it is ever pulled
+    # into the live scan (e.g. by widening a glob to be recursive) the audit would fail on a
+    # file whose whole purpose is to preserve the bad text.
+    scanned = all_surfaces(good)
+    leaked = [k for k in scanned if "fixtures" in k]
+    if leaked:
+        failures.append(
+            f"the regression fixture is being scanned as a live surface: {leaked}. It holds "
+            f"the withdrawn claim on purpose; exclude it or the audit will fail on itself."
+        )
+        print("  FAIL: regression fixture leaked into the live scan")
+    else:
+        print("  PASS: regression fixture is excluded from the live scan")
 
     print()
     if failures:

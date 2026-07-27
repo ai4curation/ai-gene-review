@@ -34,9 +34,33 @@ The trigger is the topic, so rewording the conclusion cannot evade it.
 
 A file-level version of that invariant was written first, tested against the actual text that
 shipped, and **passed** — the historical file hedged in a different section. Hence
-paragraph-locality, and hence `--self-test` replays that real paragraph verbatim from git
-rather than a synthetic mutation. Residual limit, stated rather than hidden: a hedge more
-than one paragraph away still evades it, so withdrawing a claim still needs a human re-read.
+paragraph-locality, and hence `--self-test` replays that real paragraph rather than a
+synthetic mutation.
+
+**Then the paragraph-local version turned out to be file-level too, on the surface that
+mattered most.** `_paragraphs()` split on blank lines, and `ADCK5-ai-review.yaml` contains
+**zero** blank lines — so the whole 550-line file came back as one paragraph, and a hedge in
+the `GO:0016020` row was silently satisfying the check for an unhedged claim in a *different
+annotation*. Found by the PR reviewer, and it is the fifth instance in this PR of one shape:
+**a check whose unit of analysis is coarser than the unit the claim lives in.** The splitter
+is now structure-aware — YAML is split per *scalar value* (each `summary`, `reason`,
+`gap_statement` is its own unit; 181 units, not 1), markdown keeps blank-line paragraphs —
+and the one-paragraph lookahead applies only to markdown, since an adjacent YAML scalar is
+usually an unrelated key. Fixing it immediately caught the row-3 summary, which had been
+asserting the argument flatly under a renamed label.
+
+Residual limit, stated rather than hidden: in markdown a hedge more than one paragraph away
+still evades this, so withdrawing a claim still needs a human re-read.
+
+Two further hardening points from the same review. The historical paragraph was originally
+read by `git show` from a branch-local SHA — which would not exist in a fresh clone after
+squash-merge, so **the strongest test in the suite would have broken the moment this PR
+landed**. It is now frozen as
+`fixtures/historical_unhedged_compartment_paragraph.md`, and a self-test asserts that fixture
+is *excluded* from the live scan, since it preserves the bad text on purpose. And
+`expect_flag` now takes a `match=` naming the guard under test: replaying the historical
+paragraph fires **two** messages, only one of which is the compartment guard, so without
+`match=` that test could have passed on an unrelated check.
 
 Writing the audit exposed four defects in the audit itself, every one found by running the
 break-tests and none by reading it:
@@ -52,7 +76,8 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-22 self-tests, each exercised in the direction it exists to catch and in the happy direction.
+24 self-tests, each exercised in the direction it exists to catch and in the happy
+direction, plus two invariants about the harness itself.
 
 ## Question
 
@@ -163,17 +188,25 @@ GO:0004672 IDA NOT|enables      (PMID:27499294)
 GO:0004672 IDA enables          (PMID:38425362)
 ```
 
-GOA therefore asserts and negates protein kinase activity for COQ8B simultaneously. It is
-not a census artefact — the merged COQ8B review `ACCEPT`s both rows independently, without
-noting that they conflict. The two are reconcilable in prose (2016 found no *generic,
-in-trans* activity against standard substrates; 2024 found phosphorylation of one *specific*
-partner, COQ3, using ancestral-sequence-reconstructed protein) but GO has no way to express
-"not a generic protein kinase, but does phosphorylate this one substrate", so the record
-reads as a flat contradiction. This is the same ontology gap recorded in ADCK5's second
-`knowledge_gaps` entry, showing its cost on a *characterised* member rather than a dark one.
+Read as GO terms alone, that asserts and negates protein kinase activity for the same gene
+simultaneously.
 
-Reported, not fixed: COQ8B is outside this PR's scope. Noted because the contradiction sits
-in this review's own computed output, and an unexplained one is worse than a stated one.
+**This is an ontology-expressivity gap, not a curation defect.** The merged COQ8B review
+`ACCEPT`s both rows *and reconciles them explicitly* — its NOT row records that the negation
+"refers to general in-trans kinase behaviour; it does not contradict the later, specific
+ATP-dependent COQ3 phosphorylation by COQ8B (PMID:38425362)". The curator got it right. What
+they could not do is express it **in terms**: GO offers no way to say "no activity in trans
+toward general substrates, but yes toward this one specific substrate", so the reconciliation
+lives in free text while the term-level record stays self-contradictory to any consumer
+reading terms.
+
+That is the same gap recorded in ADCK5's second `knowledge_gaps` entry, and COQ8B shows its
+cost on a **characterised** member rather than a dark one — arguably the better illustration,
+since there the biology is known and the ontology still cannot carry it.
+
+*(An earlier draft of this section claimed the COQ8B review had missed the conflict. It had
+not. The claim came from reading the structured fields — term, evidence, negated, action —
+and not the summaries. Checking `action:` values is not checking a review.)*
 
 ## Analysis 3 — PAINT node placement (`just fetch-panther-paint`)
 
