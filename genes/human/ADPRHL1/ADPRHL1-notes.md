@@ -286,10 +286,14 @@ regulatory.
   HTTP 200. So the zero is real, not a rejected query. Consistent with GOA carrying no
   `GO:0005515` row for this gene. (UniProt's `DR BioGRID; 125253; 2.` records two BioGRID
   entries that have not reached IntAct or GOA; not enough for any annotation.)
-- **Retraction / erratum / expression-of-concern sweep.** All 8 PMIDs relied on were fetched by
-  efetch and both `PublicationType` and `CommentsCorrections/RefType` were read: **zero**
-  retractions, errata or corrections. Crossref `update-to`/`relation` additionally clean for all
-  **7** load-bearing DOIs, all HTTP 200 (so the check ran rather than silently 404ing).
+- **Retraction / erratum / expression-of-concern sweep.** All **10** cited PMIDs were fetched
+  by efetch (all HTTP 200) and both `PublicationType` and `CommentsCorrections/RefType` were
+  read: **zero** retractions, errata, corrections or expressions of concern. Crossref
+  `update-to`/`relation` additionally clean for **all 10** DOIs, all HTTP 200 (so the check
+  ran rather than silently 404ing). The first pass covered only the 8 PMIDs and 7 DOIs held
+  at that point, and the two references added later (`PMID:36497109`, `PMID:16278211`) plus
+  three unchecked DOIs were swept afterwards rather than assumed — the count that did not
+  match the citation list was the prompt to re-run it.
 - **Pagination.** Every QuickGO call asserts `numberOfHits == len(results)`. The assertion
   earned its keep once: an unrestricted `GO:0003875` query reports 1728 hits and would have
   silently returned 100.
