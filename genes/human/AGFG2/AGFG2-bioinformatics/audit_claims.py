@@ -406,18 +406,25 @@ NUMBER_WORDS = {
 def _states_number(body: str, n: int, suffix: str) -> bool:
     """True if the number is stated, in digit OR word form, with its context word.
 
-    Two things this gets right that the obvious version does not:
+    Three things this gets right that the obvious version does not:
 
     * a number spelled as a word evades every digit grep, so both forms count;
     * ``str(n) in body`` is meaningless for a small number — "9" occurs inside
       "PMID:9303539" — so a **context suffix is mandatory**, not optional. Without it
-      the check passes vacuously for every single-digit value.
+      the check passes vacuously for every single-digit value;
+    * the digit form needs a **left boundary**. A plain substring test lets
+      ``"4 amphibians"`` match inside ``"14 amphibians"``, so a stale prose value whose
+      last digits happen to equal the true value would pass. Binding single-digit
+      quantities widens that hole, which is why the boundary is enforced here rather
+      than left as a latent one.
     """
     assert suffix, "a bare digit test is vacuous; give the context word"
-    if f"{n}{suffix}" in body:
+    if re.search(rf"(?<!\d){re.escape(str(n))}{re.escape(suffix)}", body):
         return True
     w = NUMBER_WORDS.get(n)
-    return bool(w) and f"{w}{suffix}" in body.lower()
+    return bool(w) and re.search(
+        rf"\b{re.escape(w)}{re.escape(suffix)}", body, re.I
+    ) is not None
 
 
 def check_h_numbers(text: str, problems: list[str]) -> None:
@@ -799,6 +806,21 @@ def _mutate_yaml_census_number(t: str) -> str:
     return out
 
 
+def _mutate_left_digit_boundary(t: str) -> str:
+    """Prefix a digit to a bound value: '4 amphibians' -> '14 amphibians'.
+
+    Without a left boundary this passes a plain substring test, so a stale prose value
+    whose trailing digits equal the true value slips through. The mutation is deliberately
+    the *smallest* one that a boundary-less matcher cannot distinguish from correct text.
+    """
+    anchor = "and 4\n      amphibians"
+    alt = "and 4 amphibians"
+    if anchor in t:
+        return t.replace(anchor, "and 14\n      amphibians")
+    assert alt in t, "neither wrapped nor unwrapped '4 amphibians' found — fixture drifted"
+    return t.replace(alt, "and 14 amphibians")
+
+
 def _mutate_number(t: str) -> str:
     """Change every occurrence of a number H binds, choosing one that does not appear
     inside any `file:` quote, so the mutation exercises H rather than A."""
@@ -838,6 +860,8 @@ BREAK_TESTS = [
     ("H: prose number contradicts the JSON", _mutate_number, "H", "not stated"),
     ("H: a YAML census number contradicts distribution.json",
      _mutate_yaml_census_number, "H", "ray-finned fish"),
+    ("H: a bound value with a digit prefixed ('4' -> '14') is NOT accepted",
+     _mutate_left_digit_boundary, "H", "amphibians"),
 ]
 
 # The happy direction. A guard can be wrong about success as easily as about failure,

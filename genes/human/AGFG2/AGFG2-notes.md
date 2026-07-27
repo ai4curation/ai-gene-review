@@ -214,7 +214,7 @@ conclusion.
 
 ## Committed guard
 
-`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 17 break-tests plus 1 no-fire test.
+`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 18 break-tests plus 1 no-fire test.
 It gates the quotes (including the `file:` quotes that CI does not check), the GOA-row
 reconciliation in both directions, `source_entities` against the WITH/FROM field, a
 duplicate-key-rejecting YAML load with a raw-vs-parsed count, the residue claims against
@@ -377,6 +377,24 @@ about what the guards compute, and the two that *were* about what they compute (
 number, a foolable counter) are now fixed. I will still fix anything that could misstate a
 number or misfire on another machine. I am drawing the line at findings about the harness's
 own prose.
+
+## Review round 4 — approved; the last item was above my own stated line, so I took it
+
+`_states_number` used a plain substring test with **no left digit boundary**, so
+`"4 amphibians"` matched inside `"14 amphibians"` and `"72 ray-finned fish"` inside
+`"172 ray-finned fish"`. Nothing in the tree was wrong — all five values match — but binding
+single-digit quantities in round 3 widened a latent hole: a stale prose value whose trailing
+digits equal the true value would have passed check H.
+
+The reviewer flagged it as arguably below the stopping criterion I had just stated, and then
+noted it concerns *what the guard computes* rather than how it reads. That is the right side
+of the line I drew, so I took it rather than accepting the offered pass. A criterion that
+bends the first time it is inconvenient is not a criterion.
+
+Digit matching now requires a negative lookbehind for a digit, word matching a word boundary,
+and the break-test is the **smallest** mutation a boundary-less matcher cannot distinguish
+from correct text: prefix one digit to a bound value (`4` → `14`) and require check H to
+reject it. 18 break-tests now.
 
 ## Environment note
 
