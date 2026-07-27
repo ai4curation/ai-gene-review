@@ -175,12 +175,24 @@ contradicted by the documented failure to find one.
 
 Widening to the whole import: **`GO_REF:0000113` is 1436 annotations over 727 distinct entities, 100%
 ISA**, of which **709 receive the identical `{GO:0000785, GO:0000981}` doublet and 18 receive chromatin
-alone.** Those 18 are the pipeline's own negative control: SMAD6/SMAD7 (inhibitory SMADs), NR0B1/NR0B2
-(nuclear receptors lacking a DNA-binding domain), NCOA1/2/3 (coactivators), ZFPM1/ZFPM2 (GATA cofactors),
-AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1, ZC3H6/ZC3H8 and HOPX. **They are not "the non-DNA-binding
-members"** — an earlier draft of this paragraph said that, and the table below refutes it: three of the
-18 carry an annotated DNA-binding domain. What unites them is that none is a *sequence-specific
-polymerase II transcription factor*, which is a different and weaker claim.
+alone.** Those 18 are the pipeline's own negative control: SMAD6/SMAD7, NR0B1/NR0B2, NCOA1/2/3,
+ZFPM1/ZFPM2, AEBP2, TFDP3, HMBOX1, DMRTC1, NFX1/NFXL1, ZC3H6/ZC3H8 and HOPX.
+
+**I generalised this set twice and was wrong both times.** Draft one called them "exactly the
+non-DNA-binding members" — refuted by the committed table below, in which three of the 18 carry an
+annotated DNA-binding domain. Draft two replaced that with "none is a sequence-specific polymerase II
+transcription factor" — **also false**: UniProt says NFX1 *"Binds to the X-box motif of MHC class II
+genes and represses their expression"*, which is sequence-specific binding at a cis-regulatory region,
+and DMRTC1 is named "Doublesex- and mab-3-related transcription factor C1". Substituting a second
+unmeasured generalisation for a retracted one is the ADCK5 pattern exactly: the contrast without the
+correction.
+
+**So I stopped generalising and measured what the set actually has in common.** The answer is
+structural, not biological: the 18 are spread across **11 distinct TFClass nodes**, and in each
+case the term is withheld from a **strict subset** of a node whose other members keep it. They share no
+property beyond being individually adjudicated exclusions. Two general lessons, and the second is the
+one worth carrying: a set assembled by a pipeline need not have a biological characterisation at all;
+and **when a generalisation is refuted, the fix is a measurement, not a weaker generalisation.**
 
 **Corrected in round 4 — I had picked the weaker of two available precedents.** My first framing was
 that HOPX makes this filable: UniProt describes it as an *"Atypical homeodomain protein which does not
@@ -201,6 +213,17 @@ and the review now says so.
 hand-typed TFDP3's end as 341 — HMBOX1's end — i.e. a number contradicting the committed artifact, in
 the paragraph correcting exactly that defect class. Retyping a number you have already computed is the
 mistake; the fix is to not retype it.)*
+
+**The granularity question, which decides whether the ask is even coherent.** If `GO_REF:0000113`
+could only withhold `GO:0000981` for a whole node, then excluding ADNP2 would also exclude **ADNP** —
+whose sequence-specific binding *is* measured — and my request would have been the wrong one. Measured
+rather than assumed, and it comes out in favour: **the exclusion is per-entity.** HOPX is excluded
+**alone out of 47** members of `tfclass:3.1.3`; HMBOX1 **alone out of 19** members of `tfclass:3.1.10`;
+TFDP3 alone out of 11; AEBP2 alone out of 20; DMRTC1 alone out of 8. ADNP2's own node `tfclass:3.1.8`
+currently stands at **14/14**. So single-entity exclusion inside a populated homeodomain node is
+something this import already performs, twice within class 3.1, and the ask needs no new mechanism and
+does not touch ADNP — it takes one node from 14/14 to 13/14. Without this measurement the ask was
+plausible but unvalidated; with it, the precedent transfers.
 
 **And the repo already adjudicates HMBOX1, which sharpens the ask rather than weakening it.**
 `projects/TRANSCRIPTION_FACTORS/dbTF-discrepancy-analysis.md` lists HMBOX1 among proteins *"correctly

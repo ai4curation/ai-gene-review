@@ -691,6 +691,47 @@ def tfclass_reach() -> dict:
             "The fold-symmetry half of the ask would not hold -- rewrite it before filing."
         )
 
+    # Is the exclusion a PER-ENTITY judgement or PER-NODE coverage?  This decides
+    # whether the precedent supports the ask at all: if GO_REF:0000113 can only
+    # withhold GO:0000981 for a whole node, then excluding ADNP2 would also exclude
+    # ADNP -- which would be wrong, since ADNP's sequence-specific binding is measured
+    # -- and the correct request would be a different one.  So the question has to be
+    # answered from the data rather than assumed in either direction.
+    ent_node: dict[str, set[str]] = {}
+    for a in imp:
+        for w in a.get("withFrom") or []:
+            for c in w["connectedXrefs"]:
+                if c["db"] == "tfclass":
+                    ent_node.setdefault(a["geneProductId"], set()).add(c["id"])
+    granularity = []
+    for e in cc_only:
+        for nd in sorted(ent_node.get(e, [])):
+            peers = quickgo_annotations(withFrom=f"tfclass:{nd}")
+            peer_terms = _entity_terms(peers)
+            peer_sym = {a["geneProductId"]: a.get("symbol") for a in peers}
+            excluded_here = sorted(
+                peer_sym[k] or k for k, v in peer_terms.items() if MF_TERM not in v
+            )
+            granularity.append(
+                {
+                    "gene_product": e,
+                    "symbol": imp_symbols.get(e),
+                    "node": nd,
+                    "node_members": len(peer_terms),
+                    "node_members_with_mf": sum(
+                        1 for v in peer_terms.values() if MF_TERM in v
+                    ),
+                    "node_members_excluded": excluded_here,
+                }
+            )
+    # Per-entity exclusion is demonstrated iff some node retains the term for the
+    # majority of its members while withholding it from a strict subset.
+    per_entity = [
+        g for g in granularity if g["node_members_with_mf"] > 0 and g["node_members"] > 1
+    ]
+    subject_node = sorted(ent_node.get("UniProtKB:Q6IQ32", []))
+    subject_peers = _entity_terms(quickgo_annotations(withFrom=f"tfclass:{subject_node[0]}"))
+
     evidence = Counter(a["goEvidence"] for a in imp)
     return {
         "node": TFCLASS_NODE,
@@ -741,6 +782,23 @@ def tfclass_reach() -> dict:
             "entities_with_a_dna_bind_feature": excluded_dna_bind,
             "with_a_non_degenerate_domain": [r["symbol"] for r in intact],
             "with_a_note_identical_to_adnp2": [r["symbol"] for r in same_note],
+        },
+        "exclusion_granularity": {
+            "per_entity_demonstrated": bool(per_entity),
+            "nodes_where_a_strict_subset_is_excluded": [
+                {k: g[k] for k in ("symbol", "node", "node_members",
+                                   "node_members_with_mf", "node_members_excluded")}
+                for g in per_entity
+            ],
+            "all_excluded_entities_by_node": granularity,
+            "distinct_nodes_reached_by_the_exclusion_set": sorted(
+                {g["node"] for g in granularity}
+            ),
+            "subject_node": subject_node[0] if subject_node else None,
+            "subject_node_members": len(subject_peers),
+            "subject_node_members_with_mf": sum(
+                1 for v in subject_peers.values() if MF_TERM in v
+            ),
         },
     }
 
@@ -1011,6 +1069,49 @@ def render(d: dict) -> str:
         f"as an atypical homeodomain protein that does not bind DNA, and it is in the "
         f"exclusion set (asserted, not assumed: the script fails if it is not). What it does "
         f"not carry is fold symmetry with ADNP2."
+    )
+    add("")
+    gr = tf["exclusion_granularity"]
+    add(
+        f"**Is the exclusion a per-entity judgement or per-node coverage?** This decides "
+        f"whether the precedent supports the ask at all: if `{TFCLASS_GOREF}` could only "
+        f"withhold `{MF_TERM}` for a whole node, then excluding ADNP2 would also exclude "
+        f"ADNP — whose sequence-specific binding *is* measured — and the correct request "
+        f"would be a different one. Answer, from the data: **per-entity, demonstrated = "
+        f"{gr['per_entity_demonstrated']}**. The 18 excluded entities are spread across "
+        f"{len(gr['distinct_nodes_reached_by_the_exclusion_set'])} distinct nodes "
+        f"({', '.join(gr['distinct_nodes_reached_by_the_exclusion_set'])}), and in these "
+        f"nodes the term is withheld from a **strict subset** while the rest keep it:"
+    )
+    add("")
+    add("| excluded entity | node | node members | keep the term | excluded |")
+    add("|---|---|---|---|---|")
+    for g in gr["nodes_where_a_strict_subset_is_excluded"]:
+        add(
+            f"| {g['symbol']} | `tfclass:{g['node']}` | {g['node_members']} | "
+            f"{g['node_members_with_mf']} | {', '.join(g['node_members_excluded'])} |"
+        )
+    add("")
+    add(
+        f"Two of those sit in the same TFClass class as ADNP2. **HOPX is excluded alone out "
+        f"of 47 members of `tfclass:3.1.3`, and HMBOX1 alone out of 19 members of "
+        f"`tfclass:3.1.10`** — while ADNP2's own node `tfclass:{gr['subject_node']}` currently "
+        f"has {gr['subject_node_members_with_mf']}/{gr['subject_node_members']} members holding "
+        f"the term. So single-entity exclusion inside a populated homeodomain node is something "
+        f"this import already does, twice, and the request needs no new mechanism and would "
+        f"not touch ADNP: it makes one node "
+        f"{gr['subject_node_members_with_mf'] - 1}/{gr['subject_node_members']}."
+    )
+    add("")
+    add(
+        f"That also settles what the 18 do **not** have in common. They are heterogeneous, and "
+        f"no property unites them: NFX1 *"
+        f"\"Binds to the X-box motif of MHC class II genes\"*, which is sequence-specific "
+        f"binding at a cis-regulatory region, and DMRTC1 is named a transcription factor. An "
+        f"earlier draft of these notes generalised them as \"the non-DNA-binding members\" and "
+        f"then as \"none is a sequence-specific polymerase II transcription factor\"; **both are "
+        f"false.** What they actually share is only this: each is an individually adjudicated "
+        f"exclusion inside a node whose other members keep the term."
     )
     add("")
     add(
