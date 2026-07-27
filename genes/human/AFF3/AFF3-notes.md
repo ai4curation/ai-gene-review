@@ -123,11 +123,12 @@ is unestablished. **The verdict does not rest on the erratum** — it rests on t
 stated in the paper's own full text — and I have deliberately not let an unresolvable correction
 manufacture a hedge (the mistake AFF4 made in the other direction).
 
-That check ran over all **29** PMIDs cited anywhere in the review YAML, these notes, or the
-affinage record (`corrections.json` records the list): **1 of 29 flagged, and no retractions and
-no expressions of concern.** The count rose from 17 to 29 as these notes accumulated the donor
-and IntAct references; the number in the committed artifacts is the one the script last
-produced, not a remembered constant.
+That check ran over all **31** PMIDs cited anywhere in the review YAML, these notes, or the
+affinage record (`corrections.json` records the list): **1 of 31 flagged, and no
+retractions and no expressions of concern.** The denominator has been 17, then 29, and is now
+31 as these notes accumulated the donor, IntAct and review-round references; every number in
+the committed artifacts is read from `corrections.json` rather than remembered, which is the
+only reason it has stayed correct through three changes.
 
 ## `GO:0035116 embryonic hindlimb morphogenesis` — well founded, kept as non-core
 
@@ -410,3 +411,61 @@ from an identifier's or a label's neighbourhood rather than from a fetched fact.
 of protein binding; `GO:0032786` was assumed negative because it sits one integer from
 `GO:0032785`; and the IntAct counts were read off a printed list instead of computed. In all
 three cases the fix was to write the check, and in all three the check fired.
+
+## Review round 1 (PR #2351, ai4c-reviewer): approved, six suggestions
+
+Verdict was **approve** with no critical or important issues. Each suggestion's premise was
+checked before conceding, and one was declined with evidence rather than accepted.
+
+**Accepted, and each a real defect.**
+
+1. **`GO:0030674` was an ill-formed IPI.** For IPI the WITH/FROM field takes the interactor, and
+   the row had none. Added CDK9 (`UniProtKB:P50750`) and cyclin T1 (`UniProtKB:O60563`), both
+   confirmed reviewed human entries by asserting `primaryAccession` on the fetch. The reviewer's
+   alternative — recode as ISS on AFF1/AFF4, whose interfaces are mapped — was declined with a
+   stated reason: the assay is a co-IP of AFF3 itself in human cells, so IPI is the correct code
+   and what was missing was the entity, not the code. The unmapped-interface caveat belongs in
+   the reason and in the knowledge gap, which is where it already was.
+2. **`GO:0003711`'s reason asserted a sibling relation on one leg only** and read a kinase
+   measurement as an elongation-factor claim without saying so. Both fixed: the inference is now
+   named as an inference, and `term_relations.py` checks `GO:0003711` under `GO:0140110` as well
+   as `GO:0003712`.
+3. **`GO:0001822`'s second human quote is "urogenital tract malformations"**, which is broader
+   than the kidney. The reason now says the mouse null is doing the work and the human quote
+   corroborates the organ system rather than the organ.
+4. **Two follow-ups the review was positioned to file but had not.** The `GO:0034612` removal's
+   downstream consumer (mouse Aff3's ISO row) is folded into the MGI question so the retraction
+   is actionable; and AFF4's merged review asks whether `GO:0032783` should reach AFF3 at all on
+   the premise that AFF3 "has not been shown to be a subunit of that complex" — I verified that
+   text at `AFF4-ai-review.yaml` before asserting it — which AFF3's own human biochemistry
+   refutes, so that correction is now filed too.
+
+**Half accepted, and the half that was wrong is the interesting part.** The reviewer observed
+that the `GO:0050877` reason grounded the row in AFF3's human genetics while the same review
+argues that AFF3's developmental nervous-system role is off-branch — so the grounding cited
+evidence the review says belongs elsewhere. Checking it split the claim: **`GO:0050890 cognition`
+IS a descendant of `GO:0050877`**, and `GO:0007611` sits one step under cognition, so the
+intellectual disability, seizures and the education association are legitimately *inside* the
+term; `GO:0021795` is **not** a descendant, so only the migration evidence is off-branch. The
+reason had lumped the two halves together. It now rests primarily on the two donor IMPs, cites
+the cognitive phenotypes as on-branch corroboration, and explicitly assigns the migration
+evidence to the separate proposed row.
+
+**Declined, with evidence.** The reviewer suggested `GO:0030674` or `GO:0003712` might capture
+the class-switch core function better than `GO:0003690`. Both would over-claim, and the paper
+says so itself: `GO:0030674` would assert a bridge between switch-region DNA and AID, but
+`PMID:36001653` states "While the mechanism by which AID is recruited to switch regions is still
+unclear, the following mechanisms have been proposed" and offers cohesin and P-TEFb as
+alternatives — "AFF3 may regulate CSR by facilitating the interaction of AID with cohesin
+factors". And `GO:0003712` belongs to transcription regulation whereas class switch recombination
+is a DNA recombination reaction. What was measured is switch-region occupancy: "We detected
+significant increases in the signals near the switch regions of IgM and IgG1, indicating that
+AFF3 can bind to these regions". Those three quotes are now in the row's `supported_by`, so the
+refusal is itself CI-checked rather than asserted in prose.
+
+**A measurement the review round added.** Asked how large the `GO:0005515` coverage gap is,
+one QuickGO call over all three paralogues answers it with its own positive controls: **AFF4 15
+rows, AFF1 3, AFF3 zero** — so the endpoint works, the term is alive for the siblings in the
+same request, and AFF3's zero is a real absence rather than a rejected query. Given that AFF3's
+CDK9 contact is the most replicated of the three in IntAct, that is a curation asymmetry rather
+than a biological one.

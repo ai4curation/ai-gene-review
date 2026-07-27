@@ -64,6 +64,21 @@ CLAIMS: list[tuple[str, str, bool, str]] = [
     ("GO:0045893", "GO:0006355", True,
      "the positive child is available and unused on this gene, so the unsigned parent must "
      "be justified by the recipient's own mixed output rather than by donor disagreement"),
+    # Added after review round 1, which observed that the GO:0050877 reason cited AFF3's
+    # human genetics as its grounding while the same review shows the developmental part of
+    # that genetics is off-branch. Half right: the COGNITIVE part is on-branch. Checked so
+    # the split can be stated precisely instead of lumped.
+    ("GO:0050890", "GO:0050877", True,
+     "cognition IS under nervous system process, so AFF3's intellectual-disability and "
+     "language/education phenotypes are on-branch grounding"),
+    ("GO:0007611", "GO:0050890", True,
+     "...and the donors' learning-or-memory term sits under cognition, one step below it"),
+    ("GO:0021795", "GO:0050877", False,
+     "...whereas cerebral cortex cell migration is NOT, so the migration evidence is the "
+     "off-branch half and belongs on the separate proposed row"),
+    ("GO:0003711", "GO:0140110", True,
+     "closes the sibling claim on the GO:0003711 NEW row: previously only the GO:0003712 "
+     "leg was checked (reviewer point 4)"),
 ]
 
 

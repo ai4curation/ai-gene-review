@@ -18,8 +18,11 @@ uv run python genes/human/AFF3/AFF3-bioinformatics/audit_claims.py --self-test
 uv run python genes/human/AFF3/AFF3-bioinformatics/verify_file_quotes.py
 ```
 
-`fix_intact_counts.py` is a one-shot repair, already applied; it is committed so the correction
-it made is reproducible and auditable rather than an untraceable hand-edit.
+`fix_intact_counts.py`, `fix_sign_claim.py`, `fix_pmid_count.py` and `apply_review_round1.py` are
+one-shot repairs, already applied. They are committed so that every correction this review made
+to itself is reproducible and auditable rather than an untraceable hand-edit, and because each
+one records in its docstring what was wrong and how the wrong version arose. Each asserts its
+anchors are present before replacing, re-greps afterwards, and asserts `detected == changed`.
 
 ## 1. WITH/FROM resolution and donor evidence (`resolve_withfrom.py`)
 
@@ -80,7 +83,15 @@ false for the repressive half. The specific negative instance is proposed as a s
 
 The `GO:0050877` donors, by contrast, **agree** on `GO:0007611` and the row sits two levels
 above it. That is a granularity mismatch relative to the donors — but the specific term is not
-supported for AFF3 itself, so the row is kept general rather than refined. See §3.
+supported for AFF3 itself, so the row is kept general rather than refined.
+
+AFF3's own human nervous-system evidence then splits across the branch boundary, and §3 measures
+where the boundary falls. `GO:0050890 cognition` **is** under `GO:0050877`, so the intellectual
+disability, seizures and the GCC-expansion education association are *inside* the term and do
+corroborate the row; `GO:0021795` and `GO:0001764` are **not**, so the cortical-migration evidence
+is outside it and belongs on the separately proposed row. Offering both halves together as the
+row's grounding — which an earlier draft did — conflates on-branch corroboration with off-branch
+evidence, and that is what review round 1 caught.
 
 ## 2. The byte-identical WITH/FROM that means three different things
 
@@ -95,7 +106,7 @@ identical bytes in all three GOA records.
 
 ## 3. Ancestry claims, fetched not assumed (`term_relations.py`)
 
-15 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
+19 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
 edges cannot be mistaken for subsumption). The script exits non-zero if any claim is wrong.
 
 | claim | result |
@@ -115,16 +126,30 @@ edges cannot be mistaken for subsumption). The script exits non-zero if any clai
 | `GO:0032786` is a descendant of `GO:0045893` | true — it is in the POSITIVE branch |
 | `GO:0032786` is a descendant of `GO:0045892` | **false** — which is what the retracted §1 premise assumed |
 | `GO:0045893` is a descendant of `GO:0006355` | true — a positive child was available and unused |
+| `GO:0050890` is a descendant of `GO:0050877` | true — cognition IS on-branch, so the ID phenotype is valid grounding |
+| `GO:0007611` is a descendant of `GO:0050890` | true — the donors' term sits one step under cognition |
+| `GO:0021795` is a descendant of `GO:0050877` | **false** — the migration evidence is the off-branch half |
+| `GO:0003711` is a descendant of `GO:0140110` | true — closes the sibling claim's second leg |
 
 **This guard has now caught two of my own claims, which is the argument for having it.**
 
 1. The `GO:0030674`/`GO:0005515` claim was written the **wrong way round** on the first pass.
    It is retained in the script with the corrected expectation and a comment recording the error.
-2. The last three rows were added *after* the review was written, to check the §1 sign-disagreement
-   premise. They refuted it: `GO:0032786` is positive, not negative, so the donors agree and the
-   original argument for keeping `GO:0006355` unsigned was false. The verdict survived on a
-   different and better ground (the recipient's own mixed output), but the reason had to be
-   rewritten. **A claim I had already shipped, corrected by a check written afterwards.**
+2. The `GO:0032786` rows were added *after* the review was written, to check the §1
+   sign-disagreement premise. They refuted it: `GO:0032786` is positive, not negative, so the
+   donors agree and the original argument for keeping `GO:0006355` unsigned was false. The
+   verdict survived on a different and better ground (the recipient's own mixed output), but the
+   reason had to be rewritten. **A claim I had already shipped, corrected by a check written
+   afterwards.**
+3. The last four rows were added in review round 1. Three of them settle a tension the reviewer
+   found in the `GO:0050877` reason — the row was grounded in AFF3's human genetics, while the
+   review argues elsewhere that AFF3's developmental nervous-system role is off-branch. The
+   reviewer was **half right**: `GO:0050890 cognition` **is** under `GO:0050877`, so the
+   intellectual-disability and language/education phenotypes are legitimate on-branch grounding,
+   whereas `GO:0021795` is **not**, so the migration evidence is the off-branch half. The reason
+   now separates the two instead of lumping them, and rests primarily on the donor IMPs. The
+   fourth closes the second leg of the `GO:0003711`/`GO:0003712` sibling claim, which the reason
+   asserted while only one leg was checked.
 
 ## 4. Reference-projection test (`reference_projection.py`)
 
@@ -204,11 +229,11 @@ P51826**, while human AFF3 currently carries neither.
 
 ## 7. Corrections check (`corrections_check.py`)
 
-29 PMIDs cited anywhere in the review, the notes or the affinage record, checked by two routes:
+31 PMIDs cited anywhere in the review, the notes or the affinage record, checked by two routes:
 `PublicationType` on the article, and `CommentsCorrections/RefType` on the article's own record
 (the second catches Errata and Publisher Corrections that a publication-type search cannot see).
 
-**1 of 29 flagged; no retractions and no expressions of concern.**
+**1 of 31 flagged; no retractions and no expressions of concern.**
 
 `PMID:20444755` carries an `ErratumIn` reference to *Ann Rheum Dis. 2011 Aug;70(8):1519* whose
 **PubMed id is null**. Not resolvable by the two fallback routes either: Crossref returns empty
@@ -238,7 +263,18 @@ unestablished — and the `REMOVE` verdict on that row deliberately does **not**
   | DISC1 (Q9NRI5) | 1 | 1 | 1 | 0.37 |
 
   The two SEC modules AFF3 bridges, CDK9 and MLLT1/ENL, are both present and GOA has curated
-  neither - an under-curation datum, not an over-annotation one. **The first version of this
+  neither - an under-curation datum, not an over-annotation one. **The scale of the gap,
+  measured across the family in one QuickGO call so a zero cannot be a rejected query:**
+
+  | gene | `GO:0005515` rows in GOA |
+  |---|---|
+  | AFF4 (Q9UHB7) | 15 |
+  | AFF1 (P51825) | 3 |
+  | **AFF3 (P51826)** | **0** |
+
+  The two paralogues are the positive controls: the endpoint works and the term is alive for
+  them in the same request, so AFF3's zero is a real absence. It is a curation asymmetry rather
+  than a biological one — AFF3's CDK9 contact is the most replicated of the three in IntAct. **The first version of this
   section was hand-counted and said "5 records across 4 distinct publications and 4 distinct
   methods with MI 0.73" for CDK9. All four numbers were wrong.** That is why the counts are now
   derived from a committed script and quoted from its output table rather than written in prose.
