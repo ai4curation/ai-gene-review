@@ -413,6 +413,32 @@ non-vacuous: it asserts the selector matched something at all, and the selector 
 *conclusion* rather than on a list of field paths, so a claim copied into a new field is caught
 automatically. Generalisable form: **select the fields by what they assert, not by where they
 live.**
+
+**And that control leaked too, in a smaller way — which turns out to be the real finding.** The
+selector matched two fixed English phrasings, so it missed the reference `findings` statement,
+which draws the same conclusion as *"covers fibrillin-1 in its entirety, not only the N-terminal
+half"*. Nothing was wrong in the file — that field carried the basis and the caveat and passed on
+merit — but had the caveat later been dropped from it, the check would still have reported all
+green, because the field asserting the conclusion in different words was never selected. Matching
+on fixed phrasings is still selecting by *how* a field asserts something; it is one abstraction
+level up from a path list, not a different kind of thing. Broadened to four patterns, and the
+selected set went 3 → 4.
+
+**The pattern across the whole review is the point.** Each control caught one more instance than
+its predecessor and left a smaller version of the same gap:
+
+| control | caught | residual gap |
+|---|---|---|
+| fix the field in front of me | 1 at a time | 5 parallel fields left stale |
+| retraction sweep over all prose | the 5th instance | cannot see *new* phrasing propagated unevenly |
+| hand-listed sibling co-occurrence | 3 of 4 siblings | list is the same judgement that caused the defect |
+| conclusion-derived selector | the 4th sibling | selector is phrase-literal, misses paraphrase |
+| broadened phrase set | the paraphrase | still phrase-literal in principle |
+
+No text-matching control closes this completely, because the thing being checked is whether two
+sentences *mean* the same. The honest summary is that each round bought a real reduction and none
+of them bought closure, and that a reviewer reading the parsed fields end to end caught what
+every mechanical control missed.
 Note the notes file legitimately still contains three of those strings, because explaining why a
 phrasing was retracted requires quoting it — so the sweep belongs on the review YAML, not on
 prose that discusses it.
