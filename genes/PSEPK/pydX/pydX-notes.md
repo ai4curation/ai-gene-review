@@ -33,7 +33,11 @@ The direct deletion phenotype reported in the abstract is for pydA, not pydX. Py
 Source: Hidese et al., 2011, PMID:21169495, DOI:10.1128/JB.01178-10.
 
 - `"E. coli dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes"`
-- The indexed protein set includes the paired P. putida accessions Q88FQ1 and Q88FQ0.
+
+The cached abstract directly supports the bacterial NADH-dependent
+iron-sulfur-flavoenzyme architecture. It does not identify the P. putida
+accessions or assign the two subunit roles, so those points are not attributed
+to this paper.
 
 ### OpenScientist report
 
@@ -46,5 +50,6 @@ Source: `file:PSEPK/pydX/pydX-deep-research-openscientist.md`.
 ## Curation conclusions
 
 - Accept DPD activity as a contribution to the assembled PydXA enzyme, with a qualifier caveat.
+- Add GO:0003954 NADH dehydrogenase activity for the PydX electron-input half-reaction.
 - Accept iron-sulfur cluster binding as an informative subunit-level function.
 - Do not elevate generic oxidoreductase activity to core status.

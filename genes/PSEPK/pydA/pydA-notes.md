@@ -31,10 +31,14 @@ This is direct organism-specific genetic evidence for the pydXA DPD locus and it
 
 ### Heteromeric enzyme context
 
-Source: Hidese et al., 2011, PMID:21169495, DOI:10.1128/JB.01178-10, abstract and indexed protein classification retrieved through PubMed/search.
+Source: Hidese et al., 2011, PMID:21169495, DOI:10.1128/JB.01178-10. Abstract cached at `publications/PMID_21169495.md`.
 
 - `"E. coli dihydropyrimidine dehydrogenase is the first member of a novel NADH-dependent subclass of iron-sulfur flavoenzymes"`
-- The paper's indexed sequence set includes P. putida Q88FQ1 and Q88FQ0 as the paired bacterial DPD homologs.
+
+The abstract establishes the family-level NADH-dependent heterotetrameric
+iron-sulfur-flavoenzyme architecture. It does not name the P. putida proteins,
+so the Q88FQ1/Q88FQ0 pairing is instead grounded in the KT2440 locus evidence
+and the two records' complementary domain architectures.
 
 ## Curation conclusions
 
