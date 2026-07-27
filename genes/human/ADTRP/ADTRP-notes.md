@@ -399,3 +399,38 @@ is deliberately absent from `core_functions.locations`. Changed to `KEEP_AS_NON_
 it is an independent claim, and the catalytic residues sit inside the bilayer rather than on the
 external face. After the change the only `ACCEPT` term absent from `core_functions` is `GO:0016020`,
 which is a verified ancestor of a core location — coherent by construction.
+
+## Review round 2 (PR #2338) — a regression introduced by the round-1 fix
+
+The round-1 de-duplication was correct on the thing it deduped and **silently dropped payload
+attached to two *other* references**: `PMID:32445923` and the affinage record came back with no
+`reference_review`. What was lost was exactly the reviewer judgement that field exists to hold and
+that no format validation can catch — the **POU1F1-is-the-DNA-binding-protein** note, and the
+**affinage caveat that its own GO grounding block is wrong (`GO:0140098` catalytic activity acting
+on RNA, for a lipid hydrolase)**. Restored verbatim from the round-1 commit.
+
+**Why every gate missed it:** the ids were all still correct. `references` was 11/11 distinct, the
+duplicate detector was clean, `checkquotes` was clean, `just validate` was clean. An id-level check
+cannot see payload loss, and that is the general shape: *a de-duplication that rewrites the carrier
+drops whatever was attached to the duplicates.*
+
+**And the first two attempts at a guard for it did not work, which is the part worth recording.**
+
+1. Attempt 1 asserted every non-`GO_REF` reference has a `reference_review`. It passed — and was
+   **unreachable**, because the builder loads its own previous output, so the payload was being
+   silently carried over from disk. A guard that cannot fail is not protection.
+2. Attempt 2's break-test *also* failed to fire, for the same reason, and an earlier mutation had
+   failed for the wrong reason entirely (a `NameError` before the check was reached — a mutation
+   coarser than the claim).
+3. So the **shape** changed rather than the predicate: the builder now **strips any inherited
+   `reference_review` when loading**, so reviewer judgement can only come from one place, the
+   `reviews` dict. That makes the loss impossible by construction *and* makes the assertion
+   load-bearing.
+
+Break-tested both directions after the restructure: dropping one `reviews` entry (ids intact, code
+valid) fires with `non-GO_REF references lacking reference_review: ['PMID:32445923']`, and the
+control run on the corrected file stays clean. Run against the shipped defect (commit `ec41395a1`)
+the check reports exactly the two affected references.
+
+Three rounds have now produced three forms of one predicate, which is the signal to stop iterating
+on it — hence the structural fix rather than a fourth assertion.

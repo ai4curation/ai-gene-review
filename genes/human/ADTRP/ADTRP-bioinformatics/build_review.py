@@ -951,6 +951,17 @@ def _finalise_references(by_id: dict) -> list[dict]:
     ids = [r["id"] for r in refs]
     dupes = sorted({i for i in ids if ids.count(i) > 1})
     assert not dupes, f"duplicate reference ids in output: {dupes}"
+    # Payload check, not just an id check. A de-duplication that rewrites the carrier will
+    # silently drop whatever was attached to the duplicates: round 1 collapsed four
+    # PMID:32152231 entries correctly and lost the reference_review blocks on two *other*
+    # references, because the ids were all still right. Assert the payload survives.
+    unreviewed = sorted(
+        r["id"] for r in refs
+        if not r.get("reference_review") and not r["id"].startswith("GO_REF:")
+    )
+    assert not unreviewed, (
+        f"non-GO_REF references lacking reference_review (dedup payload loss?): {unreviewed}"
+    )
     return refs
 
 
@@ -1270,6 +1281,14 @@ def main() -> int:
             "projection test was not run - recorded rather than approximated from a partial "
             "page. Both ADTRP rows trace to this one screen.",
         ),
+        P_POU: (
+            "MEDIUM", "VERIFIED",
+            "PubMed-verified; cached abstract-only. Resolves the mechanism behind the GO:0010628 rows: POU1F1, not ADTRP, is the DNA-binding protein. Cited to keep the review from implying any transcriptional molecular function for ADTRP. Not present in GOA for this gene; surfaced by the affinage record and then read directly.",
+        ),
+        AFFINAGE: (
+            "MEDIUM", "VERIFIED",
+            "Machine-generated deep-research record, gates_passed: True, 12 citations. Recall was checked rather than assumed and it performed well on this gene: all 12 PMIDs are numeric (no bioRxiv ids in a PMID-shaped field), all 12 resolve to papers genuinely about ADTRP - there is no gene-symbol collision here - and none carries a retraction, erratum or expression of concern on its PubMed record. It also surfaced two papers absent from GOA that this review uses, PMID:32152231 (in vivo FAHFA control) and PMID:32445923 (POU1F1). Cited only as a lead and for claims independently anchored to a primary PMID; its own GO grounding block is wrong (it lists GO:0140098 catalytic activity, acting on RNA for a lipid hydrolase) and was not used.",
+        ),
         P_MOUSE: (
             "HIGH", "VERIFIED",
             "PubMed-verified; the in vivo demonstration that ADTRP controls FAHFA levels, using "
@@ -1308,7 +1327,17 @@ def main() -> int:
     if input_dupes:
         print(f"  repaired duplicate reference ids present in input: {input_dupes}")
 
-    by_id = {r["id"]: r for r in doc["references"]}
+    # Take id/title/findings from the loaded document but DROP any inherited
+    # ``reference_review``, so reviewer judgement can only come from the ``reviews`` dict below.
+    # Round 1 lost two reference_review blocks precisely because they were inherited from the
+    # previous output rather than declared here: the ids all stayed correct, so no id-level check
+    # could see it, and the payload assertion could not fire either while the payload was being
+    # silently carried over from disk. Rebuilding the field from a single source makes that class
+    # of loss impossible by construction and makes the assertion load-bearing.
+    by_id = {}
+    for r in doc["references"]:
+        stripped = {k: v for k, v in r.items() if k != "reference_review"}
+        by_id[r["id"]] = stripped
     for r in extra_refs:
         by_id.setdefault(r["id"], r)
     for ref_id, (rel, corr, notes) in reviews.items():
