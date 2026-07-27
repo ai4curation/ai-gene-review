@@ -635,6 +635,7 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
         problems.append("computed an empty action tally -- clause 4 is vacuous")
     n_tally_claims = 0
     n_tally_claims_enforced = 0   # not exempted by the retraction context
+    n_total_claims_enforced = [0]  # stated totals actually compared
     for f in surfaces:
         if not f.exists():
             continue
@@ -686,15 +687,25 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
                     if not RETRACTION_CONTEXT.search(ctx_ok):
                         n_tally_claims_enforced += 1
         # And any stated total must equal the number of entries.
+        # Stated totals. The prose form ("N annotation entries") matched NOTHING in
+        # either surface, so this sub-clause was silently checking zero -- the same
+        # vacuity the table branch above was written to fix. Match the table row
+        # form as well, and count enforcement separately so the emptiness is visible.
         total = sum(tally.values())
-        for m in re.finditer(r"(\d+)\s+(?:annotation entries|existing_annotations)\b",
-                             flat):
-            n_tally_claims += 1
-            if int(m.group(1)) != total:
-                findings.append(
-                    f"{f.name}: states {m.group(1)} annotation entries but the "
-                    f"document contains {total}")
+        for pat in (r"(\d+)\s+(?:annotation entries|existing_annotations)\b",
+                    r"\|\s*\*\*total(?:\s+entries)?\*\*\s*\|\s*\*\*(\d+)\*\*"):
+            for m in re.finditer(pat, flat):
+                n_tally_claims += 1
+                n_total_claims_enforced[0] += 1
+                if int(m.group(1)) != total:
+                    findings.append(
+                        f"{f.name}: states {m.group(1)} total entries but the "
+                        f"document contains {total}")
 
+    if n_total_claims_enforced[0] == 0:
+        problems.append(
+            "clause 4 compared no stated TOTAL against the document, so the total "
+            "sub-clause reported coverage it does not have")
     if n_tally_claims_enforced == 0:
         problems.append(
             "clause 4 matched no tally claim outside the retraction exemption, so it "
@@ -717,6 +728,7 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
             "enumerations_checked": n_enumerations,
             "tally_claims_checked": n_tally_claims,
             "tally_claims_enforced": n_tally_claims_enforced,
+            "total_claims_enforced": n_total_claims_enforced[0],
             "COMPUTED_VERDICT_TALLY": dict(sorted(tally.items())),
             "computed_total_entries": sum(tally.values()),
             "unlintable_surfaces": ["the PR body", "git commit messages"],
@@ -822,17 +834,29 @@ def check_no_redundant_ancestor(problems: list[str]) -> dict[str, Any]:
     # granularities, which is not what that pair does. Recorded rather than
     # silently omitted, with the evidence, so the omission is a judgement a
     # reviewer can disagree with instead of a gap.
-    ic = (doc.get("core_functions") or [{}])[0].get("in_complex")
-    ic_id = ic.get("id") if isinstance(ic, dict) else None
+    # Derived by actually reading BOTH slots of EVERY core function, rather than
+    # hardcoding index 0 and asserting what `locations` holds without looking --
+    # which is what the first version of this report string did.
+    live = []
+    for i, cf in enumerate(doc.get("core_functions") or []):
+        ic = cf.get("in_complex")
+        ic_id = ic.get("id") if isinstance(ic, dict) else None
+        if not ic_id:
+            continue
+        anc = cl.get(ic_id) or []
+        locs = cf.get("locations") or []
+        loc_ids = [(x.get("id") if isinstance(x, dict) else x) for x in locs]
+        for lid in loc_ids:
+            if isinstance(lid, str) and lid in anc:
+                live.append(f"core_functions[{i}]: in_complex={ic_id} whose closure "
+                            f"contains {lid}, which locations also asserts")
     not_compared = {
         "slot_pair": ["in_complex", "locations"],
         "reason": ("a complex and the compartment containing it are different kinds "
-                   "of assertion, so co-stating them is informative, not redundant"),
-        "live_instance": (
-            f"core_functions[0].in_complex={ic_id} whose closure contains "
-            f"GO:0005634, which core_functions[0].locations also asserts"
-            if ic_id and "GO:0005634" in (cl.get(ic_id) or []) else
-            "no live instance in the current document"),
+                   "of assertion, so co-stating them is informative, not redundant; "
+                   "the rule this check enforces is about one slot restating its own "
+                   "content at two granularities"),
+        "live_instances": live or ["none in the current document"],
     }
     return {"pairs_checked": pairs_checked, "closures_available": len(cl),
             "slots_checked": list(MULTI),
@@ -1288,6 +1312,26 @@ def self_test() -> int:
         NOTES.write_text(t2)
     run_case("the only enforcing tally surface is deleted", mut_delete_tally_table,
              "matched no tally claim outside the retraction exemption")
+
+    def mut_wrong_total() -> None:
+        t2 = NOTES.read_text()
+        needle = "| **total entries** | **21**"
+        if needle not in t2:
+            raise Problem("anchor for the total mutation is absent")
+        NOTES.write_text(t2.replace(needle, "| **total entries** | **20**", 1))
+    run_case("stated total disagrees with the document", mut_wrong_total,
+             "total entries but the document contains 21")
+
+    def mut_delete_total() -> None:
+        t2 = NOTES.read_text()
+        import re as _re
+        n2 = _re.sub(r"\|\s*\*\*total(?:\s+entries)?\*\*\s*\|\s*\*\*\d+\*\*[^\n]*\n",
+                     "", t2)
+        if n2 == t2:
+            raise Problem("total row not found to delete")
+        NOTES.write_text(n2)
+    run_case("the only stated total is deleted", mut_delete_total,
+             "compared no stated TOTAL")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making
