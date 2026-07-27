@@ -121,13 +121,25 @@ fixed: routing is per sentence (paralog and record token must occur in the *same
 and the `kinase_rows` dimension asserts the **exact** kinase-row set, with references, for
 COQ8A and COQ8B.
 
-**Residual limit, stated rather than papered over:** routing is per sentence, not per *claim*.
-A single sentence mixing a covered record claim with an uncovered one still passes. Regex
-cannot do better honestly, and pretending otherwise is how the per-unit version came to claim
-more than it did.
+**Residual limits, stated rather than papered over.** Two of them, and the second is the
+larger:
+
+1. Routing is per sentence, not per *claim*. A sentence mixing a covered record claim with an
+   uncovered one still passes, because a sentence's tokens are unioned into one decision.
+2. **A record claim whose subject is an antecedent in a neighbouring sentence is not gated at
+   all** — "…carried by ADCK1 and ADCK2." followed by "The HTP row…". Carrying the last-named
+   paralog forward across sentences was implemented and then *withdrawn*: with the colon no
+   longer splitting, both in-tree claims this gate exists for already sit in one sentence
+   each, so it bought nothing and produced three false positives on sentences about ADCK5's
+   **own** evidence codes. Anaphora across a sentence boundary is therefore a known hole, not
+   a covered case.
+
+Regex cannot do better than this honestly, and pretending otherwise is exactly how the
+per-unit version came to claim more than it did.
 
 **What makes it close the class rather than enumerate it** is that the *trigger* is generic.
-Any unit naming a paralog alongside a **record-shaped token** — an evidence code, `GO_REF:`,
+Any **sentence** naming a paralog alongside a **record-shaped token** — a GO evidence code
+(the full vocabulary, not a sample), `GO_REF:`,
 `ECO:` id, SubCell id, EC number or PANTHER node id — must route to a covered dimension, and
 fails if it does not. A bare `GO:xxxxxxx` is deliberately excluded: it names a *term*, and
 terms are discussed throughout the literature prose. An earlier version keyed the trigger on
@@ -142,8 +154,11 @@ claim into a scanned surface would trip the very guard being described.
 
 Literature claims about paralogs stay out of scope, and that exclusion is narrow and stated:
 those are anchored by `supporting_text` and already checked verbatim against the cached
-publications. Exactly one unit carries a documented exemption, with its reason recorded in
-`RECORD_GATE_EXEMPTIONS`.
+publications. **There is no exemption list**: one was added for a unit whose record token was
+ADCK5's own `IPI`, then found *unreachable* once routing moved to sentence level — described
+here as an active escape while no input could reach it. Restricting `.py` surfaces to comments
+and docstrings removed the only case that motivated it, so the mechanism is gone rather than
+kept as decoration.
 
 Every guard is exercised in the direction it exists to catch **and** in the happy
 direction, plus invariants about the harness itself; `--self-test` reports the count

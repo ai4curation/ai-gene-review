@@ -312,14 +312,11 @@ RECORD_SIGNATURE_RE = re.compile(
     r"GO_REF:|ECO:\d{7}|\bEC[ =]?\d|SL-0\d|\bPTN\d|\b(" + "|".join(GO_EVIDENCE_CODES) + r")\b"
 )
 
-# Units exempt from the gate, each with a stated reason. Keyed on a stable substring rather
-# than an index. Keep this SHORT: every entry is a claim no computation covers.
-RECORD_GATE_EXEMPTIONS = {
-    # The record token here (IPI) is ADCK5's OWN evidence code; the paralog appears only in a
-    # literature clause about COQ8A's measured topology, anchored to PMID:27499294.
-    "Bare \"protein binding\" supported by a single yeast two-hybrid partner":
-        "record token is ADCK5's own IPI; the COQ8A mention is literature-anchored",
-}
+# There is no exemption list. One was added for a unit whose record token was ADCK5's
+# own IPI, then found UNREACHABLE once routing moved to sentence level - the escape was
+# described in RESULTS.md as active while no input could reach it. Restricting .py
+# surfaces to prose removed the only case that motivated it, so the mechanism is gone
+# rather than kept as decoration.
 
 # record-token -> dimension name. A token in a paralog-mentioning unit demands that dimension.
 RECORD_TOKENS = {
@@ -327,7 +324,7 @@ RECORD_TOKENS = {
     r"PMID:34800366|MitoCoP|HTP row|GO:0005739": "mitocop_row",
     r"EC[= ]?2\.7|2\.7\.-\.-|2\.7\.11\.-": "ec",
     r"Ser/Thr-kinase keyword|Serine/threonine-protein kinase keyword|kinase keyword|keyword removal|UniProt keyword": "keyword",
-    r"SL-0173|SL-0162|SUBCELLULAR LOCATION|subcellular location|inner-mitochondrial-membrane|mitochondrial inner membrane|membrane anchored|anchored": "subcellular",
+    r"SL-0173|SL-0162|SUBCELLULAR LOCATION|subcellular location|mitochondrial inner membrane|Mitochondrion membrane": "subcellular",
     r"NOT\|": "negated",
     r"ECO:0000269\|PubMed:33988507|PubMed:33988507|PMID:33988507": "screen_provenance",
     r"ECO:0000269\|PubMed:(11888884|24270420|25498144)": "tag_sets",
@@ -384,9 +381,13 @@ def _coverage(census_doc: dict, paint_text: str | None = None) -> dict[str, call
                        and any(e.startswith("ECO:0000269") for e in l["evidence"])
                        for l in c[g]["subcellular_locations"]):
                 return f"{g} lost its experimental Mitochondrion SUBCELLULAR LOCATION"
-        # The review also states that COQ8A (with ADCK1) is inner-mitochondrial-membrane
-        # anchored. UniProt records COQ8A/COQ8B as "Mitochondrion membrane"; assert it, since
-        # that sentence is a cross-gene record claim like any other.
+        # The review states COQ8A's location as "Mitochondrion membrane, single-pass" and
+        # ADCK1's as "Mitochondrion"; assert both, since those are cross-gene record claims
+        # like any other. (An earlier draft said both were "inner-mitochondrial-membrane
+        # anchored" - unsupported for either: ADCK1's line is plain Mitochondrion and COQ8A's
+        # says nothing about "inner". Found via the reviewer's note that a bare "anchored"
+        # routing alternative was marking that sentence covered by a check which asserted
+        # nothing of the kind - widening ROUTING silently shrinks what the gate reports.)
         for g in ("COQ8A", "COQ8B"):
             if not any(str(l["location"]).startswith("Mitochondrion membrane")
                        for l in c[g]["subcellular_locations"]):
@@ -537,11 +538,15 @@ def check_cross_gene_claims(census_doc: dict, texts: dict[str, str],
     triggered_by_surface: dict[str, int] = {}
     for name, text in texts.items():
         triggered_by_surface.setdefault(name, 0)
-        for unit in _paragraphs(text, name):
+        scan = _py_prose(text) if name.endswith(".py") else text
+        for unit in _paragraphs(scan, name):
             if not (PARALOG_RE.search(unit) and RECORD_SIGNATURE_RE.search(unit)):
                 continue
             triggered_by_surface[name] += 1
-            # PER RECORD TOKEN, not per unit. Routing per unit meant one covered token gave a
+            # PER SENTENCE, not per unit. (Not per token: a sentence's tokens are unioned,
+            # so a sentence carrying two record claims is still one decision - stated as a
+            # residual limit in RESULTS.md rather than implied away.) Routing per unit meant
+            # one covered token gave a
             # blanket pass to every other record claim in the same unit - and the fifth
             # instance was already in the tree because of it: the COQ8B double-GO:0004672
             # sentence tripped the gate, resolved to {negated} via its NOT| token, and sailed
@@ -549,17 +554,19 @@ def check_cross_gene_claims(census_doc: dict, texts: dict[str, str],
             # "proved" the catch only because its probe was appended as its own paragraph,
             # where it carried no covered token. Each signature occurrence is now routed
             # independently.
+            # Paralog and record token must occur in the SAME sentence. Carrying the
+            # last-named paralog forward across sentences was tried and withdrawn: with the
+            # colon no longer splitting, both in-tree claims this gate exists for already sit
+            # in one sentence each, so forward-carry bought nothing and produced three false
+            # positives on sentences about ADCK5's OWN evidence codes. The colon was the whole
+            # bug. Anaphora that genuinely crosses a sentence boundary remains a stated
+            # residual limit rather than an over-broad rule.
             for sentence in _sentences(unit):
-                # BOTH must be in the same sentence. Checking the paralog at unit level while
-                # routing at sentence level is the same scope mismatch this file keeps
-                # rediscovering - it flagged sentences about ADCK5's own evidence codes merely
-                # because a paralog was named elsewhere in the unit.
                 if not (
                     PARALOG_RE.search(sentence) and RECORD_SIGNATURE_RE.search(sentence)
                 ):
                     continue
-                if any(k in sentence for k in RECORD_GATE_EXEMPTIONS):
-                    continue
+                triggered_by_surface[name] += 1
                 tok = RECORD_SIGNATURE_RE.search(sentence).group()
                 dims = {
                     d for pat, d in RECORD_TOKENS.items() if re.search(pat, sentence, re.I)
@@ -589,6 +596,35 @@ def check_cross_gene_claims(census_doc: dict, texts: dict[str, str],
     return problems
 
 
+def _py_prose(text: str) -> str:
+    """Comments and docstrings from a Python surface - the parts that make claims.
+
+    Executable code is not prose: `for sym in ("ADCK1", "ADCK2")` names paralogs as string
+    literals and embeds ECO ids in error-message f-strings, which the cross-gene gate read as
+    an unasserted claim. Restricting to prose removes that whole class of noise without an
+    exemption entry, and keeps docstrings in scope - a docstring is where one withdrawn
+    phrasing actually hid.
+    """
+    out: list[str] = []
+    in_doc = False
+    for line in text.splitlines():
+        s = line.strip()
+        if in_doc:
+            out.append(line)
+            if TRIPLE_DQ in s or TRIPLE_SQ in s:
+                in_doc = False
+            continue
+        if s.startswith(TRIPLE_DQ) or s.startswith(TRIPLE_SQ):
+            out.append(line)
+            body = s[3:]
+            if not (body.endswith(TRIPLE_DQ) or body.endswith(TRIPLE_SQ)):
+                in_doc = True
+            continue
+        if s.startswith("#"):
+            out.append(line)
+    return "\n".join(out)
+
+
 def _sentences(unit: str) -> list[str]:
     """Split a unit into sentence-ish spans for per-claim routing.
 
@@ -598,9 +634,17 @@ def _sentences(unit: str) -> list[str]:
     sentence mixing a covered and an uncovered record claim still passes, and that residual
     limit is stated in RESULTS.md rather than papered over. Regex cannot do better honestly.
     """
+    # NOT on ":" - that was a real regression. This review's prose uses a colon to introduce
+    # exactly the record claim whose subject was just named ("...the cost is on COQ8B, not on
+    # ADCK5: GOA carries both..."), so splitting there severed the paralog from the token and
+    # made the two claims this gate exists for INVISIBLE rather than caught. A colon almost
+    # always introduces an elaboration of the same claim.
     flat = re.sub(r"\s+", " ", unit)
-    return [s for s in re.split(r"(?<=[.;:])\s+", flat) if s.strip()]
+    return [s for s in re.split(r"(?<=[.;])\s+", flat) if s.strip()]
 
+
+TRIPLE_DQ = chr(34) * 3
+TRIPLE_SQ = chr(39) * 3
 
 COARSE_UNIT_CHARS = 1500
 
