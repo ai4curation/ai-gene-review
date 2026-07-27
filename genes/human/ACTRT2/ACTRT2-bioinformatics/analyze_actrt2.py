@@ -105,6 +105,10 @@ PAINT_TSV = REPO_ROOT / "interpro" / "panther" / "PTHR11937" / "PTHR11937-paint.
 
 CONTACT_CUTOFF = 4.0  # Angstrom, heavy atom to heavy atom
 
+# One literal, used both to mark a row and to count the marks, so the report's claim about how many
+# rows are marked is derived from the rows rather than maintained alongside them.
+MARK_TRUNCATED = " **[TRUNCATED - not comparable]**"
+
 ACTRT2 = "Q8TDY3"
 
 # The comparison panel. Every member is here for a stated reason, because a panel chosen
@@ -1352,7 +1356,7 @@ def _panel_table(panel: dict, scheme: str, subset_label: str | None = None,
         sep = sep[:-1] + "---|"
     lines = [header, sep]
     for acc, rec in sorted(rows.items(), key=lambda kv: -kv[1]["identical"]):
-        mark = " **[TRUNCATED - not comparable]**" if acc in flagged else ""
+        mark = MARK_TRUNCATED if acc in flagged else ""
         line = (
             f"| {rec['label']} ({acc}){mark} | {rec['pct_identity_full_length']} | "
             f"{rec['identical']} | {rec['conservative']} | {rec['non_conservative']} | "
@@ -1539,8 +1543,10 @@ def render(r: dict) -> str:
       f"asserted rather than claimed: `panel_length_audit` raises if a flagged accession appears in "
       f"any of the argument-carrying reference sets ({', '.join(la['argument_carrying_sets_checked'])}"
       f"), and it currently finds "
-      f"{len(la['flagged_members_in_argument_carrying_sets'])} such overlaps. A flagged member's "
-      f"rows are marked in every table below where its numbers are read.")
+      f"{len(la['flagged_members_in_argument_carrying_sets'])} such overlaps. Flagged rows carry "
+      f"{MARK_TRUNCATED.strip()} wherever a tally of theirs is printed, and the number of marked "
+      f"rows is counted from the rendered document at the end of this section rather than stated "
+      f"by hand.")
     a("")
     a("Aligned residue at each named actin position:")
     a("")
@@ -1615,9 +1621,18 @@ def render(r: dict) -> str:
 
     for acc, rec in sorted(rowsrc.items(), key=lambda kv: -kv[1]["subset"]["identical"]):
         motif = "".join(call_at(rec["calls"], p)["aligned_residue"] for p in dl)
-        mark = " **[TRUNCATED - not comparable]**" if acc in FLAGGED else ""
+        mark = MARK_TRUNCATED if acc in FLAGGED else ""
         a(f"| {rec['label']} ({acc}){mark} | `{motif}` | "
           f"{rec['subset']['identical']}/{rec['subset']['n_positions']} |")
+    a("")
+
+    # Count the marks from the rendered document itself, so the claim above cannot drift from the
+    # tables below it. `L` at this point contains every residue-comparison table.
+    n_marked = sum(1 for line in L if MARK_TRUNCATED.strip() in line)
+    n_flagged = len(FLAGGED)
+    a(f"Marked rows counted from the rendered tables above: **{n_marked}** across "
+      f"{n_flagged} flagged member(s). Rows carrying only annotation counts rather than sequence "
+      f"comparisons are deliberately unmarked, since a length flag cannot affect them.")
     a("")
 
     # 3 IBA sources
@@ -1707,6 +1722,9 @@ def render(r: dict) -> str:
     a(f"Genes drawing on the beta-actin-subfamily nodes "
       f"{', '.join(rel['beta_actin_subfamily_nodes'])}: "
       f"**{', '.join(rel['genes_under_beta_actin_subfamily_nodes']) or 'none'}**.")
+    a("")
+    a("(These are annotation counts, not sequence comparisons, so they are unaffected by the "
+      "length flag above and are deliberately unmarked.)")
     a("")
     a("| gene | accession | IBA rows | IBA terms | PANTHER nodes |")
     a("|---|---|---|---|---|")

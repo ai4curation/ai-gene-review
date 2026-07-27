@@ -24,18 +24,20 @@ Design notes, each from something that actually went wrong here:
 * **Require the replacement, not just the absence of the error.** Deleting a wrong sentence and
   writing nothing is also a defect, so load-bearing corrections carry a `required` pattern with a
   minimum count.
-* **Fail loudly, and test by breaking.** `--selftest` does four things, and the third is the one
-  that does the real work. It (1) checks a literal probe can be built from each pattern, (2) injects
-  that probe as a surface and requires `audit()` to report it, (3) **asserts scan coverage** - that
-  the walk actually reaches `review.description`, a list-nested review path, the notes and
-  RESULTS.md - and (4) sabotages the scan and requires `audit()` to stop passing. Step 3 is not
-  decoration: injection alone passes even when the real-file scan is gutted, because
-  `audit(extra=...)` appends to `surfaces()`, so of the three ways this lint was deliberately broken
-  during development (`surfaces()` returning `[]`, `review_strings()` losing its list recursion, and
-  inverting the search) injection caught only the third. An earlier version of this mode did none of
-  (2)-(4) at all: it compared a regex against a string built from that same regex, and so printed
-  success without testing anything - the "reports zero on a broken input" state the mode exists to
-  prevent, committed inside the file added to prevent it.
+* **Fail loudly, and test by breaking.** `--selftest` runs every check in `SELFTEST_CHECKS` and
+  prints the registry, so this docstring does not enumerate them and cannot fall behind - which it
+  did, four rounds running, each time omitting the check added most recently. The registry is the
+  single source of truth: `selftest()` sums it, the success line formats from it, and adding a check
+  means adding one tuple.
+  Two findings from breaking this file are worth keeping, because they are why the registry exists
+  rather than another guard. Injection alone is not sufficient: `audit(extra=...)` appends to
+  `surfaces()`, so an injected surface is scanned however badly the real-file scan is broken, and of
+  three deliberate sabotages (`surfaces()` returning `[]`, `review_strings()` losing its list
+  recursion, inverting the search) injection caught only the third - the coverage assertion catches
+  the other two. And a guard that resolved "is this check called?" by substring-searching
+  `inspect.getsource(selftest)` was defeated by its own docstring, because `getsource` includes it:
+  a check that was merely *documented* counted as *called*, so deleting it from the sum while
+  leaving its bullet passed silently. Membership of a registry cannot be faked that way.
 
 Usage:
     uv run python audit_claims.py            # lint; exit 1 on any violation
@@ -226,106 +228,55 @@ def _probe_for(pattern: str) -> str:
 
 
 def selftest() -> int:
-    """Prove this lint actually fires: probe construction, injection, scan COVERAGE, sabotage, prose.
+    """Run every check in `SELFTEST_CHECKS` and fail if any reports a problem.
 
-    Injection alone is not enough and that is the central point. `audit(extra=...)` appends to
-    `surfaces()`, so an injected surface is scanned however badly the real-file scan is broken - of
-    three deliberate sabotages (`surfaces()` returning `[]`, `review_strings()` losing its list
-    recursion, inverting the `if rx.search`), injection caught only the third. The coverage assertion
-    is what catches the other two, so any description of this mode as injection alone is wrong.
-
-    The five checks, each summed into the return value:
-
-      * `_selftest_probe_builder()`         - can a literal be built that the pattern matches?
-      * `_selftest_lint_fires()`            - injected as a surface, does `audit()` report it?
-      * `_selftest_scan_coverage()`         - does the walk actually reach `review.description`, a
-                                              list-nested review path, `notes` and `RESULTS.md`?
-      * `_selftest_detects_a_broken_lint()` - if the scan is sabotaged, does `audit()` stop passing?
-      * `_selftest_docstrings_match_code()` - does this file's prose match this file's behaviour,
-                                              including this enumeration?
-
-    History, because it is the reason for the last two. The first version of this function did none
-    of the above: it compared `re.search(pattern, probe)` - the regex against a string built from
-    that same regex - so it tested `_probe_for` and never called `audit()` at all. `audit()`'s
-    `extra` parameter was dead, and `failures` could never be non-zero because its only increment sat
-    after a `raise`. It printed "every retracted phrasing is caught" without having tested anything:
-    the "reports zero on a broken input" state this mode exists to prevent, committed inside the file
-    added to prevent it. Then this docstring itself drifted - listing three helpers while the code
-    summed four, and omitting precisely the coverage check that had just been added - which is why
-    the enumeration is now machine-checked rather than maintained by hand.
+    Deliberately enumerates nothing. Four consecutive review rounds found a hand-maintained list
+    naming N-1 of N checks, each time omitting the one added most recently, because there were three
+    such lists (this docstring, the module docstring, the success print) plus a hand-written `total`
+    - all free to drift independently. Patching a count buys one round. `SELFTEST_CHECKS` is now the
+    single source of truth: this function sums it, the success line formats from it, and the
+    docstrings describe it rather than transcribe it, so the class of defect has nowhere left to
+    live.
     """
-    total = (
-        _selftest_probe_builder()
-        + _selftest_lint_fires()
-        + _selftest_scan_coverage()
-        + _selftest_detects_a_broken_lint()
-        + _selftest_docstrings_match_code()
-    )
+    total = sum(fn() for fn, _ in SELFTEST_CHECKS)
     if total:
         print(f"selftest FAILED: {total} problem(s)")
         return 1
     n_patterns = sum(len(r["retracted"]) for r in RULES)
-    surf = surfaces()
-    print(f"selftest passed: {n_patterns} retracted phrasings over {len(RULES)} rules, each")
-    print("  (a) constructible as a probe and (b) reported by audit() when injected as a surface;")
-    print(f"  scan coverage asserted over {len(surf)} surfaces including review.description, a")
-    print("  list-nested review path, notes and RESULTS.md; and audit() confirmed to stop passing")
-    print("  when its scan is sabotaged. Verified by breaking the lint three ways (surfaces()")
-    print("  returning [], review_strings() losing list recursion, and inverting the search):")
-    print("  all three are caught - the first two only by the coverage assertion.")
+    print(f"selftest passed: {len(SELFTEST_CHECKS)} checks over {len(RULES)} rules "
+          f"({n_patterns} retracted phrasings, {len(surfaces())} text surfaces)")
+    for fn, description in SELFTEST_CHECKS:
+        print(f"  {fn.__name__}: {description}")
     return 0
 
 
-def _selftest_docstrings_match_code() -> int:
-    """Assert this file's prose describes this file's behaviour. Written after claiming it existed.
+def _selftest_every_helper_is_registered() -> int:
+    """Every `_selftest_*` helper defined here must be in `SELFTEST_CHECKS`.
 
-    This check was DESCRIBED in a PR comment as already present before it had been written - the
-    exact "fixed in N places, landed in N-1" failure the rest of this file exists to prevent, and
-    the reviewer found it by grepping the folder for `__doc__` and finding nothing. So it now exists,
-    and its third clause is the one that would have caught the defect it was invented to explain: the
-    enumeration in `selftest`'s own docstring had drifted from the helpers `selftest` actually sums.
+    This is the one reachability question the registry does not answer by construction: a helper can
+    be written and never wired in. It is a set comparison against the registry rather than a source
+    scan, which also removes the bug that made this check's predecessor useless - it resolved calls
+    by substring-searching `inspect.getsource(selftest)`, and `getsource` includes the docstring, so
+    a helper that was merely *documented* counted as *called*. Deleting a helper from the sum while
+    leaving its bullet therefore passed, and the coverage assertion silently stopped running.
 
-    Deliberately mechanical rather than stylistic. It checks only claims that can be falsified from
-    the module's own source and docstrings.
+    The prose checks that used to live here - that a docstring not say "occurrence count", that it
+    mention the coverage assertion, that its enumeration match the code - are deleted rather than
+    fixed. The registry removed what they policed, and an audit harness that needs its own audit
+    harness is past the point of proportion on a gene whose curation settled several rounds ago.
     """
-    import inspect
-
-    failures = 0
-    module_doc = " ".join((__doc__ or "").split())
-    selftest_doc = " ".join((selftest.__doc__ or "").split())
-    selftest_src = inspect.getsource(selftest)
-
-    if "occurrence count" in module_doc:
-        print("  DOC FAIL: module docstring calls required_min_surfaces an 'occurrence count'; it "
-              "counts surfaces")
-        failures += 1
-    for label, doc in (("module", module_doc), ("selftest()", selftest_doc)):
-        if "coverage" not in doc.lower():
-            print(f"  DOC FAIL: {label} docstring does not mention the coverage assertion, which is "
-                  "the check that catches a sabotaged scan; describing this mode as injection alone "
-                  "is the framing that was already corrected once")
-            failures += 1
-
-    # Every _selftest_* helper defined in this module must be summed by selftest(), and every helper
-    # summed by selftest() must be named in its docstring. Both directions, because either gap hides
-    # a check that is not run or a check nobody knows is run.
-    helpers = {
+    defined = {
         name for name, obj in globals().items()
         if name.startswith("_selftest_") and callable(obj)
     }
-    called = {n for n in helpers if f"{n}()" in selftest_src}
-    for missing in sorted(helpers - called):
-        print(f"  DOC FAIL: {missing}() is defined but never called from selftest(); a check that "
-              "is not run is documentation")
+    registered = {fn.__name__ for fn, _ in SELFTEST_CHECKS}
+    failures = 0
+    for orphan in sorted(defined - registered):
+        print(f"  REGISTRY FAIL: {orphan}() is defined but not in SELFTEST_CHECKS, so it never "
+              "runs; a check that is not run is documentation")
         failures += 1
-    for undocumented in sorted(called - {h for h in helpers if h in selftest_doc}):
-        print(f"  DOC FAIL: selftest() calls {undocumented}() but its docstring does not name it; "
-              "the enumeration has drifted from the code")
-        failures += 1
-
-    n = len(called)
-    if n != 2 and "neither can be mistaken for the other" in selftest_doc:
-        print(f"  DOC FAIL: selftest() docstring uses two-way language for {n} checks")
+    for ghost in sorted(registered - defined):
+        print(f"  REGISTRY FAIL: SELFTEST_CHECKS names {ghost} which is not defined here")
         failures += 1
     return failures
 
@@ -416,6 +367,25 @@ def _selftest_detects_a_broken_lint() -> int:
     finally:
         surfaces = original
     return failures
+
+
+# The single source of truth for what `--selftest` runs. The callable IS the entry - its own
+# `__name__` supplies the key - so a registry entry cannot name a function that does not exist, nor
+# drift from the function it points at. `selftest()` sums this, the success line formats from it,
+# and the docstrings describe it rather than transcribe it, so a new check is added in exactly one
+# place and no enumeration can fall behind.
+SELFTEST_CHECKS = (
+    (_selftest_probe_builder,
+     "a literal probe can be built that each retracted pattern matches"),
+    (_selftest_lint_fires,
+     "injected as a surface, audit() reports each retracted pattern"),
+    (_selftest_scan_coverage,
+     "the walk reaches review.description, a list-nested path, notes and RESULTS.md"),
+    (_selftest_detects_a_broken_lint,
+     "audit() stops passing when its scan is sabotaged"),
+    (_selftest_every_helper_is_registered,
+     "no _selftest_* helper exists outside this registry"),
+)
 
 
 def main() -> int:

@@ -622,6 +622,24 @@ Two separate checks, because they catch different things.
   tree. `_selftest_docstrings_match_code()` now exists, was confirmed to **fail** against the wrong
   docstring before the docstring was touched, and is break-tested by deleting a helper from the
   enumeration.
+- **A guard per instance is the wrong shape; remove the possibility of drift instead.** Four
+  consecutive review rounds found a hand-maintained enumeration listing N−1 of N checks, each time
+  omitting the one added most recently — because there were *three* such lists (module docstring,
+  function docstring, success print) plus a hand-written `total`, all free to drift independently.
+  Each round I patched the count, which buys exactly one round. The fix is a single module-level
+  registry that `selftest()` sums, the success line formats from, and the docstrings *describe*
+  rather than transcribe; the registry is keyed on the callable itself, so an entry cannot name a
+  function that does not exist. The class of defect then has nowhere to live, and the guard written
+  to police it shrinks to one set comparison.
+  The guard it replaced was worse than useless: it resolved "is this check called?" by
+  substring-searching `inspect.getsource(selftest)`, and `getsource` **includes the docstring** — so
+  a check that was merely *documented* counted as *called*. Deleting `_selftest_scan_coverage()`
+  from the sum while leaving its bullet passed silently, with the coverage assertion no longer
+  running. Reproduced before fixing. My earlier break test had only exercised the direction that
+  worked.
+  Everything that audited only the script's own prose is **deleted rather than fixed**. The review
+  YAML is the deliverable; an audit harness that needs its own audit harness is past the point of
+  proportion on a gene whose curation settled several rounds earlier.
 - **A break test that does not run looks exactly like a break test that passed.** One of the round-9
   break tests was written as
   `cp … && uv run python -c "<mutate>" | grep -v warning && uv run python -c "<test>"`. The mutation
