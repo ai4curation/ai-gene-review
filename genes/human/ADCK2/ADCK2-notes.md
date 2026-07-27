@@ -138,10 +138,25 @@ dispensable in vivo, and the KxGQ occlusion is untouched. Recorded as a hypothes
 **The A339-equivalent column turns out to be branch-diagnostic**, which is a stronger result
 than the divergence alone. Across the 8 UbiB proteins in the alignment, Gly appears in
 exactly **2** — ADCK2 and Cqd1 — while all six others, *including Cqd2 and ADCK1*, carry the
-suppressor Ala. So a single residue reproduces the Cqd1↔ADCK2 / Cqd2↔ADCK1 pairing from
-sequence alone, independently of PANTHER and of PMID:34362905's genetics. This corroborates
-the orthology; it does not on its own show the two branches differ functionally, and it is
-not used here to assert anything about ADCK2's activity.
+suppressor Ala. So a single residue reproduces the Cqd1↔ADCK2 / Cqd2↔ADCK1 pairing.
+
+Two scope limits, both of which I initially got wrong and a reviewer caught:
+
+1. This is **independent of the genetics in PMID:34362905 but not of PANTHER**, whose
+   subfamily assignment is itself sequence-derived. It is a second sequence-based line
+   agreeing with the genetics, *not* a third independent line.
+2. **Only `Arich_A3` is branch-diagnostic.** At the adjacent `Arich_A1` position Gly is
+   carried by four proteins — ADCK2, Cqd1, **Cqd2 and ADCK1** — so that column cuts across
+   the pairing rather than along it. The claim is about the A339-equivalent position
+   specifically, not about the A-rich loop as a whole.
+
+It corroborates the orthology; it does not on its own show the two branches differ
+functionally, and it is not used to assert anything about ADCK2's activity.
+
+**Identity figures in the report are MSA-derived and not portable.** Adding Cqd2 shifted every
+one of them (the negative control moved 17.1% → 11.9%), because Clustal Omega's gap placement
+depends on the whole input set. Never compare an identity number from this report against one
+computed from a different membership — recompute.
 
 ## 4. Orthology, and why the ADCK genes must not be pooled
 
@@ -297,14 +312,35 @@ context. No affinage sentence is quoted as evidence anywhere in the review.
 
 ## 9. Ontology gap found
 
-GO has **no term for coenzyme Q transport or distribution**. The full descendant set of
-`GO:0006743 ubiquinone metabolic process` is 9 terms: biosynthesis, catabolism, and seven
-enzyme activities. Yet the characterised activity of ADCK2's own yeast orthologue is control
-of *cellular CoQ distribution*, and the human evidence points at precursor trafficking. The
-nearest available parents are `GO:0032365 intracellular lipid transport` and
-`GO:0120009 intermembrane lipid transfer`. Filed as `proposed_new_terms`, explicitly scoped
-so that ADCK2 is a candidate rather than an asserted holder — the direct holders today would
-be yeast Cqd1/Cqd2.
+GO has **no term for coenzyme Q transport or distribution**. Yet the characterised activity of
+ADCK2's own yeast orthologue is control of *cellular CoQ distribution*, and the human evidence
+points at precursor trafficking. The nearest available parents are
+`GO:0032365 intracellular lipid transport` and `GO:0120009 intermembrane lipid transfer`.
+Filed as `proposed_new_terms`, explicitly scoped so that ADCK2 is a candidate rather than an
+asserted holder — the direct holders today would be yeast Cqd1/Cqd2.
+
+**My first attempt to establish this absence was invalid, and a reviewer caught it.** I had
+enumerated the descendants of `GO:0006743 ubiquinone metabolic process` (9 terms: biosynthesis,
+catabolism, seven enzyme activities) and concluded no transport term exists. But a transport
+term would *never* be classified under a metabolic process, so that query could not have found
+one had it existed — it was guaranteed to return nothing. An absence is only evidence when the
+query could have returned a hit.
+
+Redone in `ADCK2-bioinformatics/coq_transport_term_check.py` with two complementary sweeps that
+each could have:
+
+- **Label sweep:** all **80** GO terms whose label mentions ubiquinone / coenzyme Q / quinone.
+  Seven have transport-flavoured labels and every one is an *electron transport* term, where
+  the electron is the cargo and the quinone the acceptor — a different sense of the word. (The
+  script's first run reported these as hits; the substring test on "transport" needed the
+  same kind of anchoring the campaign brief warns about.)
+- **Branch sweep:** the **2584 distinct** descendants of `GO:0006869`, `GO:0010876`,
+  `GO:0032365`, `GO:0120009` and `GO:0006810`. Zero ubiquinone-specific children.
+
+Each candidate is printed with the reason it was excluded, so the filtering is auditable rather
+than buried in the verdict. Sweep 1 would catch a term classified in the wrong branch; sweep 2
+a term whose label avoids the word. The absence is evidence only to the extent those two
+together are exhaustive, and the script says so.
 
 ## 10. Cross-gene note for the concurrent ADCK1 review
 

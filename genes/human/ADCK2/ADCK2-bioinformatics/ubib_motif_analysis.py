@@ -292,6 +292,15 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
         "negative control (a canonical Ser/Thr protein kinase outside the UbiB family)."
     )
     L.append("")
+    L.append(
+        "**These identity figures are properties of this MSA, not of the sequence pairs, "
+        "and are not comparable across alignments.** Adding one sequence to the input set "
+        "moved every figure in this table -- the control alone shifted by several points "
+        "when yeast Cqd2 was added -- because Clustal Omega's gap placement depends on the "
+        "whole input. Do not compare a number here against one computed from a different "
+        "membership; recompute instead."
+    )
+    L.append("")
     L.append("## Alignment register, judged by the negative control")
     L.append("")
     L.append(
@@ -413,7 +422,10 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
     L.append(
         "PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human "
         "ADCK1/5, from genetics. The A339-equivalent column tests that pairing from "
-        "sequence alone, independently of PANTHER and of the paper."
+        "sequence alone, i.e. **independently of the genetics** -- but NOT independently "
+        "of PANTHER, whose subfamily assignment is itself derived from sequence. Treat "
+        "this as a second sequence-based line agreeing with the genetics, not as a third "
+        "independent line."
     )
     L.append("")
     L.append(f"- Gly (the de-repressing residue) in **{len(gly)}** of {len(ubib_only)} "
@@ -423,6 +435,11 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
     if other:
         L.append(f"- other residue in {len(other)}: {', '.join(other)}")
     L.append("")
+    # The adjacent A-rich column must be reported too: if it does NOT split the same way,
+    # then only one of the two projected columns is branch-diagnostic, and saying "the
+    # A-rich loop supports the pairing" without that distinction would overstate the case.
+    a1 = next(r for r in rows if r["site"] == "Arich_A1")
+    a1_gly = [sym(a) for a in ubib_only if a1["targets"][a]["aa"] == "G"]
     expected_gly = {"ADCK2", "CQD1"}
     if set(gly) == expected_gly:
         L.append(
@@ -432,6 +449,14 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
             "reciprocally: the two branches differ at precisely the position whose "
             "substitution was shown to change COQ8A's behaviour. This corroborates the "
             "pairing; it does not by itself show the two branches differ functionally."
+        )
+        L.append("")
+        L.append(
+            f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
+            f"position, Gly is carried by {len(a1_gly)} proteins "
+            f"({', '.join(a1_gly)}) -- a set that includes Cqd2 and ADCK1 and therefore "
+            f"cuts across the pairing rather than along it. The claim is specifically about "
+            f"the A339-equivalent position, not about the A-rich loop as a whole."
         )
     else:
         L.append(

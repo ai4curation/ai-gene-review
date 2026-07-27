@@ -201,9 +201,15 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
     # statements -- first on the bare word "pseudokinase", then on "neither is a
     # pseudokinase" after mere anchoring. A guard that rejects the truth is worse than no
     # guard, so negation handling is explicit rather than encoded in ever-longer regexes.
+    # The negator must be in the SAME CLAUSE as the claim, so the window stops at any
+    # sentence or clause boundary. A window that only forbids a full stop is too permissive:
+    # "ADCK2 has no measured activity, and ADCK2 is a serine/threonine kinase" would be
+    # suppressed by an incidental "no" belonging to a different clause. Punctuation and
+    # coordinating conjunctions both close the window.
     negator = re.compile(
         r"\b(?:not|never|neither|nor|no|cannot|rather than|instead of|without|"
-        r"is n't|isn't|dis(?:proved|proven)|refut\w*)\b[^.]{0,40}$",
+        r"isn't|dis(?:proved|proven)|refut\w*)\b(?:(?!\band\b|\bbut\b|\bwhile\b|"
+        r"\bwhereas\b|\bhowever\b)[^.;,:])" r"{0,30}$",
         re.I,
     )
     for pattern, why in [
@@ -288,6 +294,14 @@ def self_test() -> int:
          "gene_symbol: ADCK2\ndescription_note: the protein is a pseudokinase"),
         ("assert ADCK2 catalyses a pathway step", "gene_symbol: ADCK2",
          "gene_symbol: ADCK2\ndescription_note: ADCK2 catalyses a step of CoQ synthesis"),
+        # Decoy negator in a DIFFERENT clause: the guard must not be disarmed by an
+        # incidental "no" that does not negate the claim itself.
+        ("decoy negator before an asserted claim", "gene_symbol: ADCK2",
+         "gene_symbol: ADCK2\ndescription_note: there is no purified protein, and ADCK2 is"
+         " a serine/threonine kinase"),
+        ("decoy negator across a full stop", "gene_symbol: ADCK2",
+         "gene_symbol: ADCK2\ndescription_note: the assay was not run. ADCK2 is a"
+         " serine/threonine kinase"),
     ]
     failures = 0
 

@@ -31,6 +31,8 @@ Clustal Omega MSA (EBI REST) of the UbiB family plus a canonical protein kinase 
 
 `COQ8A_HUMAN` is the projection reference; `KAPCA_HUMAN` is the negative control (a canonical Ser/Thr protein kinase outside the UbiB family).
 
+**These identity figures are properties of this MSA, not of the sequence pairs, and are not comparable across alignments.** Adding one sequence to the input set moved every figure in this table -- the control alone shifted by several points when yeast Cqd2 was added -- because Clustal Omega's gap placement depends on the whole input. Do not compare a number here against one computed from a different membership; recompute instead.
+
 ## Alignment register, judged by the negative control
 
 A column counts as in register only if the negative control's aligned position falls inside one of *its own* UniProt-annotated sites. Register and residue identity are different questions: the A-rich loop sits at the canonical Gly-rich-loop position, so the control is expected to land there while carrying Gly rather than Ala.
@@ -77,12 +79,14 @@ Note where the two conditions come apart: `DFG_D` is not confirmed by the strict
 
 ## Reciprocal-orthologue test at the A339-equivalent position
 
-PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human ADCK1/5, from genetics. The A339-equivalent column tests that pairing from sequence alone, independently of PANTHER and of the paper.
+PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human ADCK1/5, from genetics. The A339-equivalent column tests that pairing from sequence alone, i.e. **independently of the genetics** -- but NOT independently of PANTHER, whose subfamily assignment is itself derived from sequence. Treat this as a second sequence-based line agreeing with the genetics, not as a third independent line.
 
 - Gly (the de-repressing residue) in **2** of 8 UbiB proteins: ADCK2, CQD1
 - Ala (the suppressor residue) in **6**: COQ8A, COQ8B, CQD2, ADCK1, ADCK5, UBIB
 
 The split is **exactly the ADCK2/Cqd1 orthologue pair against everything else**, including Cqd2 and ADCK1, which carry the suppressor alanine. So a single residue reproduces the published orthology assignment, and it does so reciprocally: the two branches differ at precisely the position whose substitution was shown to change COQ8A's behaviour. This corroborates the pairing; it does not by itself show the two branches differ functionally.
+
+**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` position, Gly is carried by 4 proteins (ADCK2, CQD1, CQD2, ADCK1) -- a set that includes Cqd2 and ADCK1 and therefore cuts across the pairing rather than along it. The claim is specifically about the A339-equivalent position, not about the A-rich loop as a whole.
 
 ## Bottom line
 
