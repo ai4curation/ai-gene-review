@@ -43,6 +43,7 @@ PAINT_TSV = REPO / "interpro" / "panther" / "PTHR13723" / "PTHR13723-paint.tsv"
 
 FAMILY = "PTHR13723"
 ECM_TERM = "GO:0031012"
+ECM_ORG_TERM = "GO:0030198"
 ECM_NODE = "PTN000347317"
 HYDROLASE_KW = "KW-0378"
 
@@ -52,6 +53,10 @@ ADAMTSL_BRANCH = ["ADAMTSL1", "ADAMTSL2", "ADAMTSL3", "ADAMTSL4", "ADAMTSL5", "T
 MOUSE_ORTHOLOGUE = ("Adamtsl1", "Q8BLI0", 10090)
 # The two terms PAINT negates at PTN002673039.
 CATALYTIC_TERMS = ["GO:0004222", "GO:0006508"]
+
+# GO experimental evidence codes, used to test whether a missing IBA can be explained as
+# PAINT declining to overlay an existing direct annotation.
+EXPERIMENTAL_CODES = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
 
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 UNIPROT = "https://rest.uniprot.org/uniprotkb"
@@ -167,27 +172,36 @@ def main() -> int:
     targets.append((MOUSE_ORTHOLOGUE[0], MOUSE_ORTHOLOGUE[1], f"{FAMILY}:SF157", MOUSE_ORTHOLOGUE[2]))
 
     for gene, acc, subfamily, taxon in targets:
-        rows = quickgo_rows(acc, ECM_TERM)
-        iba_from_node = [
-            r for r in rows if r["goEvidence"] == "IBA" and ECM_NODE in panther_nodes(r)
-        ]
-        census.append(
-            {
-                "gene": gene,
-                "accession": acc,
-                "taxon": taxon,
-                "subfamily": subfamily,
-                "ecm_iba_from_node": len(iba_from_node),
-                "ecm_other_rows": len(rows) - len(iba_from_node),
-                "ecm_total_rows": len(rows),
-                "ecm_evidence_codes": sorted({r["goEvidence"] for r in rows}),
-            }
-        )
-        time.sleep(0.15)
+        entry = {"gene": gene, "accession": acc, "taxon": taxon, "subfamily": subfamily}
+        for term, prefix in ((ECM_TERM, "ecm"), (ECM_ORG_TERM, "ecm_org")):
+            rows = quickgo_rows(acc, term)
+            iba_from_node = [
+                r for r in rows if r["goEvidence"] == "IBA" and ECM_NODE in panther_nodes(r)
+            ]
+            other = [r for r in rows if r not in iba_from_node]
+            entry[f"{prefix}_iba_from_node"] = len(iba_from_node)
+            entry[f"{prefix}_other_rows"] = len(other)
+            entry[f"{prefix}_total_rows"] = len(rows)
+            entry[f"{prefix}_evidence_codes"] = sorted({r["goEvidence"] for r in rows})
+            # Whether the non-IBA rows are experimental decides whether a missing IBA can be
+            # explained as PAINT declining to overlay a direct annotation.
+            entry[f"{prefix}_other_experimental"] = sorted(
+                {r["goEvidence"] for r in other} & EXPERIMENTAL_CODES
+            )
+            time.sleep(0.15)
+        census.append(entry)
 
     human_census = [c for c in census if c["taxon"] == 9606]
     no_ecm = [c["gene"] for c in human_census if c["ecm_total_rows"] == 0]
     with_iba = [c["gene"] for c in human_census if c["ecm_iba_from_node"] > 0]
+    no_ecm_org = [c["gene"] for c in human_census if c["ecm_org_total_rows"] == 0]
+    with_iba_org = [c["gene"] for c in human_census if c["ecm_org_iba_from_node"] > 0]
+    # Members that miss the IBA but hold the term anyway: is a direct annotation the reason?
+    missing_iba_explained = {
+        c["gene"]: c["ecm_other_experimental"]
+        for c in human_census
+        if c["ecm_iba_from_node"] == 0 and c["ecm_total_rows"] > 0
+    }
 
     # Keyword / CAUTION audit over the ADAMTS-like branch.
     branch_acc = {g: a for g, a, _sf in human if g in ADAMTSL_BRANCH}
@@ -251,9 +265,14 @@ def main() -> int:
         "family": FAMILY,
         "ecm_term": ECM_TERM,
         "ecm_ibd_node": ECM_NODE,
+        "ecm_organization_term": ECM_ORG_TERM,
         "human_members": len(human_census),
         "human_members_with_ecm_iba_from_node": len(with_iba),
         "human_members_with_no_ecm_annotation": no_ecm,
+        "human_members_with_ecm_org_iba_from_node": len(with_iba_org),
+        "human_members_with_ecm_org_iba_list": sorted(with_iba_org),
+        "human_members_with_no_ecm_org_annotation": no_ecm_org,
+        "members_missing_ecm_iba_but_holding_term": missing_iba_explained,
         "census": census,
         "keyword_audit": keyword_audit,
         "paint_negated_rows": negations,
@@ -286,6 +305,11 @@ def main() -> int:
         n["node"] == "PTN002673039" and n["go_id"] == "GO:0004222" and n["evidence"] == "IKR"
         for n in negations
     ), "the IKR loss call on GO:0004222 is no longer in the cached PAINT table"
+    l5 = next(c for c in human_census if c["gene"] == "ADAMTSL5")
+    assert adamtsl1["ecm_org_iba_from_node"] == 0 and l5["ecm_org_iba_from_node"] == 0, (
+        "ADAMTSL1 and ADAMTSL5 no longer share the same GO:0030198 position; the "
+        "cross-review comparison in RESULTS.md is stale"
+    )
     l1_cat = next(c for c in catalytic_audit if c["gene"] == "ADAMTSL1")
     assert not any(l1_cat[t] for t in CATALYTIC_TERMS), (
         "ADAMTSL1 has acquired a GO:0004222/GO:0006508 row in GOA; the review's "
@@ -326,18 +350,17 @@ def render(r: dict) -> str:
         f"{r['human_members_with_ecm_iba_from_node']} receive it by IBA from that node."
     )
     a("")
-    a("| gene | accession | subfamily | IBA from node | other rows | evidence codes |")
-    a("|---|---|---|---|---|---|")
-    for c in human:
+    a(
+        "| gene | accession | subfamily | GO:0031012 IBA | other rows | evidence codes "
+        "| GO:0030198 IBA | GO:0030198 other |"
+    )
+    a("|---|---|---|---|---|---|---|---|")
+    for c in human + mouse:
+        label = c["gene"] if c["taxon"] == 9606 else f"*{c['gene']}* (mouse)"
         a(
-            f"| {c['gene']} | {c['accession']} | {c['subfamily']} | {c['ecm_iba_from_node']} | "
-            f"{c['ecm_other_rows']} | {', '.join(c['ecm_evidence_codes']) or '-'} |"
-        )
-    for c in mouse:
-        a(
-            f"| *{c['gene']}* (mouse) | {c['accession']} | {c['subfamily']} | "
-            f"{c['ecm_iba_from_node']} | {c['ecm_other_rows']} | "
-            f"{', '.join(c['ecm_evidence_codes']) or '-'} |"
+            f"| {label} | {c['accession']} | {c['subfamily']} | {c['ecm_iba_from_node']} | "
+            f"{c['ecm_other_rows']} | {', '.join(c['ecm_evidence_codes']) or '-'} | "
+            f"{c['ecm_org_iba_from_node']} | {', '.join(c['ecm_org_evidence_codes']) or '-'} |"
         )
     a("")
     a(
@@ -345,11 +368,45 @@ def render(r: dict) -> str:
         f"{', '.join(r['human_members_with_no_ecm_annotation']) or 'none'}.**"
     )
     a("")
+    # Derived, not asserted: does an existing direct annotation explain a missing IBA?
+    for gene, exp_codes in sorted(r["members_missing_ecm_iba_but_holding_term"].items()):
+        if exp_codes:
+            a(
+                f"{gene} holds `{r['ecm_term']}` without the IBA and does have direct evidence "
+                f"of its own ({', '.join(exp_codes)}), which is consistent with PAINT declining "
+                "to overlay an IBA on an existing direct annotation."
+            )
+        else:
+            codes = next(c["ecm_evidence_codes"] for c in human if c["gene"] == gene)
+            a(
+                f"{gene} holds `{r['ecm_term']}` without the IBA, but **none of its rows is "
+                f"experimental** (evidence codes: {', '.join(codes) or '-'}), so redundancy "
+                "suppression does not account for the missing IBA. Its absent IBA is a second "
+                "coverage gap at this node, not an explained omission."
+            )
+        a("")
     a(
-        "PAPLN is absent from the IBA column but carries the term from its own evidence, "
-        "which is the expected PAINT behaviour (an IBA is not laid down where a direct "
-        "annotation already exists). ADAMTSL1 has neither, and its mouse orthologue - the "
-        "same PANTHER subfamily, the same IBD node - does receive the IBA."
+        "ADAMTSL1 has neither an IBA nor any other row, and its mouse orthologue - the same "
+        "PANTHER subfamily, the same IBD node - does receive the IBA."
+    )
+    a("")
+    a(f"### `{r['ecm_organization_term']}` coverage, same node")
+    a("")
+    a(
+        f"{r['human_members_with_ecm_org_iba_from_node']} of the {r['human_members']} human "
+        f"members receive `{r['ecm_organization_term']}` by IBA from `{r['ecm_ibd_node']}`: "
+        f"{', '.join(r['human_members_with_ecm_org_iba_list'])}. Members with no "
+        f"`{r['ecm_organization_term']}` annotation at all: "
+        f"{', '.join(r['human_members_with_no_ecm_org_annotation']) or 'none'}."
+    )
+    a("")
+    org_adamtsl = [
+        g for g in r["human_members_with_ecm_org_iba_list"] if g in ADAMTSL_BRANCH
+    ]
+    a(
+        f"Within the ADAMTS-like branch the IBA reaches only {', '.join(org_adamtsl) or 'none'}. "
+        "ADAMTSL1 and ADAMTSL5 are therefore in the same position for this term - the InterPro "
+        "IEA and nothing else - which matters when comparing verdicts between their reviews."
     )
     a("")
     a("## 2. `Hydrolase` keyword across the ADAMTS-like branch")

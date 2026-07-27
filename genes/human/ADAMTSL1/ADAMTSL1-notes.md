@@ -22,6 +22,11 @@ and
 So the lead in the task brief holds for this gene, and it is established from the entry's own
 feature table rather than from the family name.
 
+The **ADAMTS spacer region** named in the review `description` is *not* an FT DOMAIN feature;
+it comes from `DR   Pfam; PF05986; ADAMTS_spacer1; 1.` and `DR   InterPro; IPR010294;
+ADAMTS_spacer1.`. Sourced in the review's UniProt reference rather than left as an unattributed
+claim.
+
 Pfam/PROSITE counts differ from the FT list (PROSITE `TSP1` 9, SMART `TSP1` 13, Pfam
 `TSP1_ADAMTS` 11) — the field's usual count for the full-length protein is **thirteen** TSRs
 [PMID:28722276 "which contains thirteen thrombospondin type 1 repeats (TSRs), four Immunoglobulin-like C2-type domains and a single PLAC (protease and lacunin) domain in its full-length form (1762 amino acids) and four TSRs in a short splice variant named punctin-1 (525 amino acids)"].
@@ -92,7 +97,13 @@ PAINT holds `GO:0031012 extracellular matrix` as an IBD at node `PTN000347317`. 
 all 26 human members of PTHR13723:
 
 - **24 of 26** receive it by IBA from that node.
-- PAPLN does not, but holds the term from its own evidence — the expected PAINT behaviour.
+- PAPLN is the other member without the IBA. I first wrote this off as PAINT declining to
+  overlay an existing direct annotation, which is wrong: PAPLN's only `GO:0031012` rows are
+  **IEA and TAS**, neither experimental, so redundancy suppression cannot be the reason. The
+  concurrent ADAMTSL5 review (PR #2305) sharpens it further — three PAPLN orthologs (fly
+  `Ppn`, mouse `Papln`, worm `mig-6/ppn-1`) are themselves seeds at that node. PAPLN is a
+  second coverage gap, not an explained omission. The script now derives this rather than
+  asserting it.
 - **ADAMTSL1 has no `GO:0031012` annotation of any kind, from any evidence code.**
 
 And the gap is species-specific, not subfamily-specific: **mouse Adamtsl1 (Q8BLI0), same
@@ -118,8 +129,10 @@ evidence stands on its own.
 
 ## 5. `GO:0030198` extracellular matrix organization (the one IEA)
 
-Accepted, with the reasoning made explicit because the supporting evidence is thinner than
-the annotation looks:
+**KEEP_AS_NON_CORE**, not ACCEPT. The first draft accepted it and rested the acceptance partly
+on the annotation being "well-constructed and unrefuted", which the PR reviewer correctly
+identified as absence of contradiction rather than positive support. There *is* positive
+support, but all of it is family-level:
 
 - The mapping is well-constructed (§2): `IPR013273` → `GO:0030198` only.
 - `GO:0030198` is the term the heterogeneous family agrees on. Catalytic ADAMTS members reach
@@ -130,15 +143,38 @@ the annotation looks:
   by **14 gene sources** (11 mouse, 2 fly, 1 worm), and it propagated by IBA to 22 human
   members of the family, three of them ADAMTS-like (ADAMTSL2, ADAMTSL4, THSD4). Note the
   seed count is 14, not the 15 you get by counting WITH/FROM tokens on the derived IBA rows:
-  GOA appends the PANTHER node itself to that field. Derived in
-  `ADAMTSL1-bioinformatics/RESULTS.md` section 4 rather than counted by eye.
+  GOA appends the PANTHER node itself to that field. Both figures are now **computed** by
+  `check_family_propagation.py` rather than counted by eye: the 14 in RESULTS.md section 4
+  (IBD seed composition) and the 22 in section 1 (a second census pass over `GO:0030198`,
+  added after the PR reviewer pointed out the script censused only `GO:0031012`).
 - But there is **no ADAMTSL1-specific evidence for it**, and the group that discovered the
   protein says so:
   [PMID:28722276 "The function of punctin-1 in tissues is currently unknown, however, by analogy with other family members (Apte 2009; Dubail and Apte 2015; Hubmacher and Apte 2015), there is a strong possibility that it mediates the assembly and turnover of extracellular matrix at the affected sites."]
 
-Kept, with the gap recorded in `knowledge_gaps` rather than by downgrading the action. Being
-present in the ECM and being an MMP10 substrate places ADAMTSL1 in ECM remodelling; neither
-demonstrates that it organises the matrix.
+Kept on those three grounds, with the gap recorded in `knowledge_gaps`. Being present in the
+ECM and being an MMP10 substrate places ADAMTSL1 in ECM remodelling; neither demonstrates
+that it organises the matrix. So the term stays, but it is not asserted as this gene's core
+function, and `core_functions` deliberately carries only `locations: GO:0031012` — the one
+claim the gene's own data establishes.
+
+### Divergence from the concurrent ADAMTSL5 review, and a premise that turned out false
+
+PR #2305 (ADAMTSL5) marks the **identical** InterPro `GO:0030198` IEA
+`MARK_AS_OVER_ANNOTATED`. I was told the two positions could both stand because ADAMTSL1 has
+the `GO:0030198` IBA and ADAMTSL5 does not. **That premise is false**, and #2305's own table
+says so: ADAMTSL1 is `–` in its `GO:0030198` column. My census agrees — the IBA from
+`PTN000347317` reaches only ADAMTSL2, ADAMTSL4 and THSD4 within the ADAMTS-like branch.
+ADAMTSL1 and ADAMTSL5 hold the InterPro IEA and nothing else, i.e. **identical evidentiary
+positions**, and if anything ADAMTSL5 has *more* gene-specific matrix evidence (its own IDA
+to `GO:0031012`, plus microfibril and heparin binding). The divergence therefore cannot be
+justified per gene; it is about where the family draws the KEEP_AS_NON_CORE /
+MARK_AS_OVER_ANNOTATED line, and it is filed once in `suggested_questions`. The script now
+asserts the parity so the comparison cannot go stale.
+
+Where the two reviews *agree*: ADAMTSL1 has no IBA at all (#2305 flagged this as worth
+checking against my branch — no discrepancy, my review reports the absence, never IBA
+support), and absence of an IBA at an incoherently-propagating node is a coverage gap rather
+than a curatorial judgement. My headline uses the absence exactly that way.
 
 ## 6. The `GO:0005788` ER lumen rows (three of them)
 
@@ -228,8 +264,16 @@ dropped because the UniProt `CC` block wraps mid-list. Corrected by hand in the 
   [PMID:22014523 "The biological role of MADD-4 orthologs, including ADAMTSL1 and 3 in mammals, is unknown."]
   Not carried into any human annotation.
 - **Chondrosarcoma** — PMID:24634412 reports ADAMTSL1 as a Hedgehog-responsive gene that
-  "regulates chondrosarcoma cell proliferation". Abstract-only in the cache, cancer-cell-line
-  phenotype, no normal-physiology counterpart. Recorded, not annotated.
+  "regulates chondrosarcoma cell proliferation". This is the only gene-specific functional
+  perturbation in the ADAMTSL1 literature, so it is now adjudicated **in the review file**
+  with a `reference_review`, not only here. Declined on three grounds: the cached record is
+  abstract-only and gives no direction, so neither `GO:0008284` nor `GO:0008285` can be
+  chosen; the assay is a cancer cell line with no normal-physiology counterpart; and a
+  proliferation phenotype narrows neither recorded gap, since it identifies no molecular
+  function and says nothing about matrix organisation. It does mean the review's "nothing is
+  known" claim must be stated precisely — no molecular function and no matrix-organisation
+  evidence, rather than no functional observation of any kind. `PMID:39880678` is likewise
+  now a `references` entry rather than a notes-only mention.
 
 ## 9. What ADAMTSL1 is, in one paragraph
 

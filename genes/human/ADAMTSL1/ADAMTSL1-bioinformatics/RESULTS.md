@@ -12,39 +12,47 @@ Retrieval timestamp is recorded in `results.json` so this file stays byte-reprod
 
 PAINT holds `GO:0031012` as an IBD annotation at node `PTN000347317`. Of the 26 human members of the family, 24 receive it by IBA from that node.
 
-| gene | accession | subfamily | IBA from node | other rows | evidence codes |
-|---|---|---|---|---|---|
-| ADAMTS1 | Q9UHI8 | PTHR13723:SF40 | 1 | 2 | HDA, IBA, IEA |
-| ADAMTS10 | Q9H324 | PTHR13723:SF26 | 1 | 1 | IBA, IDA |
-| ADAMTS12 | P58397 | PTHR13723:SF189 | 1 | 0 | IBA |
-| ADAMTS13 | Q76LX8 | PTHR13723:SF20 | 1 | 1 | IBA, TAS |
-| ADAMTS14 | Q8WXS8 | PTHR13723:SF24 | 1 | 0 | IBA |
-| ADAMTS15 | Q8TE58 | PTHR13723:SF39 | 1 | 1 | IBA, IEA |
-| ADAMTS16 | Q8TE57 | PTHR13723:SF140 | 1 | 0 | IBA |
-| ADAMTS17 | Q8TE56 | PTHR13723:SF151 | 1 | 1 | IBA, IDA |
-| ADAMTS18 | Q8TE60 | PTHR13723:SF167 | 1 | 0 | IBA |
-| ADAMTS19 | Q8TE59 | PTHR13723:SF197 | 1 | 0 | IBA |
-| ADAMTS2 | O95450 | PTHR13723:SF141 | 1 | 1 | IBA, IEA |
-| ADAMTS20 | P59510 | PTHR13723:SF165 | 1 | 1 | IBA, TAS |
-| ADAMTS3 | O15072 | PTHR13723:SF158 | 1 | 2 | IBA, NAS, TAS |
-| ADAMTS4 | O75173 | PTHR13723:SF38 | 1 | 1 | HDA, IBA |
-| ADAMTS5 | Q9UNA0 | PTHR13723:SF37 | 1 | 2 | IBA, IEA, TAS |
-| ADAMTS6 | Q9UKP5 | PTHR13723:SF27 | 1 | 0 | IBA |
-| ADAMTS7 | Q9UKP4 | PTHR13723:SF142 | 1 | 1 | IBA, IEA |
-| ADAMTS8 | Q9UP79 | PTHR13723:SF41 | 1 | 2 | IBA, IEA, ISS |
-| ADAMTS9 | Q9P2N4 | PTHR13723:SF33 | 1 | 2 | IBA, IDA, ISS |
-| ADAMTSL1 | Q8N6G6 | PTHR13723:SF157 | 0 | 0 | - |
-| ADAMTSL2 | Q86TH1 | PTHR13723:SF147 | 1 | 0 | IBA |
-| ADAMTSL3 | P82987 | PTHR13723:SF169 | 1 | 1 | IBA, TAS |
-| ADAMTSL4 | Q6UY14 | PTHR13723:SF144 | 1 | 3 | HDA, IBA, TAS |
-| ADAMTSL5 | Q6ZMM2 | PTHR13723:SF173 | 1 | 3 | IBA, IDA, TAS |
-| PAPLN | O95428 | PTHR13723:SF281 | 0 | 2 | IEA, TAS |
-| THSD4 | Q6ZMP0 | PTHR13723:SF16 | 1 | 10 | HDA, IBA, IEA, RCA, TAS |
-| *Adamtsl1* (mouse) | Q8BLI0 | PTHR13723:SF157 | 1 | 3 | HDA, IBA |
+| gene | accession | subfamily | GO:0031012 IBA | other rows | evidence codes | GO:0030198 IBA | GO:0030198 other |
+|---|---|---|---|---|---|---|---|
+| ADAMTS1 | Q9UHI8 | PTHR13723:SF40 | 1 | 2 | HDA, IBA, IEA | 1 | IBA, IEA |
+| ADAMTS10 | Q9H324 | PTHR13723:SF26 | 1 | 1 | IBA, IDA | 1 | IBA, IEA |
+| ADAMTS12 | P58397 | PTHR13723:SF189 | 1 | 0 | IBA | 1 | IBA, IEA |
+| ADAMTS13 | Q76LX8 | PTHR13723:SF20 | 1 | 1 | IBA, TAS | 1 | IBA, IEA |
+| ADAMTS14 | Q8WXS8 | PTHR13723:SF24 | 1 | 0 | IBA | 1 | IBA, IEA, TAS |
+| ADAMTS15 | Q8TE58 | PTHR13723:SF39 | 1 | 1 | IBA, IEA | 1 | IBA, IEA, ISS |
+| ADAMTS16 | Q8TE57 | PTHR13723:SF140 | 1 | 0 | IBA | 1 | IBA, IEA |
+| ADAMTS17 | Q8TE56 | PTHR13723:SF151 | 1 | 1 | IBA, IDA | 1 | IBA, IEA |
+| ADAMTS18 | Q8TE60 | PTHR13723:SF167 | 1 | 0 | IBA | 1 | IBA, IEA |
+| ADAMTS19 | Q8TE59 | PTHR13723:SF197 | 1 | 0 | IBA | 1 | IBA, IEA, ISS |
+| ADAMTS2 | O95450 | PTHR13723:SF141 | 1 | 1 | IBA, IEA | 1 | IBA, IEA, TAS |
+| ADAMTS20 | P59510 | PTHR13723:SF165 | 1 | 1 | IBA, TAS | 1 | IBA, IEA |
+| ADAMTS3 | O15072 | PTHR13723:SF158 | 1 | 2 | IBA, NAS, TAS | 1 | IBA, IC, IEA, NAS, TAS |
+| ADAMTS4 | O75173 | PTHR13723:SF38 | 1 | 1 | HDA, IBA | 1 | IBA, IEA, TAS |
+| ADAMTS5 | Q9UNA0 | PTHR13723:SF37 | 1 | 2 | IBA, IEA, TAS | 1 | IBA, IEA, ISS, TAS |
+| ADAMTS6 | Q9UKP5 | PTHR13723:SF27 | 1 | 0 | IBA | 1 | IBA, IEA |
+| ADAMTS7 | Q9UKP4 | PTHR13723:SF142 | 1 | 1 | IBA, IEA | 1 | IBA, IEA |
+| ADAMTS8 | Q9UP79 | PTHR13723:SF41 | 1 | 2 | IBA, IEA, ISS | 1 | IBA, IEA |
+| ADAMTS9 | Q9P2N4 | PTHR13723:SF33 | 1 | 2 | IBA, IDA, ISS | 1 | IBA, IEA, ISS |
+| ADAMTSL1 | Q8N6G6 | PTHR13723:SF157 | 0 | 0 | - | 0 | IEA |
+| ADAMTSL2 | Q86TH1 | PTHR13723:SF147 | 1 | 0 | IBA | 1 | IBA, IEA |
+| ADAMTSL3 | P82987 | PTHR13723:SF169 | 1 | 1 | IBA, TAS | 0 | IEA |
+| ADAMTSL4 | Q6UY14 | PTHR13723:SF144 | 1 | 3 | HDA, IBA, TAS | 1 | IBA |
+| ADAMTSL5 | Q6ZMM2 | PTHR13723:SF173 | 1 | 3 | IBA, IDA, TAS | 0 | IEA |
+| PAPLN | O95428 | PTHR13723:SF281 | 0 | 2 | IEA, TAS | 0 | IEA |
+| THSD4 | Q6ZMP0 | PTHR13723:SF16 | 1 | 10 | HDA, IBA, IEA, RCA, TAS | 1 | IBA |
+| *Adamtsl1* (mouse) | Q8BLI0 | PTHR13723:SF157 | 1 | 3 | HDA, IBA | 0 | IEA |
 
 **Members with no `GO:0031012` annotation of any kind: ADAMTSL1.**
 
-PAPLN is absent from the IBA column but carries the term from its own evidence, which is the expected PAINT behaviour (an IBA is not laid down where a direct annotation already exists). ADAMTSL1 has neither, and its mouse orthologue - the same PANTHER subfamily, the same IBD node - does receive the IBA.
+PAPLN holds `GO:0031012` without the IBA, but **none of its rows is experimental** (evidence codes: IEA, TAS), so redundancy suppression does not account for the missing IBA. Its absent IBA is a second coverage gap at this node, not an explained omission.
+
+ADAMTSL1 has neither an IBA nor any other row, and its mouse orthologue - the same PANTHER subfamily, the same IBD node - does receive the IBA.
+
+### `GO:0030198` coverage, same node
+
+22 of the 26 human members receive `GO:0030198` by IBA from `PTN000347317`: ADAMTS1, ADAMTS10, ADAMTS12, ADAMTS13, ADAMTS14, ADAMTS15, ADAMTS16, ADAMTS17, ADAMTS18, ADAMTS19, ADAMTS2, ADAMTS20, ADAMTS3, ADAMTS4, ADAMTS5, ADAMTS6, ADAMTS7, ADAMTS8, ADAMTS9, ADAMTSL2, ADAMTSL4, THSD4. Members with no `GO:0030198` annotation at all: none.
+
+Within the ADAMTS-like branch the IBA reaches only ADAMTSL2, ADAMTSL4, THSD4. ADAMTSL1 and ADAMTSL5 are therefore in the same position for this term - the InterPro IEA and nothing else - which matters when comparing verdicts between their reviews.
 
 ## 2. `Hydrolase` keyword across the ADAMTS-like branch
 
