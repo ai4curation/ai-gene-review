@@ -341,7 +341,8 @@ verdict(("GO:0003712", "IBA", "GO_REF:0000033"),
     action="ACCEPT",
     reason=(
         "AFF1 has no catalytic domain and no sequence-specific DNA-binding domain - "
-        "the entry is ~1000 of 1210 residues disordered - so a coregulator activity "
+        "901 of its 1210 residues (74.5%) carry a Disordered feature, computed from "
+        "the UniProt feature table rather than estimated - so a coregulator activity "
         "is exactly the right class of molecular function for it. Human evidence: it "
         "occupies the DKK1 promoter and sets DKK1 output in both directions in "
         "mesenchymal stromal cells. Recorded in core_functions under "
@@ -1146,7 +1147,8 @@ def build() -> dict:
         "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
         "description": (
             "AFF1 (also called AF4, and the founding member of the AF4/FMR2 family) is "
-            "a large, almost entirely intrinsically disordered nuclear protein that "
+            "a large, largely intrinsically disordered nuclear protein - about "
+            "three-quarters of its 1210 residues carry a disorder annotation - that "
             "works as a scaffold rather than as an enzyme or a sequence-specific "
             "DNA-binding factor. It is the subunit that holds together one branch of "
             "the super elongation complex: it is constitutively bound to the "
@@ -1383,8 +1385,8 @@ def build() -> dict:
             "Whether AFF1 has any molecular function outside a super elongation "
             "complex is unknown. Every measurement on the protein is made either "
             "within SEC or on a short peptide from it, and its only solved structure "
-            "is 42 residues bound to a partner; about a thousand of its 1210 residues "
-            "are annotated as disordered with no assigned interaction."),
+            "is 42 residues bound to a partner; 901 of its 1210 residues (74.5%) are "
+            "annotated as disordered, most of it with no assigned interaction."),
          "boundary": (
             "The SEC-dependent activity is well established and quantified. What is "
             "unmapped is the function of the large disordered regions outside the "

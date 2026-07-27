@@ -235,6 +235,10 @@ Partners supported by **two or more distinct PMIDs**: `O00472`, `P42568`, `P4842
 | `Q13547` | HDAC1 | 1 | 1 | 5 | 1 | 0.35 | P51825 |
 | `P06748` | NPM1 | 1 | 1 | 2 | 1 | 0.27 | P51825 |
 
+## J. Disorder coverage (computed from the UniProt feature table)
+
+4 `Disordered` REGION features cover **901 of 1210** residues (**74.5%**): 1-45, 73-314, 366-957, 1098-1119. Derived rather than asserted, because a first draft of the review rounded this to "about a thousand", overstating it by ~11%.
+
 ## G. affinage recall against the GOA reference set
 
 - affinage citations: **23** (non-numeric PMID-shaped ids: none)

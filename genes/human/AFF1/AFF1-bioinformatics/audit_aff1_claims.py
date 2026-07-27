@@ -578,6 +578,41 @@ def check_counted_claims(problems: list[str]) -> dict[str, Any]:
                     f"{sorted(computed)} (missing {sorted(computed - listed)}, "
                     f"unexpected {sorted(listed - computed)})")
 
+    # Clause 3: any prose statement of the disorder figure must equal the value
+    # computed from the UniProt feature table.  Added because a first draft said
+    # "about a thousand of its 1210 residues", overstating 901 by ~11% -- a number
+    # that was estimated where it could have been derived.
+    d = json.loads(RESULTS_JSON.read_text())
+    dis = d.get("disorder")
+    if not dis:
+        problems.append("results.json has no disorder section, so the disorder "
+                        "figure cannot be checked")
+    else:
+        n_dis, n_len = dis["disordered_residues"], dis["length"]
+        n_disorder_claims = 0
+        for f in surfaces:
+            if not f.exists():
+                continue
+            flat = re.sub(r"\s+", " ", f.read_text())
+            for m in re.finditer(
+                    rf"(\d[\d ,]*)\s+of\s+(?:its\s+)?(\d[\d ,]*)\s+residues",
+                    flat):
+                a_, b_ = (int(x.replace(" ", "").replace(",", ""))
+                          for x in (m.group(1), m.group(2)))
+                if b_ != n_len:
+                    continue          # not the whole-protein claim
+                n_disorder_claims += 1
+                ctx = flat[max(0, m.start() - 110):m.end() + 40]
+                if "first draft" in ctx.lower() or "earlier draft" in ctx.lower():
+                    continue
+                if a_ != n_dis:
+                    findings.append(
+                        f"{f.name}: states {a_} of {b_} residues but the feature "
+                        f"table gives {n_dis}: ...{ctx.strip()}...")
+        if n_disorder_claims == 0:
+            problems.append("counted-claim check found no '<N> of 1210 residues' "
+                            "claim, so its disorder clause could not fire")
+
     if scanned == 0:
         problems.append("counted-claim check scanned zero files -- vacuous")
     if n_number_claims == 0:
@@ -844,6 +879,15 @@ def self_test() -> int:
     run_case("enumerated gene set disagrees with the computed set",
              mut_wrong_enumeration,
              "counted claim disagrees with the computed data")
+
+    def mut_wrong_disorder() -> None:
+        t2 = REVIEW.read_text()
+        needle = "901 of its 1210 residues"
+        if needle not in t2:
+            raise Problem("anchor for the disorder mutation is absent")
+        REVIEW.write_text(t2.replace(needle, "1000 of its 1210 residues", 1))
+    run_case("disorder figure disagrees with the feature table",
+             mut_wrong_disorder, "residues but the feature table gives")
 
     def mut_alias() -> None:
         # Emit the document through a dumper that DOES create aliases, by making

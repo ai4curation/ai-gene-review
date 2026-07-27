@@ -790,6 +790,51 @@ def analyse_reference_species_split(proj: dict, pmid: str,
 
 
 # ---------------------------------------------------------------------------
+# J. disorder coverage, computed from the UniProt feature table
+# ---------------------------------------------------------------------------
+
+def analyse_disorder() -> dict:
+    """Compute how much of the sequence is annotated Disordered.
+
+    Derived rather than asserted: a first draft of the review said "about a
+    thousand of its 1210 residues", which overstates the real figure by ~11%.
+    Any prose number about disorder is now checked against this.
+    """
+    import re as _re
+    f = GENE_DIR / "AFF1-uniprot.txt"
+    if not f.exists():
+        raise Fail(f"missing {f}; run `just fetch-gene human AFF1`")
+    text = f.read_text()
+    m = _re.search(r"^ID\s+\S+\s+Reviewed;\s+(\d+) AA\.", text, _re.M)
+    if not m:
+        raise Fail("could not read the sequence length from the UniProt ID line")
+    length = int(m.group(1))
+    lines = text.splitlines()
+    regions = []
+    for i, ln in enumerate(lines):
+        mm = _re.match(r"^FT   REGION\s+(\d+)\.\.(\d+)", ln)
+        if mm and i + 1 < len(lines) and "Disordered" in lines[i + 1]:
+            regions.append((int(mm.group(1)), int(mm.group(2))))
+    if not regions:
+        raise Fail("found zero Disordered REGION features; the coverage figure "
+                   "would be a vacuous zero rather than a measurement")
+    # Union, in case regions ever overlap.
+    covered = set()
+    for a, b in regions:
+        covered.update(range(a, b + 1))
+    if max(covered) > length:
+        raise Fail(f"a disordered region extends past the sequence length "
+                   f"({max(covered)} > {length})")
+    return {
+        "length": length,
+        "n_disordered_regions": len(regions),
+        "regions": regions,
+        "disordered_residues": len(covered),
+        "disordered_fraction": round(len(covered) / length, 4),
+    }
+
+
+# ---------------------------------------------------------------------------
 # affinage recall
 # ---------------------------------------------------------------------------
 
@@ -1024,6 +1069,17 @@ def render(res: dict) -> str:
           f"{', '.join(p['subject_forms'])}{' (isoform only)' if p['isoform_only'] else ''} |")
     a("")
 
+    a("## J. Disorder coverage (computed from the UniProt feature table)")
+    a("")
+    ds = res["disorder"]
+    a(f"{ds['n_disordered_regions']} `Disordered` REGION features cover "
+      f"**{ds['disordered_residues']} of {ds['length']}** residues "
+      f"(**{ds['disordered_fraction']:.1%}**): "
+      f"{', '.join(f'{a0}-{b0}' for a0, b0 in ds['regions'])}. Derived rather than "
+      "asserted, because a first draft of the review rounded this to \"about a "
+      "thousand\", overstating it by ~11%.")
+    a("")
+
     a("## G. affinage recall against the GOA reference set")
     a("")
     ar = res["affinage_recall"]
@@ -1195,6 +1251,8 @@ def main(argv: list[str]) -> int:
     res["affinage_recall"] = analyse_affinage_recall(rows)
     print("H. missing-ortholog donor question ...")
     res["ortholog_donor"] = analyse_missing_ortholog_donor(rows, res["withfrom"])
+    print("J. disorder coverage ...")
+    res["disorder"] = analyse_disorder()
     print("I. within-reference species asymmetry ...")
     res["reference_species_split"] = analyse_reference_species_split(
         res["reference_projection"], "PMID:22195968", "GO:0008023", "GO:0032783")

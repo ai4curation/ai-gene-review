@@ -45,8 +45,9 @@ QuickGO with a working-endpoint control, not read off the file name.
   [file:human/AFF1/AFF1-uniprot.txt "RP   IDENTIFICATION IN THE SEC COMPLEX."] for `PMID:22195968`, and
   [file:human/AFF1/AFF1-uniprot.txt "RP   STRUCTURE BY NMR OF 738-779 IN COMPLEX WITH MLLT3."] for `PMID:23260655`.
 - Domain content is `IPR007797` (AF4/FMR2), `IPR043640` (AF4/FMR2 C-terminal homology domain) and
-  `IPR043639` (AF4_int); the FT table is otherwise **four disordered regions covering ~1 000 of 1 210
-  residues** and sixteen compositional-bias features. AFF1 is a long intrinsically disordered
+  `IPR043639` (AF4_int); the FT table is otherwise **four `Disordered` regions covering 901 of 1210
+  residues (74.5%)** — computed from the feature table by the analysis script, after a first draft
+  rounded it to "~1 000", overstating it by ~11% — plus sixteen compositional-bias features. AFF1 is a long intrinsically disordered
   scaffold, and its one solved structure (`2LM0`) is a 42-residue fragment bound to a partner.
 
 ## The one direct molecular measurement on human AFF1
