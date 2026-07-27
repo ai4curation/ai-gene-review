@@ -557,3 +557,40 @@ misattributes a source, or lets a guard report coverage it does not have. I will
 refining the guards' own prose, and I am not looking for further tooling symmetry for its own
 sake. If a later round finds a factual defect in the annotations, that is a different matter and
 gets fixed.
+
+## Review round 4: the fix for round 3's false positives created a coverage hole
+
+Round 4 requested changes for one item, **introduced by the round-3 commit and squarely inside
+that commit's own stated stopping criterion** ("lets a guard report coverage it does not have").
+The reviewer is right, and the diagnosis is worth recording because it is the same named mode a
+third time, one level over each time.
+
+**What happened.** Widening `check_intact_counts`' narration exemption fixed the ten false
+positives on the repair scripts — but the function is called from *both* `audit()` (the review
+YAML) and `audit_sibling_surfaces()` (the scripts and notes), and only the second needs the
+exemption. The consequence is concrete: the YAML states the CDK9 counts about 170 characters
+before "the hand-counted version of them was wrong", so **that occurrence became exempt from the
+numeric check** — on the one file the guard exists for, at the sentence that announces the
+correction.
+
+**Demonstrated against the shipped code, not argued.** Extracting `audit_claims.py` and
+`AFF3-ai-review.yaml` from `710a315df`, reverting the counts to the wrong 5/4 at that narrated
+occurrence, and running the *shipped* guard reports **0 problems**. The current guard fires
+there, and a new break-test direction pins it.
+
+**The fix.** `allow_narrated` now defaults to `False` and is switched on only by the sibling
+sweep. Verified before restoring the default that neither of the YAML's two count statements
+quotes the retracted numbers, so nothing on that surface needs the exemption. And the vocabulary
+is **split by surface**: the prose set is back to the original narrow retraction words, while the
+code-shaped tokens (`anchor`, `pattern`, `fixture`, `guard`, `premise`, `startswith`, `finditer`,
+`re.compile`) apply only on `.py` files — the reviewer's secondary point, that `guard` and
+`premise` are ordinary words in this document and would have exempted a future unnarrated sign
+claim written near either.
+
+**Three instances of one mode, at three scopes.** Round 2: an exemption coarser in **file**
+scope. Round 3: coarser in **surface** scope. Round 3 again, secondarily: coarser in
+**vocabulary**. Each time the exemption was correct in intent and one level too wide in
+implementation, and each time the symptom was a guard reporting success over exactly what it was
+written to protect. The generalisable form: **when you widen an exemption to stop a false
+positive, ask which callers need it and give it to those callers only** — the fix for a false
+positive is almost always narrower in scope than the false positive's cause.

@@ -26,7 +26,11 @@ Closes gaps the repo's own checks are known to have (campaign brief):
        - the hand-counted CDK9 IntAct figure, guarded STRUCTURALLY by checking any stated
          record/publication/method count against intact_partners.json rather than by
          pinning a literal phrase, and break-tested against the version that actually
-         shipped (`git show HEAD:...`) rather than only against a synthetic mutation;
+         shipped (`git show HEAD:...`) rather than only against a synthetic mutation.
+         The narration exemption is OFF by default and switched on only by
+         `audit_sibling_surfaces()`, so the review YAML is checked unconditionally --
+         round 3 applied it everywhere and thereby un-guarded the YAML's own
+         correction-announcing sentence, which round 4 caught;
        - the "donors disagree in sign" premise, with a PER-OCCURRENCE narration exemption.
          The one-shot repair script's exemption was file-scoped, which made it blind to two
          surviving instances inside the very file it exempted, so the check moved here to
@@ -121,19 +125,40 @@ SIGN_RE = re.compile(r"[^.]*disagree[sd]? in \*?sign\*?[^.]*\.", re.I)
 # distinction is the whole point: a file-scoped exemption is what let two instances survive
 # inside the file it exempted, which is guard-defeat mode "an exemption coarser than the
 # thing it exempts". Both directions are break-tested.
-NARRATED_RE = re.compile(
+#
+# ROUND 4: the vocabulary is SPLIT, because a single set was the same mode one level over --
+# coarser in surface scope. Two problems it caused:
+#   * `guard` and `premise` are ordinary words in this document, so a future unnarrated sign
+#     claim written near either would have been exempt on a PROSE surface.
+#   * the code-shaped tokens exist only to let repair scripts hold find anchors and let this
+#     file hold fixtures; they have no business exempting anything in the review YAML.
+# So the code-shaped set applies only on `.py` surfaces.
+NARRATED_PROSE_RE = re.compile(
     r"retract|wrong|earlier draft|earlier version|earlier wording|misread|misreading|"
-    r"refuted|was false|is actually|hand-counted|surviving|still assert|premise|"
-    r"anchor|pattern|fixture|guard|break-test|ACCEPTED, both fixed|failures\.append|"
-    r"startswith|finditer|re\.compile", re.I)
+    r"refuted|was false|is actually|hand-counted", re.I)
+NARRATED_CODE_RE = re.compile(
+    r"anchor|pattern|fixture|guard|break-test|surviving|still assert|premise|"
+    r"ACCEPTED, both fixed|failures\.append|startswith|finditer|re\.compile", re.I)
 
 
-def check_sign_claim(flat: str) -> list[str]:
-    """Every 'donors disagree in sign' sentence must be narrated, anchored or patterned."""
+def _narrated(window: str, code_context: bool) -> bool:
+    """Is this occurrence a narration, or (on a .py surface) an anchor/pattern/fixture?"""
+    if NARRATED_PROSE_RE.search(window):
+        return True
+    return bool(code_context and NARRATED_CODE_RE.search(window))
+
+
+def check_sign_claim(flat: str, code_context: bool = False) -> list[str]:
+    """Every 'donors disagree in sign' sentence must be narrated, anchored or patterned.
+
+    The narration exemption DOES apply on the review YAML here, unlike the count guard: the
+    YAML is where this review narrates its own retraction, so forbidding it there would
+    forbid the document from recording what it withdrew.
+    """
     out = []
     for m in SIGN_RE.finditer(flat):
         window = flat[max(0, m.start() - 260): m.end() + 260]
-        if not NARRATED_RE.search(window):
+        if not _narrated(window, code_context):
             out.append(
                 f"H: unnarrated 'donors disagree in sign' claim (retracted in round 2, and "
                 f"GO:0032786 is POSITIVE): {m.group(0).strip()[:150]!r}"
@@ -141,8 +166,22 @@ def check_sign_claim(flat: str) -> list[str]:
     return out
 
 
-def check_intact_counts(flat: str) -> list[str]:
-    """Assert every stated CDK9 count matches the computed one."""
+def check_intact_counts(flat: str, allow_narrated: bool = False,
+                        code_context: bool = False) -> list[str]:
+    """Assert every stated CDK9 count matches the computed one.
+
+    `allow_narrated` defaults to FALSE, and that default is the point. Round 4 caught the
+    exemption being applied on the review YAML, where it is not needed and where it silently
+    un-guarded the sentence at the GO:0032783 reason -- the counts are stated ~170 characters
+    before "the hand-counted version of them was wrong", so that occurrence became exempt and
+    the numbers could have been reverted there with the audit still passing. On the one file
+    the guard exists for, at the sentence announcing the correction.
+
+    Verified before restoring the default: neither of the YAML's two count statements quotes
+    the retracted numbers, so nothing on that surface needs the exemption. Only the sibling
+    surfaces do -- `fix_intact_counts.py`'s find anchors and this file's own fixtures -- and
+    `audit_sibling_surfaces()` passes it in explicitly.
+    """
     if not INTACT_JSON.exists():
         return [f"H: {INTACT_JSON.name} missing -- cannot check the IntAct counts, which "
                 f"is a loud failure rather than a silent skip"]
@@ -153,11 +192,10 @@ def check_intact_counts(flat: str) -> list[str]:
     for m in CDK9_COUNT_RE.finditer(flat):
         n += 1
         got = tuple(_as_int(m.group(k)) for k in ("rec", "pub", "meth"))
-        # Same per-occurrence narration/anchor exemption as the sign guard: the repair
-        # script must contain the wrong counts as its find anchors, and this file must
-        # contain them as fixtures.
+        # Per-occurrence anchor/fixture exemption, applied ONLY where the caller asks for it
+        # (the sibling sweep). Off by default, so the review YAML is fully guarded.
         window = flat[max(0, m.start() - 260): m.end() + 260]
-        if got != want and NARRATED_RE.search(window):
+        if got != want and allow_narrated and _narrated(window, code_context):
             continue
         if got != want:
             out.append(
@@ -517,7 +555,7 @@ def self_test() -> int:
         # line-wrapped differently at the two sites.
         flat_now = norm(text)
         targets = [m for m in CDK9_COUNT_RE.finditer(flat_now)
-                   if not NARRATED_RE.search(
+                   if not NARRATED_PROSE_RE.search(
                        flat_now[max(0, m.start() - 260): m.end() + 260])]
         anchor = "5 distinct publications and 3 distinct methods ("
         n_anchor = text.count(anchor)
@@ -541,6 +579,40 @@ def self_test() -> int:
                             f"version that actually shipped; got {probs[:2]}")
         else:
             print(f"  ok  H shipped IntAct count (run against HEAD): {hit[0][:150]}")
+
+    # H, the direction round 4 asked for and that would have caught round 3's regression:
+    # mutating the counts at the NARRATED occurrence must still fire on the review YAML,
+    # because `allow_narrated` is False there. Before the fix this passed silently -- the
+    # exemption reached the one file the guard exists for. Assert the target's window IS
+    # narrated first, so the direction cannot pass by accidentally hitting the other site.
+    nar_anchor = "records CDK9 in 6 records across 5 distinct publications and"
+    n_nar = text.count(nar_anchor)
+    if n_nar != 1:
+        failures.append(f"H narrated-occurrence coverage: anchor found {n_nar} times, "
+                        f"expected 1; this direction would be vacuous")
+    else:
+        flat_chk = norm(text)
+        m = next((m for m in CDK9_COUNT_RE.finditer(flat_chk)
+                  if NARRATED_PROSE_RE.search(
+                      flat_chk[max(0, m.start() - 260): m.end() + 260])), None)
+        if m is None:
+            failures.append("H narrated-occurrence coverage: no narrated occurrence exists, "
+                            "so this direction cannot exercise the default")
+        else:
+            mutated = text.replace(
+                nar_anchor, "records CDK9 in 5 records across 4 distinct publications and", 1)
+            expect("H narrated occurrence is STILL guarded on the review YAML",
+                   mutated, "H: retracted IntAct count restated")
+
+    # And the mirror: the sibling sweep must still tolerate that same shape on a .py surface,
+    # or the coexistence fix from round 3 is undone.
+    if any(p.startswith("H: retracted IntAct count restated")
+           for p in audit_sibling_surfaces()):
+        failures.append("H anchor tolerance: the sweep fires on a repair script's find "
+                        "anchors, which would forbid the guard from coexisting with its own "
+                        "implementation")
+    else:
+        print("  ok  H anchor tolerance: sweep still silent on .py find anchors and fixtures")
 
     # H, third retraction: an unnarrated sign-disagreement sentence must fire. Run against
     # THE DEFECT THAT ACTUALLY SHIPPED - the two instances the round-1 commit left standing -
@@ -668,9 +740,10 @@ def audit_sibling_surfaces(override: dict[str, str] | None = None) -> list[str]:
         raw = (override or {}).get(p.name, p.read_text(errors="ignore"))
         flat = norm(raw)
         scanned += 1
-        for prob in check_sign_claim(flat):
+        code = p.suffix == ".py"
+        for prob in check_sign_claim(flat, code_context=code):
             problems.append(f"{prob}  [in {p.name}]")
-        for prob in check_intact_counts(flat):
+        for prob in check_intact_counts(flat, allow_narrated=True, code_context=code):
             if prob.startswith("H: no CDK9 count sentence found"):
                 continue  # not every surface must state the counts
             problems.append(f"{prob}  [in {p.name}]")
