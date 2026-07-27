@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 10
 - Selected module genes: 3
 - Selected gene reviews curated: 3
-- Selected OpenScientist reports: in progress
+- Selected OpenScientist reports: 1 of 3 complete
 
 ## Curated Boundary
 
@@ -45,6 +45,10 @@ PSEPK report; no report file was produced.
 2026-07-26: The generic module-level OpenScientist run also timed out after
 7200s without producing a report.
 
+2026-07-26: The gene-level `treSB` run timed out after 7200s without producing
+a report. The subsequent `glgE` run persisted a complete report and artifacts
+despite the wrapper returning a timeout status.
+
 ## Candidate Genes
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
@@ -63,7 +67,7 @@ PSEPK report; no report file was produced.
 | [ ] | `glgX` | PP_4055 | Q88FN4 | kegg:ppu00500 | MISSING | MISSING | MISSING | Glycogen debranching enzyme (EC 3.2.1.33) |
 | [x] | `glgB` | PP_4058 | Q88FN1 | kegg:ppu00500 | PRESENT | CURATED | MISSING | 1,4-alpha-glucan branching enzyme GlgB (EC 2.4.1.18) (1,4-alpha-D-glucan:1,4-alpha-D-glucan 6-glucosyl-transferase) (Alp |
 | [x] | `treSB` | PP_4059 | Q88FN0 | kegg:ppu00500 | PRESENT | CURATED | MISSING | Maltokinase (EC 2.7.1.175) (EC 5.4.99.16) (Maltose alpha-D-glucosyltransferase) (Maltose-1-phosphate synthase) |
-| [x] | `glgE` | PP_4060 | Q88FM9 | kegg:ppu00500 | PRESENT | CURATED | MISSING | Alpha-1,4-glucan:maltose-1-phosphate maltosyltransferase (GMPMT) (EC 2.4.99.16) ((1->4)-alpha-D-glucan:maltose-1-phospha |
+| [x] | `glgE` | PP_4060 | Q88FM9 | kegg:ppu00500 | PRESENT | CURATED | PRESENT | Alpha-1,4-glucan:maltose-1-phosphate maltosyltransferase (GMPMT) (EC 2.4.99.16) ((1->4)-alpha-D-glucan:maltose-1-phospha |
 | [ ] | `pgi2` | PP_4701 | Q88DW7 | kegg:ppu00500 | PRESENT | CURATED | MISSING | Glucose-6-phosphate isomerase 2 (GPI 2) (EC 5.3.1.9) (Phosphoglucose isomerase 2) (PGI 2) (Phosphohexose isomerase 2) (P |
 | [ ] | `glgP` | PP_5041 | Q88CY8 | kegg:ppu00500 | MISSING | MISSING | MISSING | Alpha-1,4 glucan phosphorylase (EC 2.4.1.1) |
 | [ ] | `algC` | PP_5288 | Q88C93 | kegg:ppu00052 | PRESENT | CURATED | MISSING | Phosphomannomutase/phosphoglucomutase (PMM / PGM) (EC 5.4.2.2) (EC 5.4.2.8) |
