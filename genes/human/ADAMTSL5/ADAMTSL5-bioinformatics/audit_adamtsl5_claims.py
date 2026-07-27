@@ -3,20 +3,24 @@
 
 Checks the things no repo gate checks:
 
+Numbering below matches the `--- N.` banners in check(), in execution order.
+
   1. Duplicate YAML keys -- PyYAML silently keeps the last and discards the earlier,
      deleting provenance before any quote gate can inspect it.
-  2. `file:` supporting_text quotes -- the repo validator only verifies `PMID:` quotes,
-     so a broken `file:` quote passes silently. Also enforces the one-physical-line rule
-     for UniProt quotes, which must not cross a `CC       ` continuation.
-  3. Row coverage -- every GOA row must have exactly one reviewed annotation. NEW
+  2. Row coverage -- every GOA row must have exactly one reviewed annotation. NEW
      entries are our own proposals, NOT GOA rows, and are excluded from this count.
-  4. NEW-proposal validity -- each NEW entry must name a term GOA does not already
+  3. NEW-proposal validity -- each NEW entry must name a term GOA does not already
      carry. This is the only assertion a NEW row can falsify, and it is what makes the
      review's "GOA is missing GO:0001527" claim checkable rather than merely asserted.
-     Listed separately from (3) on purpose: conflating "coverage" with "NEW rows are
+     Listed separately from (2) on purpose: conflating "coverage" with "NEW rows are
      accounted for" is precisely what produced the tautological guard this replaced.
-  5. Required claims and retracted phrasings, by occurrence COUNT, so a claim asserted
-     at N sites cannot silently become N-1.
+  4. No PENDING actions left behind.
+  5. `file:` supporting_text quotes -- the repo validator only verifies `PMID:` quotes,
+     so a broken `file:` quote passes silently. Also enforces the one-physical-line rule
+     for UniProt quotes, which must not cross a `CC       ` continuation.
+  6. Required claims by occurrence COUNT, so a claim asserted at N sites cannot
+     silently become N-1.
+  7. Retracted phrasings -- rejected wordings whose reappearance is a regression.
 
 Run from the repo root:
     uv run python genes/human/ADAMTSL5/ADAMTSL5-bioinformatics/audit_adamtsl5_claims.py
@@ -98,7 +102,8 @@ def check(review_path, goa_path, problems):
         problems.append(f"DUPLICATE YAML KEY: {e}")
         return
 
-    # --- 1. row coverage -------------------------------------------------------
+    # --- 1. duplicate YAML keys: handled by StrictLoader above ------------------
+    # --- 2. row coverage (NEW entries excluded; see 3) --------------------------
     goa_rows = [r for r in csv.DictReader(goa_path.open(), delimiter="\t")]
     n_goa = len(goa_rows)
     anns = doc["existing_annotations"]
@@ -116,6 +121,7 @@ def check(review_path, goa_path, problems):
     # which is a TAUTOLOGY -- new_rows and reviewed partition anns, so it restates the
     # check above and can never fire independently. A guard that cannot fire is worse
     # than no guard, because it reads as coverage. Caught by the PR reviewer on #2305.)
+    # --- 3. NEW-proposal validity ------------------------------------------------
     goa_terms = {r["GO TERM"] for r in goa_rows}
     for a in new_rows:
         tid = a["term"]["id"]
@@ -128,10 +134,11 @@ def check(review_path, goa_path, problems):
     if goa_key != rev_key:
         problems.append(f"coverage mismatch by (term, evidence): "
                         f"GOA-only={goa_key - rev_key}, review-only={rev_key - goa_key}")
+    # --- 4. no PENDING actions ---------------------------------------------------
     if any(a["review"]["action"] == "PENDING" for a in anns):
         problems.append("at least one annotation is still PENDING")
 
-    # --- 2. file: quotes -------------------------------------------------------
+    # --- 5. file: quotes --------------------------------------------------------
     for ref, quote, path in walk_quotes(doc):
         if not str(ref).startswith("file:"):
             continue
@@ -152,13 +159,13 @@ def check(review_path, goa_path, problems):
                     f"UniProt quote crosses a physical line break (at {path}): "
                     f"{quote[:70]!r}")
 
-    # --- 3. required claims, by count -----------------------------------------
+    # --- 6. required claims, by count -------------------------------------------
     for claim, expected in REQUIRED.items():
         got = raw.count(claim)
         if got != expected:
             problems.append(f"claim {claim!r}: found {got} occurrence(s), expected {expected}")
 
-    # --- 4. retracted phrasings ------------------------------------------------
+    # --- 7. retracted phrasings ---------------------------------------------------
     for bad in RETRACTED:
         if bad in raw:
             problems.append(f"RETRACTED phrasing present: {bad!r}")
