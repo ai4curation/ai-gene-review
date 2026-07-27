@@ -104,15 +104,23 @@ Two features of this table are the finding:
 
 1. **11 of 13 partners are integral membrane proteins** (≥1 annotated transmembrane
    feature; 44 TM segments across the set).
-2. **The two exceptions are SGTA and SGTB** — the small glutamine-rich TPR co-chaperones
-   whose curated job is binding exposed hydrophobic transmembrane segments. UniProt's
-   `FUNCTION` for SGTA reads *"Co-chaperone that binds misfolded and hydrophobic
-   patches-containing client proteins in the cytosol"* and *"binding more rapidly the
-   transmembrane domain of newly synthesized proteins"*.
+2. **The two exceptions are SGTA and SGTB**, the two human members of the SGT family of
+   TPR co-chaperones (both carry the `Belongs to the SGT family` similarity statement and
+   a TPR repeat array; they are 55.6% identical over the shorter sequence).
 
-So there is no partner in the set that is not either a hydrophobic-helix-bearing membrane
-protein or a professional binder of hydrophobic helices. The set has a single shared
-property, and it is hydrophobicity rather than a pathway, a compartment or a complex.
+   **The hydrophobic-client role is curated for SGTA only, and that distinction is kept
+   here rather than smoothed over.** UniProt's `FUNCTION` for SGTA reads *"Co-chaperone
+   that binds misfolded and hydrophobic patches-containing client proteins in the
+   cytosol"* and *"binding more rapidly the transmembrane domain of newly synthesized
+   proteins"*. SGTB's entire `FUNCTION` is *"Co-chaperone that binds directly to HSC70 and
+   HSP70 and regulates their ATPase activity"* — no hydrophobic-client claim at all. So
+   SGTB's presence is *consistent* with the same explanation, by family membership and
+   shared architecture, but it is not curated evidence for it.
+
+So every partner in the set is either a hydrophobic-helix-bearing membrane protein or an
+SGT-family TPR co-chaperone, and the family's curated member binds exposed transmembrane
+helices. The set has a single shared property, and it is hydrophobicity rather than a
+pathway, a compartment or a complex.
 
 **One partner is not the canonical protein.** `Q0VAB0` is an unreviewed 259-residue TrEMBL
 entry for TBXA2R; canonical TBXA2R is `P21731`, reviewed, **343** residues. The annotation's

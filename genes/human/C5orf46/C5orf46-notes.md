@@ -170,9 +170,15 @@ Full analysis in `C5orf46-bioinformatics/RESULTS.md`. The short version:
   All share one MI-score, 0.56.
 - **The partner set has exactly one shared property: hydrophobicity.** 11 of 13 are integral
   membrane proteins (44 annotated TM segments across the set); the 2 that are not are SGTA
-  and SGTB, the co-chaperones whose curated job is binding exposed transmembrane helices
-  [UniProt SGTA `FUNCTION`: *"binding more rapidly the transmembrane domain of newly
-  synthesized proteins"*]. C5orf46 was the **bait** in 29 of 41 records, and the bait is the
+  and SGTB, the two human members of the SGT family of TPR co-chaperones. **The
+  hydrophobic-client function is curated for SGTA only** — [UniProt SGTA `FUNCTION`: *"binding
+  more rapidly the transmembrane domain of newly synthesized proteins"*] — while SGTB's whole
+  `FUNCTION` is *"Co-chaperone that binds directly to HSC70 and HSP70 and regulates their
+  ATPase activity"*, with no hydrophobic-client claim. SGTB is SGTA's paralogue, 55.6%
+  identical over the shorter sequence with the same TPR array, so its presence is consistent
+  with the hydrophobicity reading without being curated evidence for it. I first wrote this as
+  a property of both and had to correct it on five surfaces; the fix is recorded below because
+  the overstated version is the more persuasive one and would have gone unchallenged. C5orf46 was the **bait** in 29 of 41 records, and the bait is the
   full ORF whose most hydrophobic 19-residue window (KD-19 **+2.51**) is the uncleaved signal
   peptide — more hydrophobic than anything in the mature chain (**+1.08**).
 - `Q0VAB0`, annotated as TBXA2R, is an **unreviewed 259-aa TrEMBL clone**; canonical TBXA2R is
@@ -309,3 +315,20 @@ Declined, each for a stated reason:
   `new in text and old not in text`, which can never pass when `old` is a prefix of `new`. The
   edit had landed correctly. Verify by outcome — is the new text present, exactly once? — not
   by the absence of a string you deliberately extended.
+- **The overstatement I nearly shipped, and how it was caught.** I wrote that SGTA *and* SGTB
+  both have "binding exposed hydrophobic transmembrane segments" as their curated function.
+  Only SGTA does; SGTB's entire UniProt `FUNCTION` is HSC70/HSP70 ATPase regulation. Nothing
+  automated could catch it — the SGTA quote I cited was verbatim and correct, and the sentence
+  it supported silently extended the claim to a second protein. It was found only by going
+  back to fetch SGTB's own record rather than reasoning from the pair. The corrected version
+  is weaker and still sufficient: the argument now rests on SGTA specifically, with SGTB as
+  family-and-architecture corroboration (55.6% identity, same TPR array) rather than as a
+  second curated instance.
+- **Two overlapping string edits produced a dangling antecedent.** Correcting the above, I
+  applied two replacements whose anchors overlapped inside one prose constant. Both landed, and
+  the result read *"the small glutamine-rich TPR co-chaperones of the SGT family. That role is
+  curated for SGTA only"* — where "that role" no longer had an antecedent, because the second
+  edit had deleted the phrase the first one left behind. Assertions on both replacements passed
+  in isolation. The fix was to **rewrite the whole constant once** rather than patch it twice,
+  which is the campaign's "at three rounds, change the shape" rule arriving early: two
+  overlapping edits to one paragraph are already one too many.

@@ -102,20 +102,27 @@ HURI_EVIDENCE = (
 PARTNER_SET_ARGUMENT = (
     "What makes the set as a whole uninformative rather than merely thin is its composition. "
     "Eleven of the thirteen partners are integral membrane proteins, carrying 44 annotated "
-    "transmembrane segments between them; the two that are not are SGTA and SGTB, the small "
-    "glutamine-rich TPR co-chaperones whose curated function is binding exposed hydrophobic "
-    "transmembrane segments. So there is no partner that is not either a hydrophobic-helix "
-    "protein or a professional binder of hydrophobic helices. In the two-hybrid screen "
-    "C5orf46 is the bait in 26 of the 38 HuRI records - the other twelve are the same "
-    "interactions re-logged as validated two hybrid with both partners as neutral components - "
-    "and the bait is the full open reading frame, whose most hydrophobic 19-residue window "
-    "(Kyte-Doolittle +2.51) is the uncleaved signal peptide, more hydrophobic than any window "
-    "in the mature chain (+1.08). A bait presenting the most "
-    "hydrophobic segment in the construct, recovering a partner set whose only shared property "
-    "is hydrophobicity, is better explained by the screen's design than by the peptide's "
-    "biology. Twelve of the thirteen partners also exceed the subject's 14 distinct IntAct "
-    "partners, up to AQP6 at 382; the two exceptions are recorded rather than smoothed away, "
-    "PEX12 at 37 and the TBXA2R clone at 13, which is below the subject."
+    "transmembrane segments between them, and the two that are not are SGTA and SGTB, the two "
+    "human members of the SGT family of small glutamine-rich TPR co-chaperones. One "
+    "qualification belongs here rather than being smoothed over: the hydrophobic-client "
+    "function is curated for SGTA only. UniProt describes SGTA as binding misfolded and "
+    "hydrophobic-patch-containing client proteins and as binding the transmembrane domain of "
+    "newly synthesized proteins, whereas SGTB's entire FUNCTION is regulation of HSC70/HSP70 "
+    "ATPase activity, with no hydrophobic-client claim at all. SGTB is SGTA's paralogue, 55.6 "
+    "per cent identical over the shorter sequence and with the same TPR repeat architecture, so "
+    "its presence is consistent with the same explanation without being curated evidence for "
+    "it. Taken together, every partner in the set is either a hydrophobic-helix-bearing "
+    "membrane protein or an SGT-family TPR co-chaperone whose curated member binds exposed "
+    "transmembrane helices. In the two-hybrid screen C5orf46 is the bait in 26 of the 38 HuRI "
+    "records - the other twelve are the same interactions re-logged as validated two hybrid "
+    "with both partners as neutral components - and the bait is the full open reading frame, "
+    "whose most hydrophobic 19-residue window (Kyte-Doolittle +2.51) is the uncleaved signal "
+    "peptide, more hydrophobic than any window in the mature chain (+1.08). A bait presenting "
+    "the most hydrophobic segment in the construct, recovering a partner set whose only shared "
+    "property is hydrophobicity, is better explained by the screen's design than by the "
+    "peptide's biology. Twelve of the thirteen partners also exceed the subject's 14 distinct "
+    "IntAct partners, up to AQP6 at 382; the two exceptions are recorded rather than smoothed "
+    "away, PEX12 at 37 and the TBXA2R clone at 13, which is below the subject."
 )
 
 OVERANN_TAIL = (
@@ -207,10 +214,12 @@ PARTNER_NOTE = {
                "segments: UniProt describes it as a co-chaperone that binds "
                "hydrophobic-patches-containing clients and that binds the transmembrane "
                "domain of newly synthesized proteins, acting in the ASNA1/BAG6 module that "
-               "triages mislocalised membrane proteins. Recovering the cell's own detector of "
-               "exposed transmembrane helices, from a bait whose most hydrophobic window is an "
-               "uncleaved signal peptide, is what a hydrophobicity artefact looks like. It is "
-               "also a hub, with 281 distinct IntAct partners."),
+               "triages mislocalised membrane proteins. This is the partner that carries the "
+               "curated hydrophobic-client function - SGTB, its paralogue, does not - so the "
+               "hydrophobicity reading rests on this row specifically. Recovering the cell's own "
+               "detector of exposed transmembrane helices, from a bait whose most hydrophobic "
+               "window is an uncleaved signal peptide, is what a hydrophobicity artefact looks "
+               "like. It is also a hub, with 281 distinct IntAct partners."),
     "P55061": ("TMBIM6 (BI-1) is a six-pass ER membrane protein with 132 distinct IntAct "
                "partners. This is the one row in the set that is at least topologically "
                "coherent, and that is worth stating rather than flattening: C5orf46 is the "
@@ -238,10 +247,12 @@ PARTNER_NOTE = {
                "a salivary and cutaneous secreted peptide."),
     "Q96EQ0": ("SGTB is the second non-membrane partner and SGTA's paralogue, a co-chaperone "
                "that binds HSC70/HSP70 and regulates their ATPase activity, with 202 distinct "
-               "IntAct partners. Recovering both members of the hydrophobic-segment "
-               "co-chaperone pair in one screen is the clearest single indication that the "
-               "bait's exposed hydrophobic helix, not a biological pathway, defined this "
-               "partner set."),
+               "IntAct partners. Its own UniProt FUNCTION makes no hydrophobic-client claim - "
+               "that is curated for SGTA, not for SGTB - so this row is not independent "
+               "evidence for the hydrophobicity reading, only consistent with it. What it does "
+               "add is that the screen recovered both human members of the SGT family, a pair "
+               "55.6% identical with the same TPR architecture, which is hard to explain by any "
+               "pathway a secreted antibacterial peptide participates in."),
     "Q96GQ5": ("RUSF1 is a single-pass membrane protein of largely unknown function, with 199 "
                "distinct IntAct partners."),
     "Q96HE8": ("TMEM80 is a four-pass membrane protein annotated to cilium and membrane, with "
@@ -294,7 +305,9 @@ def binding_row(partner: str, reference: str) -> dict:
                 q(RESULTS_FILE_REF,
                   "| PMID:32296183 (HuRI) | `two hybrid array` | 13 |"),
                 q(RESULTS_FILE_REF,
-                  "So there is no partner in the set that is not either a hydrophobic-helix-bearing membrane"),
+                  "| SGTA | O43765 | Swiss-Prot | 313 | 0 | Cytoplasm; Nucleus | 281 | 1 |"),
+                q(RESULTS_FILE_REF,
+                  "| SGTB | Q96EQ0 | Swiss-Prot | 304 | 0 | (none stated) | 202 | 1 |"),
                 q(UNIPROT_FILE_REF, "FT   SIGNAL          1..23"),
             ],
         },
@@ -1593,14 +1606,25 @@ def self_test() -> int:
     expect(lambda: verify_file_quotes(doc), "quote NOT FOUND verbatim",
            "an invented file: quote is rejected")
 
-    # 2. A near-miss must also be caught: the same sentence with an em-dash where the
-    #    target has a hyphen. This is how a real one slipped through elsewhere.
+    # 2. A near-miss must also be caught: the same text with an em-dash where the target
+    #    has a hyphen. This is how a real one slipped through elsewhere.
+    #
+    #    The fixture is DERIVED from the document's own verified quotes rather than pinned
+    #    as a literal. An earlier version pinned a sentence of RESULTS.md prose, and when
+    #    that prose was reworded the break-test failed on its own drift guard - correctly,
+    #    but it is a maintenance trap that a derived fixture removes entirely.
     doc2 = build()
-    real = "So there is no partner in the set that is not either a hydrophobic-helix-bearing membrane"
+    candidates = []
+    walk_quotes(doc2, candidates)
+    real = next((text for ref, text in candidates
+                 if ref == RESULTS_FILE_REF and "-" in text), None)
+    assert real is not None, (
+        "no RESULTS.md quote containing a hyphen exists to build the near-miss fixture from; "
+        "the hyphen/em-dash direction is therefore UNTESTED rather than passing")
     assert real in FILE_REF_TARGETS[RESULTS_FILE_REF].read_text(), \
-        "fixture drifted: the control sentence is no longer in RESULTS.md"
+        f"derived fixture is not present in RESULTS.md: {real!r}"
     doc2["core_functions"][0]["supported_by"].append(
-        q(RESULTS_FILE_REF, real.replace("hydrophobic-helix", "hydrophobic—helix")))
+        q(RESULTS_FILE_REF, real.replace("-", "—", 1)))
     expect(lambda: verify_file_quotes(doc2), "quote NOT FOUND verbatim",
            "a hyphen/em-dash near-miss is rejected")
 
