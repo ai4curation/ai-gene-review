@@ -17,11 +17,27 @@ re-running reproduces them byte-for-byte.
 
 `audit_adck5_claims.py` re-reads the three JSON outputs and asserts that every residue call,
 census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
-`ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. Writing it exposed
-three defects in itself, all found by running the break-tests and none by reading: a residue
-check that reported a conflict between K147 and K228 (both correct — it **failed on perfect
-agreement**), a withdrawn-phrase matcher that fired on this file's own explanation of the
-correction it was policing, and a keyword-argument mismatch that aborted the suite halfway.
+`ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. It earned its keep:
+after the PR reviewer pointed out that the compartment argument assumed a membrane sidedness
+this review elsewhere declines to assert, the first "fix" softened **one** of three
+occurrences. Widening the scan to the whole gene folder found the other two — a second YAML
+field and a *script docstring* — which is why the scan is not limited to the prose files.
+
+Writing the audit exposed four defects in the audit itself, every one found by running the
+break-tests and none by reading it:
+
+1. a residue check that reported a conflict between K147 and K228, both correct — it **failed
+   on perfect agreement**, i.e. the happy path was the untested path;
+2. a withdrawn-phrase matcher that fired on this file's own explanation of the correction it
+   was policing;
+3. a keyword-argument mismatch that aborted the suite halfway while the earlier checks still
+   printed as passes;
+4. the widened scan matching **its own definition list** — the registry of withdrawn phrasings
+   necessarily contains all of them. Fixed by excluding exactly one file, this script, by
+   resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
+   and requires a catch, so the exclusion cannot silently widen.
+
+18 self-tests, each exercised in the direction it exists to catch and in the happy direction.
 
 ## Question
 

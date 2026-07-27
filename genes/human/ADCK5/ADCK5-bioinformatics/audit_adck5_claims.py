@@ -59,7 +59,17 @@ WITHDRAWN_PHRASES = [
     # protein (COQ8B -> COQ3), so a blanket denial is wrong.
     "UbiB proteins cannot phosphorylate proteins",
     "ADCK5 is a pseudokinase",
+    # Conceded to the PR reviewer: the compartment argument assumes a membrane sidedness this
+    # review elsewhere declines to assert, so it must be stated as an assumption, never as a
+    # flat conclusion. This phrasing survived in three places after the first "fix" - the
+    # canonical "fixed in N places, landed in N-1" failure - which is why it is pinned here.
+    "topologically implausible",
+    "topological objection",
 ]
+
+# Prose surfaces are not the only place a withdrawn phrasing can hide: it also lived in a
+# script docstring. Scan the whole gene folder for these, not just the three prose files.
+WITHDRAWN_SCAN_GLOBS = ["*.md", "*.yaml", "ADCK5-bioinformatics/*.py", "ADCK5-bioinformatics/*.md"]
 
 # Claims that must appear on at least `min_surfaces` of the prose surfaces.
 REQUIRED_CLAIMS = [
@@ -287,7 +297,25 @@ def check_partner_numbers(partner: dict, texts: dict[str, str]) -> list[str]:
 
 
 def check_withdrawn(texts: dict[str, str]) -> list[str]:
+    """Withdrawn phrasings must not reappear on ANY surface in the gene folder.
+
+    The scan deliberately covers more than the three prose files: 'topologically implausible'
+    was softened in the review summary but survived in a second YAML field and in a script
+    docstring, and a detector scoped narrower than the mutator cannot see what it missed.
+    """
     problems = []
+    # Widen beyond the prose surfaces so the detector's scope matches where the phrasing can live.
+    texts = dict(texts)
+    this_file = Path(__file__).resolve()
+    for pattern in WITHDRAWN_SCAN_GLOBS:
+        for f in sorted(GENE_DIR.glob(pattern)):
+            # Skip only THIS file: it is the registry of withdrawn phrasings, so it
+            # necessarily contains every one of them. Excluding it by name rather than by
+            # extension keeps every other script in scope - the docstring that hid
+            # 'topological objection' was in a sibling .py.
+            if f.resolve() == this_file:
+                continue
+            texts.setdefault(str(f.relative_to(GENE_DIR)), f.read_text())
     for name, text in texts.items():
         # Normalise quotation marks so a phrase cannot evade the matcher by being quoted
         # (a quote-splitting bypass was found on ACTA1).
@@ -433,6 +461,22 @@ def self_test() -> int:
     for a in bad_p5["goa_binding_partners"].values():
         a["methods_by_pmid"] = {}
     expect_flag("methods_by_pmid emptied (sub-method argument would be unbacked)", good, partner=bad_p5)
+
+    # The withdrawn-phrase scan covers the whole gene folder, and excludes exactly ONE file:
+    # this one, which necessarily contains every withdrawn phrase because it defines them.
+    # That exclusion must be narrow. Plant a phrase in a SIBLING script and require a catch.
+    sibling = HERE / "partner_localisation.py"
+    original = sibling.read_text()
+    assert "topological objection" not in original, (
+        "self-test target already contains the phrase; the mutation would prove nothing"
+    )
+    try:
+        sibling.write_text(original + "\n# topological objection\n")
+        expect_flag("withdrawn phrasing planted in a SIBLING script (scan must not be too narrow)", good)
+    finally:
+        sibling.write_text(original)
+    assert sibling.read_text() == original, "self-test failed to restore the sibling script"
+    expect_clean("sibling script restored", good)
 
     # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}

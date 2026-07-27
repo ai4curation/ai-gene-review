@@ -5,7 +5,9 @@ Two numbers in `RESULTS.md` and the review used to be asserted from an ad-hoc qu
 script computes them, so `audit_adck5_claims.py` can hold the prose to them:
 
   1. **How many of the mitochondrial-interactome partners are themselves mitochondrial.**
-     This underwrites the topological objection to the NOTCH2NLA two-hybrid hit.
+     This is the compartment consideration that sits alongside the NOTCH2NLA two-hybrid
+     hit; note it is a supporting argument only, since ADCK5's membrane sidedness has
+     never been measured.
   2. **How many distinct EXPERIMENTS support each partner**, as opposed to how many IntAct
      rows. UniProt's `NbExp=4` for ADCK5-NOTCH2NLA counts three sub-method labels of one
      yeast two-hybrid screen plus one further screen.
