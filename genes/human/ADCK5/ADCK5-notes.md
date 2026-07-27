@@ -1,0 +1,160 @@
+# ADCK5 (Q3MIX3) — review notes
+
+Human ADCK5, 580 aa, chromosome 8, HGNC:21738. Pharos class **Tdark**.
+UniProt name: "Uncharacterized aarF domain-containing protein kinase 5".
+
+## Starting hypothesis and how it resolved
+
+The task brief proposed that `GO:0004672 protein kinase activity` / `GO:0006468 protein
+phosphorylation` on ADCK5 would be fold-name-propagated-into-activity errors, on the grounds
+that the characterised UbiB members COQ8A/COQ8B turned out not to be canonical protein
+kinases.
+
+**Outcome: the mechanism is real and demonstrable, but the predicted annotation error is not
+in GOA.** ADCK5's entire GOA record is four rows and contains no molecular-function term
+other than `GO:0005515 protein binding`. QuickGO returns **0 hits** for `GO:0004674` with
+`goUsage=descendants` on Q3MIX3. There is nothing to REMOVE or MODIFY on kinase grounds.
+
+The unsupported kinase claim does exist — but one layer up, in UniProt:
+
+- `DE  RecName: ... EC=2.7.11.-` (protein-serine/threonine kinase)
+- `KW  Serine/threonine-protein kinase;`
+- `DR   GO; GO:0004674; F:protein serine/threonine kinase activity; IEA:UniProtKB-KW.`
+
+…in the same entry that says *"The function of this protein is not yet clear."* and *"It is
+not known if it has protein kinase activity and what type of substrate it would
+phosphorylate (Ser, Thr or Tyr)."* GOA no longer imports keyword-derived (SPKW) annotations,
+so the GO record is clean while the UniProt record is not. Reported as a UniProt correction
+request rather than a GO action.
+
+## Family and structural basis (see `ADCK5-bioinformatics/`)
+
+ADCK5 is a UbiB-family atypical kinase. Stefely et al. defined the UbiB-specific features
+[PMID:25498144 "including a unique and invariant KxGQ motif"; "an atypical AAAS motif in an
+alanine-rich (A-rich) loop that replaces the canonical glycine-rich (G-rich)
+nucleotide-binding loop"], and argued they inhibit protein-kinase function — [PMID:25498144
+"the KxGQ domain is likely to be an autoinhibitory domain because it fills the space
+normally occupied by peptide or protein substrates in typical protein kinases"].
+
+A MAFFT alignment of the five human UbiB proteins + yeast Coq8p + *E. coli* UbiB + PKA Cα
+(negative control), with every published reference residue asserted before use, shows
+**ADCK5 retains both inhibitory features and the full catalytic core**:
+
+| feature | ADCK5 | PKA Cα | discriminates? |
+|---|---|---|---|
+| KxGQ lysine (COQ8A K276) | **K147** | *gap* | yes |
+| A-rich loop Ala (COQ8A A339 ≡ PKA G53) | **A209** | G | yes |
+| catalytic-loop Asp (COQ8A D488) | D360 | D | no |
+| DFG Asp (COQ8A D507) | D382 | D | no |
+| β3 Lys (PKA K73) | K228 | K | no |
+| αC Glu (PKA E92) | E281 | E | no |
+| catalytic-loop Asn (PKA N172) | N365 | N | no |
+
+So ADCK5 is neither a canonical protein kinase nor a dead pseudokinase: it has an intact
+nucleotide-binding/catalytic core behind a UbiB-type occluded substrate pocket.
+
+The A209 assignment is corroborated two ways — the motif `AAAS` sits at 207–210 in ADCK5
+exactly as it sits at 337–340 in COQ8A, and the COQ8A-anchored and PKA-anchored columns
+resolve to the same alignment column (391).
+
+## The mirror error, avoided
+
+"UbiB proteins are not protein kinases" would be too strong. COQ8A/Coq8p indeed lack
+generic in-trans activity [PMID:27499294 "neither catalyzes canonical protein kinase
+activity"], but **COQ8B has a demonstrated protein substrate**: [PMID:38425362 "COQ3, but
+not COQ6, is phosphorylated by COQ8B at multiple sites"]. The same paper excludes
+small-molecule kinase activity for COQ8B [PMID:38425362 "GC/MS analyses did not detect any
+phosphorylated CoQ intermediates, suggesting that the enzyme is not a small-molecule
+kinase"]. (Caveat worth carrying: that study used ancestral-sequence-reconstructed COQ8
+proteins, so it is a statement about the reconstructed tetrapod enzyme.)
+
+So the right reading for ADCK5 is: *generic* Ser/Thr kinase activity is unsupported and
+architecturally disfavoured; a *specific*, substrate-restricted activity is open and would
+need direct assay. GOA reflects this correctly today by carrying no MF term at all.
+
+## Localisation
+
+- UniProt gives only `SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass membrane`
+  protein `{ECO:0000305}` — a curator inference from a *predicted* `TRANSMEM 50..67`
+  (`ECO:0000255`). That maps to SubCell `SL-0162` → the `GO:0016020 membrane` IEA row.
+- The mitochondrion is better supported: MitoCoP high-confidence mitochondrial proteome
+  (PMID:34800366, HTP); [PMID:25498144 "In eukaryotes, UbiB homologs are found exclusively
+  in mitochondria"]; and 17 of ADCK5's 25 distinct IntAct partners from the mitochondrial
+  interactome study (PMID:27499296) are UniProt-annotated to the mitochondrion.
+- **Asymmetry worth reporting:** ADCK1 and ADCK2 receive `SL-0173 Mitochondrion` →
+  `GO:0005739` from the same UniProt pipeline; ADCK5 receives only `SL-0162 Membrane`. The
+  difference is in UniProt's `SUBCELLULAR LOCATION` line, not in the evidence — all three
+  genes carry the identical MitoCoP HTP row.
+- Submitochondrial assignment (inner membrane?) is **not** established for ADCK5. Combining
+  "mitochondrion (HTP)" with "membrane (predicted TM)" to assert `GO:0031966` would be a
+  composite claim; left as a suggested experiment instead.
+
+## PAINT
+
+`PTHR43173` (ADCK5 = SF28, ADCK1 = SF19) has exactly **one** annotated node,
+`PTN005148758`, seeded by a single yeast protein, MCP2 (`SGD:S000004243`, itself SF19),
+carrying `GO:0005743`, `GO:0007005`, `GO:0055088`. ADCK1 inherits all three; ADCK5 inherits
+nothing, because the node sits in the SF19 clade.
+
+ADCK5 is the **only** human UbiB gene with zero IBA rows — UniProt states it independently:
+`PAN-GO; Q3MIX3; 0 GO annotations based on evolutionary models.` This is the inverse of this
+campaign's usual finding: under-reach, not over-propagation. Filed as a question to PAINT,
+not as an action, because ADCK5 genuinely sits outside the annotated node's clade and the
+node's evidence is a single yeast seed.
+
+## `GO:0005515` — the NOTCH2NLA rows
+
+Both rows name the same partner, NOTCH2NLA (Q7Z3S9). UniProt records `NbExp=4`, but expanding
+IntAct shows PMID:25416956 logs the interaction **three times as three sub-method labels of
+one Y2H screen** (`two hybrid array` + `two hybrid prey pooling approach` + `validated two
+hybrid`), and PMID:31515488 adds one more `two hybrid array` from the same CCSB resource
+lineage. MI score 0.67 throughout; no orthogonal assay in any of ADCK5's 54 IntAct records.
+Third occurrence of this `NbExp` trap in the campaign (after ACRV1, ADAMTSL5).
+
+NOTCH2NLA is `Secreted`/`Cytoplasm`, human-specific, and functions in neural progenitor
+proliferation — a compartment ADCK5 does not occupy. Y2H removes the targeting constraint.
+
+Checks that came back **negative** (recorded so they are not re-run blindly):
+- NOTCH2NLA resolves to a reviewed, canonical, full-length Swiss-Prot entry — no
+  TrEMBL/partial-ORFeome substitution as on ACRV1.
+- PMID:34800366 is a proteome-wide localisation census carrying no functional/phenotype
+  term, so the ACTR8 complex-to-subunit projection failure mode does not apply.
+- No retraction, erratum or expression of concern on any cited PMID
+  (`CommentsCorrections/RefType` on each cited record, plus Crossref `relation`/`update-to`
+  for the six load-bearing DOIs).
+
+## Literature quality
+
+The only ADCK5-specific functional paper is PMID:32277958 (lung cancer, SOX9/PTTG1). Its
+abstract is hedged throughout — "showed that ADCK5 might regulate the expression of tumor
+oncogene human pituitary tumor transforming gene-1 (PTTG1) by phosphorylating transcription
+factor SOX9" — and it reports no in vitro kinase assay; the SOX9 S181 claim rests on
+mutagenesis of the substrate plus a motif-match argument, "The serine 181 site of SOX9 is in
+a motif that is targeted by ADCK5." Full text unavailable. The affinage record restates this
+as fact ("ADCK5 phosphorylates the transcription factor SOX9 at serine 181"); the abstract
+does not support that strength. No GOA row rests on this paper, so nothing needed changing —
+recorded because the discrepancy is the kind that would otherwise propagate.
+
+affinage `gates_passed: True`, `faith_pct: 50.0`, 5 citations, all numeric PMIDs (no
+`PMID:bio_*` preprint ids). Its remaining findings (senescence, JQ1, asthma) are
+low-confidence, single-study, and none underpins a GOA row.
+
+## Verdicts
+
+| row | term | evidence | action |
+|---|---|---|---|
+| 1 | GO:0016020 membrane | IEA GO_REF:0000044 | ACCEPT (true but prediction-derived and less informative than the evidence allows) |
+| 2 | GO:0005515 protein binding (NOTCH2NLA) | IPI PMID:25416956 | MARK_AS_OVER_ANNOTATED |
+| 3 | GO:0005515 protein binding (NOTCH2NLA) | IPI PMID:31515488 | MARK_AS_OVER_ANNOTATED |
+| 4 | GO:0005739 mitochondrion | HTP PMID:34800366 | ACCEPT |
+
+No `core_functions` are asserted. ADCK5's molecular activity is genuinely undetermined —
+UniProt says so, Pharos calls it Tdark, and this review found no measurement to replace
+that. Per CLAUDE.md the "No core functions defined" warning is left standing rather than
+silenced with invented content.
+
+## Reconciliation
+
+GOA TSV: 4 data rows. `existing_annotations`: 4 entries. No collapse; the two `GO:0005515`
+rows share a partner but differ by reference, and the seeder keys on reference, so both
+survived.

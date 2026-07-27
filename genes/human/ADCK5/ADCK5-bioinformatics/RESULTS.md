@@ -1,0 +1,198 @@
+# ADCK5 (Q3MIX3) — is the "protein serine/threonine kinase" assignment supported?
+
+Two reproducible analyses, both runnable from this directory with no arguments:
+
+```bash
+python3 ubib_motif_analysis.py              # diagnostic residue columns
+python3 ubib_motif_analysis.py --self-test  # break-tests its guards, both directions
+python3 family_annotation_census.py         # human UbiB family GO/EC census
+python3 audit_adck5_claims.py               # prose surfaces must not drift from the JSON
+python3 audit_adck5_claims.py --self-test   # break-tests the audit, both directions
+```
+
+Outputs: `results.json`, `family_census.json`, `ubib_family.fasta`, `ubib_family.aln.fasta`.
+Deleting the `.json`/`.fasta` files and re-running reproduces all four byte-for-byte.
+
+`audit_adck5_claims.py` re-reads the two JSON outputs and asserts that every residue call,
+census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
+`ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. Writing it exposed
+three defects in itself, all found by running the break-tests and none by reading: a residue
+check that reported a conflict between K147 and K228 (both correct — it **failed on perfect
+agreement**), a withdrawn-phrase matcher that fired on this file's own explanation of the
+correction it was policing, and a keyword-argument mismatch that aborted the suite halfway.
+
+## Question
+
+UniProt names ADCK5 "Uncharacterized aarF domain-containing protein kinase 5", assigns it
+`EC 2.7.11.-`, gives it the `Serine/threonine-protein kinase` keyword, and therefore emits
+`DR GO; GO:0004674; F:protein serine/threonine kinase activity; IEA:UniProtKB-KW`. In the
+same entry it states that "The function of this protein is not yet clear."
+
+ADCK5 belongs to the UbiB family. For the two human members whose activity was actually
+measured, the answer to "is this a protein kinase?" turned out to be largely no: Stefely
+et al. showed "neither catalyzes canonical protein kinase activity" in trans
+(PMID:27499294). So the question is whether ADCK5's kinase label is a real activity call or
+a fold name propagated into an activity.
+
+## Analysis 1 — diagnostic residue columns
+
+MAFFT `--auto` alignment of the five human UbiB proteins plus yeast Coq8p, *E. coli* UbiB
+and a canonical protein kinase negative control (PKA Cα, P17612). Motif columns are located
+from a reference sequence whose residue numbering is **published**, and every published
+residue is asserted against the downloaded sequence before any column is read.
+
+Percent identity to ADCK5 over co-aligned columns:
+
+| sequence | identity |
+|---|---|
+| ADCK1 | 39.9% |
+| Coq8p (yeast) | 24.2% |
+| UbiB (*E. coli*) | 24.1% |
+| COQ8B | 22.4% |
+| COQ8A | 21.4% |
+| ADCK2 | 20.3% |
+| PKA Cα | 15.6% |
+
+| column | reference | UbiB expects | PKA has | **ADCK5 has** | discriminates? | other UbiB |
+|---|---|---|---|---|---|---|
+| KxGQ lysine | COQ8A:276 | K | *gap* | **K147** | yes | 6/6 |
+| A-rich loop | COQ8A:339 | A | G | **A209** | yes | 5/6 |
+| G-rich loop 2nd Gly | PKA:53 | A | G | **A209** | yes | 5/6 |
+| catalytic-loop Asp | COQ8A:488 | D | D | **D360** | no | 6/6 |
+| DFG Asp | COQ8A:507 | D | D | **D382** | no | 6/6 |
+| β3 (VAIK) Lys | PKA:73 | K | K | **K228** | no | 6/6 |
+| αC Glu | PKA:92 | E | E | **E281** | no | 6/6 |
+| catalytic-loop Asn | PKA:172 | N | N | **N365** | no | 6/6 |
+
+Two independent anchors — COQ8A's A-rich loop A339 and PKA's G-rich loop G53 — resolve to
+**the same alignment column (391)**, which is the correspondence Stefely et al. assert
+("the analogous A-rich loop of ADCK3"). The script asserts this rather than assuming it; if
+MAFFT separated them, the A-rich claim would not be supported by this alignment and the run
+aborts.
+
+### What this shows
+
+**ADCK5 is built like a UbiB protein, not like a canonical protein kinase.** It retains
+both features that Stefely et al. identified as positioned to *inhibit* protein kinase
+activity:
+
+* the invariant **KxGQ** motif (K147) — the motif whose domain "occludes the canonical
+  peptide substrate pocket" (PMID:27499294), and which is absent altogether from PKA
+  (the column is a gap);
+* the **A-rich loop** alanine (A209, third residue of an `AAAS` at 207–210, exactly as
+  COQ8A's A339 is the third residue of an `AAAS` at 337–340) in place of the canonical
+  glycine. This is the residue whose A→G mutation in COQ8A/Coq8p flips nucleotide
+  selectivity and *enables* autophosphorylation.
+
+**ADCK5 is not a dead pseudokinase either.** The catalytic and nucleotide-positioning
+machinery is fully intact: β3 lysine, αC glutamate, catalytic-loop aspartate and
+asparagine, and the DFG aspartate are all present. Those five columns do not discriminate
+(PKA has them too) and are reported as non-discriminating rather than counted as evidence
+either way.
+
+### One incidental per-gene difference, relevant to the sibling reviews
+
+At the A-rich-loop column, **ADCK2 alone among the seven UbiB proteins carries a glycine**,
+the same residue PKA has. Every other member — ADCK5, ADCK1, COQ8A, COQ8B, Coq8p, *E. coli*
+UbiB — has alanine. In COQ8A and Coq8p this exact A→G change is the engineered mutation
+that reverses ADP-over-ATP selectivity. Whether ADCK2 is therefore natively ATP-preferring
+is untested; flagged for the ADCK2 reviewer rather than concluded here.
+
+## Analysis 2 — human UbiB family GO/EC census
+
+Complete (non-truncated) QuickGO and UniProt queries for all five human UbiB genes.
+
+| gene | EC | Ser/Thr kinase KW | annotations | IBA | experimental | IBA node | NOT| rows |
+|---|---|---|---|---|---|---|---|
+| **ADCK5** | **2.7.11.-** | **yes** | 4 | **0** | 3 | **none** | 0 |
+| ADCK1 | 2.7.-.- | yes | 8 | 3 | 4 | PTN005148758 | 0 |
+| ADCK2 | 2.7.11.- | yes | 8 | 1 | 5 | PTN000059786 | 0 |
+| COQ8A | 2.7.-.- | no | 87 | 1 | 83 | PTN000059692 | 2 |
+| COQ8B | 2.7.-.- | no | 19 | 1 | 12 | PTN000059692 | 2 |
+
+Two findings, both asserted by the script so they fail loudly if the databases move:
+
+1. **ADCK5 is the only human UbiB gene with no IBA annotation at all.** UniProt states this
+   independently: "PAN-GO; Q3MIX3; 0 GO annotations based on evolutionary models."
+2. **The EC downgrade tracks whether the activity was measured.** COQ8A and COQ8B, the two
+   members actually assayed, were moved to the generic `EC 2.7.-.-` and lost the Ser/Thr
+   kinase keyword, and both carry `NOT|enables GO:0004672` plus `NOT|involved_in GO:0006468`
+   (IDA, PMID:27499294). ADCK5 and ADCK2, never assayed, still carry `EC 2.7.11.-` and the
+   keyword. ADCK1 is intermediate: `EC 2.7.-.-` but the keyword retained.
+
+## Analysis 3 — PAINT node placement (`just fetch-panther-paint`)
+
+ADCK5 is `PTHR43173:SF28`; ADCK1 is `PTHR43173:SF19`; ADCK2 is `PTHR45890:SF1`; COQ8A/COQ8B
+are `PTHR43851:SF1`/`SF4`. Three different PANTHER families for five paralogs.
+
+| family | node | terms | seeds |
+|---|---|---|---|
+| PTHR43173 | PTN005148758 | GO:0005743 mitochondrial inner membrane; GO:0007005 mitochondrion organization; GO:0055088 lipid homeostasis | `SGD:S000004243` (yeast MCP2) |
+| PTHR43851 | PTN000059692 | GO:0006744 ubiquinone biosynthetic process | 8 entities incl. COQ8A, COQ8B |
+
+`PTHR43173` — ADCK5's own family — has exactly **one** annotated node, seeded by a single
+yeast protein (MCP2, itself `PTHR43173:SF19`). ADCK1 receives all three of its terms;
+**ADCK5 receives none**, because the node sits in the SF19 clade and does not reach SF28.
+
+A reach scan of the three node terms was run but hit a page cap for GO:0005743 (2,500 of
+10,019) and GO:0007005 (2,500 of 9,097), so those entity lists are **floors and are not
+reported as complete**. The load-bearing claim does not depend on them: the per-gene QuickGO
+query for Q3MIX3 returned all 4 of 4 annotations, none IBA, and UniProt's PAN-GO line agrees.
+The GO:0006744 scan was complete (1,920 of 1,920) and contains no ADCK5.
+
+## Analysis 4 — the `GO:0005515` partner, and the interaction record
+
+All 54 IntAct interaction records for Q3MIX3 (complete; `len(rows) == totalElements`
+asserted):
+
+| reference | method | n | partners |
+|---|---|---|---|
+| PMID:27499296 | anti tag coip | 40 | 25 distinct partners, **17 of 25 UniProt-annotated to the mitochondrion** (ATP5F1B, C1QBP, CHCHD2, CHCHD3, ECH1, ETFA, HARS2, HOGA1, HSPA9, IMMT, MRPL2, NDUFAB1, PMPCB, POLDIP2, SHMT2, SSBP1, STOML2) |
+| PMID:25416956 | **two hybrid array + two hybrid prey pooling approach + validated two hybrid** | 3 | **NOTCH2NLA** |
+| PMID:31515488 | two hybrid array | 1 | **NOTCH2NLA** |
+| PMID:33961781 | anti tag coip | 2 | TMEM160, ZMPSTE24 |
+| others | various | 8 | singletons |
+
+The two GOA `GO:0005515` rows both name **NOTCH2NLA (Q7Z3S9)**. UniProt records
+`Q3MIX3; Q7Z3S9: NOTCH2NLA; NbExp=4;` — but the four experiments are **three sub-method
+labels of one Rolland/CCSB Y2H screen** plus one further Y2H from the same resource
+lineage. MI score 0.67 on every row; no orthogonal assay anywhere in IntAct. This is the
+third gene in this campaign where `NbExp` counts sub-methods of a single screen (after
+ACRV1 and ADAMTSL5).
+
+Topology: NOTCH2NLA (Q7Z3S9, reviewed, 236 aa) is annotated `Secreted` and `Cytoplasm` and
+is a human-specific regulator of neural progenitor proliferation. ADCK5 is a mitochondrial
+protein — in eukaryotes "UbiB homologs are found exclusively in mitochondria" — and its only
+large interaction dataset (PMID:27499296, the mitochondrial interactome) returns 25 partners
+of which 17 are annotated to the mitochondrion. Y2H places both proteins in the yeast
+nucleus and so removes exactly the targeting constraint that makes the pairing implausible
+in vivo.
+
+(The 17/25 figure was measured, not asserted; a first draft of this file claimed all 25
+partners were mitochondrial and the measurement refused it. Two gene symbols, `HARS2` and
+`MRPL2`, return two reviewed Swiss-Prot entries each; the canonical mitochondrial entry was
+taken in both cases and the ambiguity is recorded rather than hidden.)
+
+**Negative results from this check, recorded so the next reviewer knows it was run:**
+NOTCH2NLA resolves to a *reviewed, canonical, full-length* Swiss-Prot entry — no TrEMBL or
+partial-ORFeome substitution of the kind found on ACRV1. And the mitochondrion HTP row's
+reference (PMID:34800366) is a proteome-wide localisation census, not a complex-to-subunit
+projection: it carries no functional or phenotype term that could spread across a complex,
+so the ACTR8 projection failure mode does not apply.
+
+## Conclusion
+
+The kinase label on ADCK5 is a **fold-derived name, not a measured activity** — UniProt says
+so itself. But the correct inference is narrower than "UbiB proteins are not protein
+kinases": COQ8B *does* phosphorylate a specific protein substrate, COQ3
+(PMID:38425362, "COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites"), and
+that took direct assay to establish. So ADCK5's intact catalytic core plus intact
+autoinhibitory KxGQ and A-rich features are consistent with a nucleotide-dependent,
+substrate-restricted activity of an as-yet unknown kind — and are **not** consistent with
+the generic `protein serine/threonine kinase activity` that its keyword asserts.
+
+Crucially, **there is nothing in ADCK5's GOA to act on**: GOA carries no `GO:0004674`,
+`GO:0004672` or `GO:0006468` row for Q3MIX3 (QuickGO returns 0 hits for GO:0004674 with
+`goUsage=descendants`). The unsupported claim survives only in UniProt's keyword/EC layer,
+which GOA no longer imports. The actionable item is therefore a **UniProt correction
+request**, not a GO annotation change.
