@@ -443,6 +443,10 @@ No hand-written WITH/FROM was introduced; the `NEW` ISS row for `GO:0010595` lis
 - `ADGRA2-bioinformatics/interpro_signatures.py` → `interpro_signatures.json` — resolves every
   InterPro token in the GOA WITH/FROM, audits the review's `source_label` values against InterPro's
   own names, and asserts every claimed GO term is one `interpro2go` licenses for that signature.
+- `ADGRA2-bioinformatics/check_action_prose.py` — asserts every annotation's prose names the action
+  that annotation actually has, and that no reason argues the same point twice. Written after the
+  fourth round in which a change landed on the structured field but not on every sentence describing
+  it; it selects on `review.action` rather than by re-reading prose, which is how the misses happened.
 - `ADGRA2-bioinformatics/projection_test.py` → `projection_test.json` — the GDB `TAS` projection
   test. This is the load-bearing evidence for the two `REMOVE` verdicts and was the last analysis
   here still being run ad hoc; it is now reproducible, emits the per-entity term matrix, and checks
