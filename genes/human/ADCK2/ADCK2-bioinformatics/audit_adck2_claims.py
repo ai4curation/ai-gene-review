@@ -206,14 +206,16 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
     # "ADCK2 has no measured activity, and ADCK2 is a serine/threonine kinase" would be
     # suppressed by an incidental "no" belonging to a different clause. Punctuation and
     # coordinating conjunctions both close the window.
-    # The clause-boundary lookahead is what does the work; the character budget is only a
-    # backstop and must not be tight enough to reject a legitimate negation. 30 was too
-    # short -- "no experiment has ever shown that <claim>" puts 32 characters between the
-    # negator and the claim -- so it is 60, which the boundary check keeps safe.
+    # The clause-boundary lookahead is what does the work. A separate character budget can
+    # now only ADD false positives -- it cannot make the guard stricter in any useful way,
+    # because the boundary check already stops at punctuation and at coordinating
+    # conjunctions -- and it introduced its own cliff (30 was too short for "no experiment
+    # has ever shown that <claim>", 32 characters). So there is exactly one length limit
+    # now, the size of the preceding window, rather than two that can disagree.
     negator = re.compile(
         r"\b(?:not|never|neither|nor|no|cannot|rather than|instead of|without|"
         r"isn't|dis(?:proved|proven)|refut\w*)\b(?:(?!\band\b|\bbut\b|\bwhile\b|"
-        r"\bwhereas\b|\bhowever\b)[^.;,:])" r"{0,60}$",
+        r"\bwhereas\b|\bhowever\b)[^.;,:])*$",
         re.I,
     )
     for pattern, why in [
@@ -227,6 +229,45 @@ def check_retracted_phrasings(raw_review: str, notes: str, problems: list[str]) 
             if negator.search(preceding):
                 continue  # a negated mention is the correct statement, not a retracted one
             problems.append(f"retracted phrasing present ({why}): {m.group(0)!r}")
+
+
+def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
+                                     problems: list[str]) -> None:
+    """If the ontology sweep applies the quinoline false-friend exclusion, both prose
+    surfaces must disclose it.
+
+    This guards the exact defect a reviewer caught: after ``quinol`` was added to KEYWORDS,
+    the sweep began applying TWO exclusion categories, while the justification still
+    summarised only one ("every transport-flavoured one is an electron-transport term") --
+    which the widening had made false. The script stayed honest; the prose describing it
+    drifted. Keyed on the stable identifiers (the GO id and the code symbol) rather than on
+    any sentence, because the sentence is the thing that gets reworded.
+    """
+    sweep = HERE / "coq_transport_term_check.py"
+    if not sweep.exists():
+        problems.append(f"sweep script missing: {sweep.name}")
+        return
+    src = sweep.read_text()
+    if "QUINOLINE_FALSE_FRIEND" not in src:
+        return  # the second exclusion category is not in play
+    example = re.search(r"GO:\d{7}(?=\s+\"?quinolinic)", src) or re.search(
+        r"(GO:1903222)", src
+    )
+    if not example:
+        problems.append(
+            "sweep applies the quinoline exclusion but names no GO id for it, so the "
+            "prose surfaces cannot be checked against a stable identifier."
+        )
+        return
+    gid = example.group(0)
+    for surface, text in (("ADCK2-ai-review.yaml", raw_review), ("ADCK2-notes.md", notes)):
+        if gid not in text:
+            problems.append(
+                f"sweep-exclusion disclosure: the ontology sweep excludes {gid} on "
+                f"false-friend grounds, a second category beyond electron transport, but "
+                f"{surface} never mentions it. Prose summarising the sweep must state "
+                f"every exclusion category the sweep applies."
+            )
 
 
 def check_raw_vs_parsed(problems: list[str]) -> None:
@@ -271,6 +312,7 @@ def run(review_text: str | None = None) -> list[str]:
     check_supporting_entities(doc, goa, problems)
     check_motif_claims(doc, notes, results, problems)
     check_retracted_phrasings(raw, notes, problems)
+    check_sweep_exclusions_disclosed(raw, notes, problems)
     if review_text is None:
         check_raw_vs_parsed(problems)
     return problems
@@ -303,6 +345,7 @@ def self_test() -> int:
         ("decoy negator before an asserted claim", "gene_symbol: ADCK2",
          "gene_symbol: ADCK2\ndescription_note: there is no purified protein, and ADCK2 is"
          " a serine/threonine kinase"),
+        ("drop the GO:1903222 sweep-exclusion disclosure", "GO:1903222", "GO:0000000"),
         ("decoy negator across a full stop", "gene_symbol: ADCK2",
          "gene_symbol: ADCK2\ndescription_note: the assay was not run. ADCK2 is a"
          " serine/threonine kinase"),

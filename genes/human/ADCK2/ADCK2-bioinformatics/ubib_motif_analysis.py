@@ -463,11 +463,11 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
         elif crossers:
             L.append(
                 f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
-                f"position, Gly is carried by {len(a1_gly)} proteins "
-                f"({', '.join(a1_gly)}), a set that also includes "
-                f"{' and '.join(crossers)} and therefore cuts across the pairing rather "
-                f"than along it. The claim is specifically about the A339-equivalent "
-                f"position, not about the A-rich loop as a whole."
+                f"position, Gly is carried by {len(a1_gly)} proteins: the same "
+                f"{'/'.join(sorted(expected_gly))} pair plus {' and '.join(crossers)}. "
+                f"That set therefore cuts across the pairing rather than along it, so the "
+                f"claim is specifically about the A339-equivalent position and not about "
+                f"the A-rich loop as a whole."
             )
         else:
             L.append(

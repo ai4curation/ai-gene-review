@@ -86,7 +86,7 @@ PMID:34362905 pairs yeast Cqd1 with human ADCK2 and yeast Cqd2 with human ADCK1/
 
 The split is **exactly the ADCK2/Cqd1 orthologue pair against everything else**, including Cqd2 and ADCK1, which carry the suppressor alanine. So a single residue reproduces the published orthology assignment, and it does so reciprocally: the two branches differ at precisely the position whose substitution was shown to change COQ8A's behaviour. This corroborates the pairing; it does not by itself show the two branches differ functionally.
 
-**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` position, Gly is carried by 4 proteins (ADCK2, CQD1, CQD2, ADCK1), a set that also includes ADCK1 and CQD2 and therefore cuts across the pairing rather than along it. The claim is specifically about the A339-equivalent position, not about the A-rich loop as a whole.
+**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` position, Gly is carried by 4 proteins: the same ADCK2/CQD1 pair plus ADCK1 and CQD2. That set therefore cuts across the pairing rather than along it, so the claim is specifically about the A339-equivalent position and not about the A-rich loop as a whole.
 
 ## Bottom line
 

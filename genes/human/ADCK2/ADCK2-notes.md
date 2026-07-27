@@ -330,9 +330,11 @@ Redone in `ADCK2-bioinformatics/coq_transport_term_check.py` with two complement
 each could have:
 
 - **Label sweep:** all **102** GO terms whose label mentions ubiquinone / coenzyme Q /
-  quinone / **quinol**. Every transport-flavoured one among them is an *electron transport*
-  term, where the electron is the cargo and the quinone the acceptor — a different sense of
-  the word.
+  quinone / **quinol**. Every transport-flavoured term among them is set aside on one of
+  **two** grounds, not one. Most are *electron transport* terms, where the electron is the
+  cargo and the quinone merely the acceptor. One — `GO:1903222 quinolinic acid transmembrane
+  transport` — is a genuine BP transport process and is excluded on entirely different
+  grounds: it matched only through a substring accident (see trap 3 below).
 - **Branch sweep:** the **2584 distinct** descendants of `GO:0006869`, `GO:0010876`,
   `GO:0032365`, `GO:0120009` and `GO:0006810`. Zero ubiquinone-specific children.
 

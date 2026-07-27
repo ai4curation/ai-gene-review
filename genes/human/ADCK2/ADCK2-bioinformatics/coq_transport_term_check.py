@@ -64,10 +64,26 @@ EXCLUDE_LABEL = ("electron transport",)
 # Widening KEYWORDS with "quinol" immediately produced the mirror of the same trap:
 # "quinol" is a substring of "quinolinic"/"quinoline", an unrelated tryptophan-pathway
 # chemical family, and GO:1903222 "quinolinic acid transmembrane transport" sailed through
-# every other filter as a genuine transport process. Excluded unless the label also names
-# a real CoQ species, so a term mentioning both would still be caught.
+# every other filter as a genuine transport process. Excluded only when the false friend is
+# the SOLE reason the label matched (see matched_only_via_quinoline), so a label that also
+# names a real CoQ species still survives to be judged on its merits.
 QUINOLINE_FALSE_FRIEND = "quinolin"
-REAL_COQ = ("ubiquinone", "ubiquinol", "coenzyme q")
+
+
+def matched_only_via_quinoline(label: str) -> bool:
+    """True when a label matches KEYWORDS *solely* through a 'quinolin' occurrence.
+
+    Testing 'quinolin in label and no real CoQ species named' is not good enough: a label
+    like "pyrroloquinoline quinone biosynthetic process" contains 'quinolin' AND matches on
+    its own 'quinone', so that test would exclude it while reporting the wrong reason.
+    Deleting the false-friend substring and re-testing is exact -- whatever keyword still
+    matches did not come from 'quinolin'.
+    """
+    low = label.lower()
+    if QUINOLINE_FALSE_FRIEND not in low:
+        return False
+    cleaned = low.replace(QUINOLINE_FALSE_FRIEND, "")
+    return not any(k in cleaned for k in KEYWORDS)
 
 
 def get(url: str) -> dict:
@@ -117,7 +133,8 @@ def label_of(ids: list[str]) -> dict[str, str]:
 
 def main() -> int:
     print("=" * 72)
-    print("SWEEP 1: every GO term whose label mentions ubiquinone / coenzyme Q / quinone")
+    kw_str = " / ".join(KEYWORDS)
+    print(f"SWEEP 1: every GO term whose label mentions {kw_str}")
     print("=" * 72)
     seen: dict[str, str] = {}
     for kw in KEYWORDS:
@@ -146,7 +163,7 @@ def main() -> int:
             i: n for i, n in labels.items() if any(k in n.lower() for k in KEYWORDS)
         }
         print(f"{root} {root_label}: {len(kids)} descendants, "
-              f"{len(matched)} mentioning ubiquinone/CoQ/quinone")
+              f"{len(matched)} mentioning {kw_str}")
         for i, n in sorted(matched.items()):
             print(f"    {i}  {n}")
         hits2.update(matched)
@@ -176,8 +193,7 @@ def main() -> int:
         elif any(x in name.lower() for x in EXCLUDE_LABEL):
             print(f"  excluded {cid} ({name}): 'electron transport' - the electron is the "
                   f"cargo, the quinone is the acceptor")
-        elif (QUINOLINE_FALSE_FRIEND in name.lower()
-              and not any(x in name.lower() for x in REAL_COQ)):
+        elif matched_only_via_quinoline(name):
             print(f"  excluded {cid} ({name}): matched only because 'quinol' is a substring "
                   f"of 'quinolin'; quinoline/quinolinic acid is an unrelated chemical family")
         elif aspect != "biological_process":
