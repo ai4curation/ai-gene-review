@@ -38,7 +38,7 @@ autolink_gene_symbols: false
 - [ ] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [#2320](https://github.com/ai4curation/ai-gene-review/pull/2320).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 2026-07-26: The `betA` OpenScientist report completed. The `betT-I` run
