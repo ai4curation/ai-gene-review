@@ -17,11 +17,26 @@ re-running reproduces them byte-for-byte.
 
 `audit_adck5_claims.py` re-reads the three JSON outputs and asserts that every residue call,
 census number and withdrawn phrasing is consistent across `RESULTS.md`, `ADCK5-notes.md` and
-`ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. It earned its keep:
+`ADCK5-ai-review.yaml` — the "fixed in N places, landed in N−1" failure. It earned its keep, twice:
 after the PR reviewer pointed out that the compartment argument assumed a membrane sidedness
-this review elsewhere declines to assert, the first "fix" softened **one** of three
-occurrences. Widening the scan to the whole gene folder found the other two — a second YAML
-field and a *script docstring* — which is why the scan is not limited to the prose files.
+this review elsewhere declines to assert, the first "fix" softened **one** of four
+occurrences. Widening the scan to the whole gene folder found two more — a second YAML field
+and a *script docstring* — which is why the scan is not limited to the prose files. The
+**fourth** survived even that, in this very file, because the paragraph *paraphrased* the
+withdrawn conclusion instead of repeating the pinned literal. Scope had been widened;
+vocabulary had not.
+
+That is a limit of literal matching, not a gap in the phrase list, so adding more literals
+would not have closed it. The compartment claim is now guarded **structurally**: any
+paragraph that states NOTCH2NLA's own localisation — the contrast the argument is built from
+— must carry a statement that ADCK5's sidedness is unmeasured, in that paragraph or the next.
+The trigger is the topic, so rewording the conclusion cannot evade it.
+
+A file-level version of that invariant was written first, tested against the actual text that
+shipped, and **passed** — the historical file hedged in a different section. Hence
+paragraph-locality, and hence `--self-test` replays that real paragraph verbatim from git
+rather than a synthetic mutation. Residual limit, stated rather than hidden: a hedge more
+than one paragraph away still evades it, so withdrawing a claim still needs a human re-read.
 
 Writing the audit exposed four defects in the audit itself, every one found by running the
 break-tests and none by reading it:
@@ -37,7 +52,7 @@ break-tests and none by reading it:
    resolved path rather than by extension; a self-test plants a phrase in a *sibling* script
    and requires a catch, so the exclusion cannot silently widen.
 
-18 self-tests, each exercised in the direction it exists to catch and in the happy direction.
+22 self-tests, each exercised in the direction it exists to catch and in the happy direction.
 
 ## Question
 
@@ -138,6 +153,28 @@ Two findings, both asserted by the script so they fail loudly if the databases m
    (IDA, PMID:27499294). ADCK5 and ADCK2, never assayed, still carry `EC 2.7.11.-` and the
    keyword. ADCK1 is intermediate: `EC 2.7.-.-` but the keyword retained.
 
+### An unflagged contradiction in a neighbouring gene, visible in this census
+
+`family_census.json` records COQ8B holding **both** of these, from the same aspect and the
+same evidence code:
+
+```
+GO:0004672 IDA NOT|enables      (PMID:27499294)
+GO:0004672 IDA enables          (PMID:38425362)
+```
+
+GOA therefore asserts and negates protein kinase activity for COQ8B simultaneously. It is
+not a census artefact — the merged COQ8B review `ACCEPT`s both rows independently, without
+noting that they conflict. The two are reconcilable in prose (2016 found no *generic,
+in-trans* activity against standard substrates; 2024 found phosphorylation of one *specific*
+partner, COQ3, using ancestral-sequence-reconstructed protein) but GO has no way to express
+"not a generic protein kinase, but does phosphorylate this one substrate", so the record
+reads as a flat contradiction. This is the same ontology gap recorded in ADCK5's second
+`knowledge_gaps` entry, showing its cost on a *characterised* member rather than a dark one.
+
+Reported, not fixed: COQ8B is outside this PR's scope. Noted because the contradiction sits
+in this review's own computed output, and an unexplained one is worse than a stated one.
+
 ## Analysis 3 — PAINT node placement (`just fetch-panther-paint`)
 
 ADCK5 is `PTHR43173:SF28`; ADCK1 is `PTHR43173:SF19`; ADCK2 is `PTHR45890:SF1`; COQ8A/COQ8B
@@ -178,13 +215,21 @@ lineage. MI score 0.67 on every row; no orthogonal assay anywhere in IntAct. Thi
 third gene in this campaign where `NbExp` counts sub-methods of a single screen (after
 ACRV1 and ADAMTSL5).
 
-Topology: NOTCH2NLA (Q7Z3S9, reviewed, 236 aa) is annotated `Secreted` and `Cytoplasm` and
-is a human-specific regulator of neural progenitor proliferation. ADCK5 is a mitochondrial
-protein — in eukaryotes "UbiB homologs are found exclusively in mitochondria" — and its only
-large interaction dataset (PMID:27499296, the mitochondrial interactome) returns 25 partners
-of which 17 are annotated to the mitochondrion. Y2H places both proteins in the yeast
-nucleus and so removes exactly the targeting constraint that makes the pairing implausible
-in vivo.
+Compartment (a supporting consideration, **not** a conclusion): NOTCH2NLA (Q7Z3S9, reviewed,
+236 aa) is annotated `Secreted` and `Cytoplasm` and is a human-specific regulator of neural
+progenitor proliferation. ADCK5 is a mitochondrial protein — in eukaryotes "UbiB homologs are
+found exclusively in mitochondria" — and its only large interaction dataset (PMID:27499296,
+the mitochondrial interactome) returns 25 partners of which 17 are annotated to the
+mitochondrion. Y2H places both proteins in the yeast nucleus, removing whatever targeting
+constraint applies in vivo.
+
+**How far that argument actually goes.** It requires ADCK5's kinase-like domain to face the
+matrix, as COQ8A's C-terminus is measured to do. **ADCK5's own sidedness has never been
+measured** — the single transmembrane segment is a prediction, and an outer-membrane anchor
+presenting the domain to the cytosol is not excluded. That is precisely the uncertainty that
+stops this review proposing `GO:0031966`, so the compartment point is stated here as an
+assumption and nothing rests on it. The `MARK_AS_OVER_ANNOTATED` verdict rests on the
+method-replication argument, which stands alone.
 
 Every number above is computed by `partner_localisation.py`, not typed: it re-pulls all 54
 IntAct records (asserting `len(rows) == totalElements`), resolves every partner by **UniProt

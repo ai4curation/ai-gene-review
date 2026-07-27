@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,6 +45,10 @@ REVIEW_YAML = GENE_DIR / "ADCK5-ai-review.yaml"
 MOTIF_JSON = HERE / "results.json"
 CENSUS_JSON = HERE / "family_census.json"
 PARTNER_JSON = HERE / "partner_localisation.json"
+
+# The commit whose RESULTS.md still asserted the withdrawn compartment claim. Used by
+# --self-test as a real regression fixture rather than a synthetic mutation.
+HISTORICAL_MISS_COMMIT = "419dc9e37"
 
 PROSE_SURFACES = [RESULTS_MD, NOTES_MD, REVIEW_YAML]
 
@@ -70,6 +75,89 @@ WITHDRAWN_PHRASES = [
 # Prose surfaces are not the only place a withdrawn phrasing can hide: it also lived in a
 # script docstring. Scan the whole gene folder for these, not just the three prose files.
 WITHDRAWN_SCAN_GLOBS = ["*.md", "*.yaml", "ADCK5-bioinformatics/*.py", "ADCK5-bioinformatics/*.md"]
+
+# ---------------------------------------------------------------------------------------
+# A literal-phrase matcher CANNOT catch paraphrase. This is a property of the design, not a
+# gap in the phrase list, and it has already cost this review one round: after
+# "topologically implausible" was pinned above, the same withdrawn claim survived in
+# RESULTS.md as "removes exactly the targeting constraint that makes the pairing implausible
+# in vivo" - in a file that WAS in scope. Scope was widened; vocabulary was not.
+#
+# Adding two more literals would not fix that. So the compartment claim is guarded
+# structurally instead, by a CO-OCCURRENCE INVARIANT keyed on the topic rather than on the
+# wording of the conclusion:
+#
+#     any surface that discusses the ADCK5-NOTCH2NLA compartment argument at all
+#     must also carry an explicit statement that ADCK5's membrane sidedness is unmeasured.
+#
+# Paraphrasing the conclusion cannot evade this, because the trigger is the topic.
+#
+# The invariant is enforced PER PARAGRAPH, not per file, and that distinction is the whole
+# point. A file-level version of this check was written first and then tested against the
+# actual text that shipped and was missed - and it PASSED, because the historical RESULTS.md
+# hedged in a different section while asserting the claim under "Topology:". File-level
+# co-occurrence is not proximity, and a guard that cannot catch the defect it was written
+# for is worse than none, because it reads as coverage. So the hedge must appear in the same
+# paragraph as the topic, or in the one immediately following it.
+#
+# `--self-test` replays that historical paragraph verbatim from git and requires a catch.
+# Residual limit, stated rather than hidden: a hedge more than one paragraph away still
+# evades this, so withdrawing a claim still calls for a human re-read of the prose.
+# ---------------------------------------------------------------------------------------
+
+# The trigger must fire on the ARGUMENT, not on every mention of the partner. What makes a
+# paragraph an instance of the compartment argument is that it states NOTCH2NLA's own
+# localisation - that is the contrast the argument is built from. Paragraphs that merely
+# list NOTCH2NLA among partners, or name it in a verdict table, do not, and a first version
+# keyed on "mentions the partner AND any compartment word" produced three false positives on
+# exactly those.
+COMPARTMENT_TOPIC_RE = re.compile(r"NOTCH2NLA|Q7Z3S9", re.I)
+COMPARTMENT_CONTEXT_RE = re.compile(r"secreted|cytoplasm|cytosol", re.I)
+# Any ONE of these counts as the hedge being present.
+SIDEDNESS_HEDGE_RES = [
+    re.compile(r"sidedness", re.I),
+    re.compile(r"(never|has not|not) been (measured|determined)", re.I),
+    re.compile(r"stated (here )?as an assumption", re.I),
+    re.compile(r"supporting consideration", re.I),
+]
+
+
+def _paragraphs(text: str) -> list[str]:
+    """Blank-line separated blocks. Works for markdown prose and for YAML block scalars,
+    which contain no blank lines and so arrive as single blocks."""
+    return [b for b in re.split(r"\n\s*\n", text)]
+
+
+def check_compartment_hedge(texts: dict[str, str]) -> list[str]:
+    """Structural guard: discussing the compartment argument obliges you to hedge it NEARBY.
+
+    Keyed on the TOPIC, so it survives rewording of the conclusion - unlike the literal
+    phrase list, which it exists to compensate for. Enforced per paragraph (with a
+    one-paragraph lookahead) because the file-level version demonstrably failed to catch the
+    real defect.
+    """
+    problems: list[str] = []
+    triggered = 0
+    for name, text in texts.items():
+        paras = _paragraphs(text)
+        for i, para in enumerate(paras):
+            if not (COMPARTMENT_TOPIC_RE.search(para) and COMPARTMENT_CONTEXT_RE.search(para)):
+                continue
+            triggered += 1
+            window = para + "\n" + (paras[i + 1] if i + 1 < len(paras) else "")
+            if not any(r.search(window) for r in SIDEDNESS_HEDGE_RES):
+                problems.append(
+                    f"{name}: a paragraph discusses the ADCK5-NOTCH2NLA compartment argument "
+                    f"with no statement nearby that ADCK5's membrane sidedness is unmeasured. "
+                    f"The review withdrew the unhedged form of this claim. Paragraph starts: "
+                    f"{para.strip()[:90]!r}"
+                )
+    if triggered == 0:
+        problems.append(
+            "compartment-hedge guard is vacuous: no paragraph matched the topic, so the "
+            "invariant proved nothing. Check the topic pattern before trusting a pass."
+        )
+    return problems
 
 # Claims that must appear on at least `min_surfaces` of the prose surfaces.
 REQUIRED_CLAIMS = [
@@ -296,6 +384,35 @@ def check_partner_numbers(partner: dict, texts: dict[str, str]) -> list[str]:
     return problems
 
 
+def all_surfaces(texts: dict[str, str]) -> dict[str, str]:
+    """The three prose surfaces plus every other file in the gene folder that can carry prose.
+
+    Detector and mutator must agree on scope or the verification is structurally blind, so
+    this is the single definition both the withdrawn-phrase and compartment-hedge checks use.
+    Files are keyed by path relative to the gene directory, and the prose surfaces are keyed
+    the same way, so RESULTS.md is not scanned twice under two different keys.
+    """
+    out = {
+        str(p.relative_to(GENE_DIR)): t
+        for p, t in zip(PROSE_SURFACES, (texts.get(p.name, "") for p in PROSE_SURFACES))
+    }
+    # Let a caller-supplied (possibly mutated) text win over what is on disk.
+    for p in PROSE_SURFACES:
+        if p.name in texts:
+            out[str(p.relative_to(GENE_DIR))] = texts[p.name]
+    this_file = Path(__file__).resolve()
+    for pattern in WITHDRAWN_SCAN_GLOBS:
+        for f in sorted(GENE_DIR.glob(pattern)):
+            # Skip only THIS file: it is the registry of withdrawn phrasings, so it
+            # necessarily contains every one of them. Excluding it by resolved path rather
+            # than by extension keeps every other script in scope - the docstring that hid
+            # 'topological objection' was in a sibling .py.
+            if f.resolve() == this_file:
+                continue
+            out.setdefault(str(f.relative_to(GENE_DIR)), f.read_text())
+    return out
+
+
 def check_withdrawn(texts: dict[str, str]) -> list[str]:
     """Withdrawn phrasings must not reappear on ANY surface in the gene folder.
 
@@ -304,19 +421,7 @@ def check_withdrawn(texts: dict[str, str]) -> list[str]:
     docstring, and a detector scoped narrower than the mutator cannot see what it missed.
     """
     problems = []
-    # Widen beyond the prose surfaces so the detector's scope matches where the phrasing can live.
-    texts = dict(texts)
-    this_file = Path(__file__).resolve()
-    for pattern in WITHDRAWN_SCAN_GLOBS:
-        for f in sorted(GENE_DIR.glob(pattern)):
-            # Skip only THIS file: it is the registry of withdrawn phrasings, so it
-            # necessarily contains every one of them. Excluding it by name rather than by
-            # extension keeps every other script in scope - the docstring that hid
-            # 'topological objection' was in a sibling .py.
-            if f.resolve() == this_file:
-                continue
-            texts.setdefault(str(f.relative_to(GENE_DIR)), f.read_text())
-    for name, text in texts.items():
+    for name, text in all_surfaces(texts).items():
         # Normalise quotation marks so a phrase cannot evade the matcher by being quoted
         # (a quote-splitting bypass was found on ACTA1).
         flat = re.sub(r"[\"'`]", "", text.lower())
@@ -346,6 +451,7 @@ def run_checks(texts: dict[str, str], motif: dict, census: dict, partner: dict) 
     problems += check_census_numbers(census, texts)
     problems += check_partner_numbers(partner, texts)
     problems += check_withdrawn(texts)
+    problems += check_compartment_hedge(all_surfaces(texts))
     problems += check_required_claims(texts)
     return problems
 
@@ -465,18 +571,60 @@ def self_test() -> int:
     # The withdrawn-phrase scan covers the whole gene folder, and excludes exactly ONE file:
     # this one, which necessarily contains every withdrawn phrase because it defines them.
     # That exclusion must be narrow. Plant a phrase in a SIBLING script and require a catch.
-    sibling = HERE / "partner_localisation.py"
-    original = sibling.read_text()
-    assert "topological objection" not in original, (
-        "self-test target already contains the phrase; the mutation would prove nothing"
-    )
+    # Use a THROWAWAY file, never a tracked source: a self-test that mutates the repo can
+    # leave it dirty if it dies between write and restore.
+    throwaway = HERE / "_selftest_scope_probe.py"
+    assert not throwaway.exists(), f"{throwaway.name} already exists; refusing to clobber it"
     try:
-        sibling.write_text(original + "\n# topological objection\n")
-        expect_flag("withdrawn phrasing planted in a SIBLING script (scan must not be too narrow)", good)
+        throwaway.write_text("# topological objection\n")
+        expect_flag(
+            "withdrawn phrasing planted in a sibling .py (scan must not be too narrow)", good
+        )
     finally:
-        sibling.write_text(original)
-    assert sibling.read_text() == original, "self-test failed to restore the sibling script"
-    expect_clean("sibling script restored", good)
+        throwaway.unlink(missing_ok=True)
+    assert not throwaway.exists(), "self-test failed to remove its throwaway file"
+    expect_clean("throwaway removed, tree clean again", good)
+
+    # --- the compartment-hedge guard, both directions ---
+    # Catch: strip every hedge marker while leaving the topic in place. A literal-phrase
+    # matcher cannot see this; the co-occurrence invariant must.
+    import re as _re
+    unhedged = {}
+    for k, v in good.items():
+        for r in SIDEDNESS_HEDGE_RES:
+            v = r.sub("REDACTED", v)
+        unhedged[k] = v
+    expect_flag("compartment argument discussed with every hedge removed", unhedged)
+
+    # Catch by PARAPHRASE: reinstate the withdrawn conclusion in new words, no pinned literal
+    # anywhere, hedges stripped. This is the exact failure that reached RESULTS.md.
+    paraphrased = dict(unhedged)
+    paraphrased["RESULTS.md"] = (
+        unhedged["RESULTS.md"]
+        + "\n\nY2H removes exactly the targeting constraint that makes the NOTCH2NLA "
+        "pairing impossible in vivo.\n"
+    )
+    expect_flag("withdrawn claim reinstated as PARAPHRASE with no pinned literal", paraphrased)
+
+    # Happy: the real surfaces discuss the topic AND hedge it.
+    expect_clean("compartment argument discussed and properly hedged", good)
+
+    # The strongest available test: replay the ACTUAL paragraph that shipped and was missed,
+    # read from git rather than retyped. A synthetic mutation only proves the guard catches
+    # the failure I imagined; this proves it catches the one that really happened. A
+    # file-level version of this check passed here, which is why the guard is paragraph-local.
+    hist = subprocess.run(
+        ["git", "show", f"{HISTORICAL_MISS_COMMIT}:genes/human/ADCK5/ADCK5-bioinformatics/RESULTS.md"],
+        capture_output=True, text=True, cwd=str(GENE_DIR),
+    ).stdout
+    if "makes the pairing implausible" not in hist:
+        failures.append(
+            f"cannot replay the historical defect: commit {HISTORICAL_MISS_COMMIT} no longer "
+            f"contains the flagged wording, so this regression test proves nothing"
+        )
+        print("  FAIL (regression fixture unavailable): historical defect replay")
+    else:
+        expect_flag("the REAL historical defect, replayed verbatim from git", {**good, "RESULTS.md": hist})
 
     # 6. the residue guard must not silently pass when it has nothing to check
     empty_motif = {"columns": []}
