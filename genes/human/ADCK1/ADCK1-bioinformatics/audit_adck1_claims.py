@@ -64,6 +64,56 @@ for name, text in sites.items():
     if not ok:
         prob.append(f"site {name} discusses UbiB kinase activity without the PMID:38425362 qualification")
 
+# Every NUMBER the prose states about the motif scan must equal the computed value.
+# The reviewer caught "absent in 0 of 8" where RESULTS.md computes "0/8 ... have an
+# arginine" — the sentence had inverted its own table. Prose cannot be generated from
+# results.json here, so instead each numeric claim is parsed back out and compared to
+# the source of truth; divergence becomes a hard failure rather than a silent one.
+import json
+import re as _re
+
+res = json.loads((ROOT / "ADCK1-bioinformatics" / "results.json").read_text())
+n_ubib = res["n_total"] - 1
+n_all4 = sum(
+    1 for acc, row in res["proteins"].items()
+    if acc != res["reference"]
+    and all(row["motifs"][k]["matches_canonical"]
+            for k in ("beta3_lys", "catalytic_asp", "catalytic_asn", "dfg_asp"))
+)
+desc = rev["core_functions"][1]["description"]
+numeric_claims = [
+    (r"conserved in (\d+) of (\d+) UbiB proteins examined", (n_all4, n_ubib),
+     "all-four-motifs-conserved count"),
+    (r"retaining (\d+) of the (\d+) canonical glycines", 
+     (res["adck1_ploop_glycines_retained"], 3), "ADCK1 P-loop glycine count"),
+    (r"an arginine present in (\d+) of (\d+) UbiB proteins examined",
+     (res["n_ubib_with_arg_before_catalytic_asp"], n_ubib), "HRD-arginine count"),
+]
+for pattern, expected, label in numeric_claims:
+    m = _re.search(pattern, desc)
+    if not m:
+        prob.append(f"core_functions[1].description no longer states the {label} "
+                    f"in the expected form (/{pattern}/) — cannot verify it against results.json")
+        continue
+    got = (int(m.group(1)), int(m.group(2)))
+    ok = got == expected
+    print(f"  {'OK  ' if ok else 'FAIL'} {label}: prose says {got[0]}/{got[1]}, "
+          f"results.json says {expected[0]}/{expected[1]}")
+    if not ok:
+        prob.append(f"{label}: prose {got[0]}/{got[1]} != computed {expected[0]}/{expected[1]}")
+
+# ADCK1 must not assert a catalytic relationship to OPA1 in a structured slot while
+# the prose denies one. `substrates` is an assertion in the reviewer's own voice.
+for i, cf in enumerate(rev["core_functions"]):
+    if cf.get("substrates"):
+        prob.append(f"core_functions[{i}] declares substrates {cf['substrates']} while the review "
+                    "states ADCK1 is not the protease; use the has_input extension instead")
+    for slot in ("molecular_function", "contributes_to_molecular_function"):
+        if cf.get(slot):
+            prob.append(f"core_functions[{i}].{slot} asserts a molecular function, but this review "
+                        "concludes ADCK1's molecular function is unknown")
+print("  OK   no core_functions slot asserts a catalytic claim the prose refuses")
+
 # The corrected sibling-review statement must name the real state of the repo.
 for tok in ["COQ8A", "COQ8B", "#2108"]:
     if tok not in notes:
