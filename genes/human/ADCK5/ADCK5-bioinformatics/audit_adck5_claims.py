@@ -376,11 +376,17 @@ def _coverage(census_doc: dict, paint_text: str | None = None) -> dict[str, call
         if any(str(l["location"]).startswith("Mitochondrion")
                for l in c["ADCK5"]["subcellular_locations"]):
             return "ADCK5 now has a Mitochondrion SUBCELLULAR LOCATION; the request is stale"
+        # EXACT, because the prose now names these strings: "COQ8A as Mitochondrion membrane,
+        # single-pass, and ADCK1 as Mitochondrion". A startswith test would let a refinement
+        # of either line pass green while the prose quietly became imprecise.
         for g in ("ADCK1", "ADCK2"):
-            if not any(str(l["location"]).startswith("Mitochondrion")
+            if not any(str(l["location"]) == "Mitochondrion"
                        and any(e.startswith("ECO:0000269") for e in l["evidence"])
                        for l in c[g]["subcellular_locations"]):
-                return f"{g} lost its experimental Mitochondrion SUBCELLULAR LOCATION"
+                return (
+                    f"{g}'s experimental location is no longer exactly 'Mitochondrion': "
+                    f"{[l['location'] for l in c[g]['subcellular_locations']]}"
+                )
         # The review states COQ8A's location as "Mitochondrion membrane, single-pass" and
         # ADCK1's as "Mitochondrion"; assert both, since those are cross-gene record claims
         # like any other. (An earlier draft said both were "inner-mitochondrial-membrane
@@ -389,9 +395,12 @@ def _coverage(census_doc: dict, paint_text: str | None = None) -> dict[str, call
         # routing alternative was marking that sentence covered by a check which asserted
         # nothing of the kind - widening ROUTING silently shrinks what the gate reports.)
         for g in ("COQ8A", "COQ8B"):
-            if not any(str(l["location"]).startswith("Mitochondrion membrane")
+            if not any(str(l["location"]) == "Mitochondrion membrane"
                        for l in c[g]["subcellular_locations"]):
-                return f"{g} no longer has a Mitochondrion membrane SUBCELLULAR LOCATION"
+                return (
+                    f"{g}'s location is no longer exactly 'Mitochondrion membrane': "
+                    f"{[l['location'] for l in c[g]['subcellular_locations']]}"
+                )
         return None
 
     def negated():
@@ -542,7 +551,10 @@ def check_cross_gene_claims(census_doc: dict, texts: dict[str, str],
         for unit in _paragraphs(scan, name):
             if not (PARALOG_RE.search(unit) and RECORD_SIGNATURE_RE.search(unit)):
                 continue
-            triggered_by_surface[name] += 1
+            # NB: the vacuity counter is incremented in the SENTENCE loop below, not here.
+            # A unit-level increment reported the guard exercised whenever a unit tripped the
+            # pre-filter even if zero sentences routed - i.e. it could not see the gate's own
+            # coverage collapse, which is the failure it exists to detect.
             # PER SENTENCE, not per unit. (Not per token: a sentence's tokens are unioned,
             # so a sentence carrying two record claims is still one decision - stated as a
             # residual limit in RESULTS.md rather than implied away.) Routing per unit meant
@@ -1471,6 +1483,24 @@ def self_test() -> int:
         globals()["_paragraphs"] = _orig_split
     if globals()["_paragraphs"] is not _orig_split:
         failures.append("self-test failed to restore _paragraphs")
+
+    # The vacuity counter, mutated at exactly the granularity of the claim being certified.
+    # The existing "topic vanished" probe blanks the surface, driving BOTH the old unit-level
+    # and the new sentence-level counters to zero - so it passed identically against the
+    # correct and the incorrect implementation and certified nothing. This probe instead
+    # constructs the discriminating case: a unit that TRIPS the pre-filter while no sentence
+    # routes. Under the unit-level counter it reports the guard exercised; under the
+    # sentence-level counter it reports vacuity.
+    split_subject = "COQ8A is a paralog of interest. The row is IDA."
+    expect_flag(
+        "a unit trips the cross-gene pre-filter while no sentence routes",
+        {
+            **good,
+            "ADCK5-ai-review.yaml": split_subject,
+            "ADCK5-bioinformatics/RESULTS.md": split_subject,
+        },
+        match="proved nothing there",
+    )
 
     # --- invariants about the harness itself, not about the gene ---
     # A partial `texts` dict must fall back to DISK for the surfaces it omits. Blanking them

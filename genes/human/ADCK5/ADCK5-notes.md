@@ -191,6 +191,32 @@ occluded-pocket architecture. Both are grounded in quotes already verified in th
 (The reviewer's point, and a good one: as prose in `suggested_questions` the finding is read
 once; in `knowledge_gaps` it feeds the Function Knowledge Gaps project.)
 
+## A break-test can be too destructive to discriminate
+
+Worth recording because it is a failure mode this campaign has not named, and it kept a
+defect alive across two rounds of this review.
+
+I reported that a vacuity counter had been "moved inside the sentence loop". I had *added* the
+inner increment and left the outer one, so the guard still reported itself exercised whenever
+a unit tripped the pre-filter even if no sentence routed — the precise blindness it exists to
+detect. The reason it survived my own break-testing is the general point:
+
+> the only committed vacuity break-test blanked the topic from the surface entirely, driving
+> **both** increments to zero, so it passed identically against the correct and the incorrect
+> implementation.
+
+Blanking a whole surface proves only that the check reads the surface at all. To certify
+"the counter is inside the loop", the mutation has to *be* that difference: a unit that trips
+the pre-filter while **no sentence routes**. That probe (`"COQ8A is a paralog of interest. The
+row is IDA."` — paralog and token present, never in one sentence) reports the guard exercised
+under the old implementation and reports vacuity under the new one, so it discriminates.
+
+**The mutation must be as fine as the claim.** A coarser mutation still goes green, and green
+is what makes it feel tested. This sits alongside the other guard failures found here — a
+check that failed on *perfect* agreement, an unreachable branch that read as coverage, a probe
+placed where it was easier to catch than the real thing — and it is the subtlest of them,
+because the break-test genuinely ran and genuinely passed.
+
 ## Reconciliation
 
 GOA TSV: 4 data rows. `existing_annotations`: 4 entries. No collapse; the two `GO:0005515`
