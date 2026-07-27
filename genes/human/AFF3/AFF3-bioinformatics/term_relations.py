@@ -51,6 +51,19 @@ CLAIMS: list[tuple[str, str, bool, str]] = [
      "protein-macromolecule adaptor activity is NOT under protein binding"),
     ("GO:0030674", "GO:0060090", True,
      "...it is under molecular adaptor activity, a separate branch of MF"),
+    # RETRACTION, second one in this review. The GO:0006355 row's reason initially argued
+    # that its donors "disagree in sign", reading GO:0032786 as belonging to the negative
+    # branch by proximity to GO:0032785. It does not: GO:0032786 is POSITIVE regulation of
+    # transcription elongation. So every signed donor on that row points the same way, and
+    # the reason had to be rewritten to rest on the RECIPIENT's mixed output instead. The
+    # claim is asserted here so the fact is machine-checked rather than eyeballed.
+    ("GO:0032786", "GO:0045893", True,
+     "GO:0032786 is in the POSITIVE branch: all signed donors on the GO:0006355 row agree"),
+    ("GO:0032786", "GO:0045892", False,
+     "...and it is NOT in the negative branch, which is what the retracted reason assumed"),
+    ("GO:0045893", "GO:0006355", True,
+     "the positive child is available and unused on this gene, so the unsigned parent must "
+     "be justified by the recipient's own mixed output rather than by donor disagreement"),
 ]
 
 

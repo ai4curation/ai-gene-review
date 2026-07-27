@@ -64,9 +64,19 @@ WITH/FROM lists experimentally-annotated members by construction.
 | `GO:0050877` | lilli Q9VQI9 | `GO:0007611` (IMP, PMID:18310460) | donor is **two levels below** |
 | `GO:0032783` | lilli Q9VQI9 | `GO:0032783` (IPI, PMID:22195968) | lands exactly on the donor's term |
 
-The `GO:0006355` donors disagree in *sign* (`GO:0045893` positive from mouse Aff1 against
-`GO:0032786` negative-branch from human AFF1), so the unsigned parent is their true least
-common ancestor and there is no granularity defect on that row (the AEBP2 test).
+**RETRACTED, and corrected here rather than deleted.** An earlier draft of §1 stated that the
+`GO:0006355` donors disagree in *sign* — reading `GO:0032786` as negative-branch by proximity to
+`GO:0032785`. §3 refutes it: `GO:0032786` is **positive** regulation of transcription elongation,
+a descendant of `GO:0045893`, so **every signed donor on that row points the same way**, and
+`GO:0045893` is itself a descendant of `GO:0006355`, i.e. a positive child was available and
+unused. The AEBP2 donor-disagreement test therefore does **not** apply.
+
+What keeps the row at the unsigned parent is the **recipient**, not the donors: AFF3's own output
+runs both ways — it represses XIST from the silent allele in HEK293T and IMR-90, while with
+ZFP281 it establishes a permissive chromatin state at the Meg3 enhancer and its over-expression
+raises 84% of the transcripts it changes in mouse cortical cells. A positive-only term would be
+false for the repressive half. The specific negative instance is proposed as a separate
+`GO:0045892` row instead of by refining this one.
 
 The `GO:0050877` donors, by contrast, **agree** on `GO:0007611` and the row sits two levels
 above it. That is a granularity mismatch relative to the donors — but the specific term is not
@@ -85,7 +95,7 @@ identical bytes in all three GOA records.
 
 ## 3. Ancestry claims, fetched not assumed (`term_relations.py`)
 
-12 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
+15 claims, all verified against QuickGO with `relations=is_a,part_of` only (so `regulates`
 edges cannot be mistaken for subsumption). The script exits non-zero if any claim is wrong.
 
 | claim | result |
@@ -102,11 +112,19 @@ edges cannot be mistaken for subsumption). The script exits non-zero if any clai
 | `GO:0035116` is a descendant of `GO:0030326` | true |
 | `GO:0003712` is a descendant of `GO:0140110` | true |
 | `GO:0045190` is a descendant of `GO:0002443` | true |
+| `GO:0032786` is a descendant of `GO:0045893` | true — it is in the POSITIVE branch |
+| `GO:0032786` is a descendant of `GO:0045892` | **false** — which is what the retracted §1 premise assumed |
+| `GO:0045893` is a descendant of `GO:0006355` | true — a positive child was available and unused |
 
-The `GO:0030674`/`GO:0005515` claim was written the **wrong way round** on the first pass and the
-guard is what caught it. It is retained in the script with the corrected expectation and a
-comment recording the error, because a documented retraction is more useful to the next reader
-than a clean absence.
+**This guard has now caught two of my own claims, which is the argument for having it.**
+
+1. The `GO:0030674`/`GO:0005515` claim was written the **wrong way round** on the first pass.
+   It is retained in the script with the corrected expectation and a comment recording the error.
+2. The last three rows were added *after* the review was written, to check the §1 sign-disagreement
+   premise. They refuted it: `GO:0032786` is positive, not negative, so the donors agree and the
+   original argument for keeping `GO:0006355` unsigned was false. The verdict survived on a
+   different and better ground (the recipient's own mixed output), but the reason had to be
+   rewritten. **A claim I had already shipped, corrected by a check written afterwards.**
 
 ## 4. Reference-projection test (`reference_projection.py`)
 

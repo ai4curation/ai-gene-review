@@ -45,7 +45,7 @@ propagated term. Results:
 | token | resolves to | reviewed | own experimental evidence for the propagated term |
 |---|---|---|---|
 | `MGI:MGI:106927` | **P51827 mouse Aff3 — the true orthologue** | Swiss-Prot | IDA + IMP `GO:0006355` (PMID:25162227) |
-| `MGI:MGI:1100819` | O88573 mouse Aff1 (paralogue) | Swiss-Prot | IDA `GO:0045893` |
+| `MGI:MGI:1100819` | O88573 mouse Aff1 (paralogue) | Swiss-Prot | IDA `GO:0045893` (positive) |
 | `MGI:MGI:1202294` | O55112 mouse Aff2 (paralogue) | Swiss-Prot | IMP `GO:0007611` (PMID:11923441) |
 | `FB:FBgn0041111` | Q9VQI9 *Drosophila* **lilli** (single fly AFF co-orthologue) | Swiss-Prot | IMP `GO:0003712`; IMP `GO:0007611`; IPI `GO:0032783`; IMP/IGI `GO:0006355` |
 | `UniProtKB:P51825` | **P51826's paralogue, human AFF1** | Swiss-Prot | EXP `GO:0006354` (PMID:22547686) |
@@ -385,3 +385,28 @@ rewording cannot evade it. It is break-tested against `git show HEAD:...` — th
 actually shipped — and has a vacuity direction that fires if the sentence disappears
 altogether. The correction direction is favourable: 5 independent publications is a *stronger*
 replication claim than 4.
+
+## A third retraction, and the same lesson: the guard caught a claim I had already shipped
+
+The `GO:0006355` row's original reason argued that the row should stay at the unsigned parent
+"because the donors disagree in sign — mouse Aff1's descendant is positive regulation while
+human AFF1's is in the negative-regulation-of-elongation branch". I had read `GO:0032786` as
+negative by its proximity to `GO:0032785`. Adding it to `term_relations.py` refuted it
+immediately: **`GO:0032786` is *positive* regulation of DNA-templated transcription, elongation**,
+a verified descendant of `GO:0045893`. So every signed donor on that row points the same way,
+and `GO:0045893` is itself a descendant of `GO:0006355`, meaning a positive child was available
+and unused. The AEBP2 donor-disagreement test does not apply at all.
+
+The verdict did not change, but the reason had to. What actually forbids refining the row is the
+**recipient**, not the donors: AFF3 represses XIST from the silent allele in two human lines
+while establishing a permissive state at the Meg3 enhancer with ZFP281 and raising 84% of the
+transcripts it changes on over-expression in mouse cortical cells. A positive-only term would be
+false for the repressive half — which is why the specific negative instance is a separate
+`GO:0045892` row rather than a modification of this one.
+
+Three retractions on this gene, and the common shape is worth naming: **each was an inference
+from an identifier's or a label's neighbourhood rather than from a fetched fact.**
+`GO:0030674` was assumed to be under `GO:0005515` because adaptor activity *sounds like* a kind
+of protein binding; `GO:0032786` was assumed negative because it sits one integer from
+`GO:0032785`; and the IntAct counts were read off a printed list instead of computed. In all
+three cases the fix was to write the check, and in all three the check fired.
