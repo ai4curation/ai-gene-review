@@ -210,11 +210,11 @@ conclusion.
 | GO:0005096 GTPase activator activity | MARK_AS_OVER_ANNOTATED | Arf-contacting Asp absent subfamily-wide; activity never measured; not REMOVE because unmeasured |
 | GO:0016020 membrane | KEEP_AS_NON_CORE | a 1142-entity bulk import; the protein has no membrane anchor |
 | GO:0045055 regulated exocytosis | **NEW** | siRNA + rescue + overexpression in HUVEC, two secretagogues |
-| GO:0044794 host-mediated activation of viral process | **NEW** | shRNA in two human backgrounds, Nef and Vpu |
+| GO:0044794 host-mediated activation of viral process | **NEW** | shRNA in two human backgrounds, Nef and Vpu — annotated, but *not* a core function (virus-co-opted; APOE precedent) |
 
 ## Committed guard
 
-`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 10 break-tests plus 1 no-fire test.
+`AGFG2-bioinformatics/audit_claims.py` — 9 checks, 12 break-tests plus 1 no-fire test.
 It gates the quotes (including the `file:` quotes that CI does not check), the GOA-row
 reconciliation in both directions, `source_entities` against the WITH/FROM field, a
 duplicate-key-rejecting YAML load with a raw-vs-parsed count, the residue claims against
@@ -262,6 +262,65 @@ Writing the IntAct script also corrected an over-claim: I had described the bact
 partner lcrS as excluded from the co-IP set by a species filter. It is excluded by
 **method** — two-hybrid pooling — so the by-name filter is a no-op. It is kept, and
 reported as a no-op, rather than credited with work it does not do.
+
+## Review round 1 — approved with six non-blocking suggestions, all six taken
+
+`ai4c-reviewer` approved and raised six 🔵 suggestions. I verified each premise before
+conceding, and all six were right.
+
+1. **`arfgap_domain.py`'s docstring still described the refuted fixed-offset method** while
+   the code did alignment transfer. This is the "guard defeated by its own docstring" mode,
+   and it is worse here than elsewhere because the docstring is the first thing a re-runner
+   reads and the PR's stated goal was to keep the refutation *visible*. Step 1 now describes
+   the two methods separately, and the fixed-offset attempt is an explicit "tried and
+   refused" note with the ASAP3-466-not-484 measurement that killed it.
+2. **The two controls were not equivalent and the table implied they were.** The arginine is
+   *derived* and reproduces a literature number. The aspartate's position is an **input
+   constant** (`ASP_CONTROL = ("Q8TDY4", 484)`); what the script verifies is residue
+   identity, domain containment and the alignment column. `RESULTS.md` now labels them
+   `derived` and `asserted, not derived`, and `arfgap_domain.json` carries a `method` field
+   on each control saying which it is.
+3. **The HIV cofactor role was in `core_functions`, and the schema says "core *evolved*
+   functions".** A role a virus co-opts, with no host-intrinsic counterpart demonstrated,
+   does not meet that. Checked the precedent the reviewer cited: `APOE-ai-review.yaml`
+   keeps `GO:0044794` as *contextual*. The `NEW GO:0044794` annotation stays — its evidence
+   is unaffected — but it is out of `core_functions`, with the reason stated in the row.
+4. **The `GO:0016020` reason argued for `MARK_AS_OVER_ANNOTATED` while the action was
+   `KEEP_AS_NON_CORE`.** Fixed by changing the *level* of the claim rather than flipping the
+   action: the objection is to the *evidence* (a 1142-entity bulk import cannot determine a
+   location), not to the term (`GO:0016020`'s definition covers proteins *attached to* a
+   bilayer, which a granule-fusion factor is). The reason now says that explicitly, and
+   names the reviewer's alternative reading rather than leaving it unaddressed.
+5. **The Rev/RRE export result yields no annotation and the reasoning was buried** inside
+   another row. Now its own `knowledge_gaps` entry: the assay is overexpression in monkey
+   CV-1 cells, so it shows sufficiency not requirement; and `GO:0046784`'s definition
+   specifies *intronless* viral mRNA while Rev/RRE exports intron-containing transcripts.
+6. **The clade labels double-counted.** "23 reptiles and birds … and 1 bird" reads as 24
+   sauropsids, but Aves (8782) is a subset of Sauropsida (8457). Now a table using
+   `distribution.json`'s own clade names with the subset relation marked, and the real
+   asymmetry stated: 1 avian `agfg2` against 363 avian `agfg1`.
+
+**A guard I had to widen, and how I widened it.** Fix 3 collided with check F, which
+asserted that *every* ACCEPT/NEW term appears in `core_functions`. Rather than relax the
+check, it now carries an enumerated exemption **with a reason per case**, plus two new
+directions that stop the exemption rotting: it fires if an exempted term is not actually
+ACCEPT/NEW, and if an exempted term turns out to be in `core_functions` after all. Both are
+break-tested. 12 break-tests now, all firing for the right reason.
+
+**A bug in my own patch script, of the exact class the campaign has recorded three times.**
+The queued-refinement script asserted `old not in new_text` — but the anchor is a *prefix*
+of the replacement, so that assertion is **unsatisfiable**: the edit succeeded and the
+script reported failure, then re-ran and reported "already applied". Replaced with occurrence
+arithmetic (`out.count(old) == before.count(old) * new.count(old)`). It had also written to
+the installed file rather than the staging copy; that was reverted with `git checkout` and
+re-applied to the staged copy, so no partial state shipped.
+
+**Quote-count reconciliation across the two checkers.** `checkquotes.py` went 47 → 45 this
+round, which needed explaining rather than accepting: removing the second `core_functions`
+entry dropped 2 quotes, and the 2 quotes added to the new `knowledge_gaps` entry are in
+`provenance`, which `checkquotes.py` does not walk. My own walker sees 52 = 45 + 7
+provenance quotes, all verbatim, including all 10 `file:` quotes. The numbers add up exactly,
+which is the only reason the 45 is trustworthy.
 
 ## Environment note
 

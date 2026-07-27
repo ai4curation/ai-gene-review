@@ -281,6 +281,19 @@ def check_e_residues(text: str, problems: list[str]) -> None:
                             f"the discrimination claim is false")
 
 
+# An ACCEPT/NEW term may legitimately be absent from `core_functions`, but only for a
+# stated reason. An enumerated exemption list carrying a reason per case is used rather
+# than a blanket relaxation, so the next such case has to be argued rather than absorbed.
+CORE_FUNCTION_EXEMPT = {
+    "GO:0044794": (
+        "virus-co-opted role: the schema defines core_functions as the core *evolved* "
+        "functions of the gene, CD4 levels were only ever measured in the presence of "
+        "Nef or Vpu, and the in-repo APOE review keeps this same term as contextual "
+        "rather than core"
+    ),
+}
+
+
 def check_f_core_functions(text: str, problems: list[str]) -> None:
     doc = load(text)
     kept = {
@@ -302,9 +315,24 @@ def check_f_core_functions(text: str, problems: list[str]) -> None:
     if not cf_terms:
         problems.append("F: core_functions declares no terms — the check is vacuous")
     for t in sorted(kept - cf_terms):
+        if t in CORE_FUNCTION_EXEMPT:
+            continue
         problems.append(f"F: {t} is ACCEPT/NEW but absent from core_functions")
     for t in sorted(cf_terms - kept):
         problems.append(f"F: {t} is in core_functions but no row ACCEPTs or proposes it")
+    # The exemption list must not rot: an exemption for a term that is no longer ACCEPT/NEW,
+    # or that IS in core_functions after all, is a stale licence and must be removed.
+    for t in sorted(CORE_FUNCTION_EXEMPT):
+        if t not in kept:
+            problems.append(
+                f"F: {t} is exempted from core_functions but is not an ACCEPT/NEW row — "
+                f"stale exemption"
+            )
+        elif t in cf_terms:
+            problems.append(
+                f"F: {t} is exempted from core_functions but IS in core_functions — "
+                f"the exemption is unnecessary and should be removed"
+            )
 
 
 # Flat assertions of claims the review deliberately hedges. Anchored on the GO id,
@@ -496,12 +524,14 @@ def check_i_results_md(text: str, problems: list[str]) -> None:
          "count of references swept for retractions"),
         (lit["queries"]["arfgap_activity_control"]["count"], " |",
          "ArfGAP-activity positive-control count (table cell)"),
-        (dist["census"]["Actinopterygii (bony fish)"]["AGFG2"]["total"], " ray-finned fish",
-         "agfg2 bony-fish symbol census"),
-        (dist["census"]["Sauropsida (reptiles+birds)"]["AGFG2"]["total"],
-         " reptiles and birds", "agfg2 sauropsid symbol census"),
-        (dist["census"]["Actinopterygii (bony fish)"]["AGFG1_control"]["total"], ", 473",
-         "agfg1 control counts, in order"),
+        (dist["census"]["Actinopterygii (bony fish)"]["AGFG2"]["total"], "** |",
+         "agfg2 bony-fish symbol census (table cell)"),
+        (dist["census"]["Sauropsida (reptiles+birds)"]["AGFG2"]["total"], "** |",
+         "agfg2 sauropsid symbol census (table cell)"),
+        (dist["census"]["Aves"]["AGFG1_control"]["total"], " |",
+         "agfg1 avian control count (table cell)"),
+        (dist["census"]["Aves"]["AGFG2"]["total"], "** avian `agfg2`",
+         "the avian agfg2/agfg1 asymmetry"),
     ]
     intact = json.loads((HERE / "intact.json").read_text())
     md_intact = [
@@ -619,6 +649,32 @@ def _mutate_add_cf_term(t: str) -> str:
     return yaml.safe_dump(d, sort_keys=False)
 
 
+def _mutate_exemption_unnecessary(t: str) -> str:
+    """Put an exempted term back into core_functions: the exemption is then a stale
+    licence and must be reported, not silently tolerated."""
+    d = load(t)
+    cf = d["core_functions"][0]
+    before = json.dumps(cf)
+    cf.setdefault("directly_involved_in", []).append(
+        {"id": "GO:0044794", "label": "host-mediated activation of viral process"}
+    )
+    assert json.dumps(cf) != before, "mutation changed nothing"
+    return yaml.safe_dump(d, sort_keys=False)
+
+
+def _mutate_exemption_stale(t: str) -> str:
+    """Change an exempted row's action away from NEW: the exemption then covers a row
+    that no longer needs it."""
+    d = load(t)
+    for e in d["existing_annotations"]:
+        if e["term"]["id"] == "GO:0044794":
+            before = e["review"]["action"]
+            assert before == "NEW", f"fixture drifted: action is {before}"
+            e["review"]["action"] = "UNDECIDED"
+            return yaml.safe_dump(d, sort_keys=False)
+    raise AssertionError("GO:0044794 row not found — fixture has drifted")
+
+
 def _mutate_number(t: str) -> str:
     """Change every occurrence of a number H binds, choosing one that does not appear
     inside any `file:` quote, so the mutation exercises H rather than A."""
@@ -649,6 +705,10 @@ BREAK_TESTS = [
      "absent from core_functions"),
     ("F: core_functions term with no ACCEPT/NEW row", _mutate_add_cf_term, "F",
      "no row ACCEPTs"),
+    ("F: exemption unnecessary (term is in core_functions after all)",
+     _mutate_exemption_unnecessary, "F", "exemption is unnecessary"),
+    ("F: exemption stale (exempted row is no longer ACCEPT/NEW)",
+     _mutate_exemption_stale, "F", "stale exemption"),
     ("G: hedged MF asserted in a structured slot", _mutate_add_cf_term, "G",
      "structured slot"),
     ("H: prose number contradicts the JSON", _mutate_number, "H", "not stated"),

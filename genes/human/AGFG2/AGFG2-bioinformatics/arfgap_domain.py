@@ -17,23 +17,36 @@ testing both, which is why the second residue is not an optional refinement.
 
 Method, and why each step is there
 ----------------------------------
-1. Both positions are **derived, not assumed**.  The arginine sits five residues
-   past the fourth zinc-coordinating cysteine; the aspartate is the second of the
-   four residues between the fourth cysteine and the arginine (``D47`` in the
-   numbering PMID:23433073 uses for the other subfamilies).  The script locates
-   the motif by regex inside each protein's own UniProt ``Zinc finger`` window.
-2. **Positive controls, both external to the derivation:**
-   * PMID:34369554 names ``AGFG2[R75Q]`` as its GAP-dead mutant, so the derivation
-     applied to O95081 must return **75**;
-   * PMID:23433073 names ``D484`` in ASAP3 as the Arf-contacting aspartate, so the
-     derivation applied to Q8TDY4 must return **484**, and that residue must be
-     an Asp.
-   If either fails the script raises rather than reporting AGFG2's numbers.
+The two residues are located by **two different methods**, because only one of them
+can be derived:
+
+1. **The arginine is derived.**  It sits five residues past the fourth
+   zinc-coordinating cysteine, so the script locates the motif
+   ``C-x2-C-x16-C-x2-C-x4-R`` by regex inside each protein's own UniProt
+   ``Zinc finger`` window and reads off the position.  Validated against an external
+   literature anchor: PMID:34369554 names ``AGFG2[R75Q]`` as its GAP-dead mutant, so
+   the derivation applied to O95081 must return **75** or the script raises.
+2. **The aspartate is transferred by alignment, not derived.**  Its position is an
+   *input constant* — ``ASP_CONTROL = ("Q8TDY4", 484)``, the ``D484`` that
+   PMID:23433073 names in the ASAP3 structure.  What the script verifies is that
+   residue 484 of Q8TDY4 really is an Asp, that it falls inside the annotated
+   Arf-GAP domain, and that the MAFFT alignment column holding it holds ``D`` for
+   ASAP3; every other protein's residue is then read from that same column.  So this
+   is *assert-and-transfer*, and it is labelled as such rather than as a second
+   derivation.
+
+   **Tried and refused:** an earlier version treated the aspartate as derivable at a
+   fixed offset from the zinc finger — the second of the four residues between the
+   fourth cysteine and the arginine.  Its own control refused that: ASAP3 came out at
+   466, not 484 (see ``probe_asap3.py``).  The aspartate is 15 residues C-terminal of
+   the arginine *in ASAP3*, and indels move it between subfamilies, so no fixed offset
+   can be right across the family.  The refutation is kept here because this docstring
+   is the first thing a re-runner reads.
 3. **Reciprocal check:** a MAFFT alignment of the UniProt ``Arf-GAP`` domains must
-   place every derived residue in the *same alignment column*.  Residue identity
-   alone manufactures matches out of alignment noise; requiring the derived
-   position to co-align with a control's own literature-anchored position is the
-   load-bearing condition, not a refinement.
+   place every derived arginine in the *same alignment column*, and the script raises
+   if ASAP3's arginine does not co-align with AGFG2's.  Residue identity alone
+   manufactures matches out of alignment noise; requiring co-alignment with a
+   literature-anchored position is the load-bearing condition, not a refinement.
 4. Identity is computed both full-length and domain-only, because a 481-aa protein
    whose similarity is confined to a 127-aa domain is a different claim from one
    that is similar throughout.
@@ -325,12 +338,19 @@ def main() -> None:
         "motif": "C-x2-C-x16-C-x2-C-x4-R (stated for human AGFG2 in PMID:34369554)",
         "controls": {
             "catalytic_arg": {
+                "method": "derived from the motif, then matched against the literature",
                 "accession": a_acc, "literature_position": a_pos,
                 "source": "PMID:34369554 names AGFG2[R75Q] as its GAP-dead mutant",
                 "derived": recs[a_acc]["site"]["catalytic_arg"], "agrees": True,
             },
             "arf_contacting_asp": {
-                "accession": d_acc, "literature_position": d_pos,
+                "method": (
+                    "NOT derived: the position is an input constant, asserted to be an "
+                    "Asp inside the annotated domain and then transferred to the other "
+                    "proteins by alignment column"
+                ),
+                "accession": d_acc, "asserted_position": d_pos,
+                "residue_verified": d_seq[d_pos - 1],
                 "source": "PMID:23433073 names D484 in the ASAP3 structure",
                 "transferred_by": "MAFFT alignment column of ASAP3 D484",
                 "alignment_column": asp_ref_col,
@@ -352,7 +372,8 @@ def main() -> None:
     print(f"ArfGAP consensus used: {out['motif']}")
     print(f"control 1 (Arg): {a_acc} derived {recs[a_acc]['site']['catalytic_arg']} "
           f"== literature {a_pos} -> OK")
-    print(f"control 2 (Asp): ASAP3 D{d_pos} -> alignment column {asp_ref_col}; "
+    print(f"control 2 (Asp, NOT derived): ASAP3 D{d_pos} asserted from PMID:23433073, "
+          f"residue verified as {d_seq[d_pos - 1]}, alignment column {asp_ref_col}; "
           f"transferred to every protein by alignment -> OK\n")
     hdr = (f"{'acc':10s} {'entry':16s} {'rev':7s} {'len':>5s} {'x4':>5s} "
            f"{'Arg':>7s} {'aln':>4s} {'Asp-site':>9s}  role")

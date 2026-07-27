@@ -32,17 +32,19 @@ The gene name asserts an "Arf-GAP domain". Testing only the catalytic arginine g
 the opposite conclusion from testing both residues that the field identifies as
 required, so both are measured.
 
-Positions are **derived** from the ArfGAP consensus `C-x2-C-x16-C-x2-C-x4-R` located
-by regex inside each protein's own UniProt-annotated zinc finger; the Arf-contacting
-aspartate is then transferred from ASAP3 D484 **by MAFFT alignment column**, not by a
-fixed offset.
+**The two positions are located by two different methods, and only one is a
+derivation.** Both are gated by a literature anchor, but the gates are not equivalent
+and the table says which is which:
 
-Two literature-anchored controls gate the derivation:
-
-| control | source | expected | derived |
+| residue | method | literature anchor | result |
 |---|---|---|---|
-| catalytic Arg | PMID:34369554 names `AGFG2[R75Q]` as its GAP-dead mutant | 75 | **75** |
-| Arf-contacting Asp | PMID:23433073 names `D484` in the ASAP3 structure | 484 | **484 (D)** |
+| catalytic Arg | **derived** from the consensus `C-x2-C-x16-C-x2-C-x4-R`, located by regex inside each protein's own UniProt-annotated zinc finger | PMID:34369554 names `AGFG2[R75Q]` as its GAP-dead mutant, i.e. 75 | derivation returns **75** — reproduces the literature number |
+| Arf-contacting Asp | **asserted, not derived**: the position is an input constant (`ASP_CONTROL = ("Q8TDY4", 484)`), then transferred to every other protein by MAFFT alignment column | PMID:23433073 names `D484` in the ASAP3 structure | residue at 484 verified as **D**, inside the annotated domain, and its alignment column holds `D` for ASAP3 |
+
+Only the first row reproduces a literature number from an independent computation. The
+second verifies an asserted number and transfers it; the script raises if the residue is
+not an Asp, if it falls outside the annotated Arf-GAP domain, or if ASAP3 and AGFG2 fail
+to co-align at the catalytic arginine.
 
 Result over the annotated Arf-GAP domains (all Swiss-Prot except drongo):
 
@@ -268,9 +270,22 @@ count as `n_cited_checked: 12` so the number here cannot drift from the sweep.
 
 - `PMID:23433073`, a dedicated phylogenetic study, places the AGFG duplication among the
   subfamilies that duplicated "*at the base of vertebrates*";
-- a UniProt symbol census (totals read from `x-total-results`, never from a page) finds
-  `agfg2` in 72 ray-finned fish, 23 reptiles and birds, 4 amphibians and 1 bird, with
-  the `agfg1` control non-zero in every clade (50, 473, 28, 363 respectively).
+- a UniProt symbol census (totals read from `x-total-results`, never from a page), using
+  `distribution.json`'s own clade names so the sets do not appear to double-count —
+  **Aves is a subset of Sauropsida**, not a separate tally:
+
+  | clade (NCBI taxon) | `agfg2` | `agfg1` (control) |
+  |---|---|---|
+  | Actinopterygii, 7898 | **72** | 50 |
+  | Sauropsida, 8457 (reptiles + birds) | **23** | 473 |
+  | Aves, 8782 (⊂ Sauropsida) | **1** | 363 |
+  | Amphibia, 8292 | **4** | 28 |
+  | Mammalia, 40674 | 274 | 591 |
+
+  The control is non-zero in every clade, so none of the small `agfg2` numbers is a
+  rejected query. The avian asymmetry is real and worth noting — **1** avian `agfg2`
+  against **363** avian `agfg1` — but it is a symbol count, and the caveat below applies
+  to it as much as to the positive result.
 
 A symbol census is a name-matching pipeline's output, not an orthologue count, so on its
 own it would not settle this; combined with the phylogenetic result it is enough to say the
