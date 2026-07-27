@@ -458,6 +458,44 @@ report has been regenerated. Worth stating as a general hazard: **a quote into a
 artifact is a two-way dependency**, and the direction that bites is the one where the
 generator changes and the quote does not.
 
+## Round 5: the same bug's third form, and why it was worth another round
+
+The reviewer found that `better` was computed against the **worst** potassium-bearing
+resolution with no potassium filter — so with two potassium structures at different
+resolutions, the first branch would have emitted *"all N better-resolved structures … contain
+none"* **naming a potassium-bearing structure**. A false sentence, and one that is quoted into
+the review YAML. It is inside the stopping criterion twice over: it misstates a fact and it
+misfires on data other than the current four. Fixed.
+
+What makes this worth recording is that it is **the third form of one confusion** in three
+consecutive rounds:
+
+| round | `better` computed as | wrong because |
+|---|---|---|
+| 3 | structures *without potassium* | says nothing about resolution |
+| 4 | resolution < **worst** K-bearing | a K-bearing structure can sit below the worst |
+| 5 | resolution < **best** K-bearing | correct — "contains none" is then true by construction |
+
+Three attempts at one sentence, each fixing the previous objection and introducing the next.
+Two responses, because a third correction of the same shape would otherwise be inevitable:
+
+1. **Define the set so the claim is true by construction**, rather than filtering after the
+   fact — anything strictly better-resolved than *every* potassium structure cannot contain
+   potassium. The code then **asserts** that property instead of trusting it.
+2. **Extract the clause into a pure function** and unit-test *both* branches on synthetic
+   entries, including the reviewer's exact scenario. The live four structures only ever reach
+   branch 1, so branch 2 had never been executed — and `PDB_ENTRIES` is now derived from
+   UniProt, so the set grows on its own and branch 2 becomes reachable with nobody editing the
+   script. **Untested code that only new data can reach is the worst kind**; deriving the input
+   made the script more correct and simultaneously more exposed.
+
+The regenerated sentence is unchanged for the current data, which is the right outcome again.
+
+Also taken: the docstring/implementation assertion moved out of `--self-test` and into
+`audit()`, so it runs on every invocation like the disjointness assertion (break-tested: it
+now fires from a plain `audit` run); the docstring's `I` entry reordered after `H`; and the
+dead `worst` variable removed by the rewrite.
+
 ## Committed guards
 
 `ADPRH-bioinformatics/audit_adprh_review.py` holds nine invariant checks (A–I) over the

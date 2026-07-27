@@ -25,14 +25,14 @@ Checks
        G2 every term marked ACCEPT on a molecular_function row appears in core_functions,
           unless it is listed in ACCEPT_MF_NOT_CORE with a reason.  Unwritten is not the
           same as passing.
+  H  a review with status COMPLETE must contain no PENDING actions, no TODO summaries
+     and no TODO description.  Found by running this audit against the fetch-gene stub,
+     where every check but G passed on 15 entirely unreviewed rows.
   I  AT LEAST ONE supporting_text on a row must contain a surface form of that row's OWN
      term (the predicate is `any`, not `every` -- a row may legitimately carry a
      corroborating quote about something else alongside the on-point one).  A quote can be
      verbatim, correctly attributed and about a different row; every other gate passes it.
      The declared forms must be pairwise disjoint, which is itself asserted.
-  H  a review with status COMPLETE must contain no PENDING actions, no TODO summaries
-     and no TODO description.  Found by running this audit against the fetch-gene stub,
-     where every check but G passed on 15 entirely unreviewed rows.
 
 Run:  uv run python audit_adprh_review.py
       uv run python audit_adprh_review.py --self-test
@@ -321,6 +321,26 @@ def audit(raw: str, data: dict) -> list[str]:
                 "molecular-function row - the exemption is unreachable"
             )
 
+    # ---- self-description: the docstring must enumerate exactly the checks implemented.
+    # Lives here rather than in self_test() so it runs on every invocation, like the
+    # disjointness assertion.  The count drifted onto three prose surfaces at once when
+    # check I was added; this is the one surface that can police itself.
+    src_text = Path(__file__).read_text()
+    documented = set(re.findall(r"(?m)^  ([A-Z])  ", src_text.split('"""')[1]))
+    implemented = set(re.findall(r'problems\.append\(\s*\n?\s*f?"([A-Z])[0-9]?:', src_text))
+    # Check A is enforced by StrictLoader at PARSE time and never reaches `problems`.
+    # Credit it only if the loader demonstrably rejects a duplicate key - established
+    # behaviourally, not by grepping for the class name.
+    try:
+        yaml.load("a: 1\na: 2\n", Loader=StrictLoader)
+    except yaml.constructor.ConstructorError:
+        implemented.add("A")
+    if documented != implemented:
+        problems.append(
+            f"self-description: docstring documents {sorted(documented)} but the code "
+            f"implements {sorted(implemented)}"
+        )
+
     # ---- I: each supporting_text set must be about its own row's term ------------
     # Two terms sharing a surface form would make the check unable to tell them apart on a
     # quote containing that form.  Enforce disjointness rather than trusting the table.
@@ -566,26 +586,6 @@ def self_test() -> int:
     d10["existing_annotations"][0]["review"]["action"] = "PENDING"
     if any(p.startswith("H") for p in audit(raw, d10)):
         failures.append("check H fired on a non-COMPLETE review, where PENDING is legitimate")
-
-    # 9. the docstring's enumerated checks must match the checks actually implemented.
-    # The count drifted onto three prose surfaces after check I was added, so make the one
-    # surface that CAN enforce itself do so.
-    src_text = Path(__file__).read_text()
-    doc = src_text.split('"""')[1]
-    documented = set(re.findall(r"(?m)^  ([A-Z])  ", doc))
-    implemented = set(re.findall(r'problems\.append\(\s*\n?\s*f?"([A-Z])[0-9]?:', src_text))
-    # Check A is enforced by StrictLoader at PARSE time and so never reaches `problems`.
-    # Credit it only if the loader demonstrably rejects a duplicate key - established
-    # behaviourally here, not by grepping for the class name.
-    try:
-        yaml.load("a: 1\na: 2\n", Loader=StrictLoader)
-    except yaml.constructor.ConstructorError:
-        implemented.add("A")
-    if documented != implemented:
-        failures.append(
-            f"docstring documents {sorted(documented)} but the code implements "
-            f"{sorted(implemented)}"
-        )
 
     for f in failures:
         print("SELF-TEST FAIL:", f)

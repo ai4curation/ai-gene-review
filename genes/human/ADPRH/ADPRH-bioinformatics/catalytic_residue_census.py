@@ -268,6 +268,60 @@ def fetch_pdb(pdb_id: str) -> dict:
     }
 
 
+def resolution_clause(entries: list[dict]) -> list[str]:
+    """Sentences relating potassium occupancy to resolution.  Pure, so both branches can be
+    unit-tested on synthetic input - the live data only ever exercises one of them, and the
+    PDB set is now derived from UniProt, so the other becomes reachable without anyone
+    editing this file.
+
+    The subtlety that produced two successive bugs here: "better resolved" and "does not
+    contain potassium" are DIFFERENT properties.  Round 3 computed the first as the second;
+    round 4 computed it against the WORST potassium-bearing resolution, which with two
+    potassium structures at different resolutions would have described a potassium-bearing
+    structure as one that "contains none".  The set is therefore defined against the BEST
+    potassium-bearing resolution, which makes "contains none" true by construction - and that
+    is asserted rather than trusted.
+    """
+    out: list[str] = []
+    unresolved = sorted(e["pdb_id"] for e in entries if e["resolution_A"] is None)
+    if unresolved:
+        # A missing resolution cannot be silently dropped from a resolution argument.
+        out.append(
+            f"Resolution is unavailable for {', '.join(unresolved)}, so they are excluded from "
+            "the resolution comparison below."
+        )
+    known = [e for e in entries if e["resolution_A"] is not None]
+    k_res = [e["resolution_A"] for e in known if e["has_K"]]
+    if not known or not k_res:
+        return out
+    k_best, k_worst = min(k_res), max(k_res)
+    overall_worst = max(e["resolution_A"] for e in known)
+    better = [e for e in known if e["resolution_A"] < k_best]
+    if any(e["has_K"] for e in better):
+        raise AnalysisError(
+            "a structure better resolved than every potassium-bearing one contains potassium; "
+            "the clause below would be false"
+        )
+    ids = sorted(e["pdb_id"] for e in better)
+    tied_without_k = [
+        e for e in known if e["resolution_A"] == overall_worst and not e["has_K"]
+    ]
+    if k_best == k_worst == overall_worst and not tied_without_k:
+        out.append(
+            f"Every structure containing potassium is at the worst resolution in the set "
+            f"({overall_worst} A); all {len(ids)} better-resolved structures "
+            f"({', '.join(ids)}) contain none."
+        )
+    else:
+        span = f"{k_best} A" if k_best == k_worst else f"{k_best}-{k_worst} A"
+        out.append(
+            f"Potassium-containing structures resolve at {span}; "
+            f"{len(ids)} structure(s) ({', '.join(ids) if ids else 'none'}) are better resolved "
+            "than every one of them and contain no potassium."
+        )
+    return out
+
+
 def read_panther_members() -> list[str]:
     if not PANTHER_ENTRIES.exists():
         raise AnalysisError(
@@ -713,51 +767,14 @@ def report(res: dict) -> str:
     entries = res["pdb_entries"]
     mg = [e["pdb_id"] for e in entries if e["has_MG"]]
     k = [e["pdb_id"] for e in entries if e["has_K"]]
-    worst = max(entries, key=lambda e: e["resolution_A"] if e["resolution_A"] is not None else -1)
-    k_res = [e["resolution_A"] for e in entries if e["has_K"]]
     A(
         f"Magnesium is present in **{len(mg)} of {len(entries)}** structures "
         f"({', '.join(mg) if mg else 'none'}). Potassium is present in "
         f"**{len(k)} of {len(entries)}** ({', '.join(k) if k else 'none'})."
     )
-    A("")
-    unresolved = [e["pdb_id"] for e in entries if e["resolution_A"] is None]
-    if unresolved:
-        # A missing resolution cannot be silently dropped from a resolution argument.
-        A(f"Resolution is unavailable for {', '.join(sorted(unresolved))}, so they are excluded here.")
+    for line in resolution_clause(entries):
         A("")
-    if k and k_res and all(r is not None for r in k_res):
-        worst_k = max(k_res)
-        # "Better resolved" must be computed from RESOLUTION, not from "does not contain K" -
-        # the earlier version conflated the two, so a structure tied at the worst resolution
-        # would have been counted as better-resolved.
-        better = sorted(
-            e["pdb_id"]
-            for e in entries
-            if e["resolution_A"] is not None and e["resolution_A"] < worst_k
-        )
-        tied = sorted(
-            e["pdb_id"]
-            for e in entries
-            if e["resolution_A"] is not None and e["resolution_A"] == worst_k and not e["has_K"]
-        )
-        if worst_k == max(
-            e["resolution_A"] for e in entries if e["resolution_A"] is not None
-        ) and not tied:
-            A(
-                f"Every structure containing potassium is at the worst resolution in the set "
-                f"({worst_k} A); all {len(better)} better-resolved structures "
-                f"({', '.join(better)}) contain none."
-            )
-        else:
-            A(
-                f"Potassium-containing structures reach {worst_k} A at best; "
-                f"{len(better)} structure(s) ({', '.join(better) if better else 'none'}) are "
-                f"better resolved"
-                + (f", and {len(tied)} ({', '.join(tied)}) are tied at that resolution "
-                   "without potassium" if tied else "")
-                + "."
-            )
+        A(line)
     A("")
     A("## InterPro signature membership (the annotation route)")
     A("")
@@ -845,6 +862,32 @@ def self_test() -> int:
         problems.append("subject-sequence precondition did not fire on a wrong residue")
     finally:
         CATALYTIC_SITES = saved_sites
+
+    # 8c. resolution_clause: exercise BOTH branches and the failure mode, on synthetic
+    # entries, because the live four only ever reach the first branch.
+    def E(pid, res_, k_):
+        return {"pdb_id": pid, "resolution_A": res_, "has_K": k_, "has_MG": True}
+
+    one = resolution_clause([E("A", 1.9, True), E("B", 1.2, False), E("C", 1.3, False)])
+    if not any("Every structure containing potassium is at the worst resolution" in s for s in one):
+        problems.append(f"resolution_clause branch 1 wrong: {one}")
+    # the reviewer's case: two K structures at different resolutions
+    two = resolution_clause([E("A", 1.9, True), E("B", 1.5, True), E("C", 1.2, False)])
+    if not any("resolve at 1.5-1.9 A" in s for s in two):
+        problems.append(f"resolution_clause branch 2 wrong: {two}")
+    if any("contain none" in s and "all 2" in s for s in two):
+        problems.append(f"resolution_clause branch 2 described a K structure as K-free: {two}")
+    # a non-K structure tied at the worst resolution must not take branch 1
+    tie = resolution_clause([E("A", 1.9, True), E("B", 1.9, False), E("C", 1.2, False)])
+    if any("Every structure containing potassium" in s for s in tie):
+        problems.append(f"resolution_clause took branch 1 despite a tie: {tie}")
+    # a null resolution must be reported, not silently dropped
+    nul = resolution_clause([E("A", 1.9, True), E("B", None, False), E("C", 1.2, False)])
+    if not any("Resolution is unavailable for B" in s for s in nul):
+        problems.append(f"resolution_clause dropped a null resolution: {nul}")
+    # no potassium anywhere -> no clause at all, rather than a vacuous sentence
+    if resolution_clause([E("A", 1.9, False), E("B", 1.2, False)]) != []:
+        problems.append("resolution_clause emitted a clause with no potassium present")
 
     # 8b. the PDB set must be derived, and must fail loudly on an accession with none
     ids = pdb_ids_of(SUBJECT)
