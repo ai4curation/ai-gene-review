@@ -7,8 +7,10 @@ Motivated by three recurring failures in this campaign:
 * `source_entities` silently drifting from the GOA WITH/FROM field on 3 of 3 genes that
   maintained the list by hand -- so it is rebuilt from the TSV and compared;
 * a duplicate YAML key silently discarding data before any quote gate can see it -- so the
-  file is loaded once with a strict loader that rejects repeated keys, and the raw text is
-  counted independently of the parsed object.
+  file is loaded with a strict loader that rejects repeated keys. Note that StrictLoader
+  alone closes that case: the separate raw-vs-parsed count below is NOT a duplicate-key
+  guard (run() returns early on the loader error and never reaches it) and earns its place
+  on different grounds, spelled out in check_raw_vs_parsed's own docstring.
 
 Design rules learned the hard way: a check appends to `problems` and never raises, so one
 failure cannot abort the rest of the harness; and `--self-test` mutates the document to
@@ -272,18 +274,70 @@ def check_sweep_exclusions_disclosed(raw_review: str, notes: str,
             )
 
 
-_SWEEP_MODULE_CACHE: dict[str, object] = {}
+_MODULE_CACHE: dict[str, object] = {}
 
 
-def _load_sweep_module(path: Path):
-    """Import the sweep module once per process; run() is called ~15x by --self-test."""
+def _load_local_module(path: Path):
+    """Import a sibling analysis script once per process (run() is called ~15x by
+    --self-test), returning None if it cannot be imported.
+
+    Two non-obvious requirements. The module must be registered in ``sys.modules`` before
+    execution, because ``@dataclass`` resolves its class's ``__module__`` through it and
+    dies with an opaque AttributeError otherwise. And an import failure is returned rather
+    than raised, because a check that raises aborts every later check in this harness --
+    the rule this file states in its own header.
+    """
     key = str(path)
-    if key not in _SWEEP_MODULE_CACHE:
-        spec = importlib.util.spec_from_file_location("_coq_sweep", path)
+    if key not in _MODULE_CACHE:
+        name = f"_audit_{path.stem}"
+        spec = importlib.util.spec_from_file_location(name, path)
         mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        _SWEEP_MODULE_CACHE[key] = mod
-    return _SWEEP_MODULE_CACHE[key]
+        sys.modules[name] = mod
+        try:
+            spec.loader.exec_module(mod)
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            sys.modules.pop(name, None)
+            _MODULE_CACHE[key] = None
+            _MODULE_CACHE[key + ":error"] = f"{type(exc).__name__}: {exc}"
+        else:
+            _MODULE_CACHE[key] = mod
+    return _MODULE_CACHE[key]
+
+
+def _import_problem(path: Path) -> str:
+    return (f"could not import {path.name}: "
+            f"{_MODULE_CACHE.get(str(path) + ':error', 'unknown error')}")
+
+
+def check_prose_join_helper(problems: list[str]) -> None:
+    """Pin the motif report's prose list-join at 0/1/2/3 items.
+
+    Three-plus is unreachable at the current alignment membership, which is exactly why a
+    regression there would ship unnoticed -- the same reason the bare ' and '.join it
+    replaced survived several rounds. Cheap to pin, so pinned in the tree rather than in a
+    commit message.
+    """
+    motif = HERE / "ubib_motif_analysis.py"
+    if not motif.exists():
+        problems.append(f"motif script missing: {motif.name}")
+        return
+    mod = _load_local_module(motif)
+    if mod is None:
+        problems.append(_import_problem(motif))
+        return
+    fn = getattr(mod, "_english_list", None)
+    if fn is None:
+        problems.append("motif script no longer defines _english_list")
+        return
+    for items, expected in [
+        ([], "none"),
+        (["A"], "A"),
+        (["A", "B"], "A and B"),
+        (["A", "B", "C"], "A, B and C"),
+    ]:
+        got = fn(items)
+        if got != expected:
+            problems.append(f"prose join: {items} -> {got!r}, expected {expected!r}")
 
 
 def check_false_friend_helper(problems: list[str]) -> None:
@@ -299,7 +353,10 @@ def check_false_friend_helper(problems: list[str]) -> None:
     if not sweep.exists():
         problems.append(f"sweep script missing: {sweep.name}")
         return
-    mod = _load_sweep_module(sweep)
+    mod = _load_local_module(sweep)
+    if mod is None:
+        problems.append(_import_problem(sweep))
+        return
     fn = getattr(mod, "matched_only_via_quinoline", None)
     if fn is None:
         problems.append(
@@ -385,6 +442,7 @@ def run(review_text: str | None = None, notes_text: str | None = None) -> list[s
     # the helper check inspects the sweep module, and the raw/parsed check now inspects
     # whichever document run() was given.
     check_false_friend_helper(problems)
+    check_prose_join_helper(problems)
     check_raw_vs_parsed(raw, problems)
     return problems
 

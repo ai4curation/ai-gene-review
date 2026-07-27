@@ -471,7 +471,8 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
                 "The adjacent `Arich_A1` position splits the same way, so both projected "
                 "A-rich columns support the pairing."
             )
-        elif crossers:
+        elif crossers and expected_gly <= set(a1_gly):
+            # Only say "the same pair plus X" when the pair really is present at A1.
             L.append(
                 f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
                 f"position, Gly is carried by {len(a1_gly)} proteins: the same "
@@ -480,12 +481,21 @@ def render_results_md(out, entries, rows, idents, idents_core) -> str:
                 f"claim is specifically about the A339-equivalent position and not about "
                 f"the A-rich loop as a whole."
             )
+        elif crossers:
+            # The pair is NOT wholly present at A1, so describe the set as it is rather
+            # than as "the pair plus" anything.
+            L.append(
+                f"**Only this column is branch-diagnostic.** At the adjacent `Arich_A1` "
+                f"position, Gly is carried by {_english_list(sorted(a1_gly))}, which is "
+                f"neither the A339-equivalent Gly set nor a subset of it, so that column "
+                f"cuts across the pairing. The claim is specifically about the "
+                f"A339-equivalent position and not about the A-rich loop as a whole."
+            )
         else:
             L.append(
                 f"At the adjacent `Arich_A1` position Gly is carried by "
-                f"{', '.join(a1_gly) if a1_gly else 'no protein'}, a subset of the "
-                f"A339-equivalent Gly set, so that column neither supports nor contradicts "
-                f"the pairing."
+                f"{_english_list(sorted(a1_gly))}, a subset of the A339-equivalent Gly "
+                f"set, so that column neither supports nor contradicts the pairing."
             )
     else:
         L.append(
