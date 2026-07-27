@@ -502,14 +502,34 @@ Subcellular additional location:  Nucleoli fibrillar center, Nuclear bodies
   identical-row comparison this campaign recommends was run against it.
 
   The two reviews were derived independently and **converge on everything that
-  matters**, including the schema question this gene was flagged for: both chose
-  `GO:0030674 protein-macromolecule adaptor activity` as the scaffold's own
-  `molecular_function`, both put `GO:0003711 transcription elongation factor activity`
-  in `contributes_to_molecular_function` rather than claiming it for the subunit, both
-  use `GO:0032783` as `in_complex`, both propose `GO:0006368` + `GO:0032968` as the
-  process terms, and both resolve `GO:0050877 nervous system process` to
+  matters**, including the schema question this gene was flagged for. Measured after both
+  had taken their review rounds, **seven `core_functions` assertions are identical**:
+
+  ```
+  molecular_function                  GO:0030674  protein-macromolecule adaptor activity
+  contributes_to_molecular_function   GO:0003711  transcription elongation factor activity
+  contributes_to_molecular_function   GO:0003712  transcription coregulator activity
+  in_complex                          GO:0032783  super elongation complex
+  directly_involved_in                GO:0006368  transcription elongation by RNA polymerase II
+  directly_involved_in                GO:0032968  positive regulation of transcription elongation by RNA pol II
+  directly_involved_in                GO:0006355  regulation of DNA-templated transcription
+  ```
+
+  That includes the whole of the complex-versus-subunit question the gene was flagged
+  for: **both reviews put the scaffold's bridging activity in `molecular_function` and
+  the complex's elongation activity in `contributes_to`**, and both ended with
+  `GO:0003712` in `contributes_to` as well — which in my case took a review round to
+  reach and in AFF1's did not. Both also resolve `GO:0050877 nervous system process` to
   `KEEP_AS_NON_CORE` with `NO_FAILURE_NON_CORE`. On the five shared IBA rows they agree
   on four.
+
+  **The strongest single cross-check is a disagreement that should exist.** Both reviews
+  now annotate osteoblast differentiation from the same paper, `PMID:28955517`, and they
+  annotate it with **opposite-signed terms** — AFF1 `GO:0045668 negative regulation`,
+  AFF4 `GO:0045669 positive regulation`. That is exactly what the paper reports
+  (depleting AFF1 increases mineralisation, depleting AFF4 decreases it), it was reached
+  independently on each side, and it is the kind of agreement no single review can
+  produce.
 
   **They differ on `GO:0006354 DNA-templated transcription elongation`**: AFF1 MODIFYs it
   to `GO:0006368`; this review ACCEPTs it and adds `GO:0006368` as a separate `NEW` row.
