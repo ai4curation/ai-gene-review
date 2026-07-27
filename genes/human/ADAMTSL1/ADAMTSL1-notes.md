@@ -385,6 +385,17 @@ It is the ACBD3 lesson (a claim asserted at N sites with no generation relations
 them) in a review that had read that lesson and still reproduced it five times. The transferable
 part is not "be careful": it is that **the unit of correction has to be the document, not the
 field**, and a retraction list scanned over all prose is cheap enough to run on every round.
+
+**And the sweep is only half the control.** The commit that fixed instances 1-5 produced a
+sixth of the same shape: a `(data not shown)` caveat added to the reference `findings` and to
+the row reason but not to the nested BP boundary. A retraction list structurally cannot catch
+that — it looks for **old** phrasing left standing, whereas this is **new** phrasing propagated
+to some siblings and not others. The complementary check has to run at write time and enumerate
+the siblings: for the C-terminal widening the sibling set is `references.findings[1]`,
+`existing_annotations[0].review.reason` and
+`existing_annotations[0].review.knowledge_gaps[0].boundary`, and the edit now asserts that both
+the claim *and* its caveat appear in all three before it is accepted. Two directions, two
+checks: sweep for what should be gone, assert co-occurrence for what should be everywhere.
 Note the notes file legitimately still contains three of those strings, because explaining why a
 phrasing was retracted requires quoting it — so the sweep belongs on the review YAML, not on
 prose that discusses it.
