@@ -499,14 +499,43 @@ def _intact_all(acc: str) -> List[Dict[str, Any]]:
     return out
 
 
-def _intact_degree(acc: str) -> int:
-    partners: set[str] = set()
+#: IntAct MI method names that are sub-methods of one yeast two-hybrid pipeline.
+Y2H_METHODS = {
+    "two hybrid array",
+    "two hybrid prey pooling approach",
+    "validated two hybrid",
+    "two hybrid",
+    "two hybrid pooling approach",
+}
+
+
+def _norm_intact_id(value: Optional[str]) -> Optional[str]:
+    """Strip IntAct's ``" (uniprotkb)"`` / ``" (intact)"`` database suffix.
+
+    Without this an accession never equals the plain UniProt accession, so a
+    lookup keyed on the raw value silently finds nothing - and "no non-Y2H
+    method recorded" would then be indistinguishable from "partner not found",
+    which is the failure this whole check exists to rule out.
+    """
+    if not value:
+        return None
+    return value.split(" (", 1)[0].strip()
+
+
+def _intact_partner_methods(acc: str) -> Dict[str, set]:
+    """Map each distinct interaction partner of ``acc`` to its detection methods."""
+    per: Dict[str, set] = defaultdict(set)
     for i in _intact_all(acc):
-        for key in ("idA", "idB"):
-            v = i.get(key)
-            if v and v != acc:
-                partners.add(v)
-    return len(partners)
+        a, b = _norm_intact_id(i.get("idA")), _norm_intact_id(i.get("idB"))
+        other = b if a == acc else a
+        if not other or other == acc:
+            continue
+        per[other].add(i.get("detectionMethod"))
+    return per
+
+
+def _intact_degree(acc: str) -> int:
+    return len(_intact_partner_methods(acc))
 
 
 def check_intact_partners() -> Dict[str, Any]:
@@ -525,6 +554,27 @@ def check_intact_partners() -> Dict[str, Any]:
         if p.endswith("(pubmed)")
     )
 
+    # Per-pair, not per-gene. The gene-level method counter also covers partners
+    # that are NOT in GOA (a 15-partner anti-tag-coIP set and one BioID hit), so
+    # it cannot answer "is there an orthogonal assay for THESE pairs?".
+    per_partner = _intact_partner_methods(ACC)
+    missing = [a for a in partners if a not in per_partner]
+    if missing:
+        raise InputError(
+            f"GOA IPI partners {missing} were not found in ADAMTSL3's IntAct record. "
+            "A partner that cannot be located is not a partner with no orthogonal "
+            "evidence - resolve the identifier mismatch before reading anything "
+            "into the method list."
+        )
+    per_partner_methods = {a: sorted(m for m in per_partner[a] if m) for a in partners}
+    non_y2h = {
+        a: sorted(set(m) - Y2H_METHODS) for a, m in per_partner_methods.items()
+        if set(m) - Y2H_METHODS
+    }
+    non_goa_partners = {
+        a: sorted(m for m in ms if m) for a, ms in per_partner.items() if a not in partners
+    }
+
     fields = "accession,id,protein_name,gene_names,length,reviewed,cc_subcellular_location"
     rows = []
     for acc in partners:
@@ -538,8 +588,11 @@ def check_intact_partners() -> Dict[str, Any]:
     return {
         "n_ipi_rows": len(ipi),
         "n_distinct_partners": len(partners),
-        "adamtsl3_intact_distinct_partners": _intact_degree(ACC),
-        "detection_methods": dict(methods),
+        "adamtsl3_intact_distinct_partners": len(per_partner),
+        "detection_methods_gene_level": dict(methods),
+        "per_partner_methods_goa_partners": per_partner_methods,
+        "goa_partners_with_non_y2h_method": non_y2h,
+        "non_goa_partners_and_their_methods": non_goa_partners,
         "publications": dict(pubs),
         "partner_degree_median": median,
         "partners": rows,
@@ -757,9 +810,15 @@ def render_results(res: Dict[str, Any]) -> str:
     a("")
     a(
         f"{i['n_ipi_rows']} IPI rows over {i['n_distinct_partners']} distinct "
-        f"partners. IntAct detection methods across all of ADAMTSL3's records: "
-        + ", ".join(f"{k} x{v}" for k, v in sorted(i["detection_methods"].items()))
+        f"partners. Gene-level IntAct detection-method counts for P82987: "
+        + ", ".join(f"{k} x{v}" for k, v in sorted(i["detection_methods_gene_level"].items()))
         + "."
+    )
+    a("")
+    a(
+        "**That gene-level tally must not be read as evidence about these 13 pairs.** "
+        "It also covers partners that are not in GOA. Disaggregating per pair is what "
+        "answers the question, and it is done below."
     )
     a("")
     a(
@@ -769,19 +828,38 @@ def render_results(res: Dict[str, Any]) -> str:
     a("")
     a(
         f"ADAMTSL3 itself has {i['adamtsl3_intact_distinct_partners']} distinct "
-        f"IntAct partners; the median for its 13 annotated partners is "
-        f"{i['partner_degree_median']}."
+        f"IntAct partners; the median for its {i['n_distinct_partners']} annotated "
+        f"partners is {i['partner_degree_median']}."
     )
     a("")
-    a("| partner | length | protein name | UniProt subcellular location | distinct IntAct partners |")
-    a("|---|---|---|---|---|")
+    a("| partner | length | protein name | UniProt subcellular location | IntAct methods for THIS pair | distinct IntAct partners |")
+    a("|---|---|---|---|---|---|")
     for r in sorted(i["partners"], key=lambda x: -x["intact_distinct_partners"]):
         gene = "/".join(g for g in r["gene"] if g) or r["accession"]
         loc = "; ".join(r["subcellular_locations"]) or "not annotated"
+        meth = "; ".join(i["per_partner_methods_goa_partners"][r["accession"]])
         a(
             f"| {gene} ({r['accession']}) | {r['length']} aa | {r['protein_name']} | "
-            f"{loc} | {r['intact_distinct_partners']} |"
+            f"{loc} | {meth} | {r['intact_distinct_partners']} |"
         )
+    a("")
+    nony2h = i["goa_partners_with_non_y2h_method"]
+    a(
+        f"**GOA partners with any non-Y2H detection method: "
+        f"{len(nony2h)} of {i['n_distinct_partners']}** "
+        + (f"({nony2h})" if nony2h else "- every one of these pairs rests on yeast "
+           "two-hybrid sub-methods alone, with no orthogonal assay.")
+    )
+    a("")
+    a(
+        f"For contrast, the {len(i['non_goa_partners_and_their_methods'])} IntAct "
+        "partners that are **not** in GOA are where the other methods live: "
+        + ", ".join(
+            sorted({m for ms in i["non_goa_partners_and_their_methods"].values() for m in ms})
+        )
+        + ". These are separate publications and are out of scope for this review, but "
+        "they are why the gene-level method counter cannot settle the question."
+    )
     a("")
 
     a("## 4. Review coverage against the GOA table")

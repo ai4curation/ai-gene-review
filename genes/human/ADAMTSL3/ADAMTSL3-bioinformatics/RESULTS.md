@@ -73,30 +73,36 @@ The specific terms those donors hold experimentally: GO:0001527, GO:0005604, GO:
 
 ## 3. The `GO:0005515` partner set
 
-15 IPI rows over 13 distinct partners. IntAct detection methods across all of ADAMTSL3's records: anti tag coip x15, proximity-dependent biotin identification x1, two hybrid array x16, two hybrid prey pooling approach x16, validated two hybrid x16.
+15 IPI rows over 13 distinct partners. Gene-level IntAct detection-method counts for P82987: anti tag coip x15, proximity-dependent biotin identification x1, two hybrid array x16, two hybrid prey pooling approach x16, validated two hybrid x16.
+
+**That gene-level tally must not be read as evidence about these 13 pairs.** It also covers partners that are not in GOA. Disaggregating per pair is what answers the question, and it is done below.
 
 Every partner resolves to a reviewed Swiss-Prot entry at canonical length: True (no TrEMBL/ORFeome substitutions).
 
-ADAMTSL3 itself has 31 distinct IntAct partners; the median for its 13 annotated partners is 189.
+ADAMTSL3 itself has 30 distinct IntAct partners; the median for its 13 annotated partners is 188.
 
-| partner | length | protein name | UniProt subcellular location | distinct IntAct partners |
-|---|---|---|---|---|
-| CYSRT1 (A8MQ03) | 144 aa | Cysteine-rich tail protein 1 | Cornified envelope | 517 |
-| MDFI (Q99750) | 246 aa | MyoD family inhibitor | Nucleus; Cytoplasm | 484 |
-| KRT40 (Q6A162) | 431 aa | Keratin, type I cytoskeletal 40 | not annotated | 449 |
-| KRTAP10-8 (P60410) | 259 aa | Keratin-associated protein 10-8 | not annotated | 416 |
-| NOTCH2NLA (Q7Z3S9) | 236 aa | Notch homolog 2 N-terminal-like protein A | Secreted; Cytoplasm | 278 |
-| GLRX3 (O76003) | 335 aa | Glutaredoxin-3 | Cytoplasm, cytosol; Cytoplasm, cell cortex; Cytoplasm, myofibril, sarcomere, Z line | 191 |
-| KRTAP1-1 (Q07627) | 177 aa | Keratin-associated protein 1-1 | not annotated | 189 |
-| KRTAP12-3 (P60328) | 96 aa | Keratin-associated protein 12-3 | not annotated | 142 |
-| KRTAP2-4 (Q9BYR9) | 128 aa | Keratin-associated protein 2-4 | not annotated | 90 |
-| KRTAP3-2 (Q9BYR7) | 98 aa | Keratin-associated protein 3-2 | not annotated | 85 |
-| KRTAP10-6 (P60371) | 365 aa | Keratin-associated protein 10-6 | not annotated | 78 |
-| KRTAP5-7 (Q6L8G8) | 165 aa | Keratin-associated protein 5-7 | not annotated | 62 |
-| KRTAP2-3 (P0C7H8) | 128 aa | Keratin-associated protein 2-3 | not annotated | 11 |
+| partner | length | protein name | UniProt subcellular location | IntAct methods for THIS pair | distinct IntAct partners |
+|---|---|---|---|---|---|
+| CYSRT1 (A8MQ03) | 144 aa | Cysteine-rich tail protein 1 | Cornified envelope | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 516 |
+| MDFI (Q99750) | 246 aa | MyoD family inhibitor | Nucleus; Cytoplasm | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 483 |
+| KRT40 (Q6A162) | 431 aa | Keratin, type I cytoskeletal 40 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 448 |
+| KRTAP10-8 (P60410) | 259 aa | Keratin-associated protein 10-8 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 415 |
+| NOTCH2NLA (Q7Z3S9) | 236 aa | Notch homolog 2 N-terminal-like protein A | Secreted; Cytoplasm | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 276 |
+| GLRX3 (O76003) | 335 aa | Glutaredoxin-3 | Cytoplasm, cytosol; Cytoplasm, cell cortex; Cytoplasm, myofibril, sarcomere, Z line | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 190 |
+| KRTAP1-1 (Q07627) | 177 aa | Keratin-associated protein 1-1 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 188 |
+| KRTAP12-3 (P60328) | 96 aa | Keratin-associated protein 12-3 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 141 |
+| KRTAP2-4 (Q9BYR9) | 128 aa | Keratin-associated protein 2-4 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 89 |
+| KRTAP3-2 (Q9BYR7) | 98 aa | Keratin-associated protein 3-2 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 84 |
+| KRTAP10-6 (P60371) | 365 aa | Keratin-associated protein 10-6 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 77 |
+| KRTAP5-7 (Q6L8G8) | 165 aa | Keratin-associated protein 5-7 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 61 |
+| KRTAP2-3 (P0C7H8) | 128 aa | Keratin-associated protein 2-3 | not annotated | two hybrid array; two hybrid prey pooling approach; validated two hybrid | 10 |
+
+**GOA partners with any non-Y2H detection method: 0 of 13** - every one of these pairs rests on yeast two-hybrid sub-methods alone, with no orthogonal assay.
+
+For contrast, the 17 IntAct partners that are **not** in GOA are where the other methods live: anti tag coip, proximity-dependent biotin identification, two hybrid array, two hybrid prey pooling approach, validated two hybrid. These are separate publications and are out of scope for this review, but they are why the gene-level method counter cannot settle the question.
 
 ## 4. Review coverage against the GOA table
 
-GOA rows: 18. Reviewed rows derived from GOA: 18. Reviewer-proposed (`NEW`) rows: 3. Coverage OK: **True**.
+GOA rows: 18. Reviewed rows derived from GOA: 18. Reviewer-proposed (`NEW`) rows: 4. Coverage OK: **True**.
 
-Actions: ACCEPT x2, KEEP_AS_NON_CORE x1, MARK_AS_OVER_ANNOTATED x15, NEW x3.
+Actions: ACCEPT x2, KEEP_AS_NON_CORE x1, MARK_AS_OVER_ANNOTATED x15, NEW x4.

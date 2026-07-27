@@ -204,8 +204,27 @@ the detection methods across ADAMTSL3's records are `two hybrid array` ×16,
 `two hybrid prey pooling approach` ×16 and `validated two hybrid` ×16 — **three sub-methods
 of the same Y2H pipeline**, not three independent assays. So UniProt's `NbExp=3` (and
 `NbExp=6` for the two partners found in both screens) counts Y2H variants, not orthogonal
-confirmation. MI-scores are 0.56, or 0.72 for the two that appear in both maps. No
-orthogonal assay exists for any pair.
+confirmation. MI-scores are 0.56, or 0.72 for the two that appear in both maps.
+
+**Corrected after review — the aggregate does not answer the question.** The first version
+of this analysis counted detection methods across ADAMTSL3's *whole* IntAct record and then
+asserted that no orthogonal assay existed for these pairs. That was a non sequitur, and the
+committed `results.json` refuted it at the aggregate level: the same counter records
+`anti tag coip` ×15 and one BioID. Disaggregating **per pair** is what settles it, and it
+does so in favour of the claim: **0 of the 13 GOA partners carries any non-Y2H detection
+method**, while the `anti tag coip` and BioID methods belong entirely to the **17** IntAct
+partners that are *not* in GOA (from PMID:40205054 and PMID:39232006, separate publications
+that are not the source of any row reviewed here).
+
+Writing that per-pair check exposed a second, quieter defect. IntAct returns partner
+identifiers with a database suffix — `A8MQ03 (uniprotkb)`, not `A8MQ03` — so a lookup keyed
+on the bare accession matches **nothing**, and "no non-Y2H method recorded" would have been
+indistinguishable from "partner not found". The script now strips the suffix and raises if
+any GOA partner is absent from the IntAct record, because a silent zero is exactly what this
+check exists to rule out. Normalising the identifiers also merged a few duplicate labels, so
+the degree numbers moved by one apiece: ADAMTSL3's own degree is **30** (was 31) and the
+partner median is **188** (was 189). Small, but they were wrong, and the numbers quoted in
+the review are the corrected ones.
 
 Partner identity, all resolved to reviewed Swiss-Prot entries at canonical length (no
 TrEMBL/ORFeome substitutions — the ACRV1 `Q86WV8` trap checked and negative):
@@ -215,9 +234,9 @@ TrEMBL/ORFeome substitutions — the ACRV1 `Q86WV8` trap checked and negative):
 - **CYSRT1**, a cornified-envelope protein that is itself a KRTAP-network hub
 - **GLRX3** (cytosol), **MDFI** (nucleus/cytoplasm), **NOTCH2NLA**
 
-Quantitatively: the median number of distinct IntAct partners across the 13 is **189**,
-against **31** for ADAMTSL3 itself; six of them (CYSRT1 517, MDFI 484, KRT40 449,
-KRTAP10-8 416, NOTCH2NLA 278, GLRX3 191) are extreme interactome hubs. Only KRTAP2-3 (11)
+Quantitatively: the median number of distinct IntAct partners across the 13 is **188**,
+against **30** for ADAMTSL3 itself; six of them (CYSRT1 516, MDFI 483, KRT40 448,
+KRTAP10-8 415, NOTCH2NLA 276, GLRX3 190) are extreme interactome hubs. Only KRTAP2-3 (10)
 is not.
 
 Compartment argument: ADAMTSL3 has a cleaved signal peptide and is a secreted matrix
@@ -359,6 +378,33 @@ kind:
   madd-4 *is* the functional orthologue discussed in the neural literature. Then
   `gene:mig-6` in UniProt fuzzy-matched **mig-10**, so the script now asserts the returned
   entry carries the exact symbol.
+
+## 12a. Three decisions taken under review, recorded so they are not re-litigated
+
+1. **`GO:0002020 protease binding` added.** The 2 nM SPR interaction with ADAMTS-10 was
+   described in the review but carried no term of its own. It does now, as `ISS` with the
+   same reagent-species caveat as `GO:0050840`. Deliberately *not* an inhibitor term: the
+   contact is with ADAMTS-10's non-catalytic Tsp1 region
+   ([PMID:22242013 "The C-terminal recombinant ADAMTS-10 polypeptide used in the SPR studies represents the noncatalytic region of ADAMTS-10, a region composed primarily of Tsp1 repeats (Figure S3)."]),
+   so nothing has been shown about its activity. The merged ADAMTSL4 review also carries
+   `GO:0002020`, so the paralogues stay consistent.
+
+2. **`P35555` removed from the `GO:0050840` WITH/FROM.** For `ISS` the field takes the
+   sequence-similar entity — mouse `G3UXC7` — and the binding partner belongs there only on
+   an `IPI` upgrade. Worth flagging as a general trap: `supporting_entities` is an
+   unconstrained string list in the schema, so validation passes either way and this can
+   only be caught by reading.
+
+3. **The neuronal role is non-core, and the document now says so once.** An earlier draft
+   listed it in `core_functions` while the annotation row called it non-core — and the
+   `core_functions` entry justified its inclusion with *the same premise* ("the evidence is
+   entirely non-human") that the row used to exclude it. The `core_functions` entry has been
+   removed and the annotation row is the single statement of the position: the direct
+   evidence is entirely mouse and worm, and the molecular activity behind the DCC effect is
+   unknown and recorded as an `MF_DARK` gap. The biology is still fully present in the gene
+   description, in the annotation row, and in §8 above; its matrix component is carried by
+   `GO:0030198` in core function 1. Note the deletion alone would not have been enough — the
+   contradiction lived in two passages, and both were touched.
 
 ## 13. For whoever reviews ADAMTSL1
 
