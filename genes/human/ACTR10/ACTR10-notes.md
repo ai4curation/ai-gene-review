@@ -306,7 +306,8 @@ subunit-specific activity) and
 
 ## 9. Provenance / process
 
-- affinage deep research ran with `gates_passed: True`, 3 numeric PMID citations, all
+- affinage deep research ran with `self_evaluation_pairwise: win` and clear trust gates,
+  3 numeric PMID citations, all
   three of which were fetched and read in full text. Its narrative is accurate on the
   zebrafish work; its "Affinage mechanism profile" grounding (`GO:0060090 molecular
   adaptor activity`, `GO:0005739 mitochondrion`) was not imported.

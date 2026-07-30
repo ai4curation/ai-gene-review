@@ -10,15 +10,18 @@ Affinage needs no pipeline change: this tool fetches the record and writes
 This is the ONLY Affinage integration the evaluation endorses — a *free precomputed
 first pass for the human backlog* (see ../results/narrative-vs-go.md).
 
-DESIGN PRINCIPLE — the file is a VERBATIM external-provider record, nothing more.
-A ``<GENE>-deep-research-*.md`` file reproduces exactly what the external provider
+DESIGN PRINCIPLE — the file is a faithful, unedited rendering of the provider record,
+nothing more. A ``<GENE>-deep-research-*.md`` file reproduces what the external provider
 returned (like a falcon/perplexity report): the mechanistic narrative, Affinage's own
 GO/Reactome ``mechanism_profile`` grounding, the dated discoveries, and the citations.
-It carries **no AIGR interpretation** — no CAUTION banners, no "these GO terms are
-coarse, do not import them" advice, no adjudication of trust. That curatorial judgment
-is the reviewer's, and it belongs in the gene review's
-``references[].reference_review`` (relevance / correctness / review_notes) and
-``findings`` — NOT in this source file. Mixing the two would launder AIGR's own
+(A few emitted fields are mechanical derivations of that content rather than provider
+fields — ``citation_count`` and the ``## Citations`` list are the union of the discovery
+PMIDs and the ``PMID:NNN`` tokens in the narrative, and ``n_discoveries`` is a count —
+but nothing is edited, summarised or adjudicated.) It carries **no AIGR interpretation**
+— no CAUTION banners, no "these GO terms are coarse, do not import them" advice, no
+adjudication of trust. That curatorial judgment is the reviewer's, and it belongs in the
+gene review's ``references[].reference_review`` (relevance / correctness / review_notes)
+and ``findings`` — NOT in this source file. Mixing the two would launder AIGR's own
 opinion into something that looks like the provider said it.
 
 The tool still HELPS the curator form that judgment: it is HUMAN ONLY (Affinage
@@ -31,10 +34,18 @@ kept OUT of the written file so the file stays a faithful provider record. Only
 factual provenance (source URL, run date, accession, Affinage's own self-eval numbers)
 is recorded in the frontmatter.
 
+Because the written file no longer carries an in-file warning, the safety check lives in
+the TOOL instead: the two *wrong-protein* gates (accession mismatch, non-human organism
+token) are **blocking** — writing such a record into the live ``genes/`` tree is refused
+with a non-zero exit unless ``--force`` is passed — since a file in a gene folder is
+ingested by a later review of that gene. The soft ``pairwise`` signal never blocks; it is
+already in the frontmatter as ``self_evaluation_pairwise``.
+
 Usage:
     python affinage_deep_research.py human GPX4                 # print to stdout
     python affinage_deep_research.py human GPX4 --write         # -> genes/human/GPX4/GPX4-deep-research-affinage.md
-    python affinage_deep_research.py human ADA                  # gate trips -> stderr warning (file stays verbatim)
+    python affinage_deep_research.py human ADA --write          # blocking gate -> refuses to write (use --force)
+    python affinage_deep_research.py human ADA                  # stdout is never gated; warning goes to stderr
 """
 from __future__ import annotations
 
@@ -76,15 +87,30 @@ def local_accession(species: str, gene: str) -> str | None:
     return m.group(1) if m else None
 
 
-def run_gates(gene: str, data: dict, expected_acc: str | None) -> list[str]:
+def _in_gene_tree(dest: Path) -> bool:
+    """True if ``dest`` lands inside the live ``genes/`` tree (where a later review of that
+    gene would ingest it), as opposed to a scratch/results path."""
+    try:
+        dest.resolve().relative_to(REPO / "genes")
+    except ValueError:
+        return False
+    return True
+
+
+def run_gates(gene: str, data: dict, expected_acc: str | None) -> list[tuple[bool, str]]:
     """Compute trust-gate warnings for the OPERATOR (printed to stderr, never written
-    into the file). Returns a list of human-readable strings (empty = all clear).
+    into the file). Returns ``(blocking, message)`` pairs (empty = all clear).
+
+    ``blocking`` marks the two *wrong-protein* gates (accession mismatch, non-human
+    organism token): a record that describes a different protein must not land in a gene
+    folder, where a later review would ingest it. The ``pairwise`` self-signal is a soft
+    signal already present in the frontmatter, so it never blocks.
 
     These are AIGR's judgment of the record, not Affinage's output — so they are
     surfaced to the reviewer as a prompt to record the assessment in the gene review's
-    references[].reference_review, and are deliberately kept out of the verbatim file.
+    references[].reference_review, and are deliberately kept out of the provider file.
     """
-    cautions: list[str] = []
+    cautions: list[tuple[bool, str]] = []
     up = (data.get("prefetch_data") or {}).get("uniprot") or {}
     aff_acc = up.get("accession")
     ev = data.get("evaluation") or {}
@@ -93,32 +119,32 @@ def run_gates(gene: str, data: dict, expected_acc: str | None) -> list[str]:
     model = (data.get("timeline") or {}).get("current_model", "") or ""
 
     if pairwise and pairwise != "win":
-        cautions.append(
+        cautions.append((False,
             f"Affinage's own head-to-head self-evaluation scored this record "
             f"`pairwise = {pairwise}` (not `win`) vs the curated UniProt reference — "
-            f"treat the narrative with extra scepticism.")
+            f"treat the narrative with extra scepticism."))
     if expected_acc and aff_acc and expected_acc != aff_acc:
-        cautions.append(
+        cautions.append((True,
             f"Accession mismatch: local review uses `{expected_acc}` but the Affinage "
-            f"record's prefetch UniProt accession is `{aff_acc}`.")
+            f"record's prefetch UniProt accession is `{aff_acc}`."))
     opening = (model[:220] + " " + narr[:220]).lower()
     hit = next((t for t in NONHUMAN_TOKENS if t in opening), None)
     if hit:
-        cautions.append(
+        cautions.append((True,
             f"Possible symbol collision: the narrative's opening names a non-human "
             f"context (\"{hit}\") despite a human record — verify the narrative "
-            f"describes human {gene} and not a same-symbol protein (cf. the ADA case).")
+            f"describes human {gene} and not a same-symbol protein (cf. the ADA case)."))
     return cautions
 
 
-def render(species: str, gene: str, data: dict, expected_acc: str | None) -> str:
-    """Render the Affinage record VERBATIM as a deep-research source file.
+def render(species: str, gene: str, data: dict) -> str:
+    """Render the Affinage record as a deep-research source file.
 
-    This is a faithful reproduction of what Affinage returned — provider metadata,
+    This is a faithful, unedited rendering of what Affinage returned — provider metadata,
     the mechanistic narrative, Affinage's own GO/Reactome grounding, dated findings,
-    and citations. It carries no AIGR interpretation by design (see module docstring):
-    trust-gate judgment is surfaced separately (stderr) and recorded by the reviewer in
-    the gene review's ``references[].reference_review``, not here.
+    and citations. It does no trust work and carries no AIGR interpretation by design
+    (see module docstring): trust-gate judgment is surfaced separately (stderr) and
+    recorded by the reviewer in the gene review's ``references[].reference_review``.
     """
     tl = data.get("timeline") or {}
     nar = data.get("narrative") or {}
@@ -199,6 +225,10 @@ def main() -> None:
     ap.add_argument("--write", action="store_true",
                     help="Write to genes/<species>/<GENE>/<GENE>-deep-research-affinage.md")
     ap.add_argument("--out", help="Explicit output path (overrides --write location)")
+    ap.add_argument("--force", action="store_true",
+                    help="Write even if a blocking trust gate (accession mismatch / non-human "
+                         "organism token) trips. Use only when you have verified the record "
+                         "really does describe this gene.")
     args = ap.parse_args()
 
     if args.species.lower() != "human":
@@ -213,31 +243,46 @@ def main() -> None:
         sys.exit(f"❌ no Affinage record content for {args.gene}")
 
     expected = args.accession or local_accession(args.species, args.gene)
-    doc = render(args.species, args.gene, data, expected)
+    doc = render(args.species, args.gene, data)
 
     # Trust gates are a reminder to the reviewer, printed to stderr — never written into
-    # the verbatim provider file. Record the resulting judgment in the gene review's
+    # the provider file. Record the resulting judgment in the gene review's
     # references[].reference_review (relevance / correctness / review_notes).
     cautions = run_gates(args.gene, data, expected)
     if cautions:
         print(f"⚠️  {args.gene}: trust gate(s) tripped — record this in the review's "
               f"reference_review, NOT in the deep-research file:", file=sys.stderr)
-        for c in cautions:
-            print(f"    - {c}", file=sys.stderr)
+        for blocking, c in cautions:
+            print(f"    - {'[BLOCKING] ' if blocking else ''}{c}", file=sys.stderr)
     else:
         print(f"✓  {args.gene}: trust gates clear "
               f"(still record your own reference_review in the review).", file=sys.stderr)
 
     if args.out:
-        Path(args.out).write_text(doc)
-        print(f"wrote {args.out}")
+        dest = Path(args.out)
     elif args.write:
         dest = REPO / "genes" / args.species / args.gene / f"{args.gene}-deep-research-affinage.md"
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(doc)
-        print(f"wrote {dest}")
     else:
         print(doc)
+        return
+
+    # The written file carries no in-file warning, so the wrong-protein gates are enforced
+    # here instead: a record describing a different protein must not land in a gene folder,
+    # where a later review of that gene would ingest it as a source.
+    blocking = [c for is_blocking, c in cautions if is_blocking]
+    if blocking and _in_gene_tree(dest) and not args.force:
+        sys.exit(
+            f"❌ refusing to write {dest}: {len(blocking)} blocking trust gate(s) tripped "
+            f"(see stderr above). This record may describe a different protein, and a file in "
+            f"a gene folder is ingested by a later review of that gene. Verify the record "
+            f"first; pass --force to write anyway, or --out <path> to keep it outside genes/."
+        )
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(doc)
+    if blocking:
+        print(f"⚠️  wrote {dest} despite {len(blocking)} blocking gate(s) (--force)", file=sys.stderr)
+    print(f"wrote {dest}")
 
 
 if __name__ == "__main__":

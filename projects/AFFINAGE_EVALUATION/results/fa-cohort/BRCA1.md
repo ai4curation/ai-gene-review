@@ -1,6 +1,6 @@
 # BRCA1 (FANCS) — AIGR vs Affinage
 
-**Affinage record:** run 2026-06-09 · 22 discoveries · self-eval pairwise = **tie** (CAUTION) · faith 100% · gates **not** passed (tie gate tripped).
+**Affinage record:** run 2026-06-09 · 22 discoveries · self-eval pairwise = **tie** · faith 100% · trust gate tripped at generation time (the `tie` gate).
 
 The Affinage record for BRCA1 is a strong, PMID-dense (22 citations) mechanistic narrative that
 correctly centers BRCA1 on error-free homologous recombination as a RING/BARD1 E3-ligase tumor
@@ -34,7 +34,7 @@ result that BRCA1/BARD1 ligase activity is *not* essential in vivo for FANCD2 mo
 | ATR-Ser1423 phosphorylation, CRM1/p53 nuclear export | Emphasized as BRCA1 biology (PMID:11114888, 15087457) | Not annotated as BRCA1 function | **AIGR right to exclude.** These describe regulation *of* BRCA1 (BRCA1 as substrate / its localization control), not molecular functions/processes executed by BRCA1. Out of scope. |
 | Transcriptional targets (SIRT1, ERα, VDAC3/GPX4 ferroptosis, BRCA1/E2F1/Rb autorepression) | Presented alongside core roles (PMID:18851829, 19887647, 38552003, 20068145) | Transcriptional/metabolic roles already KEEP_AS_NON_CORE or MARK_AS_OVER_ANNOTATED | **AIGR right.** These are peripheral/tissue-specific or indirect (the ferroptosis and atherosclerosis links are downstream); AIGR's non-core/over-annotated treatment is the correct altitude. No change. |
 
-## Was the CAUTION warranted?
+## Was the trust-gate flag warranted?
 
 **Mildly warranted, but the narrative held up well.** The `pairwise = tie` self-eval almost certainly
 reflects that BRCA1's curated UniProt reference is itself exhaustive (BRCA1 is among the most-studied
@@ -71,11 +71,11 @@ conservative bar for a high-quality already-QA'd review.
 
 AIGR and Affinage agree on BRCA1's core RING/BARD1 E3-ligase and homologous-recombination biology, and
 Affinage's narrative was factually clean under extra scrutiny. Its coarse `mechanism_profile` GO layer
-is, as the CAUTION implies, the untrustworthy part — one wrong-branch RNA-catalytic term and a mis-
+is, as the flag implies, the untrustworthy part — one wrong-branch RNA-catalytic term and a mis-
 branched ligase parent that were correctly not imported. Affinage's real value was its dense, well-
 anchored narrative supplying three canonical primary papers — Nacson 2020 (separation-of-function HR
 alleles), Zong 2019 (RNF168-redundant PALB2 loading), and Hu 2021 (cryo-EM H2A-K127 ubiquitylation
 opposing 53BP1) — that the review had under-cited. These were incorporated conservatively as added
 references + verbatim `supported_by` on existing annotations, with no change to any curation decision,
-no reversal of the aggressive protein-binding REMOVEs, and no new terms. The **CAUTION was warranted as
-a flag against the GO layer but not against the prose.** File remains ✓ Valid.
+no reversal of the aggressive protein-binding REMOVEs, and no new terms. The **flag was warranted
+against the GO layer but not against the prose.** File remains ✓ Valid.

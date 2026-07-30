@@ -486,7 +486,7 @@ cytoskeleton.
 
 ## 11. Things the affinage record got right, and its limits
 
-`gates_passed: True`. Its central claim — ACTR1B as a stoichiometric minor
+`self_evaluation_pairwise: win`, trust gates clear. Its central claim — ACTR1B as a stoichiometric minor
 subunit of 20S dynactin at ~1:15 versus alpha, with no free pool, from
 PMID:7696711 — checks out verbatim against the abstract (§1); the direction of
 the ratio is quoted the other way round in the source (15:1 alpha:beta) but the

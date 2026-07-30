@@ -68,7 +68,8 @@ membership is captured; what the bare binding rows add is the specific partner i
 
 ## Provider assessment
 
-The best affinage record of the campaign so far: `gates_passed: True`, `pairwise: win`, and the
+The best affinage record of the campaign so far: `self_evaluation_pairwise: win` with clear
+trust gates, and the
 narrative correctly foregrounds the substrate switch — *"biliverdin/bilirubin export rather than
 direct ALA or dALA transport is the established substrate axis"*. It also assembles the
 cardiolipin dependence, the glutathionylation at Cys547, the R232/R295 ATPase-stimulation
