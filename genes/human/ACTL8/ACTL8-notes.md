@@ -29,7 +29,7 @@ An `AltName: Full=Cancer/testis antigen 57; Short=CT57` reflects its identificat
 CT-antigen survey PMID:15905330.
 
 **The affinage record was not empty and must not be treated as if it were.** It returned
-`gates_passed: True`, 8 citations, and a coherent oncology narrative. Checking UniProt's own
+clear trust gates at fetch time, 8 citations, and a coherent oncology narrative. Checking UniProt's own
 `RN`/`RX` list independently confirms only sequencing papers plus PMID:15905330 — so the
 tumour-biology literature reaches this review *only* through affinage, and every claim taken from
 it was re-read against the cached PMID.
@@ -285,7 +285,8 @@ ACCEPT and is now `KEEP_AS_NON_CORE`, which is what its own reason had said all 
 
 - Worktree `/private/tmp/wt-ACTL8`, branch `paint/ACTL8`.
 - `just fetch-gene human ACTL8` → 16 GOA rows, 6 seeded references.
-- affinage: `gates_passed: True`, faith 85.7%, 8 citations, all numeric PMIDs (no bioRxiv-shaped
+- affinage: trust gates clear at fetch time (no `self_evaluation_pairwise` score), faith 85.7%,
+  8 citations, all numeric PMIDs (no bioRxiv-shaped
   ids). Every claim used was re-verified against the cached PMID; the retraction of PMID:32125225
   was found this way and is not flagged by affinage.
 - `just fetch-gene-pmids` + 9 extra `just fetch-pmid` calls.

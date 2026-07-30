@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 83.33333333333333
 n_discoveries: 14
 citation_count: 14
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACTL7A (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACTL7A is a testis-enriched actin-like protein essential for acrosome biogenesis and sperm head shaping during spermiogenesis [PMID:36734600]. It localizes dynamically to the nucleus and subacrosomal space of developing spermatids and later to postacrosomal regions, where it drives formation of subacrosomal filamentous actin and anchors the acrosome to the nucleus via the acroplaxome; its loss abolishes subacrosomal F-actin, causes abnormal acrosomal granule migration, and produces peeling, detached acrosomes [PMID:36734600]. ACTL7A operates within a perinuclear theca cytoskeletal network, co-immunoprecipitating with the zona-pellucida-binding protein ZPBP and being stabilized by FNDC8, whose depletion destabilizes ACTL7A and disrupts head morphogenesis [PMID:35921706, PMID:41169243]. Disruption of the acrosome-acroplaxome-manchette complex upon ACTL7A loss yields small-headed sperm, accompanied by dysregulation of the PI3K/AKT/mTOR/autophagy axis and PDLIM1 accumulation that impairs manchette development [PMID:37667331]. A central downstream consequence of ACTL7A dysfunction is mislocalization, reduced expression, or co-discharge of the sperm-borne oocyte activation factor PLCζ (PLCZ1), which abolishes oocyte calcium oscillations and causes total fertilization failure [PMID:32923619, PMID:35863052]. Loss-of-function and missense mutations in ACTL7A cause male infertility through acrosomal and perinuclear theca ultrastructural defects and oocyte activation deficiency, a phenotype rescuable by artificial oocyte activation [PMID:32923619, PMID:34727571].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0008092 cytoskeletal protein binding, GO:0005198 structural molecule activity
 - **localization:** GO:0005634 nucleus, GO:0005856 cytoskeleton

@@ -430,7 +430,7 @@ justify ortholog transfer to the human gene, not direct-assay codes on it.
 
 ## 10. Affinage deep-research record
 
-`gates_passed: True`, faith 83.3%, 14 citations. The narrative is broadly accurate and its PLCζ
+`self_evaluation_pairwise: win` (trust gates clear at fetch time), faith 83.3%, 14 citations. The narrative is broadly accurate and its PLCζ
 framing is confirmed against the primary papers. Two cautions applied here:
 
 - One citation, `PMID:bio_10.1101_2025.03.27.645694`, is a **bioRxiv DOI in a PMID-shaped field**,

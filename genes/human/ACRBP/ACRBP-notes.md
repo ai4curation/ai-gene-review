@@ -263,7 +263,8 @@ handled as an over-annotation for other genes in this repository (AAAS, ACADS, A
 
 ## Process notes
 
-- `gates_passed: True` on the affinage record; all 12 citations are numeric PMIDs. Its narrative
+- `self_evaluation_pairwise: win` and clear trust gates on the affinage record; all 12 citations
+  are numeric PMIDs. Its narrative
   is accurate on the mechanism, and its own GO grounding (`GO:0098772`, `GO:0140313`,
   `GO:0031410`, `GO:0005886`) was not imported: `GO:0005886 plasma membrane` rests only on the
   boar antibody-accessibility experiment, and `GO:0140313 molecular sequestering activity` frames

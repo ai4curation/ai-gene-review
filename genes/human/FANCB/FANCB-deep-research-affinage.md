@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 8
 citation_count: 8
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCB (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCB (originally identified as FAAP95) is an X-linked component of the Fanconi anemia (FA) core complex that acts upstream to promote FANCD2 monoubiquitination during the repair of DNA interstrand crosslinks (ICLs) [PMID:15611632, PMID:21458466]. Loss of FANCB abolishes MMC- and crosslink-induced FANCD2 foci formation and reduces RAD51 foci, sister chromatid exchange, and gene targeting, producing crosslinker hypersensitivity and chromosomal instability, while a parallel MUS81-dependent route handles replication-fork repair independently of FANCB [PMID:17903171, PMID:21458466]. Biochemical reconstitution establishes that FANCB protein is indispensable for FANCD2 monoubiquitination, and the degree of residual monoubiquitination conferred by FANCB missense variants correlates with clinical severity [PMID:32106311]. Beyond canonical ICL repair, FANCB has dedicated germline and stem-cell roles: during male meiosis it localizes to the sex chromosomes in an MDC1/γH2AX-dependent manner, is required for meiotic FANCD2 localization, and shapes sex-chromosome H3K9 methylation (decreasing H3K9me2 and increasing H3K9me3 upon loss), with FANCB-mutant mice showing primordial germ cell defects and spermatogonial failure [PMID:26123487]; it also maintains hematopoietic stem cell quiescence and repopulating capacity [PMID:26658157]. Truncating loss-of-function FANCB mutations cause X-linked VACTERL-hydrocephalus syndrome in hemizygous males, with carrier females showing skewed X-inactivation [PMID:21910217].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome

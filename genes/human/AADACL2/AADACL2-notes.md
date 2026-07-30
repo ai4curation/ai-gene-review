@@ -23,7 +23,8 @@ N-terminal helix.
 ## Literature: genuinely absent for function, present for genetics
 
 PubMed returns 6 hits for `AADACL2`; none characterises the protein. The affinage record came
-back empty (`n_discoveries: 0`, `citation_count: 0`, `gates_passed: True`), and in this case
+back empty (`n_discoveries: 0`, `citation_count: 0`, no `self_evaluation_pairwise` score), and
+in this case
 the emptiness is corroborated rather than taken on trust — the only literature statement
 about AADACL2's function is that there isn't one:
 

@@ -8,27 +8,22 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 37
 citation_count: 38
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACAT1 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Accession mismatch: local review uses `P24752` but the Affinage record's prefetch UniProt accession is `P35610`.
 
 ## Current model (mechanistic narrative)
 
 ACAT1 is a cholesterol-esterifying enzyme that maintains intracellular cholesterol homeostasis and, through this lipid-handling role, governs membrane sterol pools in macrophages, neurons, and adipocytes [PMID:32433614, PMID:9857049, PMID:39481851]. In the ER membrane it assembles as a dimer-of-dimers tetramer in which each protomer presents converging cytosolic and transmembrane tunnels that admit acyl-CoA and cholesterol, respectively, to a shared catalytic site; long-chain unsaturated acyl-CoA (preferentially oleoyl-CoA) is conjugated to free cholesterol, and the enzyme behaves allosterically with sigmoidal kinetics toward its cholesterol substrate [PMID:32433614, PMID:32433613, PMID:9857049]. Catalysis depends on a cytosolic-facing active-site serine (Ser269) and on histidines H386 and H460, and substrate recognition is stereospecific for the 3β-hydroxyl steroid configuration [PMID:11071899, PMID:16647063, PMID:20964445]. ACAT1 accounts for the dominant fraction of cholesterol-esterifying activity in human liver, adrenal, macrophage, and kidney tissue, and is enriched at mitochondria-associated ER membranes, where its inhibition raises local cholesterol and strengthens ER–mitochondria contacts [PMID:9717734, PMID:36982602]. In macrophages, ACAT1 controls the balance between cholesterol esterification and efflux and is transcriptionally driven by TNF-α through an NF-κB element in its promoter; myeloid ACAT1 ablation attenuates atherosclerotic lesion formation, adipose inflammation, and TLR4-dependent inflammatory signaling [PMID:15499044, PMID:19189937, PMID:31495784, PMID:36982689]. In neurons, ACAT1 activity controls plasma-membrane and ER free-cholesterol pools and thereby modulates APP processing and amyloid-β generation, placing cholesterol esterification upstream of amyloidogenesis [PMID:20133765, PMID:26474739]. Beyond its esterase function, mitochondrial ACAT1 acts as a protein acetyltransferase that acetylates PDHA1 (K321) and PDP1 (K202) to inhibit the pyruvate dehydrogenase complex and promote the Warburg effect, opposed by the deacetylase SIRT3 [PMID:24486017]. The human enzyme is unusual in arising from a chimeric mRNA assembled by interchromosomal trans-splicing, which additionally yields a 56-kDa ER-localized isoform via IRES-dependent translation from a GGC start codon [PMID:10196189, PMID:15319423].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016740 transferase activity, GO:0140096 catalytic activity, acting on a protein, GO:0008289 lipid binding, GO:0098772 molecular function regulator activity
 - **localization:** GO:0005783 endoplasmic reticulum, GO:0005739 mitochondrion, GO:0005764 lysosome, GO:0031410 cytoplasmic vesicle

@@ -8,12 +8,13 @@ self_evaluation_pairwise:
 faith_pct: 100.0
 n_discoveries: 6
 citation_count: 6
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for A1BG (human)
@@ -22,9 +23,7 @@ note: >-
 
 A1BG is a secreted immunoglobulin-like domain plasma glycoprotein that functions through protein–protein interactions to regulate the activity and stability of partner proteins across diverse physiological contexts [PMID:39433128, PMID:40560034]. Its third of five repeated immunoglobulin-like domains binds CAP-superfamily proteins such as CRISP2 in a magnesium-dependent manner, and this interaction inhibits CRISP2 sterol-binding in vitro and abolishes its sterol export function in yeast [PMID:39433128]. In a distinct context, adipocyte-secreted A1BG binds and stabilizes NAMPT, raising NAD+ production to enhance PARP1/ATM-mediated DNA repair and thereby drive cisplatin resistance in osteosarcoma [PMID:40560034]. A1BG also has a sex-specific cardiac role: cardiomyocyte-specific deletion causes dilated cardiomyopathy with disrupted intercalated disc architecture and altered glucose-6-phosphate and acetyl-CoA metabolism in female but not male mice, consistent with sex-specific cardiac interactomes [PMID:40270023]. Beyond these interaction-based roles, the broader signaling and regulatory logic linking A1BG's partners across tissues has not been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity
 - **localization:** GO:0005576 extracellular region

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 2
 citation_count: 1
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for AASDH (human)
@@ -22,9 +23,7 @@ note: >-
 
 AASDH (ACSF4-U26) is a β-alanine-activating enzyme that catalyzes an ATP-dependent reaction forming a covalent acyl-enzyme thioester intermediate with β-alanine, with near-absolute substrate specificity for β-alanine among the standard amino acids and a KM of ~5 µM [PMID:24467666]. Catalysis depends on a phosphopantetheine cofactor: a point mutant lacking the phosphopantetheine attachment site fails to form the thioester bond [PMID:24467666]. The β-alanine transfer activity resides in the adenylation domain, since deletion of the C-terminal PQQDH-related domain does not abolish transfer onto thiol acceptors; the physiological function of this C-terminal domain has not been characterized in the available corpus [PMID:24467666]. Beyond this in vitro activation and transfer chemistry, no downstream pathway or in vivo role for AASDH has been established in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0016874 ligase activity
 - **localization:** *(none)*

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 34
 citation_count: 34
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACBD3 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACBD3 (GCP60/PAP7) is a peripheral Golgi-membrane scaffolding protein that organizes lipid-modifying and signaling machinery on Golgi/TGN membranes and at ER–Golgi contact sites [PMID:11590181, PMID:27009356]. Its central scaffolding output is the direct recruitment of the lipid kinase PI4KB to membranes through its GOLD domain, an interaction defined structurally by NMR that both anchors PI4KB to the Golgi and stimulates its enzymatic activity to maintain Golgi PI4P homeostasis [PMID:27009356, PMID:27989622]. ACBD3 is itself targeted to the Golgi by a two-step mechanism: the Sec1/Munc-18 protein SCFD1 with the SNARE SEC22B acts upstream of an MWT374-376 motif that binds the golgins giantin and golgin-45 [PMID:38134218, PMID:11590181, PMID:28777890]. Beyond PI4KB, ACBD3 acts as an A-kinase anchoring protein, binding PKA regulatory subunits (RIα and RII via the GOLD domain) to position PKA at the Golgi and at mitochondria, where it couples cholesterol transport to hormone-stimulated steroidogenesis and where it controls cargo-triggered PKA activation governing KDEL-receptor retrograde trafficking [PMID:11731621, PMID:12943713, PMID:37044218, PMID:34493279]. ACBD3 is required for Golgi stack integrity and for FAPP2-mediated glucosylceramide transport and ER-to-Golgi ceramide/sphingolipid flux, with knockout producing enlarged, unstacked Golgi and altered sphingolipid pools [PMID:29750412, PMID:34298889]. The same membrane-coupling activity is extensively exploited by pathogens: picornavirus 3A proteins clamp ACBD3 onto replication-organelle membranes to recruit and activate PI4KB for viral PI4P synthesis, and the OSBP–VAP cholesterol-transport machinery is co-opted through ACBD3 as well [PMID:22124328, PMID:22258260, PMID:27989622, PMID:28065508, PMID:31381608, PMID:29367253]. ACBD3 also concentrates ligand-activated STING at ER–Golgi contact sites to drive ER export and type-I interferon responses [PMID:36543137], partners with Numb during mitotic Golgi fragmentation to influence asymmetric neural cell-fate specification [PMID:17418793], and modulates apoptotic signaling through a redox-sensitive Cys-463 interaction with a caspase-generated golgin-160 fragment [PMID:17711851]. Salmonella effectors SseF/SseG bind ACBD3 to position Salmonella-containing vacuoles at the Golgi [PMID:27406559], underscoring ACBD3 as a recurrently hijacked membrane-organizing hub.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0098772 molecular function regulator activity, GO:0008289 lipid binding
 - **localization:** GO:0005794 Golgi apparatus, GO:0005783 endoplasmic reticulum, GO:0005829 cytosol, GO:0005739 mitochondrion

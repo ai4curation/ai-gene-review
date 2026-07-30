@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 10
 citation_count: 10
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ACAP1 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ACAP1 is an ARF6 GTPase-activating protein that operates as a coat component of the endocytic recycling pathway, sorting cargo from endosomes back to the plasma membrane to control processes such as cell migration and glucose homeostasis [PMID:17664335]. It assembles into a novel ARF6-regulated clathrin coat complex that drives stimulation-dependent recycling of integrin beta1 and insulin-stimulated recycling of Glut4 [PMID:17664335], and it localizes to a tubular recycling endosome distinct from the ARAP2/APPL1-positive compartment, with the two ARF6 GAPs exerting opposing effects on integrin internalization and focal adhesions [PMID:25225293]. Cargo engagement is switch-regulated: Akt phosphorylation of ACAP1 relieves a localized autoinhibition to enhance binding of a defined recycling sorting signal in the integrin beta1 cytoplasmic tail, coupling recycling to upstream signaling [PMID:16256741, PMID:22645133]. Its membrane-deforming activity arises from an unconventional division of labor between adjacent domains, in which the PH domain mediates membrane binding and curvature generation while the BAR domain mediates clustering of ACAP1 molecules into a lattice that deforms the membrane [PMID:25284369]. Beyond integrin and Glut4 trafficking, ACAP1 acts in a Rab10-ACAP1-Arf6 cascade that inactivates Arf6 to arrest the M4 muscarinic acetylcholine receptor in early endosomes [PMID:36917255], and it scaffolds a PTPN9-FGFR2 complex to facilitate FGFR2 dephosphorylation, a function requiring its PH and Arf-GAP domains [PMID:37505213].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0098772 molecular function regulator activity, GO:0008289 lipid binding, GO:0060090 molecular adaptor activity, GO:0005198 structural molecule activity
 - **localization:** GO:0005768 endosome, GO:0031410 cytoplasmic vesicle

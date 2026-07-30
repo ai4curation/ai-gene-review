@@ -263,7 +263,8 @@ inference about what the full text might contain.
 
 - `just fetch-gene human ACRV1` — 10 GOA rows, 6 seeded (the five IPI rows collapse to one
   in the stub; expanded back to one entry per GOA row, in GOA order).
-- `affinage_deep_research.py human ACRV1 --write` — `gates_passed: True`, `faith_pct: 100`,
+- `affinage_deep_research.py human ACRV1 --write` — trust gates clear at fetch time (no
+  `self_evaluation_pairwise` score), `faith_pct: 100`,
   13 citations, all numeric PMIDs. Two claims in its narrative needed correction against
   the sources rather than being taken on trust: it presents the sperm–zona results as a
   flat contradiction, and it repeats the 1990 "no homology" conclusion without noting the

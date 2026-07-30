@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 60
 citation_count: 60
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCD2 (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCD2 is the central effector of the Fanconi anemia (FA) DNA repair pathway, originally identified by positional cloning as the FA-D2 gene product whose reintroduction complements mitomycin C sensitivity in patient cells [PMID:11239453]. Its activation is governed by a regulated cycle of post-translational modification: ATR/ATM kinases phosphorylate FANCD2 (T691, S717) and its partner FANCI, priming the complex [PMID:16943440, PMID:36050501], after which the FA core complex — minimally the FANCB-FANCL-FAAP100 module using UBE2T as E2 — monoubiquitinates FANCD2 on K561 during S phase and in response to DNA damage [PMID:12239151, PMID:24905007, PMID:31873223]. This modification drives translocation from soluble nucleoplasm to chromatin, where FANCD2 forms damage-induced foci with BRCA1 and RAD51 [PMID:12239151, PMID:15454491]. FANCD2 functions as an obligate heterodimer with its paralog FANCI, and DNA engagement by the ID2 complex is required for efficient monoubiquitination [PMID:17412408, PMID:22287633, PMID:24623813]. Structural studies establish that the unmodified ID2 complex is recruited to DNA and that monoubiquitination triggers a conformational closure into a sliding clamp that encircles dsDNA, with ubiquitin acting as a molecular pin at the I-D interface; the clamp diffuses on duplex DNA and stalls at ssDNA-dsDNA junctions found at stalled replication forks [PMID:21764741, PMID:32066963, PMID:32510829, PMID:39085614]. Activated FANCD2 coordinates interstitial crosslink repair by recruiting the XPF-ERCC1/SLX4 nucleases for unhooking incisions, FAN1 and CtIP for end processing and resection, and by stabilizing RAD51 filaments and mediating strand exchange while protecting DNA ends from DNA2, MRE11, and EXO1 nucleases [PMID:20603015, PMID:24726325, PMID:24794430, PMID:24794434, PMID:27694619, PMID:37526271]. The cycle is reversed by USP1-UAF1, which deubiquitinates K561 in a DNA- and FANCI-contact-dependent manner requiring a FANCD2-specific sequence in the USP1 N-terminus [PMID:18082605, PMID:31253762, PMID:33795880]. Beyond crosslink repair, FANCD2 — including its non-ubiquitinated form — restrains replication fork progression at common fragile sites and in BRCA1/2-deficient cells where its loss is synthetic lethal, suppresses R-loop accumulation by recruiting RNA-processing factors and collaborating with SRSF1 for mRNA export, activates TAp63 transcription to suppress skin carcinogenesis, and localizes to mitochondria where it supports homeostasis through ATAD3 and TUFM [PMID:23806336, PMID:26797144, PMID:27768874, PMID:27264184, PMID:28378742, PMID:30431240, PMID:38165804].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0003677 DNA binding, GO:0003723 RNA binding, GO:0031386 protein tag activity, GO:0140096 catalytic activity, acting on a protein, GO:0060090 molecular adaptor activity, GO:0140110 transcription regulator activity
 - **localization:** GO:0005634 nucleus, GO:0000228 nuclear chromosome, GO:0005654 nucleoplasm, GO:0005739 mitochondrion

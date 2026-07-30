@@ -35,22 +35,47 @@ file, so no pipeline change is needed to "wire in" Affinage — this tool just w
 ```bash
 python affinage_deep_research.py human GPX4            # print to stdout
 python affinage_deep_research.py human GPX4 --write    # -> genes/human/GPX4/GPX4-deep-research-affinage.md
+python affinage_deep_research.py human ADA   --write   # refused: wrong-protein gate trips (--force to override)
 ```
 
 It is deliberately scoped to the **only** use the [evaluation](results/narrative-vs-go.md)
-endorses — a *free precomputed first pass for the human backlog* — and enforces the two
-required gates:
+endorses — a *free precomputed first pass for the human backlog*.
+
+**The emitted file is a faithful, unedited rendering of the external-provider record — no
+AIGR interpretation.** A `-deep-research-*.md` file reproduces what the provider returned
+(like a falcon/perplexity report): Affinage's mechanistic narrative, its own
+`mechanism_profile` GO/Reactome grounding, the dated discoveries, and the citations. (A few
+emitted fields are mechanical derivations of that content rather than provider fields —
+`citation_count` and the `## Citations` list union the discovery PMIDs with the `PMID:NNN`
+tokens in the narrative, and `n_discoveries` is a count — but nothing is edited or
+adjudicated.) The file carries **no
+CAUTION banners, no "these GO terms are coarse, do not import them" advice, and no trust
+adjudication** — mixing AIGR's own opinion into the file would launder it into something
+that looks like the provider said it. Curatorial judgment of the record — relevance,
+correctness, whether to import its GO grounding, and the trust gates below — is the
+reviewer's, and belongs in the gene review's `references[].reference_review`
+(`relevance` / `correctness` / `review_notes`) and `findings`, **not** in the source file.
+
+The tool still helps the reviewer form that judgment via two checks, printed to **stderr**
+(never written into the file):
 
 1. **Human only.** Refuses any other species (Affinage is human-only).
-2. **Trust gates surfaced, never hidden.** It writes Affinage's own `evaluation.pairwise`
+2. **Trust gates (stderr reminder).** It surfaces Affinage's own `evaluation.pairwise`
    self-signal, compares the record's UniProt accession to the local `<GENE>-uniprot.txt`,
-   and scans the narrative's opening for a non-human organism token; any tripped gate
-   becomes a ⚠️ CAUTION banner at the top of the file (see the ADA symbol-collision case).
+   and scans the narrative's opening for a non-human organism token (the ADA symbol-collision
+   case). A tripped gate prints a ⚠️ warning telling you to record it in the review's
+   `reference_review` — it does not touch the file.
+3. **Blocking write gate.** Since the file itself carries no warning, the two *wrong-protein*
+   gates (accession mismatch, non-human organism token) also **refuse the write** when the
+   destination is inside `genes/` — a record describing a different protein must not land in
+   a gene folder, where a later review of that gene would ingest it. Exit is non-zero and
+   nothing is written unless `--force` is passed (or `--out` targets a path outside `genes/`).
+   The soft `pairwise` gate only warns; it is already in the frontmatter as
+   `self_evaluation_pairwise`.
 
-The emitted file records the raw `mechanism_profile` GO ids **only for reference**, with an
-explicit note *not* to import them directly (the evaluation showed that layer is coarse and
-can contradict the narrative). It is external, LLM-generated preliminary research — treat it
-like a falcon/perplexity report, not a curated annotation.
+Only factual provenance (source URL, run date, accession, and Affinage's own self-evaluation
+numbers) is recorded in the file frontmatter. It is external, LLM-generated preliminary
+research — treat it like a falcon/perplexity report, not a curated annotation.
 
 ## Caveats
 

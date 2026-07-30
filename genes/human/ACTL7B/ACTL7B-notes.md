@@ -29,7 +29,7 @@ lesser extent, in the prostate." whereas "ACTL7A is expressed in a wide variety 
 ## 2. What is actually known about function (all of it from mouse)
 
 Two independent `Actl7b`-null mouse lines were published in 2023 and agree. Only one of them
-is in the affinage record (`ACTL7B-deep-research-affinage.md`, `gates_passed: True`); the
+is in the affinage record (`ACTL7B-deep-research-affinage.md`, trust gates clear at fetch time); the
 other, PMID:37800308, was found by a plain PubMed search of the gene symbol and turns out to
 carry the only informative molecular partner ACTL7B has. Affinage's own GO grounding for this
 gene proposes `GO:0008092 cytoskeletal protein binding` as the molecular activity, which no

@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 22
 citation_count: 22
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABCB10 (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABCB10 is a homodimeric ABC transporter of the inner mitochondrial membrane that exports the tetrapyrrole biliverdin from the matrix to the cytosol, coupling mitochondrial redox and iron metabolism to cellular fate decisions in erythroid, hepatic, cardiac, immune, and stem cell lineages [PMID:34011630, PMID:22240895]. Structurally it adopts an exporter fold with matrix-facing nucleotide-binding domains, captured crystallographically in an open-inwards conformation both in the apo and nucleotide-bound states, with a transmembrane portal assisting substrate entry [PMID:23716676]; it is delivered to the inner membrane by an unusually long 105-residue presequence and assembles into homodimers and higher oligomers [PMID:15215243]. Its ATPase cycle is the functional core: catalytic Walker A/B and C-loop residues are required for ATP binding and hydrolysis [PMID:26053025], conserved transmembrane arginines R232/R295 mediate biliverdin-induced ATPase stimulation and conformational switching [PMID:41229075], and activity is tuned by cardiolipin, which binds preferentially and cooperatively [PMID:37807693], and by glutathione redox status acting partly through glutathionylation at Cys547 [PMID:26053025]. Functionally, ABCB10 ATPase activity is essential for hemoglobinization independent of any block at the ferrochelatase or ALA-export steps, and it shapes the heme biosynthetic transcriptional program via Bach1 [PMID:28808058]; biliverdin/bilirubin export rather than direct ALA or dALA transport is the established substrate axis [PMID:34011630, PMID:28808058, PMID:33253225]. ABCB10 physically organizes mitochondrial iron-heme machinery, stabilizing mitoferrin-1 to enhance iron import [PMID:19805291] and forming a complex with ferrochelatase bridged to ABCB7 near the nucleotide-binding domains [PMID:20427704, PMID:30765471]. Loss of ABCB10 causes mitochondrial and lysosomal iron accumulation, elevated ROS, and lethal failure of erythropoiesis [PMID:22240895, PMID:38655715, PMID:38493949], while its bilirubin product acts as the maladaptive effector limiting hepatic glucose handling and beta-cell insulin secretion through PTP1B and H2O2 signaling [PMID:34011630, PMID:34823065]; it additionally supports CD4+ T cell metabolic reprogramming and memory formation [PMID:34893527] and the mitochondrial unfolded protein response [PMID:28315685, PMID:30802639].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140657 ATP-dependent activity, GO:0005215 transporter activity, GO:0008289 lipid binding, GO:0140313 molecular sequestering activity
 - **localization:** GO:0005739 mitochondrion

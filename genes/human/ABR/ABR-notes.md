@@ -407,7 +407,8 @@ Three of these were found by the PR reviewer, and all three were real.
 
 ## Provider record (affinage)
 
-`gates_passed: True`, `faith_pct: 100.0`, 15 citations, all numeric PubMed ids (no bioRxiv
+`self_evaluation_pairwise: win` with clear trust gates, `faith_pct: 100.0`, 15 citations, all
+numeric PubMed ids (no bioRxiv
 DOIs in PMID-shaped fields). Its corpus-level conclusion matches the primary literature and
 is cited once, for that corpus-level direction only. **It does not cite Amin et al. 2016
 (PMID:27481945)** — the paper that reconciles the substrate conflict and that Reactome relies

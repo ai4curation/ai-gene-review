@@ -455,7 +455,7 @@ Two committed scripts, both tested by deliberate mutation rather than by reading
 * `just fetch-gene human ACTR5`; `just fetch-gene-pmids human ACTR5`;
   `just fetch-pmid` for 26306040, 16618800, 39676660, 41775336, 36563143,
   40386946.
-* Affinage record: `gates_passed: True`, 2 citations, 3 findings. Both cited
+* Affinage record: `self_evaluation_pairwise: win`, trust gates clear, 2 citations, 3 findings. Both cited
   PMIDs are real PubMed records (no `PMID:bio_*` preprint ids). Neither is
   retracted; PMID:36563143 has the 2025 erratum described in §10, which the
   provider does not flag. PMID:40386946 (a childhood-lupus trio-WES study whose

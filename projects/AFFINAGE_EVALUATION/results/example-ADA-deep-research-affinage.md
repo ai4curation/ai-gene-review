@@ -8,29 +8,22 @@ self_evaluation_pairwise: loss
 faith_pct: 100.0
 n_discoveries: 30
 citation_count: 30
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ADA (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Affinage's own head-to-head self-evaluation scored this record `pairwise = loss` (not `win`) vs the curated UniProt reference — treat the narrative with extra scepticism.
->
-> - Possible symbol collision: the narrative's opening names a non-human context ("e. coli") despite a human record — verify the narrative describes human ADA and not a same-symbol protein (cf. the ADA case).
 
 ## Current model (mechanistic narrative)
 
 The ADA symbol in this corpus resolves into three biologically distinct proteins, and the timeline is dominated by the bacterial Ada DNA-alkylation-repair regulator rather than the human adenosine deaminase. The E. coli Ada protein is a bifunctional suicide methyltransferase that, in its repair role, irreversibly transfers methyl groups from O6-methylguanine in alkylated DNA to its own cysteine residues [PMID:2987251], with the active-site cysteine buried in the 19-kDa C-terminal domain whose structure has been solved [PMID:8156986]. A second methyltransferase activity in the N-terminal domain accepts methyl from methylphosphotriesters at Cys-69, and this specific modification—not the C-terminal Cys-321 methylation—converts Ada into a sequence-specific transcriptional activator of the adaptive response to alkylating agents [PMID:2843522, PMID:2648001]. Methylated Ada binds the ada/alkA regulatory sequence (AAAGCGCA) upstream of the promoter and recruits RNA polymerase through direct contact with the C-terminal domain of the alpha subunit and with the C-terminal region of sigma70 (notably Glu575), defining Ada as a class I activator [PMID:3139888, PMID:8468304, PMID:9582376]. The repair-to-activator switch is electrostatic rather than ligand-exchange-based: structural and spectroscopic analyses show S-methyl-Cys69 remains zinc-coordinated, and neutralization of negative charge at the zinc-thiolate center remodels a surface patch to convert phosphate repulsion into attraction for promoter DNA [PMID:9383376, PMID:11284682, PMID:16209950]. The response is self-limiting: unmethylated Ada antagonizes its own activation [PMID:7937881], and an endogenous protease cleaves Ada into a 20-kDa N-terminal fragment that activates alkA but represses ada, terminating the adaptive response [PMID:3058696, PMID:2254928]. A separate set of findings describes the eukaryotic ADA/Ada2/Ada3 transcriptional co-activator subunits, which scaffold the GCN5 histone acetyltransferase within the ADA and SAGA complexes to acetylate nucleosomal histone H3K14, antagonize chromatin-mediated repression together with SWI/SNF, and mediate activation by nuclear receptors, with complex-specific ADA2 isoforms (ATAC ADA2a vs SAGA ADA2b) differentially stimulating GCN5 [PMID:9224714, PMID:9343382, PMID:26468280]. A third set addresses human ADA enzymatic activity, whose deficiency causes toxic purine accumulation impairing TCR signaling [PMID:18218852], Treg suppressive function via the CD39/CD73/adenosine axis [PMID:22184407], bone homeostasis via RANKL/OPG imbalance [PMID:19633200], and brain adenosine receptor signaling [PMID:28074903]. These three groups describe unrelated proteins sharing the ADA/Ada symbol.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140097 catalytic activity, acting on DNA, GO:0016740 transferase activity, GO:0003677 DNA binding, GO:0140110 transcription regulator activity, GO:0140096 catalytic activity, acting on a protein
 - **localization:** *(none)*

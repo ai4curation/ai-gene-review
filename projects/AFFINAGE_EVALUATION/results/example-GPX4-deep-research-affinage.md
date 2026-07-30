@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 37
 citation_count: 37
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for GPX4 (human)
@@ -22,9 +23,7 @@ note: >-
 
 GPX4 is a selenocysteine-dependent glutathione peroxidase that constitutes the central cellular defense against iron-dependent lipid peroxidation, and its loss precipitates ferroptotic cell death [PMID:24439385, PMID:31634900]. It is uniquely capable of reducing esterified phospholipid hydroperoxides within membranes to non-toxic lipid alcohols, a reaction no other enzyme performs in a cellular context [PMID:31634900, PMID:34931062]; an electrostatic cationic patch mediates membrane and cardiolipin binding adjacent to the catalytic site [PMID:34492183], and the selenolate active-site catalysis is specifically required to resist irreversible overoxidation, distinguishing GPX4 from a cysteine variant and being essential for neuronal survival in vivo [PMID:29290465]. This antioxidant function makes GPX4 a survival dependency in therapy-resistant high-mesenchymal persister cancer cells [PMID:29088702], and a patient-derived R152H active-site loop mutation that abolishes activity links GPX4 dysfunction to human disease [PMID:34931062]. Beyond its canonical hydroperoxidase role, GPX4 acts as a protein-thiol peroxidase that cross-links mitochondrial capsule proteins during spermatogenesis [PMID:11568459], and alternative-promoter usage generates cytosolic, mitochondrial, and arginine-rich nuclear isoforms with distinct localizations [PMID:12751792, PMID:14583338]. GPX4 abundance is set by a dense post-translational network: stabilizing palmitoylation at C66/C75 (ZDHHC20/ZDHHC8, reversed by APT2) [PMID:39833225, PMID:40108413], R152 symmetric dimethylation by PRMT5 that excludes the Cullin1-FBW7 ligase [PMID:40033101], S104 phosphorylation by CKB that blocks chaperone-mediated autophagy [PMID:37156912], stabilizing deubiquitination (USP8, OTUD5, OTUB1 recruited by CST1) and linear ubiquitination by LUBAC [PMID:36369321, PMID:36279464, PMID:38598341, PMID:38110369], opposed by degradative ubiquitination (STUB1 at K191, NEDD4L, copper-induced modification of C107/C148) and selective/chaperone-mediated autophagy via TAX1BP1, p62/TRAF6, legumain-HSC70, and FUNDC1-mediated mitochondrial import [PMID:36622894, PMID:38110356, PMID:33431801, PMID:36828120, PMID:40394165], with transcriptional and m6A control by STAT3 and the PKA-ALKBH5 axis [PMID:35859150, PMID:39901038]. Functionally, GPX4-maintained redox homeostasis sustains follicular helper T cell and germinal center responses [PMID:34413521], enables cGAS-STING innate immunity by preventing lipid-peroxidation-driven STING carbonylation at C88 [PMID:32541831], confers host resistance to Mycobacterium tuberculosis [PMID:36069923], and in adipocytes suppresses metabolic inflammation independently of overt ferroptotic death [PMID:35031697]. Direct covalent modification of C66 by itaconate allosterically activates the enzyme to protect neurons [PMID:38719928].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0016491 oxidoreductase activity, GO:0140098 catalytic activity, acting on RNA, GO:0008289 lipid binding, GO:0003677 DNA binding, GO:0016209 antioxidant activity
 - **localization:** GO:0005829 cytosol, GO:0005739 mitochondrion, GO:0005634 nucleus, GO:0005886 plasma membrane

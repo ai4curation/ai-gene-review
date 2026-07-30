@@ -8,27 +8,22 @@ self_evaluation_pairwise: tie
 faith_pct: 100.0
 n_discoveries: 3
 citation_count: 2
-gates_passed: False
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABHD8 (human)
-
-> ⚠️ **CAUTION — trust gate(s) tripped; review before using:**
->
-> - Affinage's own head-to-head self-evaluation scored this record `pairwise = tie` (not `win`) vs the curated UniProt reference — treat the narrative with extra scepticism.
 
 ## Current model (mechanistic narrative)
 
 ABHD8 is an α/β-hydrolase domain-containing protein that functions as a negative regulator of NLRP3 inflammasome activation by controlling NLRP3 protein turnover [PMID:39225180]. ABHD8 interacts physically with NLRP3 and acts as a scaffold that recruits the palmitoyltransferase ZDHHC12 to NLRP3, promoting NLRP3 palmitoylation and its subsequent degradation through the chaperone-mediated autophagy (CMA) pathway; loss of ABHD8 stabilizes NLRP3 and enhances inflammasome activation, whereas overexpression dampens LPS- and alum-triggered activation in vivo [PMID:39225180]. This regulatory axis is a target of viral subversion, as the SARS-CoV-2 nucleocapsid protein disrupts the ABHD8–NLRP3 association, elevating NLRP3 levels and driving excessive inflammasome activation [PMID:39225180]. ABHD8 expression is itself controlled at the 19p13.1 locus, where risk SNPs physically contact the ABHD8 promoter and risk alleles increase its transactivation [PMID:27601076]. Beyond these findings, the catalytic activity of the α/β-hydrolase domain and its direct enzymatic substrates have not been characterized in the available corpus.
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity
 - **localization:** *(none)*

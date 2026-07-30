@@ -47,12 +47,12 @@ primary papers folded into the review.
 | [PALB2](fa-cohort/PALB2.md) | N | win (35) | 2 | **1** | ChAM nucleosome binding (GO:0031491) + the primary KEAP1 paper; layer says histone-vs-nucleosome / catalytic-on-DNA |
 | [RAD51C](fa-cohort/RAD51C.md) | O | win (42) | 5 | **1** | ICL repair / FANCO founding paper (GO:0036297); does **not** claim RAD51C is itself an endonuclease — AIGR's over-annotation of GO:0008821 stands |
 | [SLX4](fa-cohort/SLX4.md) | P | win (57) | 3 | **1** | SLX4-complex SUMO E3 ligase (GO:0061665, non-core); narrative correctly frames SLX4 as nuclease-dead scaffold |
-| [ERCC4](fa-cohort/ERCC4.md) | Q | **tie / CAUTION** (40) | 1 | 0 | The FANCQ disease-defining paper (PMID:23623386); CAUTION warranted vs the GO layer, not the (sound) prose |
+| [ERCC4](fa-cohort/ERCC4.md) | Q | **tie / gate tripped** (40) | 1 | 0 | The FANCQ disease-defining paper (PMID:23623386); flag warranted vs the GO layer, not the (sound) prose |
 | [RAD51](fa-cohort/RAD51.md) | R | win (45) | 3 | 0 | Foundational Gupta/Radding 1997 recombinase paper; RNA/TERRA left as documented candidate |
 | [UBE2T](fa-cohort/UBE2T.md) | T | win (35) | 1 | 0 | Anchored polyubiquitination; declines the large single-study cancer-substrate / RNF8 / NER set |
 | [XRCC2](fa-cohort/XRCC2.md) | U | win (29) | 5 | **1** | ICL repair / FANCU (GO:0036297); narrative *reinforces* "not an ATP-dependent damage sensor" |
 | [RFWD3](fa-cohort/RFWD3.md) | W | win (17) | 2 | 0 | Two RFWD3-focused fork-remodeling papers; p53/MDM2 correctly non-core |
-| [BRCA1](fa-cohort/BRCA1.md) | S | **tie / CAUTION** (22) | 3 | 0 | Anchored HR/E3/H2AK127 terms; CAUTION warranted vs GO layer (spurious RNA-catalytic term), not the prose; ~70 protein-binding REMOVEs untouched |
+| [BRCA1](fa-cohort/BRCA1.md) | S | **tie / gate tripped** (22) | 3 | 0 | Anchored HR/E3/H2AK127 terms; flag warranted vs GO layer (spurious RNA-catalytic term), not the prose; ~70 protein-binding REMOVEs untouched |
 | [BRCA2](fa-cohort/BRCA2.md) | D1 | win (27) | 3 | 0 | 3 canonical primary papers (Yang 2002 structure, fork protection, single-molecule RAD51 loading) replacing indirect support |
 | [MAD2L2](fa-cohort/MAD2L2.md) | V | win (47) | 2 | **1** | Shieldin-independent fork-resection protection (GO:0110027) + the previously-uncited FANCV disease paper |
 
@@ -79,7 +79,7 @@ SLX4 nuclease-dead). This is the opposite of the redundancy the project page wor
 genuinely hard, adaptor-heavy pathway the narrative pulled real, checkable literature the
 GOA-seeded review had not surfaced.
 
-**3. The two `tie`/CAUTION records (ERCC4, BRCA1) were correctly flagged, but for the GO layer,
+**3. The two `tie` records (ERCC4, BRCA1) were correctly gate-flagged, but for the GO layer,
 not the prose.** In both, the narrative was factually sound and PMID-dense with no fabrication or
 mis-attribution; the `tie` tracked the coarse/wrong-branch GO grounding (a spurious RNA-catalytic
 term on BRCA1; RNA-binding + parent-level catalytic terms on ERCC4) plus a breadth-over-focus

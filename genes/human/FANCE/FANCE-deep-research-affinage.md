@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 10
 citation_count: 10
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for FANCE (human)
@@ -22,9 +23,7 @@ note: >-
 
 FANCE is a nuclear subunit of the Fanconi anemia (FA) core complex that functions as a molecular bridge coupling the core complex to its downstream substrate, the FANCD2-FANCI heterodimer [PMID:12093742, PMID:16127171]. It binds FANCC directly and, through a distinct region, contacts FANCD2, thereby recruiting the substrate for monoubiquitination; FANCE is required for nuclear accumulation of FANCC, formation of the FANCA-FANCC complex, FANCD2 monoubiquitination, and FANCD2 nuclear foci assembly [PMID:12093742, PMID:12239156, PMID:16513431]. The FANCC-binding and FANCD2-binding surfaces are separable, and the extreme C-terminal residue phenylalanine 522 is the critical determinant of the FANCD2/FANCI interaction required for substrate monoubiquitination and DNA cross-link repair [PMID:16513431, PMID:24451376]. Structurally FANCE adopts a repeated helical (HEAT-like) fold, and disease-associated mutations map to this domain and disrupt the FANCE-FANCD2 interaction [PMID:17308347]. Beyond its scaffolding role, FANCE is directly phosphorylated by Chk1 at threonine 346 and serine 374 upon DNA damage, an event dispensable for FANCD2 monoubiquitination but required for cross-link repair, defining a separable monoubiquitination-independent function [PMID:17296736]. The FANCC-FANCE-FANCF subcomplex is evolutionarily conserved and additionally acts to suppress meiotic crossovers [PMID:36652992].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0060090 molecular adaptor activity, GO:0140096 catalytic activity, acting on a protein
 - **localization:** GO:0005634 nucleus

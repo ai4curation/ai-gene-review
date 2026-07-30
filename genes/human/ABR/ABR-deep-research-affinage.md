@@ -8,12 +8,13 @@ self_evaluation_pairwise: win
 faith_pct: 100.0
 n_discoveries: 15
 citation_count: 15
-gates_passed: True
 note: >-
-  Machine-fetched from the Affinage API (Cheeseman Lab). This is external
-  precomputed research to be treated as a preliminary source, NOT a curated
-  annotation. Affinage is human-only and LLM-generated; verify claims against
-  the cited PMIDs before use.
+  Verbatim machine-fetched record from the Affinage API (Cheeseman Lab),
+  reproduced as-is as an external deep-research source (like a
+  falcon/perplexity report). It is Affinage-authored, LLM-generated, and
+  human-only. Curatorial assessment of this record — relevance, correctness,
+  trust gates, whether to import its GO grounding — is the reviewer's and
+  belongs in the gene review's references[].reference_review, not in this file.
 ---
 
 # Affinage mechanistic annotation for ABR (human)
@@ -22,9 +23,7 @@ note: >-
 
 ABR is a dual-function regulator of Rho-family GTPase signaling that carries both a Dbl-homology guanine-nucleotide exchange factor (GEF) domain and a C-terminal GTPase-activating protein (GAP) domain within a single polypeptide [PMID:8349582, PMID:7479768]. Biochemical reconstitution established that its GEF domain stimulates GTP loading of CDC42, RhoA, Rac1, and Rac2 (rank order CDC42 > RhoA > Rac1 = Rac2) while its GAP domain selectively inactivates Rac1, Rac2, and CDC42 but not RhoA or Ras, with each domain binding substrate non-competitively [PMID:7479768]. In vivo, ABR acts predominantly as a negative regulator of Rac: it is redundant with its paralog BCR, and combined loss in mice elevates active Rac1 and downstream p38 MAPK signaling, producing cerebellar developmental defects in glia [PMID:11684658], dysregulated macrophage morphology, motility, and phagocytosis with sustained Rac activation [PMID:17116687], excessive neutrophil ROS and protease output [PMID:19703997], and pulmonary vascular remodeling under hypoxia [PMID:23152932]. ABR enforces spatial control of GTPase activity: in single-cell wound repair it is recruited to the active-Rho zone through binding GTP-bound Rho, where it locally amplifies Rho via its GEF domain and restricts Cdc42 via its GAP domain to keep the two activity zones segregated [PMID:21295482], and it transiently translocates to the plasma membrane and phagosomes upon CSF-1 stimulation [PMID:17116687]. At excitatory synapses ABR binds the scaffold PSD-95 and constrains basal Rac1 activity to support long-term potentiation maintenance and memory [PMID:20962234], and in CD4+ T cells it deactivates Rac to limit chemotaxis and allergic airway responses [PMID:24058174]. ABR additionally supports phagocytosis in trabecular meshwork cells via an integrin/RAC1 pathway [PMID:31516309], osteoclast differentiation and bone resorption through interaction with PARG and Rho GTPases [PMID:37507586], mitotic fidelity and centrosome dynamics in human embryonic stem cells [PMID:28579391], and hyperglycaemia-driven RhoA activation and actin organization in feto-placental endothelium [PMID:38776074]. ABR is also the host target of the bacterial effector EspH, which binds the ABR GAP domain to hijack Rac1 and Cdc42 signaling [PMID:36219160].
 
-## Affinage mechanism profile (its own GO/Reactome grounding)
-
-_Recorded for reference. The AIGR evaluation found this grounding is coarse (collapses to general parents) and can contradict the narrative — do not import these GO ids directly; re-ground from the narrative + PMIDs._
+## Affinage mechanism profile (Affinage's own GO/Reactome grounding)
 
 - **molecular_activity:** GO:0140096 catalytic activity, acting on a protein, GO:0098772 molecular function regulator activity, GO:0060089 molecular transducer activity
 - **localization:** GO:0005886 plasma membrane, GO:0031410 cytoplasmic vesicle, GO:0005815 microtubule organizing center
