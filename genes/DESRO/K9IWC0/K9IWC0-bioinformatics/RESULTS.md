@@ -70,11 +70,14 @@ Consequences for GO annotation:
 - `GO:0007168 receptor guanylyl cyclase signaling pathway` and
   `GO:0006182 cGMP biosynthetic process` remain correct, since CNP also acts
   through a receptor guanylyl cyclase — but the receptor is NPR2, not NPR1.
-- `GO:0005179 hormone activity` is questionable for the *salivary* protein:
-  unlike ANP/BNP, CNP acts as a local paracrine vasodilator rather than a
-  circulating cardiac hormone, and in *D. rotundus* the transcript is expressed
-  in the submaxillary salivary gland, where it is expected to act on host
-  vasculature at the bite site.
+- `GO:0005179 hormone activity` is retained, as it is for the human NPPC
+  orthologue, but with a caveat about the mode of action: unlike ANP/BNP, CNP
+  acts as a local paracrine vasodilator rather than a circulating cardiac
+  hormone, and in *D. rotundus* the transcript is expressed in the submaxillary
+  salivary gland, where it is expected to act on host vasculature at the bite
+  site. The orthology assignment made here does not by itself argue for or
+  against the term; it is the paracrine/salivary context that should be recorded
+  alongside it.
 
 ## Limitations
 
