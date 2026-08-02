@@ -84,6 +84,23 @@ hypothesis jobs for gene function review.
     indefinitely.
 - Remove the empty `GENE-hypotheses/<slug>/` directory before re-running so a
   failed attempt does not masquerade as a completed one.
+- **A `403 Forbidden` on `POST /api/v1/jobs` is usually a Cloudflare WAF block on
+  the prompt *content*, not an auth failure.** The traceback surfaces as
+  `httpx.HTTPStatusError: Client error '403 Forbidden'` from `_submit_job`, which
+  looks like a bad key — it is not. Confirm by checking that
+  `GET /api/v1/jobs` with the same `Authorization: Bearer` header returns 200,
+  and that a minimal payload (`{"research_question": "What is 2+2?", ...}`)
+  returns 201. If the body of the 403 is an HTML page titled
+  `Attention Required! | Cloudflare`, the edge rejected the request body.
+  The trigger is prompt text containing literal shell commands or code
+  (`nvidia-smi`, `pip install ...`, `python -c "import torch..."`, `/dev/...`
+  paths, URLs with query strings) — it reads as command injection to the WAF.
+  **Fix: reword the hypothesis in prose**, describing what to determine rather
+  than pasting the commands to run. The agent still executes the work; only the
+  prompt wording changes. This bites capability/environment probes hardest, since
+  those are the prompts most likely to contain commands verbatim.
+- Job admin endpoints: `POST /api/v1/jobs/{id}/cancel` cancels (204 on success);
+  there is no `DELETE`. Cancel stray probe jobs rather than leaving them to run.
 
 ## After Completion
 
