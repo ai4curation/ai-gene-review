@@ -44,6 +44,11 @@ genes:
   - ADAM10
   - APOE
   - HTT
+  - Mir26a-1
+  - Mir384
+  - Mir30e
+  - Mir100
+  - Mir127
   - hsp-16.2
   - hsp-4
   - hsp-6
@@ -133,14 +138,14 @@ is rare enough that no sampling is needed — there are only 25,401 of them.
 
 | | Global (UniProt-GOA) | Repo GOA files | Coverage |
 |---|---:|---:|---:|
-| IEP annotations | 25,401 | 530 | 2.1% |
+| IEP annotations | 25,401 | 543 | 2.1% |
 | Gene products with IEP | 10,618 | 207 | 1.9% |
 | Distinct GO terms | 2,383 | 277 | 11.6% |
 | Distinct references | 11,777 | 357 | 3.0% |
 
 Within the repo, IEP is rare in the same way it is globally: 530 of 147,856
-cached GOA rows (0.4%), roughly one IEP row per 40 IDA rows. 525 of those have
-been reviewed, across 210 review files.
+cached GOA rows (0.4%), roughly one IEP row per 40 IDA rows. 538 of those have
+been reviewed, across 215 review files.
 
 The reviewed sample is 2% of global IEP, so before drawing conclusions from it,
 see [how representative it is](#is-the-reviewed-sample-representative). The short
@@ -151,12 +156,12 @@ findings rest on, badly skewed by organism and annotation group.
 
 | GO branch (is_a + part_of closure) | Global rows | Global share | Repo share | Flagged in repo |
 |---|---:|---:|---:|---:|
-| response to stimulus (GO:0050896) | 17,099 | 67.3% | 70.5% | 15.1% |
-| developmental process (GO:0032502) | 4,110 | 16.2% | 14.5% | **23.7%** |
-| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 4.2% | 4.5% |
-| cellular component | 1,147 | 4.5% | 2.7% | 0% |
-| biological regulation (GO:0065007) | 1,060 | 4.2% | 5.3% | 7.1% |
-| metabolic process / localization / MF | 590 | 2.3% | 2.9% | 13.3% |
+| response to stimulus (GO:0050896) | 17,099 | 67.3% | 70.1% | 16.7% |
+| developmental process (GO:0032502) | 4,110 | 16.2% | 14.1% | **23.7%** |
+| unclassified (obsolete/unresolvable) | 1,395 | 5.5% | 4.3% | 8.7% |
+| cellular component | 1,147 | 4.5% | 2.6% | 0% |
+| biological regulation (GO:0065007) | 1,060 | 4.2% | 6.1% | 15.2% |
+| metabolic process / localization / MF | 590 | 2.3% | 2.6% | 7.1% |
 
 Seven out of ten IEP annotations are a "response to X" term, both globally and in
 the repo, which follows directly from the experiment type: expose an organism to
@@ -174,7 +179,7 @@ tissue.
 
 ### The disposition data: IEP is not wrong so much as peripheral
 
-Reviewers flagged 15.0% of IEP rows (REMOVE + MARK_AS_OVER_ANNOTATED + MODIFY).
+Reviewers flagged 16.7% of IEP rows (REMOVE + MARK_AS_OVER_ANNOTATED + MODIFY).
 That is worse than the other experimental codes (IDA 6.7%, IMP 6.8%, IGI 6.4%)
 but comparable to ISO (16.8%) and better than IEA (20.4%) — not, on its own, a
 damning number.
@@ -190,13 +195,13 @@ The damning number is the other end of the distribution:
 | IMP | 9,770 | 48.5% | 32.7% |
 | IGI | 1,555 | 45.3% | 26.5% |
 | ISO | 4,237 | 33.2% | 16.1% |
-| **IEP** | **525** | **22.9%** | **9.9%** |
+| **IEP** | **538** | **22.7%** | **10.0%** |
 | IPI | 17,472 | 10.9% | 4.3% |
 
 IEP has the lowest ACCEPT rate and the lowest core-function grounding rate of
 any code surveyed except IPI — and IPI's position is a known artifact of
 `protein binding` rather than a property of physical-interaction evidence. The
-missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **56.8%** of IEP
+missing IEP mass went to `KEEP_AS_NON_CORE`, which absorbs **55.4%** of IEP
 rows, the highest share of any code.
 
 So the characteristic IEP annotation is not false. It is *true and peripheral*:
@@ -206,7 +211,7 @@ nothing in the annotation is checkably wrong.
 
 Two more measurements sharpen it:
 
-- **71.4%** of IEP rows are the **sole** carrier of their GO term in the review
+- **72.1%** of IEP rows are the **sole** carrier of their GO term in the review
   — no other evidence code in the same gene supports that term. IEP is not
   mostly redundant confirmation of what IDA/IMP already say; it is mostly
   adding terms nothing else supports.
@@ -266,12 +271,14 @@ single-screen IEP batches in all of GOA are MGI's (see
 so the stratum the repo samples at 0.05x is precisely where the most extreme
 instance of a pattern this page documents actually lives.
 
-**A slice the repo cannot represent at all.** 840 global IEP rows (3.3%), on 437
-gene products, are **RNAcentral** entries rather than proteins — almost all
-microRNA precursors from miRNA-profiling studies. The `genes/` tree is organized
-around UniProt protein entries, so this class is out of scope by construction
-even though it is IEP in its purest form: the only observation is that a
-non-coding RNA's abundance changed.
+**A slice the repo under-samples but can represent.** 840 global IEP rows
+(3.3%), on 437 gene products, are **RNAcentral** entries rather than proteins —
+almost all microRNA precursors from miRNA-profiling studies. This is IEP in its
+purest form: the only observation is that a non-coding RNA's abundance changed.
+The `genes/` tree handles ncRNA entries natively (`id: URS…`, `product_type:
+MIRNA`, fetched with `ai-gene-review fetch-ncrna`), so the gap was coverage, not
+capability. Five of them are now reviewed — see
+[the miRNA cohort](#cohort-review-130-mirnas-one-term-one-paper) below.
 
 **Corrections this forces.** Two claims made from the repo sample alone need
 restating:
@@ -281,7 +288,7 @@ restating:
    the repo sample was proportionally *accurate* (1.00x for BP, 0.84x for CC) all
    along. The mechanism proposed from 20 rows holds at scale: see
    [below](#gorule0000006-violations-are-an-eco-mapping-artifact).
-2. *No GO term is majority-IEP.* Within a gene, 71% of IEP rows are the sole
+2. *No GO term is majority-IEP.* Within a gene, 72% of IEP rows are the sole
    carrier of their term. But measured per term across the whole ontology, IEP is
    never the dominant support: the most IEP-dependent frequent term is
    `seed trichome elongation` at **19.6%** of its annotations, then
@@ -413,6 +420,71 @@ produced it. And because these batches are concentrated in MGI — the group the
 repo samples at 0.05x — the reviewed corpus systematically under-represents the
 most extreme form of the pattern.
 
+#### Cohort review: 130 miRNAs, one term, one paper
+
+PMID:25858512 is a natural experiment, because the paper itself sorts its miRNAs
+into tiers. It detected **372** miRNAs in hippocampal slices, found that only
+**12** changed during LTP, and functionally validated **three** — miR-26a,
+miR-384-5p and let-7a — by electrophysiology, time-lapse spine imaging and 3'
+UTR reporter assays. MGI annotated **130** miRNA precursors to
+`long-term synaptic potentiation`. The paper's own abstract describes what the
+rest amount to: "presents a catalogue of candidate 'LTP miRNAs'".
+
+Five members were reviewed, one from each tier, so that the batch is tested with
+an internal positive control rather than assumed to be wrong:
+
+| Tier | miRNA | What the paper shows | Action |
+|---|---|---|---|
+| Validated | mouse/Mir26a-1 | Title miRNA; required for LTP maintenance and spine enlargement via RSK3 | ACCEPT |
+| Validated | mouse/Mir384 | Title miRNA; same experiments | ACCEPT |
+| Changed, untested | mouse/Mir30e | Named as one of the six downregulated among the 12 that changed | MARK_AS_OVER_ANNOTATED |
+| Detected only | mouse/Mir100 | Not mentioned anywhere in the full text | REMOVE |
+| Detected only | mouse/Mir127 | Not mentioned anywhere in the full text | REMOVE |
+
+The tier predicts the verdict exactly. This matters because it separates two
+claims that are easy to conflate: the batch is not wrong because it is a batch,
+it is wrong for the members whose only qualification is having been detected.
+mouse/Mir30e is the instructive middle case — its expression genuinely changed,
+so IEP is the correct evidence code and the observation is sound; what fails is
+the leap from "changed" to "acts upstream of or within".
+
+The batch also has a defect visible only from the cohort: it **omits let-7a**,
+one of the three miRNAs the paper establishes as required, while including 127
+that it does not. The annotation set is not merely over-inclusive, it is
+misaligned with the paper's conclusions at both ends.
+
+Three further batch papers annotate these same five miRNAs, and two produced
+sharper findings than the LTP batch itself:
+
+- **A source that refutes its own annotation.** mouse/Mir26a-1 carries
+  `response to bacterium` from PMID:24205035, a circulating-miRNA survey in a
+  cecal-ligation-and-puncture sepsis model. The authors asked whether bacterial
+  sensing drives the increase and concluded it does not — it persists in *Tlr2*,
+  *Tlr4* and *NF-kB* knockouts, indicating the change "was not directly mediated
+  by the TLR2/NF-κB or TLR4/NF-κB pathway, and pathways induced by exposure to
+  the gram-positive or gram-negative bacteria". The annotation asserts precisely
+  what the cited paper tested and rejected, which is what makes it a REMOVE
+  rather than an over-annotation. The companion `response to wounding` row
+  describes the surgery used to perturb the animals.
+- **The pattern inside a single paper.** PMID:20439489 supports both a validated
+  IMP row on mouse/Mir100 (`positive regulation of stem cell differentiation`,
+  via direct repression of Smarca5 — miR-100 is one of the paper's three title
+  miRNAs) and an unvalidated IEP batch row (`cellular response to leukemia
+  inhibitory factor`, one of 291). The same study, the same gene, one row
+  recording what was demonstrated and one recording what was merely observed.
+  The IEP term is also a poor description of the experiment, which induced
+  differentiation by *withdrawing* LIF.
+- **Wrong direction as well as wrong evidence.** mouse/Mir100's
+  `sensory perception of sound` comes from an ageing survey (PMID:23646144)
+  whose full text never mentions miR-100 and whose subject is *degeneration* of
+  the organ of Corti during hearing loss, not normal hearing.
+
+Across the 13 IEP rows in this cohort: 2 ACCEPT, 7 MARK_AS_OVER_ANNOTATED,
+4 REMOVE — an 85% flag rate against 16.7% corpus-wide, and 4 REMOVEs added to a
+corpus that previously held 7 in total. Targeting batch cohorts rather than
+individual rows is therefore a high-yield review strategy, which is the practical
+lesson for the remaining candidates.
+
 ### 4. Promiscuous hub inversion: the regulator annotated as a responder
 
 ARATH/PIF3 carries seven IEP rows — `response to heat`, `response to cold`,
@@ -520,8 +592,8 @@ actually expression-pattern evidence.
 
 ## Where IEP Is Legitimate
 
-IEP is not a code to review adversarially. 22.9% of IEP rows were accepted and
-47 of them ground a term in a gene's `core_functions`. The accepted cases share
+IEP is not a code to review adversarially. 22.7% of IEP rows were accepted and
+49 of them ground a term in a gene's `core_functions`. The accepted cases share
 a single property, and it is the discriminator this project turns on: **the
 gene's job is the response itself**.
 
@@ -546,7 +618,7 @@ gene's job is the response itself**.
   MEDTR/NFP (`nodulation`), worm/skn-1 (`response to oxidative stress`) and
   worm/xbp-1 (`IRE1-mediated unfolded protein response`) all keep IEP rows that
   restate what IMP and IDA independently establish. Here IEP costs nothing and
-  adds a line of evidence — the 28.6% of IEP rows that are *not* the sole carrier
+  adds a line of evidence — the 27.9% of IEP rows that are *not* the sole carrier
   of their term.
 - **Markers that are the differentiated product.** DICDI/ecmB, as above.
 
@@ -597,7 +669,7 @@ Before accepting or flagging an IEP row.
   imidacloprid`) is over-reach, and the correct fix is usually MODIFY to the
   parent rather than REMOVE.
 - Check whether the term already has non-IEP support in the same gene. If it
-  does, the IEP row is cheap corroboration; if it does not (71% of rows), the
+  does, the IEP row is cheap corroboration; if it does not (72% of rows), the
   IEP row is load-bearing and deserves the full agency question.
 
 ### Prefer the right action
@@ -610,7 +682,8 @@ Before accepting or flagging an IEP row.
 - `REMOVE` should be reserved for a categorical mismatch, where the process is
   not merely peripheral but belongs to a different functional class entirely
   (human/RB1 `Ras protein signal transduction`, human/FN3K `epithelial cell
-  differentiation`). Only 7 of 525 rows met that bar.
+  differentiation`). Only 11 of 538 rows met that bar, four of them added by the
+  miRNA cohort below.
 - Do not REMOVE an IEP row merely because the evidence code is weak. The
   induction happened; what is at issue is the term, not the experiment.
 
@@ -662,14 +735,18 @@ correct answer is "true, keep it, but it is not what this gene is for."
       sample-robust or sample-dependent.
 - [ ] Review the remaining 22 `PENDING` IEP rows, all on rat/Casp3 — the largest
       single unreviewed block already in the repo.
-- [ ] Review a batch cohort rather than another single gene. The candidates are
-      picked for us: **PMID:11967071** (152 *E. coli* genes → `DNA damage
-      response`) is the cleanest test of the regulon-membership pattern, and
-      *E. coli* is already a well-covered organism here.
-- [ ] Close the MGI gap (sampled at 0.05x), since the largest single-screen IEP
-      batches in GOA are MGI's. `cellular response to leukemia inhibitory factor`
-      (294 rows, 0 reviewed) and `long-term synaptic potentiation` (139 rows, 0
-      reviewed) are the two biggest untouched strata.
+- [x] Review a batch cohort rather than another single gene, sampling tiers
+      within the cohort so the batch is tested rather than assumed. Done for
+      PMID:25858512 — see
+      [the miRNA cohort](#cohort-review-130-mirnas-one-term-one-paper).
+- [ ] Do the same for **PMID:11967071** (152 *E. coli* genes → `DNA damage
+      response`), the cleanest test of the regulon-membership pattern, in an
+      organism this repo already covers well. The tiering is available there too:
+      the paper distinguishes SOS-regulon members from the wider induced set.
+- [ ] Continue closing the MGI gap (still sampled well below its 3.4% global
+      share). `cellular response to leukemia inhibitory factor` now has 3 rows
+      reviewed of 294; `long-term synaptic potentiation` 5 of 139;
+      `sensory perception of sound` 1 of 100.
 - [ ] Review the IEP-heaviest gene products, none of which are in the repo: rat
       Ppargc1a (50 IEP rows), Il6 (48), Nos3 (45), Serpine1 (44), Tnf (43), Star
       (43), Hif1a (41), Ccl2 (40), Il1b (39). These are the extreme form of the
@@ -693,13 +770,46 @@ correct answer is "true, keep it, but it is not what this gene is for."
 - [ ] Check the reviewed IEP corpus against the "normal expression only" rule —
       any row whose source paper is an overexpression study is mis-coded, not
       merely over-annotated.
-- [ ] Decide whether the RNAcentral slice (840 rows, 437 miRNA precursors) is in
-      scope. It is IEP in its purest form, but the `genes/` tree is built around
-      UniProt protein entries and cannot currently hold it.
+- [x] Establish that the RNAcentral slice (840 rows, 437 miRNA precursors) is in
+      scope. It is, via `ai-gene-review fetch-ncrna`; five miRNA reviews now
+      exist. 432 gene products remain.
 
 ---
 
 ## Session Notes
+
+### 2026-08-02 (third pass — the first batch cohort reviewed)
+
+- **Retracted the scope claim.** The second pass said the RNAcentral slice was
+  "out of scope by construction". That was wrong: the repo already reviews ncRNA
+  entries (`id: URS…`, `product_type: MIRNA`; see human/MIR155, human/XIST) and
+  has a dedicated `ai-gene-review fetch-ncrna` command. The gap was coverage, not
+  capability.
+- Reviewed five mouse miRNA precursors from the PMID:25858512 LTP batch, chosen
+  to span the tiers the paper itself defines: 372 detected, 12 changed, 3
+  validated, 130 annotated. Full details in
+  [the cohort section](#cohort-review-130-mirnas-one-term-one-paper).
+- **The tier predicted the verdict in every case.** Validated members
+  (mouse/Mir26a-1, mouse/Mir384) ACCEPT; changed-but-untested (mouse/Mir30e)
+  MARK_AS_OVER_ANNOTATED; detected-only (mouse/Mir100, mouse/Mir127) REMOVE. The
+  middle tier is the useful one: mouse/Mir30e's expression change is real and IEP
+  is the right code, so the failure is isolated to the inference, not the
+  evidence.
+- **Two findings stronger than the LTP batch itself.** mouse/Mir26a-1's
+  `response to bacterium` is refuted by its own source, which shows the
+  circulating-miRNA increase survives *Tlr2*, *Tlr4* and *NF-kB* knockout and
+  concludes bacterial sensing is not the driver. And PMID:20439489 supplies
+  mouse/Mir100 with both a validated IMP row and an unvalidated IEP batch row —
+  the pattern visible within one paper and one gene.
+- **The LTP batch omits let-7a**, one of the three miRNAs the paper establishes
+  as required, while including 127 it never tested. Batch annotation is not just
+  over-inclusive here; it is misaligned at both ends.
+- Cohort flag rate 11/13 (85%) versus 16.7% corpus-wide, and 4 REMOVEs added to a
+  corpus that previously held 7. **Reviewing batch cohorts is high-yield**, and
+  reviewing them tier-by-tier is what makes the verdicts defensible rather than
+  reflexive.
+- Corpus figures updated throughout: reviewed IEP rows 525 → 538, flagged 15.0% →
+  16.7%, REMOVE 7 → 11.
 
 ### 2026-07-27 (second pass — global denominator)
 
@@ -737,7 +847,7 @@ correct answer is "true, keep it, but it is not what this gene is for."
   is the group the repo samples at 0.05x — so the reviewed corpus systematically
   misses the most extreme form of a pattern the page documents.
 - **New framing: IEP is load-bearing per gene, never per term.** Within a gene,
-  71% of IEP rows are the sole carrier of their term; measured per term across the
+  72% of IEP rows are the sole carrier of their term; measured per term across the
   ontology, no frequent term exceeds **19.6%** IEP support
   (`seed trichome elongation`), and most are under 2%.
 - Wrote [`data/iep_review_candidates.tsv`](IEP/data/iep_review_candidates.tsv):
@@ -750,9 +860,9 @@ correct answer is "true, keep it, but it is not what this gene is for."
   which surveys 147,856 cached GOA rows and 210 gene reviews, and writes
   [iep-corpus-survey.md](IEP/iep-corpus-survey.md). Everything below is measured
   on the repo only; see the second pass for how representative that is.
-- **Headline finding:** IEP's problem is not error rate (15.0% flagged, between
-  ISO and IEA) but *centrality*. At 22.9% ACCEPT and 9.9% core-function
-  grounding it is the weakest experimental code by both measures, with 56.8% of
+- **Headline finding:** IEP's problem is not error rate (15.0% flagged at the
+  time, between ISO and IEA) but *centrality*. At 22.9% ACCEPT and 9.9%
+  core-function grounding it was the weakest experimental code by both measures, with 56.8% of
   rows landing in `KEEP_AS_NON_CORE` — the highest of any code. The
   characteristic IEP annotation is true and peripheral.
 - **Second finding:** the developmental branch (23.7% flagged) is riskier than
