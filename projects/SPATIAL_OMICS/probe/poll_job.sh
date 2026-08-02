@@ -26,8 +26,24 @@ while [ "$elapsed" -lt "$MAX" ]; do
     completed|failed|cancelled|error)
       echo "Terminal status: $status"
       if [ "$status" = "completed" ]; then
-        curl -sS -H "$AUTH" -H "Accept: text/markdown" "$API/jobs/$JOB_ID/report" -o "$OUT"
-        echo "Report written to $OUT ($(wc -c < "$OUT") bytes)"
+        # The report endpoint returns PDF even when text/markdown is requested,
+        # so save to .pdf and extract text alongside it.
+        pdf="${OUT%.md}.pdf"
+        curl -sS -H "$AUTH" -H "Accept: text/markdown" "$API/jobs/$JOB_ID/report" -o "$pdf"
+        echo "Report written to $pdf ($(wc -c < "$pdf") bytes)"
+        if head -c 5 "$pdf" | grep -q '%PDF'; then
+          uvx --with pypdf python -c "
+import sys
+from pypdf import PdfReader
+src, dst = sys.argv[1], sys.argv[2]
+text = '\n'.join(p.extract_text() for p in PdfReader(src).pages)
+open(dst, 'w').write(text)
+print(f'Extracted {len(text)} chars to {dst}')
+" "$pdf" "$OUT"
+        else
+          mv "$pdf" "$OUT"
+          echo "Response was not a PDF; kept as $OUT"
+        fi
       else
         echo "Job did not complete successfully; no report downloaded."
         printf '%s\n' "$status_json"

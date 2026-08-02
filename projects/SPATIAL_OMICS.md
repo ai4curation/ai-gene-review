@@ -80,16 +80,54 @@ The AIGR session container has **no GPU** (4 vCPU, ~15 GB RAM, no `nvidia-smi`,
 no `/dev/nvidia*`), so it can host data prep, preprocessing and schema mapping, but not
 the inference itself.
 
-Two candidate execution venues:
+Two candidate execution venues were considered. **OpenScientist was probed
+empirically and ruled out**; Colab remains.
 
-1. **OpenScientist** — an agentic co-scientist that can both run the analysis and
-   interpret it. Whether its sandbox exposes a GPU, sufficient disk, and egress to
-   Figshare/GEO is being determined empirically; see
-   [environment probe](SPATIAL_OMICS/probe/environment-probe-prompt.md). Hard
-   constraint either way: `OpenScientistParams.timeout` is validated `le=7200`, i.e. a
-   2-hour ceiling per job, so any IGP run must be scoped to fit.
-2. **Colab** — the upstream repo ships Colab notebooks for co-localization prediction
-   and gene-pair perturbation; a T4/A100 handles a bounded IGP comfortably.
+### OpenScientist — ruled out for inference (probed 2026-08-02)
+
+An environment-capability probe was run as an OpenScientist job (job
+`b30006f6-3f11-459b-9162-7decb0ffd5a0`, 2 iterations, ~28 min wall clock). Prompt:
+[environment-probe-prompt.md](SPATIAL_OMICS/probe/environment-probe-prompt.md);
+full report: [openscientist-environment-probe.md](SPATIAL_OMICS/probe/openscientist-environment-probe.md).
+
+Every answer below was determined by the agent executing commands in its own
+sandbox, not inferred from documentation.
+
+| Capability | Result |
+|---|---|
+| Hardware accelerator | **None.** No `/dev/nvidia*`, no `/dev/kfd`, no `/proc/driver/nvidia/version`; `torch.cuda.is_available()` false, `device_count()` 0, MPS false |
+| CPU / RAM / disk | 4 cores (Xeon Platinum 8375C @ 2.90 GHz), ~15.3 GiB RAM (~10.5 GiB available), **129.4 GB free disk** of 414.9 GB |
+| Network egress | All reachable — PyPI 200, Figshare API 200 / files 202, GEO 200, HuggingFace 200, PyTorch CPU index OK |
+| `pip install spatialformer` | Succeeds — 0.1.8, pure-Python wheel (10.9 MB), Python 3.12.13 satisfies `>=3.10` |
+| CPU PyTorch | Installs cleanly, `torch 2.13.0+cpu`, ~40 s |
+| **Blocking constraint** | **The `execute_code` sandbox is stateless between calls with a ~60 s per-call wall-clock ceiling** |
+
+The blocker is orchestration, not capability. A full-dependency install resolves
+116 packages (and needlessly pulls CUDA `nvidia_*` wheels from the default PyTorch
+index) and is killed at the per-call limit (RC=124). The chain "install torch +
+pytorch_lightning + transformers, download a multi-GB Figshare checkpoint, load the
+model, run it" cannot complete in one call, and nothing persists between calls.
+
+So the 2-hour job ceiling (`OpenScientistParams.timeout` is validated `le=7200`) was
+never the operative limit — the ~60 s stateless per-call sandbox is much tighter.
+**OpenScientist cannot run IGP.** It remains well suited to *interpreting* results
+produced elsewhere, which is how it is already used in
+[PROTNLM_EVALUATION](PROTNLM_EVALUATION/openscientist-adjudication.md).
+
+### Colab — the remaining venue
+
+The upstream repo ships Colab notebooks for co-localization prediction and gene-pair
+perturbation; a T4/A100 handles a bounded IGP comfortably.
+
+### Useful side-finding: the IGP API surface
+
+The probe's package introspection surfaced the relevant entry points, which are not
+documented in the paper. `spatialformer.tools.get_embeddings` exposes `embed_data`,
+`valid_mean_embedding`, **`reveal_gene_pairs`**, `process_bidirectional_predictions`,
+`prepare_extended_checkpoint` and `manual_train_fm`, alongside the model class
+`Spaformer`, a `Processor` and a **`GeneInteractionProcessor`**. The last two names are
+the likely handles for the IGP workflow. Dependency chain: `spatialformer` is a thin
+layer over `torch` -> `pytorch_lightning` -> `transformers`/`datasets`.
 
 ## Existing repository assets to build on
 
@@ -124,13 +162,14 @@ C has role R → BP), which is the non-spatial ancestor of what this project pro
 ## Status
 
 - **2026-08-02** — Project created. Availability, API surface, and compute profile
-  established from the paper and upstream repo. Environment probe launched against
-  OpenScientist to determine whether the analysis can run there. No inference run yet;
-  **no predictions have been generated or reviewed.**
+  established from the paper and upstream repo. OpenScientist environment probe run
+  and **ruled out as an inference venue** (CPU-only, ~60 s stateless per-call sandbox);
+  it remains viable for interpreting results computed elsewhere. Colab is the remaining
+  candidate venue. No inference run yet; **no predictions have been generated or
+  reviewed.**
 
 ## Open questions
 
-- Does the OpenScientist sandbox expose a GPU, and can it reach Figshare/GEO?
 - Which tissue and cell-type contact makes the best first bounded IGP target? The PF
   granuloma (macrophage <-> T cell, GEO `GSE250346`) is the paper's own worked example
   and therefore the cheapest to sanity-check against.
